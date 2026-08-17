@@ -1,5 +1,6 @@
 import { createPatient, getStoredPatients } from '../patients/patientStore.ts'
 import { createAppointment, getAppointmentsByDate } from '../appointments/appointmentStore.ts'
+import { getAvailableAppointmentSlots } from '../appointments/availabilityEngine.ts'
 import { getStoredServices } from '../services/serviceStore.ts'
 
 export type PublicBookingInput = {
@@ -13,7 +14,11 @@ export type PublicBookingInput = {
   notes?: string
 }
 
-export function getAvailableBookingTimes(serviceId: string, date: string): string[] {
+export function getAvailableBookingTimes(serviceId: string, date: string, branchId?: string, providerId?: string): string[] {
+  if (branchId) {
+    return getAvailableAppointmentSlots({ branchId, providerId, serviceId, date }).map((slot) => slot.startTime)
+  }
+
   const service = getStoredServices().find((item) => item.id === serviceId)
   const durationMinutes = service?.duration ?? 30
   const busy = getAppointmentsByDate(date)

@@ -30,11 +30,63 @@ export function normalizePatientEmail(email: string) {
   return email.trim().toLowerCase()
 }
 
+export function normalizePatientPhone(phone: string) {
+  return phone.replace(/[^\d+]/g, '').trim()
+}
+
+function normalizeComparable(value: string | undefined) {
+  return (value ?? '').trim().toLowerCase().replace(/\s+/g, ' ')
+}
+
+export function getPatientDisplayName(patient: Pick<Patient, 'firstName' | 'middleName' | 'lastName' | 'fullName'>) {
+  const structuredName = [patient.firstName, patient.middleName, patient.lastName].filter(Boolean).join(' ').trim()
+  return structuredName || patient.fullName || 'Unnamed patient'
+}
+
+function mapPatientToRemoteRow(patient: Patient) {
+  return {
+    id: patient.id,
+    patient_id: patient.patientId,
+    auth_user_id: patient.authUserId || null,
+    first_name: patient.firstName,
+    middle_name: patient.middleName,
+    last_name: patient.lastName,
+    full_name: patient.fullName ?? getPatientDisplayName(patient),
+    date_of_birth: patient.dateOfBirth || null,
+    sex: patient.sex,
+    phone: patient.phone,
+    email: patient.email,
+    address: patient.address,
+    city: patient.city ?? '',
+    province: patient.province ?? '',
+    emergency_contact: patient.emergencyContact,
+    emergency_contact_phone: patient.emergencyContactPhone,
+    emergency_contact_relationship: patient.emergencyContactRelationship ?? '',
+    preferred_branch_id: patient.preferredBranchId || null,
+    origin: patient.origin ?? 'staff_created',
+    registration_date: patient.registrationDate,
+    status: patient.status,
+    allergies: patient.allergies,
+    medical_conditions: patient.medicalConditions,
+    current_medications: patient.currentMedications,
+    previous_surgeries: patient.previousSurgeries,
+    medical_notes: patient.medicalNotes,
+    administrative_notes: patient.administrativeNotes ?? '',
+    import_batch_id: patient.importBatchId || null,
+    import_source_row: patient.importSourceRow ?? null,
+    original_imported_name: patient.originalImportedName ?? '',
+    profile_image: patient.profileImage ?? '',
+  }
+}
+
 export function getStoredPatients(): Patient[] {
   const stored = safeParsePatients(window.localStorage.getItem(PATIENT_STORAGE_KEY))
 
   if (stored?.length) {
-    return stored
+    return stored.map((patient) => ({
+      ...patient,
+      origin: patient.origin ?? (patient.authUserId ? 'online_registration' : 'staff_created'),
+    }))
   }
 
   window.localStorage.setItem(PATIENT_STORAGE_KEY, JSON.stringify(seedPatients))
@@ -57,17 +109,23 @@ export function mapSupabasePatientRow(row: Record<string, any>): Patient {
   return {
     id: row.id,
     patientId: row.patient_id,
+    authUserId: row.auth_user_id ?? undefined,
     firstName: row.first_name ?? '',
     middleName: row.middle_name ?? '',
     lastName: row.last_name ?? '',
+    fullName: row.full_name ?? '',
     dateOfBirth: row.date_of_birth ?? '',
     sex: row.sex ?? 'prefer_not_to_say',
     phone: row.phone ?? '',
     email: row.email ?? '',
     address: row.address ?? '',
+    city: row.city ?? '',
+    province: row.province ?? '',
     emergencyContact: row.emergency_contact ?? '',
     emergencyContactPhone: row.emergency_contact_phone ?? '',
     emergencyContactRelationship: row.emergency_contact_relationship ?? '',
+    preferredBranchId: row.preferred_branch_id ?? '',
+    origin: row.origin ?? (row.auth_user_id ? 'online_registration' : 'staff_created'),
     registrationDate: row.registration_date ?? '',
     status: row.status ?? 'active',
     allergies: row.allergies ?? '',
@@ -75,6 +133,10 @@ export function mapSupabasePatientRow(row: Record<string, any>): Patient {
     currentMedications: row.current_medications ?? '',
     previousSurgeries: row.previous_surgeries ?? '',
     medicalNotes: row.medical_notes ?? '',
+    administrativeNotes: row.administrative_notes ?? '',
+    importBatchId: row.import_batch_id ?? undefined,
+    importSourceRow: row.import_source_row ?? undefined,
+    originalImportedName: row.original_imported_name ?? '',
     profileImage: row.profile_image ?? '',
     createdAt: row.created_at ?? new Date().toISOString(),
     updatedAt: row.updated_at ?? row.created_at ?? new Date().toISOString(),
@@ -106,6 +168,7 @@ export async function getCurrentPatientForAuthenticatedUser(userId: string): Pro
 
 export function findPatientByEmail(email: string) {
   const normalizedEmail = normalizePatientEmail(email)
+  if (!normalizedEmail) return undefined
   return getStoredPatients().find((patient) => normalizePatientEmail(patient.email) === normalizedEmail)
 }
 
@@ -118,6 +181,52 @@ export function generatePatientId(patients: Patient[]) {
   return `PT-${String(highest + 1).padStart(6, '0')}`
 }
 
+export type DuplicateSignal =
+  | 'patient_number'
+  | 'email'
+  | 'phone'
+  | 'name_dob'
+  | 'name_phone'
+  | 'full_name_dob'
+
+export type PotentialPatientDuplicate = {
+  patient: Patient
+  signals: DuplicateSignal[]
+}
+
+export function findPotentialPatientDuplicates(
+  values: Partial<PatientFormValues> & { patientId?: string },
+  candidates = getStoredPatients(),
+): PotentialPatientDuplicate[] {
+  const email = normalizePatientEmail(values.email ?? '')
+  const phone = normalizePatientPhone(values.phone ?? '')
+  const patientNumber = normalizeComparable(values.patientId)
+  const firstName = normalizeComparable(values.firstName)
+  const lastName = normalizeComparable(values.lastName)
+  const fullName = normalizeComparable(values.fullName)
+  const dateOfBirth = values.dateOfBirth ?? ''
+
+  return candidates
+    .map((patient) => {
+      const signals: DuplicateSignal[] = []
+      const existingEmail = normalizePatientEmail(patient.email)
+      const existingPhone = normalizePatientPhone(patient.phone)
+      const existingFirstName = normalizeComparable(patient.firstName)
+      const existingLastName = normalizeComparable(patient.lastName)
+      const existingFullName = normalizeComparable(getPatientDisplayName(patient))
+
+      if (patientNumber && normalizeComparable(patient.patientId) === patientNumber) signals.push('patient_number')
+      if (email && existingEmail === email) signals.push('email')
+      if (phone && existingPhone === phone) signals.push('phone')
+      if (firstName && lastName && dateOfBirth && existingFirstName === firstName && existingLastName === lastName && patient.dateOfBirth === dateOfBirth) signals.push('name_dob')
+      if (firstName && lastName && phone && existingFirstName === firstName && existingLastName === lastName && existingPhone === phone) signals.push('name_phone')
+      if (fullName && dateOfBirth && existingFullName === fullName && patient.dateOfBirth === dateOfBirth) signals.push('full_name_dob')
+
+      return signals.length ? { patient, signals } : null
+    })
+    .filter((match): match is PotentialPatientDuplicate => Boolean(match))
+}
+
 export function createPatient(values: PatientFormValues): Patient {
   const patients = getStoredPatients()
   const now = new Date().toISOString()
@@ -126,7 +235,18 @@ export function createPatient(values: PatientFormValues): Patient {
     id: generateUUID(),
     patientId: generatePatientId(patients),
     ...values,
-    email: normalizePatientEmail(values.email),
+    authUserId: values.authUserId ?? undefined,
+    fullName: values.fullName ?? [values.firstName, values.middleName, values.lastName].filter(Boolean).join(' '),
+    email: normalizePatientEmail(values.email ?? ''),
+    phone: normalizePatientPhone(values.phone),
+    city: values.city ?? '',
+    province: values.province ?? '',
+    preferredBranchId: values.preferredBranchId ?? '',
+    origin: values.origin ?? 'staff_created',
+    administrativeNotes: values.administrativeNotes ?? '',
+    importBatchId: values.importBatchId,
+    importSourceRow: values.importSourceRow,
+    originalImportedName: values.originalImportedName ?? '',
     profileImage: values.profileImage ?? '',
     createdAt: now,
     updatedAt: now,
@@ -136,29 +256,7 @@ export function createPatient(values: PatientFormValues): Patient {
   saveStoredPatients(nextPatients)
   
   // Persist to Supabase asynchronously
-  void insertRemoteTableRow('patients', {
-    id: patient.id,
-    patient_id: patient.patientId,
-    first_name: patient.firstName,
-    middle_name: patient.middleName,
-    last_name: patient.lastName,
-    date_of_birth: patient.dateOfBirth,
-    sex: patient.sex,
-    phone: patient.phone,
-    email: patient.email,
-    address: patient.address,
-    emergency_contact: patient.emergencyContact,
-    emergency_contact_phone: patient.emergencyContactPhone,
-    emergency_contact_relationship: patient.emergencyContactRelationship ?? '',
-    registration_date: patient.registrationDate,
-    status: patient.status,
-    allergies: patient.allergies,
-    medical_conditions: patient.medicalConditions,
-    current_medications: patient.currentMedications,
-    previous_surgeries: patient.previousSurgeries,
-    medical_notes: patient.medicalNotes,
-    profile_image: patient.profileImage ?? '',
-  })
+  void insertRemoteTableRow('patients', mapPatientToRemoteRow(patient))
   
   recordAuditEntry({
     user: getCurrentSessionUserName(),
@@ -182,9 +280,16 @@ export function updatePatient(id: string, values: PatientFormValues): Patient | 
   const updated: Patient = {
     ...patients[index],
     ...values,
-    email: normalizePatientEmail(values.email),
+    fullName: values.fullName ?? [values.firstName, values.middleName, values.lastName].filter(Boolean).join(' '),
+    email: normalizePatientEmail(values.email ?? ''),
+    phone: normalizePatientPhone(values.phone),
     profileImage: values.profileImage ?? patients[index].profileImage ?? '',
     emergencyContactRelationship: values.emergencyContactRelationship ?? patients[index].emergencyContactRelationship ?? '',
+    city: values.city ?? '',
+    province: values.province ?? '',
+    preferredBranchId: values.preferredBranchId ?? '',
+    origin: values.origin ?? patients[index].origin ?? 'staff_created',
+    administrativeNotes: values.administrativeNotes ?? '',
     updatedAt: now,
   }
 
@@ -192,27 +297,7 @@ export function updatePatient(id: string, values: PatientFormValues): Patient | 
   saveStoredPatients(nextPatients)
   
   // Persist to Supabase asynchronously
-  void updateRemoteTableRow('patients', id, {
-    first_name: updated.firstName,
-    middle_name: updated.middleName,
-    last_name: updated.lastName,
-    date_of_birth: updated.dateOfBirth,
-    sex: updated.sex,
-    phone: updated.phone,
-    email: updated.email,
-    address: updated.address,
-    emergency_contact: updated.emergencyContact,
-    emergency_contact_phone: updated.emergencyContactPhone,
-    emergency_contact_relationship: updated.emergencyContactRelationship ?? '',
-    registration_date: updated.registrationDate,
-    status: updated.status,
-    allergies: updated.allergies,
-    medical_conditions: updated.medicalConditions,
-    current_medications: updated.currentMedications,
-    previous_surgeries: updated.previousSurgeries,
-    medical_notes: updated.medicalNotes,
-    profile_image: updated.profileImage ?? '',
-  })
+  void updateRemoteTableRow('patients', id, mapPatientToRemoteRow(updated))
   
   recordAuditEntry({
     user: getCurrentSessionUserName(),

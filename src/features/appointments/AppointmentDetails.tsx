@@ -1,16 +1,36 @@
-import { X } from 'lucide-react'
+import { CalendarClock, ClipboardList, MapPin, Send, Stethoscope, UserRound, X } from 'lucide-react'
 import { Badge } from '../../components/ui/Badge'
 import { Button } from '../../components/ui/Button'
+import { CommunicationHistoryPanel } from '../communications/CommunicationHistoryPanel'
+import { getCommunicationLogsByAppointment } from '../communications/communicationStore'
+import type { CommunicationTemplateKey } from '../communications/communicationTypes'
 import type { Appointment, AppointmentStatus } from './appointmentTypes'
 import type { Patient } from '../patients/patientTypes'
 import type { Service } from '../services/serviceTypes'
+import type { Branch } from '../branches/branchTypes'
+import type { Provider } from '../dentists/dentistTypes'
 
 type AppointmentDetailsProps = {
   appointment: Appointment
   patient?: Patient
   service?: Service
+  branch?: Branch
+  provider?: Provider
   onClose: () => void
   onStatusChange: (status: AppointmentStatus) => void
+  onActionRequest?: (appointment: Appointment, status: AppointmentStatus, label: string, requiresReason?: boolean) => void
+  onManualResend?: (appointment: Appointment, templateKey: CommunicationTemplateKey) => void
+  onOpenClinicalRecord?: (appointment: Appointment) => void
+  history?: Array<{
+    id: string
+    eventType: string
+    fromStatus?: AppointmentStatus
+    toStatus?: AppointmentStatus
+    changedBy: string
+    changedAt: string
+    reason?: string
+    notes?: string
+  }>
   canManage?: boolean
 }
 
@@ -35,7 +55,10 @@ function getStatusLabel(status: AppointmentStatus): string {
   const labels: Record<AppointmentStatus, string> = {
     pending: 'Pending',
     confirmed: 'Approved',
+    rejected: 'Rejected',
     checked_in: 'Checked In',
+    waiting: 'Waiting',
+    rescheduled: 'Rescheduled',
     in_progress: 'In Progress',
     completed: 'Completed',
     cancelled: 'Cancelled',
@@ -49,13 +72,16 @@ function getStatusTone(status: AppointmentStatus): 'neutral' | 'success' | 'warn
     case 'pending':
       return 'warning'
     case 'confirmed':
+    case 'rescheduled':
       return 'info'
     case 'checked_in':
+    case 'waiting':
     case 'in_progress':
       return 'success'
     case 'completed':
       return 'success'
     case 'cancelled':
+    case 'rejected':
     case 'no_show':
       return 'danger'
     default:
@@ -63,21 +89,54 @@ function getStatusTone(status: AppointmentStatus): 'neutral' | 'success' | 'warn
   }
 }
 
+function formatHistoryEvent(eventType: string, status?: AppointmentStatus) {
+  const map: Record<string, string> = {
+    created: 'Booking created',
+    status_changed: status ? `Appointment ${getStatusLabel(status).toLowerCase()}` : 'Appointment updated',
+    checked_in: 'Patient checked in',
+    moved_to_waiting: 'Added to waiting queue',
+    started: 'Treatment started',
+    completed: 'Appointment completed',
+    cancelled: 'Appointment cancelled',
+    no_show: 'Marked as no show',
+    rescheduled: 'Appointment rescheduled',
+    provider_changed: 'Dentist assignment changed',
+  }
+  return map[eventType] ?? 'Appointment activity recorded'
+}
+
 export function AppointmentDetails({
   appointment,
   onClose,
   onStatusChange,
   patient,
+  branch,
+  provider,
   service,
+  history = [],
+  onActionRequest,
+  onManualResend,
+  onOpenClinicalRecord,
   canManage,
 }: AppointmentDetailsProps) {
-  const visibleActions: Array<{ status: AppointmentStatus; label: string }> =
+  const visibleActions: Array<{ status: AppointmentStatus; label: string; reason?: boolean }> =
     !canManage
       ? []
       : appointment.status === 'pending'
-        ? [{ status: 'confirmed', label: 'Approve' }, { status: 'cancelled', label: 'Reject' }]
+        ? [{ status: 'confirmed', label: 'Confirm' }, { status: 'rejected', label: 'Reject', reason: true }]
         : appointment.status === 'confirmed'
-          ? [{ status: 'completed', label: 'Complete' }, { status: 'cancelled', label: 'Cancel' }]
+          ? [
+              { status: 'checked_in', label: 'Check In' },
+              { status: 'rescheduled', label: 'Mark Rescheduled', reason: true },
+              { status: 'cancelled', label: 'Cancel', reason: true },
+              { status: 'no_show', label: 'Mark No Show', reason: true },
+            ]
+          : appointment.status === 'checked_in'
+            ? [{ status: 'waiting', label: 'Move to Waiting' }, { status: 'in_progress', label: 'Start Visit' }]
+            : appointment.status === 'waiting'
+              ? [{ status: 'in_progress', label: 'Start Visit' }]
+              : appointment.status === 'in_progress'
+                ? [{ status: 'completed', label: 'Complete Visit' }]
           : appointment.status === 'completed'
             ? []
             : appointment.status === 'cancelled'
@@ -94,7 +153,7 @@ export function AppointmentDetails({
       >
         <div className="modal-header">
           <div>
-            <p className="eyebrow">Appointment Details</p>
+            <p className="eyebrow">{appointment.appointmentNumber ?? appointment.id}</p>
             <h2 id="appointment-details-title">
               {patient ? `${patient.firstName} ${patient.lastName}` : 'Patient appointment'}
             </h2>
@@ -105,10 +164,15 @@ export function AppointmentDetails({
         </div>
 
         <div className="appointment-details-content">
-          <div className="details-section">
+          <div className="details-section appointment-detail-hero">
             <div className="details-header">
               <h3>Status</h3>
               <Badge tone={getStatusTone(appointment.status)}>{getStatusLabel(appointment.status)}</Badge>
+            </div>
+            <div className="appointment-detail-metrics">
+              <div><CalendarClock size={16} /><span>{formatDate(appointment.date)}</span></div>
+              <div><MapPin size={16} /><span>{branch?.name ?? 'No branch assigned'}</span></div>
+              <div><Stethoscope size={16} /><span>{provider?.displayName ?? 'No dentist assigned'}</span></div>
             </div>
           </div>
 
@@ -125,20 +189,24 @@ export function AppointmentDetails({
                   <span className="value">{patient.patientId}</span>
                 </div>
                 <div className="detail-item">
-                  <span className="label">Phone</span>
-                  <span className="value">{patient.phone}</span>
+                <span className="label">Phone</span>
+                  <span className="value">{patient.phone || 'No phone recorded'}</span>
                 </div>
                 <div className="detail-item">
                   <span className="label">Email</span>
-                  <span className="value">{patient.email}</span>
+                  <span className="value">{patient.email || 'No email recorded'}</span>
                 </div>
               </div>
             )}
           </div>
 
           <div className="details-section">
-            <h3>Appointment</h3>
+            <h3>Schedule</h3>
             <div className="details-grid">
+              <div className="detail-item">
+                <span className="label">Appointment number</span>
+                <span className="value">{appointment.appointmentNumber ?? appointment.id}</span>
+              </div>
               <div className="detail-item">
                 <span className="label">Service</span>
                 <span className="value">{service?.name || 'Unknown'}</span>
@@ -155,28 +223,85 @@ export function AppointmentDetails({
               </div>
               <div className="detail-item">
                 <span className="label">Duration</span>
-                <span className="value">{service?.duration ?? 0} minutes</span>
+                <span className="value">{appointment.durationMinutes ?? service?.duration ?? 0} minutes</span>
+              </div>
+              <div className="detail-item">
+                <span className="label">Branch</span>
+                <span className="value">{branch?.name ?? 'No branch assigned'}</span>
+              </div>
+              <div className="detail-item">
+                <span className="label">Assigned Dentist</span>
+                <span className="value">{provider?.displayName ?? 'No dentist assigned'}</span>
+              </div>
+              <div className="detail-item">
+                <span className="label">Estimated Amount</span>
+                <span className="value">{appointment.estimatedAmountCents || service?.price ? new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP' }).format((appointment.estimatedAmountCents ?? service?.price ?? 0) / 100) : 'Price to be confirmed'}</span>
+              </div>
+              <div className="detail-item">
+                <span className="label">Payment Status</span>
+                <span className="value">{(appointment.paymentStatus ?? 'not_billed').replaceAll('_', ' ')}</span>
+              </div>
+              <div className="detail-item">
+                <span className="label">Booking Source</span>
+                <span className="value">{(appointment.bookingSource ?? 'staff_entry').replaceAll('_', ' ')}</span>
+              </div>
+              <div className="detail-item">
+                <span className="label">Checked In</span>
+                <span className="value">{appointment.checkedInAt ? new Date(appointment.checkedInAt).toLocaleString() : 'Not checked in'}</span>
+              </div>
+              <div className="detail-item">
+                <span className="label">Started</span>
+                <span className="value">{appointment.startedAt ? new Date(appointment.startedAt).toLocaleString() : 'Not started'}</span>
+              </div>
+              <div className="detail-item">
+                <span className="label">Completed</span>
+                <span className="value">{appointment.completedAt ? new Date(appointment.completedAt).toLocaleString() : 'Not completed'}</span>
               </div>
             </div>
           </div>
 
-          {appointment.notes && (
-            <div className="details-section">
-              <h3>Notes</h3>
-              <p className="details-notes">{appointment.notes}</p>
+          <div className="details-section">
+            <h3>Booking Notes</h3>
+            <div className="details-grid">
+              <div className="detail-item">
+                <span className="label">Reason for Visit</span>
+                <span className="value">{appointment.reasonForVisit || appointment.notes || 'No reason recorded'}</span>
+              </div>
+              <div className="detail-item">
+                <span className="label">Patient Notes</span>
+                <span className="value">{appointment.patientNotes || 'No patient notes'}</span>
+              </div>
+              <div className="detail-item">
+                <span className="label">Internal Notes</span>
+                <span className="value">{appointment.internalNotes || 'No internal notes'}</span>
+              </div>
+              <div className="detail-item">
+                <span className="label">Created By</span>
+                <span className="value">{appointment.createdBy}</span>
+              </div>
             </div>
-          )}
+          </div>
 
           {canManage && visibleActions.length > 0 && (
             <div className="details-section">
               <h3>Quick Actions</h3>
               <div className="action-buttons">
-                {visibleActions.map(({ status, label }) => (
+                <Button size="sm" variant="secondary">
+                  <UserRound size={14} />
+                  Open Patient Record
+                </Button>
+                {appointment.status === 'in_progress' && onOpenClinicalRecord && (
+                  <Button size="sm" variant="secondary" onClick={() => onOpenClinicalRecord(appointment)}>
+                    <ClipboardList size={14} />
+                    Open Clinical Record
+                  </Button>
+                )}
+                {visibleActions.map(({ status, label, reason }) => (
                   <Button
                     key={status}
                     size="sm"
                     variant={status === 'cancelled' ? 'secondary' : 'primary'}
-                    onClick={() => onStatusChange(status as AppointmentStatus)}
+                    onClick={() => onActionRequest ? onActionRequest(appointment, status, label, reason) : onStatusChange(status as AppointmentStatus)}
                   >
                     {label}
                   </Button>
@@ -184,6 +309,56 @@ export function AppointmentDetails({
               </div>
             </div>
           )}
+
+          <div className="details-section">
+            <div className="details-header">
+              <h3>Communications</h3>
+              {canManage && onManualResend && (
+                <div className="action-buttons">
+                  {appointment.status === 'confirmed' && (
+                    <Button size="sm" variant="secondary" onClick={() => onManualResend(appointment, 'appointment_confirmed')}>
+                      <Send size={14} />
+                      Resend Confirmation
+                    </Button>
+                  )}
+                  {['confirmed', 'checked_in', 'waiting'].includes(appointment.status) && (
+                    <Button size="sm" variant="secondary" onClick={() => onManualResend(appointment, 'appointment_reminder')}>
+                      <Send size={14} />
+                      Resend Reminder
+                    </Button>
+                  )}
+                  {appointment.status === 'rescheduled' && (
+                    <Button size="sm" variant="secondary" onClick={() => onManualResend(appointment, 'appointment_rescheduled')}>
+                      <Send size={14} />
+                      Send Reschedule Message
+                    </Button>
+                  )}
+                </div>
+              )}
+            </div>
+            <CommunicationHistoryPanel
+              logs={getCommunicationLogsByAppointment(appointment.id)}
+              emptyMessage="No appointment communications recorded."
+            />
+          </div>
+
+          <div className="details-section">
+            <h3>Activity</h3>
+            <ul className="appointment-history-list">
+              {history.length ? history.map((entry) => (
+                <li key={entry.id}>
+                  <span className="timeline-dot" />
+                  <div>
+                    <strong>{formatHistoryEvent(entry.eventType, entry.toStatus)}</strong>
+                    <small>{new Date(entry.changedAt).toLocaleString()} - {entry.changedBy}</small>
+                    {(entry.reason || entry.notes) && <p>{entry.reason || entry.notes}</p>}
+                  </div>
+                </li>
+              )) : (
+                <li className="timeline-empty">No activity history recorded.</li>
+              )}
+            </ul>
+          </div>
 
           <div className="modal-actions">
             <Button variant="secondary" onClick={onClose}>

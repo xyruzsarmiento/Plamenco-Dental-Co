@@ -1,16 +1,26 @@
-export type TreatmentStatus = 'planned' | 'scheduled' | 'in_progress' | 'completed' | 'cancelled'
+export type TreatmentStatus = 'planned' | 'scheduled' | 'in_progress' | 'completed' | 'cancelled' | 'voided'
 
 export type Treatment = {
   id: string
   patientId: string
   dentalRecordId?: string
+  appointmentId?: string
+  appointmentNumber?: string
+  branchId?: string
+  providerId?: string
+  providerNameSnapshot?: string
   serviceId: string
+  serviceNameSnapshot?: string
   toothNumber?: number
   description: string
   cost: number
+  priceSnapshotCents: number
+  quantity: number
   status: TreatmentStatus
   treatmentDate: string
   notes: string
+  performedBy: string
+  createdBy: string
   createdAt: string
   updatedAt: string
 }

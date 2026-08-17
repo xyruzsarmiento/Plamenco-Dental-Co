@@ -6,12 +6,15 @@ import { RegisterPage } from '../features/auth/RegisterPage'
 import { useAuth } from '../features/auth/AuthContext'
 import { RequireAuth } from '../features/auth/RequireAuth'
 import { RequirePatientAuth } from '../features/auth/RequirePatientAuth'
+import { RequirePermission } from '../features/auth/RequirePermission'
 import { RequireRole } from '../features/auth/RequireRole'
 import { ResetPasswordPage } from '../features/auth/ResetPasswordPage'
 import { AppointmentsPage } from '../pages/AppointmentsPage'
 import { BillingPage } from '../pages/BillingPage'
+import { BranchesPage } from '../pages/BranchesPage'
 import { DashboardPage } from '../pages/DashboardPage'
 import { DentalRecordsPage } from '../pages/DentalRecordsPage'
+import { DentistsPage } from '../pages/DentistsPage'
 import { LandingPage } from '../pages/LandingPage'
 import { NotFoundPage } from '../pages/NotFoundPage'
 import { NotificationsPage } from '../pages/NotificationsPage'
@@ -64,53 +67,134 @@ export function AppRouter() {
           }
         >
           <Route index element={<DashboardPage />} />
-          <Route path="appointments" element={<AppointmentsPage />} />
-          <Route path="patients" element={<PatientsPage />} />
+          <Route
+            path="appointments"
+            element={
+              <RequirePermission permission="appointments.view">
+                <AppointmentsPage />
+              </RequirePermission>
+            }
+          />
+          <Route
+            path="patients"
+            element={
+              <RequirePermission permission="patients.view">
+                <PatientsPage />
+              </RequirePermission>
+            }
+          />
           <Route
             path="dental-records"
             element={
-              <RequireRole allowedRoles={['admin', 'staff']}>
+              <RequirePermission permission="clinical_records.view">
                 <DentalRecordsPage />
-              </RequireRole>
+              </RequirePermission>
             }
           />
-          <Route path="treatments" element={<TreatmentsPage />} />
-          <Route path="billing" element={<BillingPage />} />
-          <Route path="services" element={<ServicesPage />} />
+          <Route
+            path="treatments"
+            element={
+              <RequirePermission permission="treatments.view">
+                <TreatmentsPage />
+              </RequirePermission>
+            }
+          />
+          <Route
+            path="billing"
+            element={
+              <RequirePermission anyOf={['billing.view', 'payments.view']}>
+                <BillingPage />
+              </RequirePermission>
+            }
+          />
+          <Route
+            path="services"
+            element={
+              <RequirePermission anyOf={['services.view', 'services.manage']}>
+                <ServicesPage />
+              </RequirePermission>
+            }
+          />
           <Route
             path="staff"
             element={
-              <RequireRole allowedRoles={['admin']}>
+              <RequirePermission anyOf={['staff.manage', 'dentists.manage']}>
                 <StaffPage />
-              </RequireRole>
+              </RequirePermission>
+            }
+          />
+          <Route
+            path="dentists"
+            element={
+              <RequirePermission permission="dentists.manage">
+                <DentistsPage />
+              </RequirePermission>
+            }
+          />
+          <Route
+            path="branches"
+            element={
+              <RequirePermission anyOf={['branches.view', 'branches.manage']}>
+                <BranchesPage />
+              </RequirePermission>
             }
           />
           <Route
             path="reports"
             element={
-              <RequireRole allowedRoles={['admin', 'staff']}>
+              <RequirePermission anyOf={['reports.view', 'reports.view_limited']}>
                 <ReportsPage />
-              </RequireRole>
+              </RequirePermission>
             }
           />
           <Route
             path="notifications"
             element={
-              <RequireRole allowedRoles={['admin', 'staff']}>
+              <RequirePermission permission="notifications.view">
                 <NotificationsPage />
-              </RequireRole>
+              </RequirePermission>
             }
           />
           <Route
             path="settings"
             element={
-              <RequireRole allowedRoles={['admin']}>
+              <RequirePermission permission="settings.manage">
                 <SettingsPage />
-              </RequireRole>
+              </RequirePermission>
             }
           />
           <Route path="unauthorized" element={<UnauthorizedPage />} />
         </Route>
+        <Route
+          path="/super-admin/*"
+          element={
+            <RequireAuth>
+              <RequireRole allowedRoles={['super_admin']}>
+                <Navigate to="/app" replace />
+              </RequireRole>
+            </RequireAuth>
+          }
+        />
+        <Route
+          path="/dentist/*"
+          element={
+            <RequireAuth>
+              <RequireRole allowedRoles={['dentist', 'associate_dentist']}>
+                <Navigate to="/app" replace />
+              </RequireRole>
+            </RequireAuth>
+          }
+        />
+        <Route
+          path="/staff/*"
+          element={
+            <RequireAuth>
+              <RequireRole allowedRoles={['staff', 'admin', 'super_admin']}>
+                <Navigate to="/app" replace />
+              </RequireRole>
+            </RequireAuth>
+          }
+        />
         <Route path="/dashboard" element={<Navigate to="/app" replace />} />
         <Route path="*" element={<NotFoundPage />} />
       </Routes>

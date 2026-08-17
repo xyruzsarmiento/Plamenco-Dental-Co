@@ -17,6 +17,10 @@ export function RequireAuth({ children }: { children: React.ReactNode }) {
     return <Navigate to="/login" state={{ from: location }} replace />
   }
 
+  if (user?.status === 'inactive' || user?.status === 'suspended') {
+    return <Navigate to="/unauthorized" state={{ from: location }} replace />
+  }
+
   if (user?.role === 'patient') {
     return <Navigate to={user.patientId ? `/portal/${user.patientId}` : '/login'} replace />
   }

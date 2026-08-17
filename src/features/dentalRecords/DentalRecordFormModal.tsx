@@ -82,9 +82,9 @@ export function DentalRecordFormModal({
                 }
                 options={[
                   { label: 'Draft', value: 'draft' },
-                  { label: 'Active', value: 'active' },
-                  { label: 'Follow-up', value: 'follow_up' },
-                  { label: 'Completed', value: 'completed' },
+                  { label: 'Finalized', value: 'finalized' },
+                  { label: 'Amended', value: 'amended' },
+                  { label: 'Voided', value: 'voided' },
                 ]}
               />
             </div>
@@ -107,25 +107,30 @@ export function DentalRecordFormModal({
               />
             </div>
             <Textarea
-              label="Diagnosis"
-              value={values.diagnosis}
-              onChange={(event) => onChange({ ...values, diagnosis: event.target.value })}
+              label="Assessment"
+              value={values.assessment}
+              onChange={(event) => onChange({ ...values, assessment: event.target.value, diagnosis: event.target.value })}
               required
             />
             <Textarea
-              label="Findings"
-              value={values.findings}
-              onChange={(event) => onChange({ ...values, findings: event.target.value })}
+              label="Clinical findings"
+              value={values.clinicalFindings}
+              onChange={(event) => onChange({ ...values, clinicalFindings: event.target.value, findings: event.target.value })}
             />
             <Textarea
-              label="Treatment plan"
-              value={values.treatmentPlan}
-              onChange={(event) => onChange({ ...values, treatmentPlan: event.target.value })}
+              label="Recommendations"
+              value={values.recommendations}
+              onChange={(event) => onChange({ ...values, recommendations: event.target.value, treatmentPlan: event.target.value })}
             />
             <Textarea
-              label="Treatment notes"
-              value={values.treatmentNotes}
-              onChange={(event) => onChange({ ...values, treatmentNotes: event.target.value })}
+              label="Treatment performed"
+              value={values.treatmentPerformed}
+              onChange={(event) => onChange({ ...values, treatmentPerformed: event.target.value, treatmentNotes: event.target.value })}
+            />
+            <Textarea
+              label="Clinical notes"
+              value={values.clinicalNotes}
+              onChange={(event) => onChange({ ...values, clinicalNotes: event.target.value })}
             />
           </div>
 

@@ -72,7 +72,10 @@ export function StaffFormModal({
               value={values.role}
               onChange={(event) => onChange({ ...values, role: event.target.value as StaffFormValues['role'] })}
               options={[
+                { label: 'Super Admin', value: 'super_admin' },
                 { label: 'Admin', value: 'admin' },
+                { label: 'Dentist', value: 'dentist' },
+                { label: 'Associate Dentist', value: 'associate_dentist' },
                 { label: 'Staff', value: 'staff' },
               ]}
             />
@@ -89,13 +92,11 @@ export function StaffFormModal({
             />
           </div>
 
-          <Input
-            label={mode === 'add' ? 'Temporary password' : 'Password'}
-            type="password"
-            value={values.password}
-            onChange={(event) => onChange({ ...values, password: event.target.value })}
-            required
-          />
+          {mode === 'add' && (
+            <div className="inline-alert" role="note">
+              <span>New clinic accounts should be invited through Supabase Auth. No temporary password is stored here.</span>
+            </div>
+          )}
 
           {error && (
             <div className="inline-alert" role="alert">

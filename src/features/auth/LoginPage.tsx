@@ -26,10 +26,16 @@ export function LoginPage() {
     const storedUser = JSON.parse(window.localStorage.getItem('plamenco.auth.user') ?? 'null') as { role?: string; patientId?: string } | null
     const userRole = storedUser?.role ?? (location.state && typeof location.state === 'object' && 'role' in location.state ? (location.state as { role?: string }).role : undefined)
 
-    let destination = '/app'
-    if (userRole === 'patient') {
-      destination = storedUser?.patientId ? `/portal/${storedUser.patientId}` : '/login'
-    }
+    const destination =
+      userRole === 'patient'
+        ? storedUser?.patientId ? `/portal/${storedUser.patientId}` : '/login'
+        : userRole === 'dentist' || userRole === 'associate_dentist'
+          ? '/dentist'
+          : userRole === 'staff'
+            ? '/staff'
+            : userRole === 'super_admin'
+              ? '/super-admin'
+              : '/app'
 
     return <Navigate to={destination} replace />
   }
@@ -45,7 +51,13 @@ export function LoginPage() {
           ? state.from.pathname
           : storedUser?.role === 'patient' && storedUser.patientId
             ? `/portal/${storedUser.patientId}`
-            : '/app'
+            : storedUser?.role === 'dentist' || storedUser?.role === 'associate_dentist'
+              ? '/dentist'
+              : storedUser?.role === 'staff'
+                ? '/staff'
+                : storedUser?.role === 'super_admin'
+                  ? '/super-admin'
+                  : '/app'
       navigate(targetPath, { replace: true })
     }
   }

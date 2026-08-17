@@ -1,10 +1,14 @@
-export type UserRole = 'admin' | 'staff' | 'patient'
+export type UserRole = 'super_admin' | 'admin' | 'dentist' | 'associate_dentist' | 'staff' | 'patient'
+
+export type AccountStatus = 'active' | 'inactive' | 'suspended'
 
 export type AuthUser = {
   id: string
   name: string
   email: string
   role: UserRole
+  status?: AccountStatus
+  permissions?: string[]
   patientId?: string
 }
 
@@ -16,7 +20,7 @@ export type StaffMember = {
   email: string
   phone: string
   position: string
-  role: UserRole
+  role: Exclude<UserRole, 'patient'>
   status: StaffStatus
   password: string
   createdAt: string

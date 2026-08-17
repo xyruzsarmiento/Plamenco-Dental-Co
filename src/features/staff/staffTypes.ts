@@ -5,7 +5,7 @@ export type StaffFormValues = {
   email: string
   phone: string
   position: string
-  role: UserRole
+  role: Exclude<UserRole, 'patient'>
   status: StaffStatus
   password: string
 }

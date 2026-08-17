@@ -2,12 +2,14 @@ import { Menu, Search, X } from 'lucide-react'
 import { useState } from 'react'
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../features/auth/AuthContext'
+import { roleLabels, usePermissions } from '../../features/auth/permissions'
 import { Button } from '../ui/Button'
 import { navigationGroups, navigationItems } from './navigation'
 
 export function AppLayout() {
   const [isMobileNavOpen, setIsMobileNavOpen] = useState(false)
   const { user, signOut } = useAuth()
+  const { canAny } = usePermissions()
   const location = useLocation()
   const navigate = useNavigate()
   const currentPage =
@@ -20,8 +22,8 @@ export function AppLayout() {
 
   const visibleGroups = navigationGroups.map((group) => ({
     ...group,
-    items: group.items.filter((item) => !item.adminOnly || user?.role === 'admin'),
-  }))
+    items: group.items.filter((item) => !item.anyOf || canAny(item.anyOf)),
+  })).filter((group) => group.items.length > 0)
 
   return (
     <div className="app-shell">
@@ -72,7 +74,7 @@ export function AppLayout() {
             <span className="avatar">{user?.name.charAt(0) ?? 'U'}</span>
             <span>
               <strong>{user?.name}</strong>
-              <small>{user?.role === 'admin' ? 'Admin / Owner' : 'Staff'}</small>
+              <small>{user?.role ? roleLabels[user.role] : 'User'}</small>
             </span>
           </div>
           <Button

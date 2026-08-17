@@ -16,6 +16,7 @@ const STATUS_ICONS = {
   in_progress: Clock,
   completed: CheckCircle,
   cancelled: AlertCircle,
+  voided: AlertCircle,
 }
 
 const STATUS_COLORS = {
@@ -24,6 +25,7 @@ const STATUS_COLORS = {
   in_progress: '#C6A15B',
   completed: '#2A5F4A',
   cancelled: '#7D4F4F',
+  voided: '#7D4F4F',
 }
 
 function formatCurrency(cents: number): string {
@@ -97,6 +99,7 @@ export function TreatmentTimeline({
                   <option value="in_progress">In Progress</option>
                   <option value="completed">Completed</option>
                   <option value="cancelled">Cancelled</option>
+                  <option value="voided">Voided</option>
                 </select>
               </div>
 
@@ -106,7 +109,11 @@ export function TreatmentTimeline({
                 <div className="card-metadata-grid">
                   <div className="metadata-cell">
                     <span className="metadata-label">Cost</span>
-                    <span className="metadata-value">{formatCurrency(treatment.cost)}</span>
+                    <span className="metadata-value">{formatCurrency(treatment.priceSnapshotCents)}</span>
+                  </div>
+                  <div className="metadata-cell">
+                    <span className="metadata-label">Provider</span>
+                    <span className="metadata-value">{treatment.providerNameSnapshot || treatment.performedBy}</span>
                   </div>
                   {treatment.toothNumber && (
                     <div className="metadata-cell">
@@ -131,10 +138,10 @@ export function TreatmentTimeline({
                 <button
                   className="action-button delete-button"
                   onClick={() => onDelete(treatment.id)}
-                  title="Delete treatment"
+                  title="Void treatment"
                 >
                   <Trash2 size={14} />
-                  Delete
+                  Void
                 </button>
               </div>
             </div>

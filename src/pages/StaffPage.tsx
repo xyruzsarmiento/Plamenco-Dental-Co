@@ -8,7 +8,10 @@ import { deleteStaffMember, getStoredStaff, saveStoredStaff } from '../features/
 import { StaffFormModal } from '../features/staff/StaffFormModal'
 import { recordAuditEntry } from '../features/security/auditLogStore'
 import { getCurrentSessionUserName } from '../features/security/security'
+import { permissionGroups, roleLabels, rolePermissions } from '../features/auth/permissions'
 import type { StaffFormMode, StaffFormValues, StaffMember, StaffStatus, UserRole } from '../features/staff/staffTypes'
+
+type InternalAccountRole = Exclude<UserRole, 'patient'>
 
 const emptyForm: StaffFormValues = {
   name: '',
@@ -36,7 +39,7 @@ export function StaffPage() {
   const [staff, setStaff] = useState<StaffMember[]>(() => getStoredStaff())
   const [selectedStaffId, setSelectedStaffId] = useState(staff[0]?.id ?? '')
   const [query, setQuery] = useState('')
-  const [roleFilter, setRoleFilter] = useState<'all' | UserRole>('all')
+  const [roleFilter, setRoleFilter] = useState<'all' | InternalAccountRole>('all')
   const [statusFilter, setStatusFilter] = useState<'all' | StaffStatus>('all')
   const [modalMode, setModalMode] = useState<StaffFormMode | null>(null)
   const [editingStaffId, setEditingStaffId] = useState<string | null>(null)
@@ -60,8 +63,8 @@ export function StaffPage() {
 
   const selectedStaff = staff.find((member) => member.id === selectedStaffId) ?? filteredStaff[0] ?? staff[0] ?? null
   const activeStaff = staff.filter((member) => member.status === 'active').length
-  const adminStaff = staff.filter((member) => member.role === 'admin').length
-  const supportStaff = staff.filter((member) => member.role === 'staff').length
+  const clinicalUsers = staff.filter((member) => member.role === 'dentist' || member.role === 'associate_dentist').length
+  const managedUsers = staff.filter((member) => member.role === 'super_admin' || member.role === 'admin').length
 
   function persistStaff(nextStaff: StaffMember[]) {
     setStaff(nextStaff)
@@ -108,10 +111,6 @@ export function StaffPage() {
 
     if (emailOwner) {
       return 'A staff account with this email already exists.'
-    }
-
-    if (formValues.password.length < 6) {
-      return 'Password must be at least 6 characters.'
     }
 
     return null
@@ -197,12 +196,12 @@ export function StaffPage() {
     <section className="page-stack">
       <div className="section-header premium-section-header">
         <div>
-          <Badge tone="info">Admin only</Badge>
-          <h2>Clinic team</h2>
-          <p>Manage personnel coverage, roles, and account status across the clinic operations.</p>
+          <Badge tone="info">Super Admin foundation</Badge>
+          <h2>Team &amp; Access</h2>
+          <p>Manage clinic accounts, roles and permissions.</p>
         </div>
-        <Button icon={<Plus size={16} />} onClick={openAddModal}>
-          Add staff
+        <Button icon={<Plus size={16} />} onClick={openAddModal} disabled title="Use Supabase Auth invitation for new clinic accounts.">
+          Invite account
         </Button>
       </div>
 
@@ -213,14 +212,14 @@ export function StaffPage() {
           <small>{activeStaff} active accounts</small>
         </article>
         <article className="stat-card">
-          <span>Admins</span>
-          <strong>{adminStaff}</strong>
-          <small>{adminStaff === 1 ? 'Primary admin access' : 'Admin coverage'}</small>
+          <span>Management</span>
+          <strong>{managedUsers}</strong>
+          <small>Super Admin and Admin roles</small>
         </article>
         <article className="stat-card">
-          <span>Support staff</span>
-          <strong>{supportStaff}</strong>
-          <small>{supportStaff === 0 ? 'No support staff assigned' : 'Operational coverage'}</small>
+          <span>Clinical users</span>
+          <strong>{clinicalUsers}</strong>
+          <small>Dentist account foundation</small>
         </article>
       </div>
 
@@ -240,7 +239,10 @@ export function StaffPage() {
           onChange={(event) => setRoleFilter(event.target.value as typeof roleFilter)}
           options={[
             { label: 'All roles', value: 'all' },
+            { label: 'Super Admin', value: 'super_admin' },
             { label: 'Admin', value: 'admin' },
+            { label: 'Dentist', value: 'dentist' },
+            { label: 'Associate Dentist', value: 'associate_dentist' },
             { label: 'Staff', value: 'staff' },
           ]}
         />
@@ -281,7 +283,7 @@ export function StaffPage() {
                         <strong>{member.name}</strong>
                         <span>{member.email}</span>
                       </td>
-                      <td>{member.role === 'admin' ? 'Admin' : 'Staff'}</td>
+                      <td>{roleLabels[member.role]}</td>
                       <td>
                         <Badge tone={member.status === 'active' ? 'success' : 'neutral'}>
                           {member.status === 'active' ? 'Active' : 'Inactive'}
@@ -356,7 +358,7 @@ export function StaffPage() {
                 </div>
                 <div>
                   <dt>Role</dt>
-                  <dd>{selectedStaff.role === 'admin' ? 'Admin' : 'Staff'}</dd>
+                  <dd>{roleLabels[selectedStaff.role]}</dd>
                 </div>
                 <div>
                   <dt>Status</dt>
@@ -381,6 +383,20 @@ export function StaffPage() {
                 >
                   Delete
                 </Button>
+              </div>
+              <div className="permissions-preview">
+                <p className="eyebrow">Permission preview</p>
+                {permissionGroups.map((group) => {
+                  const granted = group.permissions.filter((permission) => rolePermissions[selectedStaff.role].includes(permission.key))
+                  if (!granted.length) return null
+
+                  return (
+                    <div key={group.label} className="permission-group-preview">
+                      <strong>{group.label}</strong>
+                      <span>{granted.map((permission) => permission.label).join(', ')}</span>
+                    </div>
+                  )
+                })}
               </div>
             </>
           ) : (

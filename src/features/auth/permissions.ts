@@ -1,0 +1,304 @@
+import { useMemo } from 'react'
+import { useAuth } from './AuthContext'
+import type { AuthUser, UserRole } from './authTypes'
+
+export const permissionGroups = [
+  {
+    label: 'Appointments',
+    permissions: [
+      { key: 'appointments.view', label: 'View appointments' },
+      { key: 'appointments.create', label: 'Create appointments' },
+      { key: 'appointments.approve', label: 'Approve appointments' },
+      { key: 'appointments.reject', label: 'Reject appointments' },
+      { key: 'appointments.reschedule', label: 'Reschedule appointments' },
+      { key: 'appointments.cancel', label: 'Cancel appointments' },
+      { key: 'appointments.assign_dentist', label: 'Assign dentist' },
+      { key: 'appointments.check_in', label: 'Check patients in' },
+      { key: 'appointments.start', label: 'Start appointment' },
+      { key: 'appointments.complete', label: 'Complete appointment' },
+      { key: 'appointments.mark_no_show', label: 'Mark no-show' },
+      { key: 'appointments.view_assigned', label: 'View assigned appointments' },
+      { key: 'appointments.update_clinical_status', label: 'Update clinical appointment status' },
+    ],
+  },
+  {
+    label: 'Patients',
+    permissions: [
+      { key: 'patients.view', label: 'View patients' },
+      { key: 'patients.create', label: 'Create patients' },
+      { key: 'patients.edit_basic', label: 'Edit basic patient details' },
+      { key: 'patients.view_history', label: 'View patient history' },
+      { key: 'patients.import', label: 'Import patients' },
+      { key: 'patients.export', label: 'Export patients' },
+    ],
+  },
+  {
+    label: 'Clinical',
+    permissions: [
+      { key: 'clinical_records.view', label: 'View clinical records' },
+      { key: 'clinical_records.create', label: 'Create clinical records' },
+      { key: 'clinical_records.edit', label: 'Edit clinical records' },
+      { key: 'clinical_records.edit_draft', label: 'Edit draft clinical records' },
+      { key: 'clinical_records.finalize', label: 'Finalize clinical records' },
+      { key: 'clinical_records.amend', label: 'Amend finalized clinical records' },
+      { key: 'treatments.view', label: 'View treatments' },
+      { key: 'treatments.create', label: 'Create treatments' },
+      { key: 'treatments.edit', label: 'Edit treatments' },
+      { key: 'treatments.complete', label: 'Complete treatments' },
+      { key: 'prescriptions.view', label: 'View prescriptions' },
+      { key: 'prescriptions.create', label: 'Create prescriptions' },
+      { key: 'prescriptions.edit', label: 'Edit prescriptions' },
+      { key: 'documents.view', label: 'View documents' },
+      { key: 'documents.upload', label: 'Upload documents' },
+    ],
+  },
+  {
+    label: 'Finance',
+    permissions: [
+      { key: 'billing.view', label: 'View billing' },
+      { key: 'billing.create', label: 'Create invoices' },
+      { key: 'billing.edit', label: 'Edit billing' },
+      { key: 'payments.view', label: 'View payments' },
+      { key: 'payments.record_manual', label: 'Record manual payments' },
+      { key: 'payments.confirm', label: 'Confirm payments' },
+      { key: 'payments.reject', label: 'Reject payments' },
+      { key: 'payments.refund', label: 'Refund payments' },
+    ],
+  },
+  {
+    label: 'Services',
+    permissions: [
+      { key: 'services.view', label: 'View services' },
+      { key: 'services.manage', label: 'Manage services' },
+    ],
+  },
+  {
+    label: 'Inventory',
+    permissions: [
+      { key: 'inventory.view', label: 'View inventory' },
+      { key: 'inventory.stock_in', label: 'Stock in' },
+      { key: 'inventory.stock_out', label: 'Stock out' },
+      { key: 'inventory.adjust', label: 'Adjust stock' },
+      { key: 'inventory.transfer', label: 'Transfer stock' },
+      { key: 'suppliers.view', label: 'View suppliers' },
+      { key: 'suppliers.manage', label: 'Manage suppliers' },
+      { key: 'purchases.view', label: 'View purchases' },
+      { key: 'purchases.create', label: 'Create purchases' },
+      { key: 'purchases.receive', label: 'Receive purchases' },
+    ],
+  },
+  {
+    label: 'Expenses',
+    permissions: [
+      { key: 'expenses.view', label: 'View expenses' },
+      { key: 'expenses.create', label: 'Create expenses' },
+      { key: 'expenses.edit', label: 'Edit expenses' },
+      { key: 'expenses.approve', label: 'Approve expenses' },
+    ],
+  },
+  {
+    label: 'Reports',
+    permissions: [
+      { key: 'reports.view', label: 'View reports' },
+      { key: 'reports.view_limited', label: 'View limited reports' },
+      { key: 'reports.export_pdf', label: 'Export PDF reports' },
+      { key: 'reports.export_excel', label: 'Export Excel reports' },
+    ],
+  },
+  {
+    label: 'Management',
+    permissions: [
+      { key: 'dentists.manage', label: 'Manage dentists' },
+      { key: 'staff.manage', label: 'Manage staff' },
+      { key: 'roles.manage', label: 'Manage roles' },
+      { key: 'permissions.manage', label: 'Manage permissions' },
+      { key: 'branches.view', label: 'View branches' },
+      { key: 'branches.manage', label: 'Manage branches' },
+      { key: 'schedule.view_own', label: 'View own schedule' },
+      { key: 'schedule.manage_own', label: 'Manage own schedule' },
+      { key: 'schedule.manage_all', label: 'Manage all schedules' },
+      { key: 'notifications.view', label: 'View notifications' },
+      { key: 'notifications.send', label: 'Send notifications' },
+      { key: 'settings.manage', label: 'Manage settings' },
+      { key: 'audit_logs.view', label: 'View audit logs' },
+    ],
+  },
+] as const
+
+type PatientPermissionKey =
+  | 'patient_portal.view'
+  | 'patient_profile.view_own'
+  | 'patient_profile.edit_own'
+  | 'patient_appointments.view_own'
+  | 'patient_appointments.create_own'
+  | 'patient_billing.view_own'
+  | 'patient_documents.view_own'
+  | 'patient_notifications.view_own'
+
+export type PermissionKey = (typeof permissionGroups)[number]['permissions'][number]['key'] | PatientPermissionKey
+
+const clinicalPermissions: PermissionKey[] = [
+  'appointments.view',
+  'appointments.view_assigned',
+  'appointments.update_clinical_status',
+  'patients.view',
+  'patients.view_history',
+  'clinical_records.view',
+  'clinical_records.create',
+  'clinical_records.edit',
+  'clinical_records.edit_draft',
+  'clinical_records.finalize',
+  'clinical_records.amend',
+  'treatments.view',
+  'treatments.create',
+  'treatments.edit',
+  'treatments.complete',
+  'prescriptions.view',
+  'prescriptions.create',
+  'prescriptions.edit',
+  'documents.view',
+  'documents.upload',
+  'schedule.view_own',
+  'schedule.manage_own',
+  'notifications.view',
+]
+
+export const rolePermissions: Record<UserRole, PermissionKey[]> = {
+  super_admin: permissionGroups.flatMap((group) => group.permissions.map((permission) => permission.key)),
+  admin: [
+    'appointments.view',
+    'appointments.create',
+    'appointments.approve',
+    'appointments.reject',
+    'appointments.reschedule',
+    'appointments.cancel',
+    'appointments.assign_dentist',
+    'appointments.check_in',
+    'appointments.start',
+    'appointments.complete',
+    'appointments.mark_no_show',
+    'patients.view',
+    'patients.create',
+    'patients.edit_basic',
+    'patients.view_history',
+    'patients.import',
+    'clinical_records.view',
+    'clinical_records.create',
+    'clinical_records.edit',
+    'clinical_records.edit_draft',
+    'clinical_records.finalize',
+    'clinical_records.amend',
+    'treatments.view',
+    'treatments.create',
+    'treatments.edit',
+    'treatments.complete',
+    'services.view',
+    'services.manage',
+    'billing.view',
+    'billing.create',
+    'billing.edit',
+    'payments.view',
+    'payments.record_manual',
+    'payments.confirm',
+    'reports.view',
+    'reports.export_pdf',
+    'notifications.view',
+    'notifications.send',
+    'staff.manage',
+    'dentists.manage',
+    'branches.view',
+    'branches.manage',
+    'schedule.manage_all',
+    'settings.manage',
+    'audit_logs.view',
+  ],
+  dentist: [...clinicalPermissions, 'appointments.start', 'appointments.complete'],
+  associate_dentist: [
+    'appointments.view',
+    'appointments.view_assigned',
+    'appointments.update_clinical_status',
+    'patients.view',
+    'patients.view_history',
+    'clinical_records.view',
+    'clinical_records.create',
+    'clinical_records.edit_draft',
+    'clinical_records.finalize',
+    'clinical_records.amend',
+    'treatments.view',
+    'treatments.create',
+    'treatments.edit',
+    'prescriptions.view',
+    'prescriptions.create',
+    'documents.view',
+    'schedule.view_own',
+    'notifications.view',
+  ],
+  staff: [
+    'appointments.view',
+    'appointments.create',
+    'appointments.approve',
+    'appointments.reject',
+    'appointments.reschedule',
+    'appointments.check_in',
+    'appointments.mark_no_show',
+    'patients.view',
+    'patients.create',
+    'patients.edit_basic',
+    'payments.view',
+    'payments.record_manual',
+    'expenses.view',
+    'expenses.create',
+    'inventory.view',
+    'inventory.stock_in',
+    'inventory.stock_out',
+    'suppliers.view',
+    'reports.view_limited',
+    'notifications.view',
+    'notifications.send',
+  ],
+  patient: [
+    'patient_portal.view',
+    'patient_profile.view_own',
+    'patient_profile.edit_own',
+    'patient_appointments.view_own',
+    'patient_appointments.create_own',
+    'patient_billing.view_own',
+    'patient_documents.view_own',
+    'patient_notifications.view_own',
+  ],
+}
+
+export const roleLabels: Record<UserRole, string> = {
+  super_admin: 'Super Admin',
+  admin: 'Admin',
+  dentist: 'Dentist',
+  associate_dentist: 'Associate Dentist',
+  staff: 'Staff',
+  patient: 'Patient',
+}
+
+export function getRolePermissions(role: UserRole | undefined) {
+  return role ? rolePermissions[role] ?? [] : []
+}
+
+export function hasPermission(user: AuthUser | null | undefined, permission: PermissionKey | string) {
+  if (!user || user.status === 'inactive' || user.status === 'suspended') return false
+  const granted = new Set([...getRolePermissions(user.role), ...(user.permissions ?? [])])
+  return granted.has(permission as PermissionKey)
+}
+
+export function hasAnyPermission(user: AuthUser | null | undefined, permissions: Array<PermissionKey | string>) {
+  return permissions.some((permission) => hasPermission(user, permission))
+}
+
+export function usePermissions() {
+  const { user } = useAuth()
+  return useMemo(
+    () => ({
+      permissions: getRolePermissions(user?.role),
+      can: (permission: PermissionKey | string) => hasPermission(user, permission),
+      canAny: (permissions: Array<PermissionKey | string>) => hasAnyPermission(user, permissions),
+    }),
+    [user],
+  )
+}

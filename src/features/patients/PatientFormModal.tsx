@@ -4,7 +4,18 @@ import { Button } from '../../components/ui/Button'
 import { Input } from '../../components/ui/Input'
 import { Select } from '../../components/ui/Select'
 import { Textarea } from '../../components/ui/Textarea'
+import { getStoredBranches } from '../branches/branchStore'
+import type { PotentialPatientDuplicate } from './patientStore'
 import type { PatientFormMode, PatientFormValues } from './patientTypes'
+
+const duplicateSignalLabels: Record<string, string> = {
+  patient_number: 'patient number',
+  email: 'email',
+  phone: 'phone',
+  name_dob: 'name and birth date',
+  name_phone: 'name and phone',
+  full_name_dob: 'full name and birth date',
+}
 
 type PatientFormModalProps = {
   error: string | null
@@ -13,6 +24,9 @@ type PatientFormModalProps = {
   onChange: (values: PatientFormValues) => void
   onClose: () => void
   onSubmit: () => void
+  duplicateMatches?: PotentialPatientDuplicate[]
+  onOpenDuplicate?: (patientId: string) => void
+  onContinueDuplicate?: () => void
 }
 
 export function PatientFormModal({
@@ -21,8 +35,13 @@ export function PatientFormModal({
   onChange,
   onClose,
   onSubmit,
+  duplicateMatches = [],
+  onOpenDuplicate,
+  onContinueDuplicate,
   values,
 }: PatientFormModalProps) {
+  const branches = getStoredBranches()
+
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     onSubmit()
@@ -120,20 +139,65 @@ export function PatientFormModal({
                 label="Emergency contact"
                 value={values.emergencyContact}
                 onChange={(event) => onChange({ ...values, emergencyContact: event.target.value })}
-                required
+              />
+              <Input
+                label="Relationship"
+                value={values.emergencyContactRelationship ?? ''}
+                onChange={(event) => onChange({ ...values, emergencyContactRelationship: event.target.value })}
               />
               <Input
                 label="Emergency contact phone"
                 value={values.emergencyContactPhone}
                 onChange={(event) => onChange({ ...values, emergencyContactPhone: event.target.value })}
-                required
+              />
+              <Input
+                label="City / Municipality"
+                value={values.city ?? ''}
+                onChange={(event) => onChange({ ...values, city: event.target.value })}
+              />
+              <Input
+                label="Province"
+                value={values.province ?? ''}
+                onChange={(event) => onChange({ ...values, province: event.target.value })}
               />
             </div>
             <Textarea
               label="Address"
               value={values.address}
               onChange={(event) => onChange({ ...values, address: event.target.value })}
-              required
+            />
+          </div>
+
+          <div className="form-section">
+            <h3>Clinic</h3>
+            <div className="form-grid">
+              <Select
+                label="Preferred branch"
+                value={values.preferredBranchId ?? ''}
+                onChange={(event) => onChange({ ...values, preferredBranchId: event.target.value })}
+                options={[
+                  { label: 'No preferred branch', value: '' },
+                  ...branches.map((branch) => ({ label: branch.name, value: branch.id })),
+                ]}
+              />
+              <Select
+                label="Origin"
+                value={values.origin ?? 'staff_created'}
+                onChange={(event) =>
+                  onChange({ ...values, origin: event.target.value as PatientFormValues['origin'] })
+                }
+                options={[
+                  { label: 'Staff Created', value: 'staff_created' },
+                  { label: 'Walk-in', value: 'walk_in' },
+                  { label: 'Online Registration', value: 'online_registration' },
+                  { label: 'Historical Import', value: 'historical_import' },
+                ]}
+              />
+            </div>
+            <Textarea
+              label="Administrative notes"
+              value={values.administrativeNotes ?? ''}
+              onChange={(event) => onChange({ ...values, administrativeNotes: event.target.value })}
             />
           </div>
 
@@ -171,6 +235,29 @@ export function PatientFormModal({
           {error && (
             <div className="inline-alert" role="alert">
               <span>{error}</span>
+            </div>
+          )}
+
+          {duplicateMatches.length > 0 && (
+            <div className="duplicate-warning-panel">
+              <h3>Possible existing patient</h3>
+              <p>Review these matches before creating another patient record.</p>
+              <div className="duplicate-match-list">
+                {duplicateMatches.map((match) => (
+                  <div key={match.patient.id} className="duplicate-match-row">
+                    <div>
+                      <strong>{match.patient.firstName} {match.patient.lastName}</strong>
+                      <span>{match.patient.patientId} - {match.signals.map((signal) => duplicateSignalLabels[signal] ?? signal).join(', ')}</span>
+                    </div>
+                    <button type="button" className="text-button" onClick={() => onOpenDuplicate?.(match.patient.id)}>
+                      Open existing
+                    </button>
+                  </div>
+                ))}
+              </div>
+              <button type="button" className="btn btn-secondary btn-sm" onClick={onContinueDuplicate}>
+                Continue creating new patient
+              </button>
             </div>
           )}
 

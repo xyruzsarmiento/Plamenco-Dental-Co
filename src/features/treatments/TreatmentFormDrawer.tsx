@@ -73,7 +73,10 @@ export function TreatmentFormDrawer({
               <select
                 className="form-select"
                 value={values.serviceId}
-                onChange={(e) => setValues({ ...values, serviceId: e.target.value })}
+                  onChange={(e) => {
+                    const selected = services.find((service) => service.value === e.target.value)
+                    setValues({ ...values, serviceId: e.target.value, serviceNameSnapshot: selected?.label ?? values.serviceNameSnapshot })
+                  }}
               >
                 <option value="">Select service</option>
                 {services.map((service) => (
@@ -111,13 +114,14 @@ export function TreatmentFormDrawer({
                 <select
                   className="form-select"
                   value={values.status}
-                  onChange={(e) => setValues({ ...values, status: e.target.value as any })}
+                  onChange={(e) => setValues({ ...values, status: e.target.value as TreatmentFormValues['status'] })}
                 >
                   <option value="planned">Planned</option>
                   <option value="scheduled">Scheduled</option>
                   <option value="in_progress">In Progress</option>
                   <option value="completed">Completed</option>
                   <option value="cancelled">Cancelled</option>
+                  <option value="voided">Voided</option>
                 </select>
               </div>
             </div>
@@ -151,11 +155,35 @@ export function TreatmentFormDrawer({
                 <input
                   type="number"
                   className="form-input"
-                  value={values.cost}
-                  onChange={(e) => setValues({ ...values, cost: parseFloat(e.target.value) || 0 })}
+                  value={values.priceSnapshotCents / 100}
+                  onChange={(e) => {
+                    const cents = Math.round((parseFloat(e.target.value) || 0) * 100)
+                    setValues({ ...values, cost: cents, priceSnapshotCents: cents })
+                  }}
                   placeholder="0.00"
                   step="0.01"
                   min="0"
+                />
+              </div>
+            </div>
+
+            <div className="form-row">
+              <div className="form-field-group">
+                <label className="form-label">Quantity</label>
+                <input
+                  type="number"
+                  className="form-input"
+                  value={values.quantity}
+                  onChange={(e) => setValues({ ...values, quantity: parseInt(e.target.value, 10) || 1 })}
+                  min="1"
+                />
+              </div>
+              <div className="form-field-group">
+                <label className="form-label">Performed by</label>
+                <input
+                  className="form-input"
+                  value={values.performedBy}
+                  onChange={(e) => setValues({ ...values, performedBy: e.target.value })}
                 />
               </div>
             </div>

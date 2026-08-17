@@ -1,14 +1,18 @@
-export type DocumentCategory = 'xray' | 'consent' | 'medical' | 'treatment' | 'other'
+export type DocumentCategory = 'xray' | 'treatment_photo' | 'consent' | 'referral' | 'prescription' | 'lab_result' | 'medical' | 'treatment' | 'other'
 export type DentalImageKind = 'xray' | 'before' | 'after' | 'treatment_photo'
 
 export type PatientDocument = {
   id: string
   patientId: string
+  clinicalVisitId?: string
+  treatmentId?: string
   fileName: string
   fileType: string
   category: DocumentCategory
   uploadDate: string
   uploadedBy: string
+  description?: string
+  storagePath?: string
   content: string
   sizeBytes: number
   createdAt: string
@@ -33,10 +37,14 @@ export type DocumentAccessRole = 'admin' | 'staff'
 
 type CreateDocumentInput = {
   patientId: string
+  clinicalVisitId?: string
+  treatmentId?: string
   fileName: string
   fileType: string
   category: DocumentCategory
   uploadedBy: string
+  description?: string
+  storagePath?: string
   content: string
 }
 
@@ -164,7 +172,18 @@ export function getDentalImagesByTreatment(patientId: string, treatmentId: strin
   return getDentalImagesByPatient(patientId).filter((image) => image.treatmentId === treatmentId)
 }
 
-export function createDocument({ patientId, fileName, fileType, category, uploadedBy, content }: CreateDocumentInput): PatientDocument {
+export function createDocument({
+  patientId,
+  clinicalVisitId,
+  treatmentId,
+  fileName,
+  fileType,
+  category,
+  uploadedBy,
+  description,
+  storagePath,
+  content,
+}: CreateDocumentInput): PatientDocument {
   if (!patientId.trim()) {
     throw new Error('Patient is required for document upload.')
   }
@@ -183,11 +202,15 @@ export function createDocument({ patientId, fileName, fileType, category, upload
   const document: PatientDocument = {
     id: `doc-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`,
     patientId,
+    clinicalVisitId,
+    treatmentId,
     fileName,
     fileType,
     category,
     uploadDate: now.slice(0, 10),
     uploadedBy,
+    description,
+    storagePath,
     content,
     sizeBytes: getContentSize(content),
     createdAt: now,

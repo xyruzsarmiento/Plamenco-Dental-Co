@@ -19,6 +19,7 @@ import {
   Save,
   ShieldCheck,
   Sparkles,
+  Stethoscope,
   Trash2,
   UserCircle2,
   UserRound,
@@ -30,6 +31,8 @@ import { Badge } from '../components/ui/Badge'
 import { Button } from '../components/ui/Button'
 import { useAuth } from '../features/auth/AuthContext'
 import { createAppointment, getAppointmentsByPatient } from '../features/appointments/appointmentStore'
+import { addMinutesToTime } from '../features/appointments/appointmentStore'
+import { getAvailableAppointmentSlots, getEligibleProviders } from '../features/appointments/availabilityEngine'
 import {
   getOutstandingBalanceByPatient,
   getPaymentsByPatient,
@@ -40,8 +43,10 @@ import { getCurrentPatientForAuthenticatedUser, updatePatient } from '../feature
 import type { Patient } from '../features/patients/patientTypes'
 import { getPrescriptionsByPatient } from '../features/prescriptions/prescriptionStore'
 import { getStoredServices } from '../features/services/serviceStore'
+import { getStoredBranches } from '../features/branches/branchStore'
+import { CommunicationPreferencesPanel } from '../features/communications/CommunicationPreferencesPanel'
+import { getStoredProviders } from '../features/dentists/dentistStore'
 import { getStoredTreatmentPlans, getTreatmentsByPatient } from '../features/treatments/treatmentStore'
-import { getAvailableBookingTimes } from '../features/patientPortal/patientPortalStore'
 
 const portalTabs = [
   { key: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -100,7 +105,8 @@ export function PatientPortalPage() {
   const [bookingStep, setBookingStep] = useState(0)
   const [bookingForm, setBookingForm] = useState({
     serviceId: '',
-    branch: 'Pulilan',
+    branchId: '',
+    providerId: '',
     date: '',
     startTime: '',
     notes: '',
@@ -244,6 +250,25 @@ export function PatientPortalPage() {
     () => getStoredServices().filter((service) => service.status === 'active'),
     [],
   )
+  const portalServiceMap = useMemo(() => new Map(getStoredServices().map((service) => [service.id, service])), [])
+  const bookingBranches = useMemo(
+    () => getStoredBranches().filter((branch) => branch.status === 'active'),
+    [],
+  )
+  const portalBranchMap = useMemo(() => new Map(getStoredBranches().map((branch) => [branch.id, branch])), [])
+  const bookingProviders = useMemo(
+    () => (bookingForm.branchId ? getEligibleProviders(bookingForm.branchId) : []),
+    [bookingForm.branchId],
+  )
+  const providerMap = useMemo(() => new Map(getStoredProviders().map((provider) => [provider.id, provider])), [])
+  const selectedBookingBranch = useMemo(
+    () => bookingBranches.find((branch) => branch.id === bookingForm.branchId) ?? null,
+    [bookingBranches, bookingForm.branchId],
+  )
+  const selectedBookingProvider = useMemo(
+    () => providerMap.get(bookingForm.providerId) ?? null,
+    [bookingForm.providerId, providerMap],
+  )
 
   const selectedBookingService = useMemo(
     () => bookingServices.find((service) => service.id === bookingForm.serviceId) ?? null,
@@ -251,11 +276,16 @@ export function PatientPortalPage() {
   )
 
   const availableBookingTimes = useMemo(() => {
-    if (!bookingForm.date || !bookingForm.serviceId) return []
-    return getAvailableBookingTimes(bookingForm.serviceId, bookingForm.date)
-  }, [bookingForm.date, bookingForm.serviceId])
+    if (!bookingForm.date || !bookingForm.serviceId || !bookingForm.branchId) return []
+    return getAvailableAppointmentSlots({
+      branchId: bookingForm.branchId,
+      serviceId: bookingForm.serviceId,
+      providerId: bookingForm.providerId || undefined,
+      date: bookingForm.date,
+    })
+  }, [bookingForm.branchId, bookingForm.date, bookingForm.providerId, bookingForm.serviceId])
 
-  const bookingSteps = ['Service', 'Location', 'Date & time', 'Confirmation'] as const
+  const bookingSteps = ['Service', 'Location', 'Dentist', 'Date & time', 'Confirmation'] as const
 
   const recentActivity = useMemo(() => {
     const items = [
@@ -302,7 +332,7 @@ export function PatientPortalPage() {
 
   const fullName = `${patient.firstName} ${patient.middleName ? `${patient.middleName} ` : ''}${patient.lastName}`.trim()
 
-  function handleBookingFieldChange<K extends 'serviceId' | 'branch' | 'date' | 'startTime' | 'notes'>(key: K, value: string) {
+  function handleBookingFieldChange<K extends 'serviceId' | 'branchId' | 'providerId' | 'date' | 'startTime' | 'notes'>(key: K, value: string) {
     setBookingForm((current) => ({ ...current, [key]: value }))
     setBookingError(null)
   }
@@ -318,12 +348,12 @@ export function PatientPortalPage() {
       return
     }
 
-    if (bookingStep === 1 && !bookingForm.branch) {
+    if (bookingStep === 1 && !bookingForm.branchId) {
       setBookingError('Please choose a clinic branch.')
       return
     }
 
-    if (bookingStep === 2 && (!bookingForm.date || !bookingForm.startTime)) {
+    if (bookingStep === 3 && (!bookingForm.date || !bookingForm.startTime)) {
       setBookingError('Please choose a date and time before continuing.')
       return
     }
@@ -338,17 +368,31 @@ export function PatientPortalPage() {
       return
     }
 
+    const selectedSlot = availableBookingTimes.find((slot) => slot.startTime === bookingForm.startTime && (!bookingForm.providerId || slot.providerId === bookingForm.providerId))
+    if (!selectedSlot) {
+      setBookingError('That slot is no longer available. Please choose another time.')
+      return
+    }
+
     setBookingError(null)
     setBookingSubmitting(true)
 
     const appointment = createAppointment(
       {
         patientId: patient.patientId,
+        branchId: bookingForm.branchId,
+        providerId: selectedSlot.providerId,
         serviceId: selectedBookingService.id,
         date: bookingForm.date,
         startTime: bookingForm.startTime,
-        endTime: `${String(Number(bookingForm.startTime.slice(0, 2)) + Math.ceil(selectedBookingService.duration / 60)).padStart(2, '0')}:${String(Number(bookingForm.startTime.slice(3, 5))).padStart(2, '0')}`,
-        notes: `${bookingForm.branch} branch • ${bookingForm.notes.trim() || 'Requested through the patient portal.'}`,
+        endTime: addMinutesToTime(bookingForm.startTime, selectedBookingService.duration),
+        durationMinutes: selectedBookingService.duration,
+        estimatedAmountCents: selectedBookingService.price,
+        paymentStatus: 'not_billed',
+        bookingSource: 'patient_portal',
+        patientNotes: bookingForm.notes.trim(),
+        reasonForVisit: selectedBookingService.name,
+        notes: bookingForm.notes.trim() || 'Requested through the patient portal.',
         status: 'pending',
       },
       'patient-portal',
@@ -367,7 +411,7 @@ export function PatientPortalPage() {
 
   function resetBookingFlow() {
     setBookingStep(0)
-    setBookingForm({ serviceId: '', branch: 'Pulilan', date: '', startTime: '', notes: '' })
+    setBookingForm({ serviceId: '', branchId: '', providerId: '', date: '', startTime: '', notes: '' })
     setBookingError(null)
     setBookingSuccessId(null)
     setBookingSubmitting(false)
@@ -649,15 +693,18 @@ export function PatientPortalPage() {
                           <h3>Where would you like to visit?</h3>
                         </div>
                         <div className="branch-choice-grid">
-                          {['Pulilan', 'Plaridel'].map((branch) => (
+                          {bookingBranches.map((branch) => (
                             <button
-                              key={branch}
+                              key={branch.id}
                               type="button"
-                              className={`branch-choice ${bookingForm.branch === branch ? 'is-selected' : ''}`}
-                              onClick={() => handleBookingFieldChange('branch', branch)}
+                              className={`branch-choice ${bookingForm.branchId === branch.id ? 'is-selected' : ''}`}
+                              onClick={() => {
+                                setBookingForm((current) => ({ ...current, branchId: branch.id, providerId: '', startTime: '' }))
+                                setBookingError(null)
+                              }}
                             >
-                              <strong>{branch}</strong>
-                              <small>{branch === 'Pulilan' ? 'Pulilan, Bulacan' : 'Plaridel, Bulacan'}</small>
+                              <strong>{branch.name}</strong>
+                              <small>{branch.city}, {branch.province}</small>
                             </button>
                           ))}
                         </div>
@@ -665,6 +712,36 @@ export function PatientPortalPage() {
                     )}
 
                     {bookingStep === 2 && (
+                      <div className="portal-booking-section">
+                        <div className="section-title-row">
+                          <Stethoscope size={18} />
+                          <h3>Choose dentist</h3>
+                        </div>
+                        <div className="branch-choice-grid">
+                          <button
+                            type="button"
+                            className={`branch-choice ${!bookingForm.providerId ? 'is-selected' : ''}`}
+                            onClick={() => handleBookingFieldChange('providerId', '')}
+                          >
+                            <strong>Any available dentist</strong>
+                            <small>The clinic will use an eligible provider for your selected slot.</small>
+                          </button>
+                          {bookingProviders.map((provider) => (
+                            <button
+                              key={provider.id}
+                              type="button"
+                              className={`branch-choice ${bookingForm.providerId === provider.id ? 'is-selected' : ''}`}
+                              onClick={() => handleBookingFieldChange('providerId', provider.id)}
+                            >
+                              <strong>{provider.displayName}</strong>
+                              <small>{provider.role.replace('_', ' ')}</small>
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {bookingStep === 3 && (
                       <div className="portal-booking-section">
                         <div className="section-title-row">
                           <CalendarDays size={18} />
@@ -687,14 +764,18 @@ export function PatientPortalPage() {
                             {bookingForm.date && bookingForm.serviceId ? (
                               availableBookingTimes.length ? (
                                 <div className="time-slot-grid">
-                                  {availableBookingTimes.map((time) => (
+                                  {availableBookingTimes.map((slot) => (
                                     <button
-                                      key={time}
+                                      key={`${slot.providerId}-${slot.startTime}`}
                                       type="button"
-                                      className={`time-slot ${bookingForm.startTime === time ? 'is-selected' : ''}`}
-                                      onClick={() => handleBookingFieldChange('startTime', time)}
+                                      className={`time-slot ${bookingForm.startTime === slot.startTime && (!bookingForm.providerId || bookingForm.providerId === slot.providerId) ? 'is-selected' : ''}`}
+                                      onClick={() => {
+                                        setBookingForm((current) => ({ ...current, startTime: slot.startTime, providerId: slot.providerId }))
+                                        setBookingError(null)
+                                      }}
                                     >
-                                      {formatTimeDisplay(time)}
+                                      {formatTimeDisplay(slot.startTime)}
+                                      <small>{slot.providerName}</small>
                                     </button>
                                   ))}
                                 </div>
@@ -709,7 +790,7 @@ export function PatientPortalPage() {
                       </div>
                     )}
 
-                    {bookingStep === 3 && (
+                    {bookingStep === 4 && (
                       <div className="portal-booking-section">
                         <div className="section-title-row">
                           <ShieldCheck size={18} />
@@ -718,7 +799,8 @@ export function PatientPortalPage() {
 
                         <div className="confirmation-card">
                           <div className="confirm-row"><span>Service</span><strong>{selectedBookingService?.name ?? '—'}</strong></div>
-                          <div className="confirm-row"><span>Branch</span><strong>{bookingForm.branch}</strong></div>
+                          <div className="confirm-row"><span>Branch</span><strong>{selectedBookingBranch?.name ?? 'No branch selected'}</strong></div>
+                          <div className="confirm-row"><span>Dentist</span><strong>{selectedBookingProvider?.displayName ?? 'Any available dentist'}</strong></div>
                           <div className="confirm-row"><span>Date</span><strong>{bookingForm.date ? new Date(bookingForm.date).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }) : '—'}</strong></div>
                           <div className="confirm-row"><span>Time</span><strong>{bookingForm.startTime ? formatTimeDisplay(bookingForm.startTime) : '—'}</strong></div>
                           <div className="confirm-row"><span>Estimated price</span><strong>{selectedBookingService ? (selectedBookingService.price > 0 ? new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP' }).format(selectedBookingService.price / 100) : 'Price to be confirmed') : '—'}</strong></div>
@@ -766,7 +848,7 @@ export function PatientPortalPage() {
                     <div className="summary-grid">
                       <div>
                         <span>Branch</span>
-                        <strong>{bookingForm.branch}</strong>
+                        <strong>{selectedBookingBranch?.name ?? 'Choose a branch'}</strong>
                       </div>
                       <div>
                         <span>Time</span>
@@ -1070,22 +1152,27 @@ export function PatientPortalPage() {
                 {patientAppointments.length === 0 ? (
                   <p className="empty-inline">No appointments on file.</p>
                 ) : (
-                  patientAppointments.map((appointment) => (
-                    <div key={appointment.id} className="portal-premium-card info-row">
-                      <div>
-                        <strong>{formatDate(appointment.date)}</strong>
-                        <small>
-                          {appointment.startTime} - {appointment.endTime}
-                        </small>
+                  patientAppointments.map((appointment) => {
+                    const service = portalServiceMap.get(appointment.serviceId)
+                    const branch = appointment.branchId ? portalBranchMap.get(appointment.branchId) : undefined
+                    const provider = appointment.providerId ? providerMap.get(appointment.providerId) : undefined
+                    return (
+                      <div key={appointment.id} className="portal-premium-card info-row">
+                        <div>
+                          <strong>{formatDate(appointment.date)}</strong>
+                          <small>
+                            {appointment.startTime} - {appointment.endTime}
+                          </small>
+                        </div>
+                        <div className="info-row-meta">
+                          <Badge tone={appointment.status === 'confirmed' ? 'success' : appointment.status === 'pending' ? 'warning' : 'info'}>
+                            {appointment.status}
+                          </Badge>
+                          <span>{service?.name ?? 'Service'} - {branch?.name ?? 'Branch pending'} - {provider?.displayName ?? 'Dentist pending'}</span>
+                        </div>
                       </div>
-                      <div className="info-row-meta">
-                        <Badge tone={appointment.status === 'confirmed' ? 'success' : appointment.status === 'pending' ? 'warning' : 'info'}>
-                          {appointment.status}
-                        </Badge>
-                        <span>{appointment.serviceId}</span>
-                      </div>
-                    </div>
-                  ))
+                    )
+                  })
                 )}
               </div>
             </article>
@@ -1112,7 +1199,7 @@ export function PatientPortalPage() {
                           <p className="eyebrow">{record.visitType}</p>
                           <h4>{record.chiefComplaint}</h4>
                         </div>
-                        <Badge tone={record.status === 'completed' ? 'success' : 'info'}>{record.status}</Badge>
+                        <Badge tone={record.status === 'finalized' || record.status === 'amended' ? 'success' : 'info'}>{record.status}</Badge>
                       </div>
                       <div className="record-grid">
                         <div>
@@ -1120,20 +1207,20 @@ export function PatientPortalPage() {
                           <p>{formatDate(record.recordDate)}</p>
                         </div>
                         <div>
-                          <span className="label">Diagnosis</span>
-                          <p>{record.diagnosis}</p>
+                          <span className="label">Summary</span>
+                          <p>{record.patientVisibleSummary || record.assessment || 'No patient-facing summary recorded.'}</p>
                         </div>
                         <div>
-                          <span className="label">Treatment</span>
-                          <p>{record.treatmentPlan}</p>
+                          <span className="label">Recommendations</span>
+                          <p>{record.recommendations || 'No recommendations recorded.'}</p>
                         </div>
                         <div>
                           <span className="label">Follow-up</span>
                           <p>{record.followUpDate ? formatDate(record.followUpDate) : 'Not scheduled'}</p>
                         </div>
                         <div className="record-full">
-                          <span className="label">Notes</span>
-                          <p>{record.treatmentNotes}</p>
+                          <span className="label">Follow-up notes</span>
+                          <p>{record.followUpNotes || 'No follow-up notes recorded.'}</p>
                         </div>
                       </div>
                     </div>
@@ -1167,7 +1254,7 @@ export function PatientPortalPage() {
                       </div>
                       <div className="info-row-meta">
                         <Badge tone={treatment.status === 'completed' ? 'success' : 'info'}>{treatment.status}</Badge>
-                        <span>{formatCurrency(treatment.cost)}</span>
+                        <span>{formatCurrency(treatment.priceSnapshotCents)}</span>
                       </div>
                     </div>
                   ))
@@ -1526,6 +1613,14 @@ export function PatientPortalPage() {
                         </div>
                       </div>
                     )}
+                  </section>
+
+                  <section className="profile-section">
+                    <CommunicationPreferencesPanel
+                      patient={patient}
+                      actor={user?.email ?? patient.patientId}
+                      canEdit
+                    />
                   </section>
                 </div>
 

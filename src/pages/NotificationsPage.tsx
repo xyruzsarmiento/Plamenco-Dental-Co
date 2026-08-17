@@ -1,5 +1,6 @@
 import { Bell, CheckCheck, Clock3, Sparkles } from 'lucide-react'
 import { useAuth } from '../features/auth/AuthContext'
+import { CommunicationOperationsPanel } from '../features/communications/CommunicationOperationsPanel'
 import { NotificationCenter } from '../features/notifications/NotificationCenter'
 
 export function NotificationsPage() {
@@ -22,6 +23,8 @@ export function NotificationsPage() {
       </div>
 
       <NotificationCenter userId={userId} />
+
+      <CommunicationOperationsPanel actor={user?.email ?? 'clinic-user'} />
 
       <div className="notification-summary panel">
         <div className="notification-summary-icon">

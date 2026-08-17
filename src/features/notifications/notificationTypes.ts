@@ -1,10 +1,14 @@
 export type NotificationKind = 'appointment' | 'payment' | 'treatment'
 export type NotificationAction =
   | 'booking_received'
+  | 'appointment_requested'
   | 'appointment_confirmed'
+  | 'appointment_rejected'
   | 'appointment_reminder'
   | 'appointment_cancelled'
   | 'appointment_rescheduled'
+  | 'appointment_no_show'
+  | 'no_show_follow_up'
   | 'payment_received'
   | 'outstanding_balance'
   | 'treatment_reminder'
@@ -12,7 +16,7 @@ export type NotificationAction =
 
 export type NotificationPriority = 'low' | 'normal' | 'high'
 export type NotificationStatus = 'draft' | 'published' | 'archived'
-export type ReminderChannel = 'email' | 'sms'
+export type ReminderChannel = 'email' | 'sms' | 'messenger' | 'in_app'
 
 export type ReminderDeliveryPlan = {
   id: string

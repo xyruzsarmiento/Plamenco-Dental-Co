@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from 'react'
 import { supabase } from '../../lib/supabase'
 import { AuthContext, type AuthContextValue } from './AuthContext'
-import type { AuthUser } from './authTypes'
+import type { AccountStatus, AuthUser, UserRole } from './authTypes'
+import { getRolePermissions } from './permissions'
 import { findStaffByEmail } from './staffStore'
 
 const STORAGE_KEY = 'plamenco.auth.user'
@@ -29,8 +30,85 @@ function buildPatientUserFromSupabase(sessionUser: { id: string; email?: string 
     name: `${firstName} ${lastName}`.trim() || sessionUser.email.split('@')[0] || 'Patient',
     email: sessionUser.email.toLowerCase(),
     role: 'patient',
+    status: 'active',
+    permissions: getRolePermissions('patient'),
     patientId: patientId ?? (typeof metadata.patient_id === 'string' ? metadata.patient_id : undefined),
   }
+}
+
+function isUserRole(value: unknown): value is UserRole {
+  return (
+    value === 'super_admin' ||
+    value === 'admin' ||
+    value === 'dentist' ||
+    value === 'associate_dentist' ||
+    value === 'staff' ||
+    value === 'patient'
+  )
+}
+
+function isAccountStatus(value: unknown): value is AccountStatus {
+  return value === 'active' || value === 'inactive' || value === 'suspended'
+}
+
+async function getSupabaseProfileForSession(sessionUser: { id: string; email?: string | null; user_metadata?: Record<string, unknown> }) {
+  if (!supabase) return null
+
+  const { data, error } = await supabase
+    .from('profiles')
+    .select('id, full_name, role, status, permissions')
+    .eq('id', sessionUser.id)
+    .maybeSingle()
+
+  if (error) {
+    if (import.meta.env.DEV) {
+      console.debug('[profile lookup skipped]', error.message)
+    }
+    return null
+  }
+
+  return data as {
+    id: string
+    full_name?: string | null
+    role?: string | null
+    status?: string | null
+    permissions?: string[] | null
+  } | null
+}
+
+function buildProfileUserFromSupabase(
+  sessionUser: { id: string; email?: string | null; user_metadata?: Record<string, unknown> },
+  profile: Awaited<ReturnType<typeof getSupabaseProfileForSession>>,
+): AuthUser | null {
+  if (!sessionUser.email || !profile || !isUserRole(profile.role)) return null
+
+  const status = isAccountStatus(profile.status) ? profile.status : 'active'
+  const metadata = sessionUser.user_metadata ?? {}
+  const metadataName = [metadata.first_name, metadata.last_name]
+    .filter((value): value is string => typeof value === 'string' && Boolean(value.trim()))
+    .join(' ')
+  const name = profile.full_name?.trim() || metadataName || sessionUser.email.split('@')[0] || 'User'
+
+  return {
+    id: sessionUser.id,
+    name,
+    email: sessionUser.email.toLowerCase(),
+    role: profile.role,
+    status,
+    permissions: Array.isArray(profile.permissions) && profile.permissions.length > 0 ? profile.permissions : getRolePermissions(profile.role),
+  }
+}
+
+async function buildUserFromSupabaseSession(sessionUser: { id: string; email?: string | null; user_metadata?: Record<string, unknown> }) {
+  const profile = await getSupabaseProfileForSession(sessionUser)
+  const profileUser = buildProfileUserFromSupabase(sessionUser, profile)
+
+  if (profileUser && profileUser.role !== 'patient') {
+    return profileUser
+  }
+
+  const patientId = await ensurePatientProfileForSession(sessionUser)
+  return buildPatientUserFromSupabase(sessionUser, patientId)
 }
 
 async function ensurePatientProfileForSession(sessionUser: { id: string; email?: string | null; user_metadata?: Record<string, unknown> }) {
@@ -113,8 +191,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return
       }
 
-      const patientId = await ensurePatientProfileForSession(session.user)
-      const nextUser = buildPatientUserFromSupabase(session.user, patientId)
+      const nextUser = await buildUserFromSupabaseSession(session.user)
       if (nextUser) {
         window.localStorage.setItem(STORAGE_KEY, JSON.stringify(nextUser))
       }
@@ -135,8 +212,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return
       }
 
-      const patientId = await ensurePatientProfileForSession(session.user)
-      const nextUser = buildPatientUserFromSupabase(session.user, patientId)
+      const nextUser = await buildUserFromSupabaseSession(session.user)
       if (nextUser) {
         window.localStorage.setItem(STORAGE_KEY, JSON.stringify(nextUser))
       }
@@ -169,6 +245,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             name: staff.name,
             email: staff.email,
             role: staff.role,
+            status: staff.status,
+            permissions: getRolePermissions(staff.role),
           }
 
           window.localStorage.setItem(STORAGE_KEY, JSON.stringify(nextUser))
@@ -199,8 +277,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           return false
         }
 
-        const patientId = await ensurePatientProfileForSession(data.user)
-        const nextUser = buildPatientUserFromSupabase(data.user, patientId)
+        const nextUser = await buildUserFromSupabaseSession(data.user)
         if (!nextUser) {
           setAuthError('Unable to load your patient account.')
           setIsLoading(false)
