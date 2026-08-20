@@ -154,6 +154,35 @@ Do not guess these values. Record the clinic owner's decision, date, and approve
 | Which management reports are classified as sensitive? | Pending clinic owner/privacy/security confirmation |
 | Who approves the final scheduled-report configuration? | Pending clinic owner confirmation |
 
+## Part 44 — Release, Handover & Acceptance Decisions
+
+| Decision Needed | Current Status |
+|---|---|
+| Who is the final clinic approver for RC1 and v1.0.0? | Pending clinic owner confirmation |
+| What is the approved production go-live date? | Pending clinic owner/operations confirmation |
+| What is the approved maintenance window for deployments and migrations? | Pending clinic operations confirmation |
+| Who owns day-to-day Super Admin access after handover? | Pending clinic owner/security confirmation |
+| Who owns payment provider credentials and webhook configuration? | Pending clinic owner/accountant/technical confirmation |
+| Who owns email/SMS/Messenger provider credentials? | Pending clinic owner/communications/technical confirmation |
+| Who owns database backup verification and restore rehearsal? | Pending clinic owner/technical confirmation |
+| What backup retention policy is approved? | Pending clinic owner/privacy/technical confirmation |
+| Who is the incident escalation contact for privacy/security events? | Pending clinic owner/security confirmation |
+| Who is the incident escalation contact for payment/financial posting issues? | Pending clinic owner/accountant confirmation |
+| Who will conduct Admin training? | Pending clinic owner/technical confirmation |
+| Who will conduct Front Desk training? | Pending clinic owner/operations confirmation |
+| Who will conduct Dentist training? | Pending clinic owner/clinical confirmation |
+| Which staff/accounts participate in RC1 acceptance testing? | Pending clinic operations/security confirmation |
+| Which branch is used first for pilot/soft launch? | Pending clinic owner/operations confirmation |
+| Are both branches going live at the same time? | Pending clinic owner/operations confirmation |
+| What controlled test data may be used during acceptance? | Pending clinic owner/privacy confirmation |
+| Who signs off financial reconciliation before v1.0.0? | Pending clinic owner/accountant confirmation |
+| Who signs off inventory reconciliation before v1.0.0? | Pending clinic owner/inventory confirmation |
+| Who signs off production RLS/cross-access verification? | Pending clinic owner/security/technical confirmation |
+| Which remaining High issues, if any, are accepted for post-launch remediation? | Pending release review; Critical blockers may not be silently waived |
+| What support contact/process should users follow after launch? | Pending clinic owner/support confirmation |
+| What response expectations apply to Critical/High/Medium/Low issues? | Pending clinic owner/support confirmation |
+| When may RC1 be promoted to v1.0.0? | Only after required testing, configuration, Critical blocker clearance and actual client sign-off |
+
 ## Existing decisions from Parts 1–32
 
 The previously tracked decisions remain in project history and implementation documentation, including branch identity/hours, appointment policies, deposits, payment gateway and manual payment methods, service catalog/pricing, provider schedules/roles, staff permissions, compensation rules, inventory opening stock/reorder/cost rules, expense approvals, SMS/email/Messenger providers and consent, historical Excel migration/linking, retention/privacy, clinical visibility, patient exports, procurement/stock transfer/count workflows, backup/recovery ownership, deployment domains/projects, daily clinic workflow, queue/check-in/no-show permissions, patient booking/rescheduling, reminders, online payments, and patient-facing price presentation.
