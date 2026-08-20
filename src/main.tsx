@@ -8,6 +8,7 @@ import './styles/modal-fixes.css'
 import './styles/payment-recorder.css'
 import './styles/inventory-actions.css'
 import './styles/expense-actions.css'
+import './styles/forms-consent-actions.css'
 import App from './App.tsx'
 import { registerPatientPortalPwa } from './features/patientPortal/pwaRegistration'
 
