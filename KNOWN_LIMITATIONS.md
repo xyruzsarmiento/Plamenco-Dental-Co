@@ -12,6 +12,11 @@ This file records known/unverified production limitations. It is not a failure l
 - Treatment-plan scheduling/performed-treatment/billing handoff requires full end-to-end QA.
 - Recall automation cadence, cooldown, quiet hours, reactivation rules and clinic intervals remain clinic decisions unless explicitly configured.
 - Consent/legal wording, signature acceptance policy, guardian/minor workflow and retention requirements remain clinic decisions.
+- Management report automation has schedule/run/delivery state foundations, but a trusted production scheduler, generator and provider-backed delivery worker still require configuration and verification before recurring reports can be called operational.
+- Part 41 operational task automation rules remain disabled until clinic decisions explicitly enable them.
+- Patient self-service reschedule/cancel behavior remains dependent on unresolved clinic policy and live access verification.
+- The final Part 44 cross-route visual/accessibility audit is still in progress; RC1 should not be described as fully polished or accessibility-verified yet.
 - No formal general ledger, tax filing engine, statutory payroll, insurance claim engine, KYC/biometric verification, AI diagnosis or automated treatment recommendation is provided.
 - Odontogram/dental chart is intentionally not surfaced.
 - Production domain ownership, Auth redirect configuration and final environment values require deployment verification.
+- `v1.0.0` is blocked until required production checks and actual client acceptance are complete.
