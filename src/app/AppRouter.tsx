@@ -22,7 +22,7 @@ import { ExpensesPage46F } from '../pages/ExpensesPage46F'
 import { FormsConsentAdminPage } from '../pages/FormsConsentAdminPage'
 import { InventoryPage } from '../pages/InventoryPage'
 import { LandingPage } from '../pages/LandingPage'
-import { ManagementReportAutomationPage } from '../pages/ManagementReportAutomationPage'
+import { ManagementReportAutomationPageV20 } from '../pages/ManagementReportAutomationPageV20'
 import { NotFoundPage } from '../pages/NotFoundPage'
 import { NotificationsPage } from '../pages/NotificationsPage'
 import { OperationalTasksPageV17 } from '../pages/OperationalTasksPageV17'
@@ -96,7 +96,7 @@ export function AppRouter() {
           <Route path="dentists" element={<RequirePermission permission="dentists.manage"><DentistsPageV16 /></RequirePermission>} />
           <Route path="branches" element={<RequirePermission anyOf={['branches.view', 'branches.manage']}><BranchesPage /></RequirePermission>} />
           <Route path="reports" element={<RequirePermission permission="reports.view"><ReportsPageV19 /></RequirePermission>} />
-          <Route path="report-automation" element={<RequirePermission permission="reports.view"><ManagementReportAutomationPage /></RequirePermission>} />
+          <Route path="report-automation" element={<RequirePermission permission="reports.view"><ManagementReportAutomationPageV20 /></RequirePermission>} />
           <Route path="data-import" element={<RequirePermission permission="patients.import"><DataImportPage /></RequirePermission>} />
           <Route path="notifications" element={<RequirePermission permission="notifications.view"><NotificationsPage /></RequirePermission>} />
           <Route path="communications" element={<RequirePermission anyOf={['communications.manage', 'notifications.send', 'notifications.view']}><CommunicationsPage /></RequirePermission>} />
