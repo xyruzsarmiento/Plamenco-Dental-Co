@@ -103,7 +103,16 @@ export async function ensurePatientIntake(patientId: string, appointmentId?: str
     .select('*')
     .single()
 
-  if (error) throw error
+  if (error) {
+    if (error.code === '23505') {
+      const retryQuery = client.from('patient_intakes').select('*').eq('patient_id', patientId)
+      const scopedRetry = appointmentId ? retryQuery.eq('appointment_id', appointmentId) : retryQuery.is('appointment_id', null)
+      const { data: retried, error: retryError } = await scopedRetry.limit(1).single()
+      if (retryError) throw retryError
+      return mapIntake(retried)
+    }
+    throw error
+  }
   return mapIntake(data)
 }
 
@@ -172,7 +181,7 @@ export async function savePatientMedicalHistory(input: {
       medical_notes: input.medicalNotes.trim(),
       updated_at: now,
     })
-    .or(`patient_id.eq.${input.patientId},id.eq.${input.patientId}`)
+    .eq('patient_id', input.patientId)
   if (patientError) throw patientError
 
   if (input.intakeId) {
