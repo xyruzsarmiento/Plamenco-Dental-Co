@@ -3,6 +3,7 @@ import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Badge } from '../../components/ui/Badge'
 import { Button } from '../../components/ui/Button'
+import { DashboardBarChart, DashboardTrendChart } from '../../components/ui/DashboardChart'
 import { getStoredAppointments } from '../appointments/appointmentStore'
 import { getStoredBranches } from '../branches/branchStore'
 import { getStoredProviders } from '../dentists/dentistStore'
@@ -16,6 +17,21 @@ function manilaToday() {
     month: '2-digit',
     day: '2-digit',
   }).format(new Date())
+}
+
+function manilaDateOffset(days: number) {
+  const date = new Date()
+  date.setUTCDate(date.getUTCDate() + days)
+  return new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Asia/Manila',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).format(date)
+}
+
+function dayLabel(value: string) {
+  return new Date(`${value}T00:00:00+08:00`).toLocaleDateString('en-PH', { weekday: 'short', timeZone: 'Asia/Manila' })
 }
 
 function formatTime(value: string) {
@@ -41,7 +57,7 @@ export function StaffTodayWorkspace() {
   const services = useMemo(() => new Map(getStoredServices().map((row) => [row.id, row])), [])
   const providers = useMemo(() => new Map(getStoredProviders().map((row) => [row.id, row])), [])
   const branches = useMemo(() => new Map(getStoredBranches().map((row) => [row.id, row])), [])
-  const patientMap = useMemo(() => new Map(patients.map((row) => [row.patientId, row])), [patients])
+  const patientMap = useMemo(() => new Map(patients.flatMap((row) => [[row.patientId, row], [row.id, row]] as const)), [patients])
 
   const todayAppointments = useMemo(
     () => appointments.filter((row) => row.date === today).sort((a, b) => a.startTime.localeCompare(b.startTime)),
@@ -51,6 +67,17 @@ export function StaffTodayWorkspace() {
   const pending = todayAppointments.filter((row) => row.status === 'pending')
   const walkIns = todayAppointments.filter((row) => row.bookingSource === 'walk_in')
   const completed = todayAppointments.filter((row) => row.status === 'completed')
+  const trendData = useMemo(() => Array.from({ length: 7 }, (_, index) => {
+    const date = manilaDateOffset(index - 6)
+    return { label: dayLabel(date), value: appointments.filter((row) => row.date === date).length }
+  }), [appointments])
+  const statusData = useMemo(() => [
+    { label: 'Scheduled', value: todayAppointments.filter((row) => row.status === 'confirmed').length },
+    { label: 'Waiting', value: todayAppointments.filter((row) => ['checked_in', 'waiting'].includes(row.status)).length },
+    { label: 'In treatment', value: todayAppointments.filter((row) => row.status === 'in_progress').length },
+    { label: 'Completed', value: completed.length },
+    { label: 'Pending', value: pending.length },
+  ], [completed.length, pending.length, todayAppointments])
 
   const patientResults = useMemo(() => {
     const normalized = query.trim().toLowerCase()
@@ -80,6 +107,11 @@ export function StaffTodayWorkspace() {
         <article><span className="staff-metric-icon"><CalendarPlus size={18} /></span><div><strong>{walkIns.length}</strong><span>Walk-ins</span></div></article>
         <article><span className="staff-metric-icon"><CheckCircle2 size={18} /></span><div><strong>{completed.length}</strong><span>Completed visits</span></div></article>
       </section>
+
+      <div className="dashboard-chart-grid">
+        <DashboardTrendChart title="Appointments over the last 7 days" description="Real appointment records across the clinic." data={trendData} />
+        <DashboardBarChart title="Today’s workflow" description="Current appointment status distribution." data={statusData} />
+      </div>
 
       <div className="staff-workspace-grid">
         <section className="staff-panel staff-schedule-panel">
