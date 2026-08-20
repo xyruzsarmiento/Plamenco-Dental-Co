@@ -33,8 +33,8 @@ import { ReportsPageV19 } from '../pages/ReportsPageV19'
 import { RoleHomePage } from '../pages/RoleHomePage'
 import { ServicesPageV15 } from '../pages/ServicesPageV15'
 import { SettingsPage } from '../pages/SettingsPage'
-import { StaffPage } from '../pages/StaffPage'
 import { SystemAdministrationPage } from '../pages/SystemAdministrationPage'
+import { TeamAccessPageV26 } from '../pages/TeamAccessPageV26'
 import { TreatmentPlansPageV13 } from '../pages/TreatmentPlansPageV13'
 import { TreatmentsPageV12 } from '../pages/TreatmentsPageV12'
 import { UnauthorizedPage } from '../pages/UnauthorizedPage'
@@ -92,7 +92,7 @@ export function AppRouter() {
           <Route path="services" element={<RequirePermission anyOf={['services.view', 'services.manage']}><ServicesPageV15 /></RequirePermission>} />
           <Route path="inventory" element={<RequirePermission permission="inventory.view"><InventoryPageV22 /></RequirePermission>} />
           <Route path="expenses" element={<RequirePermission permission="expenses.view"><ExpensesPageV23 /></RequirePermission>} />
-          <Route path="staff" element={<RequirePermission anyOf={['staff.manage', 'dentists.manage']}><StaffPage /></RequirePermission>} />
+          <Route path="staff" element={<RequirePermission anyOf={['staff.manage', 'dentists.manage']}><TeamAccessPageV26 /></RequirePermission>} />
           <Route path="dentists" element={<RequirePermission permission="dentists.manage"><DentistsPageV16 /></RequirePermission>} />
           <Route path="branches" element={<RequirePermission anyOf={['branches.view', 'branches.manage']}><BranchesPage /></RequirePermission>} />
           <Route path="reports" element={<RequirePermission permission="reports.view"><ReportsPageV19 /></RequirePermission>} />
