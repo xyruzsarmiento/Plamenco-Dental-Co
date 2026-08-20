@@ -15,11 +15,21 @@ export function PatientPortalRoute() {
 
     const loadBookingFoundation = async () => {
       try {
-        await Promise.all([
-          loadBranchesFromSupabase(),
-          loadServicesFromSupabase(),
-          loadProviderFoundationFromSupabase(),
+        const [branches, services, providerFoundation] = await Promise.all([
+          loadBranchesFromSupabase({ strict: true }),
+          loadServicesFromSupabase({ strict: true }),
+          loadProviderFoundationFromSupabase({ strict: true }),
         ])
+
+        if (!branches.length) {
+          throw new Error('No active clinic branches are configured for online booking.')
+        }
+        if (!services.length) {
+          throw new Error('No active clinic services are configured for online booking.')
+        }
+        if (!providerFoundation.providers.length) {
+          throw new Error('No active dentist records are available for online booking.')
+        }
 
         if (isMounted) {
           setState('ready')
