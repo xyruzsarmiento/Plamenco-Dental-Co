@@ -121,7 +121,7 @@ export function saveProviderAvailabilityOverrides(overrides: ProviderAvailabilit
   saveList(PROVIDER_AVAILABILITY_STORAGE_KEY, overrides)
 }
 
-export async function loadProviderFoundationFromSupabase() {
+export async function loadProviderFoundationFromSupabase(options: { strict?: boolean } = {}) {
   if (!supabase) {
     return {
       providers: getStoredProviders(),
@@ -138,10 +138,21 @@ export async function loadProviderFoundationFromSupabase() {
     supabase.from('provider_availability_overrides').select('*'),
   ])
 
-  if (Array.isArray(providerResult.data)) saveStoredProviders(providerResult.data.map(mapProviderRow))
-  if (Array.isArray(assignmentResult.data)) saveProviderBranchAssignments(assignmentResult.data.map(mapAssignmentRow))
-  if (Array.isArray(scheduleResult.data)) saveProviderScheduleBlocks(scheduleResult.data.map(mapScheduleRow))
-  if (Array.isArray(overrideResult.data)) saveProviderAvailabilityOverrides(overrideResult.data.map(mapOverrideRow))
+  const failures = [
+    ['dentists', providerResult.error],
+    ['provider branch assignments', assignmentResult.error],
+    ['provider schedules', scheduleResult.error],
+    ['provider availability overrides', overrideResult.error],
+  ].filter((entry) => entry[1]) as Array<[string, { message: string }]>
+
+  if (failures.length && options.strict) {
+    throw new Error(`Unable to load ${failures[0][0]}: ${failures[0][1].message}`)
+  }
+
+  if (!providerResult.error && Array.isArray(providerResult.data)) saveStoredProviders(providerResult.data.map(mapProviderRow))
+  if (!assignmentResult.error && Array.isArray(assignmentResult.data)) saveProviderBranchAssignments(assignmentResult.data.map(mapAssignmentRow))
+  if (!scheduleResult.error && Array.isArray(scheduleResult.data)) saveProviderScheduleBlocks(scheduleResult.data.map(mapScheduleRow))
+  if (!overrideResult.error && Array.isArray(overrideResult.data)) saveProviderAvailabilityOverrides(overrideResult.data.map(mapOverrideRow))
 
   return {
     providers: getStoredProviders(),
