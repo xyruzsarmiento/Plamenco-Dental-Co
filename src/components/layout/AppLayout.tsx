@@ -6,6 +6,12 @@ import { roleLabels, usePermissions } from '../../features/auth/permissions'
 import { Button } from '../ui/Button'
 import { navigationGroups, navigationItems } from './navigation'
 
+function getPageClass(pathname: string) {
+  if (pathname === '/app' || pathname === '/app/') return 'page-dashboard'
+  const segment = pathname.replace(/^\/app\/?/, '').split('/')[0] || 'dashboard'
+  return `page-${segment.replace(/[^a-z0-9-]/gi, '-').toLowerCase()}`
+}
+
 export function AppLayout() {
   const [isMobileNavOpen, setIsMobileNavOpen] = useState(false)
   const { user, signOut } = useAuth()
@@ -42,18 +48,15 @@ export function AppLayout() {
             ? 'Executive administration'
             : 'Clinic workspace'
 
-  const roleLabel = user?.role ? roleLabels[user.role] : 'User'
-  const initial = user?.name?.trim().charAt(0).toUpperCase() || 'U'
-
   return (
-    <div className={`app-shell role-${user?.role ?? 'guest'}`}>
+    <div className={`app-shell role-${user?.role ?? 'guest'} ${getPageClass(location.pathname)}`}>
       <aside className={`sidebar ${isMobileNavOpen ? 'is-open' : ''}`}>
         <div className="sidebar-header">
-          <div className="brand-lockup-modern">
-            <span className="brand-mark-modern" aria-hidden="true">P</span>
-            <span className="brand-copy-modern">
-              <strong>Plamenco Dental Co.</strong>
-              <small>{workspaceEyebrow}</small>
+          <div className="brand-lockup">
+            <span className="brand-symbol">P</span>
+            <span>
+              <strong>Plamenco</strong>
+              <small>Dental Co.</small>
             </span>
           </div>
           <button
@@ -79,7 +82,7 @@ export function AppLayout() {
                     end={item.path === '/app'}
                     onClick={() => setIsMobileNavOpen(false)}
                   >
-                    <Icon size={17} aria-hidden="true" />
+                    <Icon size={18} aria-hidden="true" />
                     <span>{item.label}</span>
                   </NavLink>
                 )
@@ -89,15 +92,14 @@ export function AppLayout() {
         </nav>
 
         <div className="sidebar-footer">
-          <div className="sidebar-profile-modern">
-            <span className="avatar" aria-hidden="true">{initial}</span>
-            <span className="sidebar-profile-copy">
+          <div className="user-card">
+            <span className="avatar">{user?.name?.charAt(0)?.toUpperCase() ?? 'U'}</span>
+            <span>
               <strong>{user?.name || user?.email || 'Signed in user'}</strong>
-              <small>{roleLabel}</small>
+              <small>{user?.role ? roleLabels[user.role] : 'User'}</small>
             </span>
           </div>
           <Button
-            className="sidebar-signout-modern"
             variant="secondary"
             size="sm"
             onClick={() => {
@@ -120,7 +122,7 @@ export function AppLayout() {
       )}
 
       <div className="main-shell">
-        <header className="topbar topbar-modern">
+        <header className="topbar">
           <button
             className="icon-button mobile-only"
             type="button"
@@ -129,17 +131,12 @@ export function AppLayout() {
           >
             <Menu size={20} />
           </button>
-
-          <div className="topbar-heading-modern">
+          <div className="topbar-copy">
             <p className="eyebrow">{workspaceEyebrow}</p>
             <h1>{currentPage}</h1>
           </div>
-
-          <div className="topbar-meta-modern" aria-label="Current account role">
-            <span className="role-chip-modern">
-              <span className="role-chip-dot" aria-hidden="true" />
-              {roleLabel}
-            </span>
+          <div className="topbar-account-pill" aria-label="Current account role">
+            {user?.role ? roleLabels[user.role] : 'User'}
           </div>
         </header>
 
