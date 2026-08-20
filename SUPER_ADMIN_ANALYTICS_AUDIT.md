@@ -12,6 +12,37 @@ Audit the existing Plamenco reporting implementation before changing UI/query ar
 - `src/features/reports/executiveWorkbook.ts` provides an existing Excel/export foundation.
 - Existing billing, expense, inventory, appointments, patients and provider modules are retained as operational sources of truth.
 - Existing chart infrastructure is reused; Part 33 must not introduce a competing chart library.
+- Existing database analytics migrations already add report indexes plus enterprise summary support.
+
+## Gaps found in the current implementation
+
+The audit found several Part 33 semantic issues that must be corrected rather than hidden behind UI polish:
+
+1. The current executive dashboard still uses the label `Revenue` for invoice totals. Part 33 requires this to be labelled `Billed Amount` unless formal recognized revenue is actually implemented.
+2. The current dashboard uses `Operating Result` for collections less expenses. The safer Part 33 label is `Collections Less Recorded Expenses` or `Net Cash Movement`, with an explicit non-profit disclaimer.
+3. Several existing report-store field names still use legacy identifiers such as `billedRevenueCents`, `collectedCashCents`, and `netOperatingResultCents`. The calculations can remain compatible internally, but management-facing labels and new trusted database interfaces must use unambiguous terminology.
+4. `collectedCashCents` is semantically inaccurate because completed payments can include GCash, card, bank transfer and online gateway payments. This is a collections metric, not necessarily physical cash.
+5. The original `get_enterprise_financial_summary` database function reports successful payment totals and refunds separately but uses legacy names. Part 33 now adds `get_management_financial_summary` with explicit Billed Amount, Gross Collections, Refunds, Net Collections, Recorded Expenses and Collections Less Recorded Expenses semantics.
+6. Current invoice `balance_cents` is a present-state balance. Without historical receivable snapshots, the system must not imply that an arbitrary prior-period AR total is a reconstructed historical as-of balance.
+7. The report store contains a legacy `buildReportSnapshot` path that derives service value from current service catalog price multiplied by appointment count. That legacy path must not be used for historical management service-value reporting; Part 33 enterprise service reporting must continue to use stored charges/treatment history.
+8. Provider/payment attribution must be treated carefully because one invoice/payment can cover multiple items/providers. Provider collections should not be presented as fully attributable where allocation architecture cannot prove it.
+9. Dashboard error state still needs to be separated from legitimate zero-data state wherever remote/server-side report queries replace local aggregation.
+
+## Corrective database change
+
+Migration `supabase/migrations/20260820_024_management_reporting_semantics.sql` adds a trusted, security-invoker management summary function over the existing operational tables. It does not add editable summary tables or a second reporting database.
+
+The new function exposes:
+
+- Billed Amount
+- Gross Collections
+- Refunds
+- Net Collections
+- Outstanding Receivables
+- Recorded Expenses
+- Collections Less Recorded Expenses
+
+It uses invoice date, payment date, refund processed date and expense date respectively. The receivables field is explicitly documented as current invoice balance for valid invoices issued on/before the selected end date rather than a reconstructed historical AR snapshot.
 
 ## Part 33 audit rules
 
@@ -57,7 +88,7 @@ These remain conditional until the underlying data or clinic policy is reliable/
 - formal recognized revenue;
 - provider utilization;
 - inventory monetary valuation;
-- receivable aging when due-date semantics are incomplete;
+- historical receivable as-of balances;
 - new-vs-returning classification for incomplete historical visit data;
 - provider compensation visibility;
 - clinic-wide expense presentation;
@@ -71,4 +102,5 @@ These remain conditional until the underlying data or clinic policy is reliable/
 - Reconcile provider totals to underlying visits/treatments.
 - Verify unauthorized roles cannot access management-only reporting/export paths.
 - Verify report query failure renders an error/retry state, not a fake zero.
-- Run only scripts that actually exist in `package.json`, including `npm run build` and lint/test/typecheck where present.
+- Verify management-facing labels no longer call invoice totals `Revenue` or collections-minus-expenses `Net Profit`/ambiguous operating profit.
+- Run only scripts that actually exist in `package.json`, including `npm run build` and `npm run lint`. There is currently no repository `test` or `typecheck` script separate from the TypeScript work performed by `npm run build`; do not invent them.
