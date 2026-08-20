@@ -13,6 +13,7 @@ import { useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import { Badge } from '../../components/ui/Badge'
 import { Button } from '../../components/ui/Button'
+import { DashboardBarChart, DashboardTrendChart } from '../../components/ui/DashboardChart'
 import { getStoredAppointments } from '../appointments/appointmentStore'
 import { getStoredStaff } from '../auth/staffStore'
 import { getStoredBranches } from '../branches/branchStore'
@@ -26,6 +27,21 @@ function manilaDate() {
     month: '2-digit',
     day: '2-digit',
   }).format(new Date())
+}
+
+function manilaDateOffset(days: number) {
+  const date = new Date()
+  date.setUTCDate(date.getUTCDate() + days)
+  return new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Asia/Manila',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).format(date)
+}
+
+function dayLabel(value: string) {
+  return new Date(`${value}T00:00:00+08:00`).toLocaleDateString('en-PH', { weekday: 'short', timeZone: 'Asia/Manila' })
 }
 
 export function SuperAdminOverview() {
@@ -48,6 +64,14 @@ export function SuperAdminOverview() {
     ...snapshot.securityDiagnostics,
     ...snapshot.dataIntegrityDiagnostics,
   ].filter((item) => item.status !== 'healthy')
+  const trendData = useMemo(() => Array.from({ length: 7 }, (_, index) => {
+    const date = manilaDateOffset(index - 6)
+    return { label: dayLabel(date), value: appointments.filter((row) => row.date === date).length }
+  }), [appointments])
+  const branchData = useMemo(() => activeBranches.map((branch) => ({
+    label: branch.code || branch.name,
+    value: todayAppointments.filter((row) => row.branchId === branch.id).length,
+  })), [activeBranches, todayAppointments])
 
   return (
     <section className="page-stack super-admin-overview">
@@ -70,6 +94,11 @@ export function SuperAdminOverview() {
         <article><span>Appointments today</span><strong>{todayAppointments.length}</strong><small>{activeFlow.length} currently in clinic flow</small></article>
         <article><span>Pending requests</span><strong>{pendingRequests.length}</strong><small>Awaiting appointment decision</small></article>
         <article><span>Attention items</span><strong>{warnings.length}</strong><small>From configured system diagnostics</small></article>
+      </div>
+
+      <div className="dashboard-chart-grid">
+        <DashboardTrendChart title="Clinic appointment activity" description="Actual appointment volume across the last 7 days." data={trendData} />
+        <DashboardBarChart title="Today by branch" description="Current appointment count for each active branch." data={branchData} />
       </div>
 
       <div className="super-admin-grid">
