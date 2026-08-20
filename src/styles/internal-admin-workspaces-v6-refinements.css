@@ -1,0 +1,120 @@
+/* Refinements for rebuilt communication and notification markup. */
+
+.page-communications .communications-page-v6,
+.page-notifications .notifications-page-v6 { display:grid; gap:16px; }
+
+.page-communications .communications-header-v6,
+.page-notifications .notifications-header { align-items:flex-end; padding-bottom:4px; }
+
+.page-communications .communications-metrics-v6 {
+  display:grid;
+  grid-template-columns:repeat(4,minmax(0,1fr));
+  gap:11px;
+}
+.page-communications .communications-metrics-v6 article {
+  min-height:104px;
+  padding:15px 16px;
+  border:1px solid #edf1f6;
+  border-radius:14px;
+  background:#fff;
+}
+.page-communications .communications-metrics-v6 span { color:#6b7280;font-size:.71rem;font-weight:720; }
+.page-communications .communications-metrics-v6 strong { display:block;margin:12px 0 3px;color:#172033;font-size:1.45rem;letter-spacing:-.04em; }
+.page-communications .communications-metrics-v6 small { color:#8a93a3;font-size:.7rem; }
+
+.page-communications .communications-tabs-v6 {
+  display:flex;
+  gap:5px;
+  width:fit-content;
+  max-width:100%;
+  overflow:auto;
+  padding:4px;
+  border:1px solid #edf1f6;
+  border-radius:11px;
+  background:#f8fafc;
+}
+.page-communications .communications-tabs-v6 button {
+  flex:0 0 auto;
+  min-height:34px;
+  padding:0 11px;
+  border:0;
+  border-radius:8px;
+  background:transparent;
+  color:#667085;
+  font:inherit;
+  font-size:.75rem;
+  font-weight:700;
+  text-transform:capitalize;
+}
+.page-communications .communications-tabs-v6 button.active { background:#fff;color:#1d4ed8;box-shadow:0 1px 4px rgba(15,23,42,.08); }
+
+.page-communications .communications-overview-v6,
+.page-communications .communications-composer-v6 {
+  display:grid;
+  grid-template-columns:minmax(0,1.2fr) minmax(320px,.8fr);
+  gap:16px;
+  align-items:start;
+}
+
+.page-communications .communications-channel-panel-v6,
+.page-communications .communications-composer-main-v6,
+.page-communications .communications-context-v6,
+.page-communications .communications-data-panel-v6,
+.page-notifications .notifications-primary-v6,
+.page-notifications .notifications-secondary-v6 {
+  padding:18px;
+  border:1px solid #edf1f6;
+  border-radius:17px;
+  background:#fff;
+  box-shadow:0 4px 16px rgba(15,23,42,.035);
+}
+
+.page-communications .workspace-heading-v6,
+.page-notifications .workspace-heading-v6 {
+  display:flex;
+  align-items:flex-start;
+  gap:11px;
+  margin-bottom:14px;
+}
+.page-communications .workspace-heading-v6 h3,
+.page-notifications .workspace-heading-v6 h3 { margin:2px 0 4px;color:#172033;font-size:1rem;letter-spacing:-.02em; }
+.page-communications .workspace-heading-v6 p,
+.page-notifications .workspace-heading-v6 p { margin:0;color:#6b7280;line-height:1.5;font-size:.78rem; }
+.page-notifications .workspace-icon-v6 { width:36px;height:36px;display:grid;place-items:center;flex:0 0 36px;border-radius:10px;background:#eaf2ff;color:#2563eb; }
+
+.page-communications .communications-composer-fields-v6 { display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px; }
+.page-communications .communications-message-field-v6 { grid-column:1/-1; }
+.page-communications .communications-composer-actions-v6 { display:flex;justify-content:flex-end;margin-top:12px; }
+.page-communications .communications-context-v6 ol { margin:12px 0 0;padding-left:20px;color:#526077; }
+.page-communications .communications-context-v6 li { padding:5px 0;line-height:1.45; }
+
+.page-communications .communications-template-grid-v6 { display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px; }
+.page-communications .communications-template-card-v6 { padding:14px;border:1px solid #edf1f6;border-radius:12px;background:#fbfcfe; }
+.page-communications .communications-template-card-v6 h4 { margin:2px 0 3px;color:#172033; }
+.page-communications .communications-template-card-v6 span,
+.page-communications .communications-template-card-v6 small { color:#6b7280;font-size:.7rem; }
+.page-communications .communications-template-card-v6 p { color:#475467;line-height:1.5;font-size:.8rem; }
+.page-communications .communications-outbox-action-v6 { display:flex;align-items:center;gap:8px; }
+
+.page-notifications .notifications-workspace-v6 {
+  display:grid;
+  grid-template-columns:minmax(0,1.12fr) minmax(340px,.88fr);
+  gap:16px;
+  align-items:start;
+}
+
+@media(max-width:1050px){
+  .page-communications .communications-overview-v6,
+  .page-communications .communications-composer-v6,
+  .page-notifications .notifications-workspace-v6 { grid-template-columns:1fr; }
+  .page-communications .communications-template-grid-v6 { grid-template-columns:repeat(2,minmax(0,1fr)); }
+}
+@media(max-width:720px){
+  .page-communications .communications-metrics-v6 { grid-template-columns:repeat(2,minmax(0,1fr)); }
+  .page-communications .communications-composer-fields-v6 { grid-template-columns:1fr; }
+  .page-communications .communications-message-field-v6 { grid-column:auto; }
+}
+@media(max-width:430px){
+  .page-communications .communications-metrics-v6,
+  .page-communications .communications-template-grid-v6 { grid-template-columns:1fr; }
+}
