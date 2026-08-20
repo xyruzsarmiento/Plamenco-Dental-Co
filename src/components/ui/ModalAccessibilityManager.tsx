@@ -10,22 +10,26 @@ const FOCUSABLE_SELECTOR = [
 ].join(',')
 
 function getVisibleDialogs() {
-  return Array.from(document.querySelectorAll<HTMLElement>('.modal-backdrop [role="dialog"], .modal-backdrop > .modal'))
-    .filter((dialog) => {
-      const style = window.getComputedStyle(dialog)
-      return style.display !== 'none' && style.visibility !== 'hidden'
-    })
+  return Array.from(
+    document.querySelectorAll<HTMLElement>(
+      '.modal-backdrop [role="dialog"], .modal-backdrop > .modal, .treatment-drawer-backdrop [role="dialog"]',
+    ),
+  ).filter((dialog) => {
+    const style = window.getComputedStyle(dialog)
+    return style.display !== 'none' && style.visibility !== 'hidden'
+  })
 }
 
 function findCloseControl(dialog: HTMLElement): HTMLElement | null {
   const labelledClose = dialog.querySelector<HTMLElement>(
-    '[data-modal-close], [aria-label*="close" i], .modal-close, .modal-close-button',
+    '[data-modal-close], [aria-label*="close" i], .modal-close, .modal-close-button, .drawer-close-btn',
   )
   if (labelledClose) return labelledClose
 
-  return Array.from(dialog.querySelectorAll<HTMLButtonElement>('button')).find(
-    (button) => button.textContent?.trim().toLowerCase() === 'close' || button.textContent?.trim().toLowerCase() === 'cancel',
-  ) ?? null
+  return Array.from(dialog.querySelectorAll<HTMLButtonElement>('button')).find((button) => {
+    const label = button.textContent?.trim().toLowerCase()
+    return label === 'close' || label === 'cancel'
+  }) ?? null
 }
 
 export function ModalAccessibilityManager() {
@@ -36,12 +40,12 @@ export function ModalAccessibilityManager() {
 
     const activateTopDialog = () => {
       const dialogs = getVisibleDialogs()
-      const nextDialog = dialogs.at(-1) ?? null
+      const nextDialog = dialogs.length ? dialogs[dialogs.length - 1] : null
 
       if (!nextDialog) {
         if (activeDialog) {
           document.body.style.overflow = previousBodyOverflow
-          previouslyFocused?.focus?.()
+          previouslyFocused?.focus()
         }
         activeDialog = null
         previouslyFocused = null
@@ -81,8 +85,9 @@ export function ModalAccessibilityManager() {
 
       if (event.key !== 'Tab') return
 
-      const focusable = Array.from(activeDialog.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR))
-        .filter((element) => !element.hasAttribute('disabled') && element.getAttribute('aria-hidden') !== 'true')
+      const focusable = Array.from(activeDialog.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR)).filter(
+        (element) => !element.hasAttribute('disabled') && element.getAttribute('aria-hidden') !== 'true',
+      )
 
       if (!focusable.length) {
         event.preventDefault()
@@ -104,7 +109,12 @@ export function ModalAccessibilityManager() {
     }
 
     const observer = new MutationObserver(activateTopDialog)
-    observer.observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ['class', 'style'] })
+    observer.observe(document.body, {
+      childList: true,
+      subtree: true,
+      attributes: true,
+      attributeFilter: ['class', 'style'],
+    })
     document.addEventListener('keydown', onKeyDown)
     activateTopDialog()
 
