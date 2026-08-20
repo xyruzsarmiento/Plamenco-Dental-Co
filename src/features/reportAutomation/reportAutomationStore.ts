@@ -164,18 +164,39 @@ export async function createManagementReportSchedule(input: {
   scheduleConfig?: Record<string, unknown>
 }) {
   const client = requireSupabase()
-  const { data, error } = await client.rpc('create_management_report_schedule', {
-    p_name: input.name,
-    p_report_type: input.reportType,
-    p_frequency: input.frequency,
-    p_branch_scope: input.branchScope,
-    p_branch_id: input.branchId ?? null,
-    p_format: input.format,
-    p_recipient_config: input.recipientConfig ?? [],
-    p_schedule_config: input.scheduleConfig ?? {},
-  })
-  if (error) throw error
-  return String(data)
+  const name = input.name.trim()
+  if (!name) throw new Error('Schedule name is required.')
+  if (input.branchScope === 'branch' && !input.branchId) throw new Error('Select a branch for this report schedule.')
+
+  const { data: authData, error: authError } = await client.auth.getUser()
+  if (authError) throw new Error(`Unable to verify the current account: ${authError.message}`)
+  if (!authData.user) throw new Error('You must be signed in to create a management report schedule.')
+
+  // Persist the disabled schedule directly through the RLS-protected table. This avoids
+  // client/RPC signature drift while preserving the same database constraints and
+  // management-only authorization. A worker is still required for generation/delivery.
+  const { data, error } = await client
+    .from('management_report_schedules')
+    .insert({
+      name,
+      report_type: input.reportType,
+      frequency: input.frequency,
+      timezone: 'Asia/Manila',
+      branch_scope: input.branchScope,
+      branch_id: input.branchScope === 'branch' ? input.branchId ?? null : null,
+      format: input.format,
+      recipient_config: input.recipientConfig ?? [],
+      enabled: false,
+      schedule_config: input.scheduleConfig ?? {},
+      created_by: authData.user.id,
+      updated_by: authData.user.id,
+    })
+    .select('id')
+    .single()
+
+  if (error) throw new Error(`Unable to create report schedule: ${error.message}`)
+  if (!data?.id) throw new Error('The report schedule was not returned by the database after creation.')
+  return String(data.id)
 }
 
 export async function setManagementReportScheduleEnabled(schedule: ManagementReportSchedule, enabled: boolean) {
