@@ -1,4 +1,4 @@
-import { Menu, Search, X } from 'lucide-react'
+import { Menu, X } from 'lucide-react'
 import { useState } from 'react'
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../features/auth/AuthContext'
@@ -12,6 +12,7 @@ export function AppLayout() {
   const { canAny } = usePermissions()
   const location = useLocation()
   const navigate = useNavigate()
+
   const currentPage =
     navigationItems.find(
       (item) =>
@@ -20,13 +21,15 @@ export function AppLayout() {
         (item.path === '/app' && (location.pathname === '/app' || location.pathname === '/app/')),
     )?.label ?? 'Workspace'
 
-  const visibleGroups = navigationGroups.map((group) => ({
-    ...group,
-    items: group.items.filter((item) => {
-      if (user?.role === 'admin' && item.path === '/app/system-admin') return false
-      return !item.anyOf || canAny(item.anyOf)
-    }),
-  })).filter((group) => group.items.length > 0)
+  const visibleGroups = navigationGroups
+    .map((group) => ({
+      ...group,
+      items: group.items.filter((item) => {
+        if (user?.role === 'admin' && item.path === '/app/system-admin') return false
+        return !item.anyOf || canAny(item.anyOf)
+      }),
+    }))
+    .filter((group) => group.items.length > 0)
 
   const workspaceEyebrow =
     user?.role === 'staff'
@@ -36,18 +39,21 @@ export function AppLayout() {
         : user?.role === 'admin'
           ? 'Clinic operations'
           : user?.role === 'super_admin'
-            ? 'System administration'
-            : 'Clinic management'
+            ? 'Executive administration'
+            : 'Clinic workspace'
+
+  const roleLabel = user?.role ? roleLabels[user.role] : 'User'
+  const initial = user?.name?.trim().charAt(0).toUpperCase() || 'U'
 
   return (
     <div className={`app-shell role-${user?.role ?? 'guest'}`}>
       <aside className={`sidebar ${isMobileNavOpen ? 'is-open' : ''}`}>
         <div className="sidebar-header">
-          <div className="brand-lockup">
-            <span className="brand-symbol">P</span>
-            <span>
-              <strong>Plamenco</strong>
-              <small>Dental Co</small>
+          <div className="brand-lockup-modern">
+            <span className="brand-mark-modern" aria-hidden="true">P</span>
+            <span className="brand-copy-modern">
+              <strong>Plamenco Dental Co.</strong>
+              <small>{workspaceEyebrow}</small>
             </span>
           </div>
           <button
@@ -66,7 +72,6 @@ export function AppLayout() {
               <p className="nav-section-label">{group.title}</p>
               {group.items.map((item) => {
                 const Icon = item.icon
-
                 return (
                   <NavLink
                     key={item.path}
@@ -74,7 +79,7 @@ export function AppLayout() {
                     end={item.path === '/app'}
                     onClick={() => setIsMobileNavOpen(false)}
                   >
-                    <Icon size={18} />
+                    <Icon size={17} aria-hidden="true" />
                     <span>{item.label}</span>
                   </NavLink>
                 )
@@ -84,14 +89,15 @@ export function AppLayout() {
         </nav>
 
         <div className="sidebar-footer">
-          <div className="user-card">
-            <span className="avatar">{user?.name.charAt(0) ?? 'U'}</span>
-            <span>
-              <strong>{user?.name}</strong>
-              <small>{user?.role ? roleLabels[user.role] : 'User'}</small>
+          <div className="sidebar-profile-modern">
+            <span className="avatar" aria-hidden="true">{initial}</span>
+            <span className="sidebar-profile-copy">
+              <strong>{user?.name || user?.email || 'Signed in user'}</strong>
+              <small>{roleLabel}</small>
             </span>
           </div>
           <Button
+            className="sidebar-signout-modern"
             variant="secondary"
             size="sm"
             onClick={() => {
@@ -114,7 +120,7 @@ export function AppLayout() {
       )}
 
       <div className="main-shell">
-        <header className="topbar">
+        <header className="topbar topbar-modern">
           <button
             className="icon-button mobile-only"
             type="button"
@@ -123,18 +129,16 @@ export function AppLayout() {
           >
             <Menu size={20} />
           </button>
-          <div className="topbar-copy">
+
+          <div className="topbar-heading-modern">
             <p className="eyebrow">{workspaceEyebrow}</p>
             <h1>{currentPage}</h1>
           </div>
-          <div className="topbar-actions">
-            <label className="search-field">
-              <Search size={16} />
-              <input type="search" placeholder="Search patients, invoices, visits" />
-            </label>
-            <span className="topbar-status">
-              <span className="status-dot" />
-              Clinic online
+
+          <div className="topbar-meta-modern" aria-label="Current account role">
+            <span className="role-chip-modern">
+              <span className="role-chip-dot" aria-hidden="true" />
+              {roleLabel}
             </span>
           </div>
         </header>
