@@ -1,0 +1,195 @@
+.payment-recorder-backdrop {
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  overscroll-behavior: contain;
+}
+
+.payment-recorder-modal {
+  width: min(720px, calc(100vw - 32px));
+  max-height: min(860px, calc(100vh - 40px));
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  background: var(--surface);
+  box-shadow: 0 28px 80px rgba(20, 17, 15, 0.24);
+  animation: paymentRecorderEnter 180ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@keyframes paymentRecorderEnter {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.985);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.payment-recorder-modal .recorder-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 22px 24px 18px;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+  flex: 0 0 auto;
+}
+
+.payment-recorder-modal .recorder-header > div {
+  display: grid;
+  gap: 5px;
+}
+
+.payment-recorder-modal .recorder-header h2 {
+  margin: 0;
+}
+
+.payment-recorder-modal .recorder-header p {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+
+.payment-recorder-modal .recorder-content {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 22px 24px 24px;
+  display: grid;
+  gap: 18px;
+  scrollbar-gutter: stable;
+}
+
+.payment-recorder-modal .invoice-summary {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  padding: 0;
+  background: transparent;
+}
+
+.payment-recorder-modal .summary-item {
+  display: grid;
+  gap: 5px;
+  min-width: 0;
+  padding: 14px 16px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface-alt);
+}
+
+.payment-recorder-modal .summary-item span {
+  color: var(--text-muted);
+  font-size: 0.76rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.payment-recorder-modal .summary-item strong {
+  overflow-wrap: anywhere;
+  font-size: 1rem;
+}
+
+.payment-recorder-modal .summary-item.highlight {
+  border-color: var(--border-strong);
+  background: var(--accent-soft);
+}
+
+.payment-recorder-note,
+.payment-amount-hint {
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: var(--surface-alt);
+  color: var(--text-muted);
+  font-size: 0.86rem;
+}
+
+.payment-amount-hint.is-error {
+  background: var(--danger-soft);
+  color: var(--danger);
+}
+
+.payment-recorder-success {
+  min-height: 220px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 14px;
+  padding: 38px 28px;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: var(--success-soft);
+  color: var(--success);
+}
+
+.payment-recorder-success > div {
+  display: grid;
+  gap: 6px;
+}
+
+.payment-recorder-success strong {
+  color: var(--text-strong);
+  font-size: 1.05rem;
+}
+
+.payment-recorder-success p {
+  margin: 0;
+  color: var(--text);
+}
+
+.payment-recorder-modal .recorder-actions {
+  position: sticky;
+  bottom: -24px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin: 2px -24px -24px;
+  padding: 16px 24px;
+  border-top: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.96);
+  backdrop-filter: blur(10px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .payment-recorder-modal {
+    animation: none;
+  }
+}
+
+@media (max-width: 640px) {
+  .payment-recorder-backdrop {
+    align-items: flex-end;
+    padding: 0;
+  }
+
+  .payment-recorder-modal {
+    width: 100%;
+    max-height: 94vh;
+    border-radius: 18px 18px 0 0;
+    border-bottom: 0;
+  }
+
+  .payment-recorder-modal .recorder-header,
+  .payment-recorder-modal .recorder-content {
+    padding-left: 18px;
+    padding-right: 18px;
+  }
+
+  .payment-recorder-modal .invoice-summary,
+  .payment-recorder-modal .form-grid-cols-2 {
+    grid-template-columns: 1fr;
+  }
+
+  .payment-recorder-modal .recorder-actions {
+    margin-left: -18px;
+    margin-right: -18px;
+    padding-left: 18px;
+    padding-right: 18px;
+  }
+}
