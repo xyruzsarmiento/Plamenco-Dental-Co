@@ -13,14 +13,16 @@ set search_path = public
 stable
 as $$
   select
-    public.is_management_role()
+    public.has_profile_permission('system_admin.view'::text)
     or public.has_profile_permission('tasks.view_all'::text)
     or (
-      p_assignee_profile_id = auth.uid()
+      public.is_internal_profile()
+      and p_assignee_profile_id = auth.uid()
       and public.current_profile_role() in ('staff','dentist','associate_dentist')
     )
     or (
-      p_branch_id is not null
+      public.is_internal_profile()
+      and p_branch_id is not null
       and public.current_profile_role() = 'staff'
       and public.profile_has_active_branch(p_branch_id)
     )
@@ -30,12 +32,14 @@ as $$
       and public.profile_has_active_branch(p_branch_id)
     )
     or (
-      p_provider_id is not null
+      public.is_internal_profile()
+      and p_provider_id is not null
       and public.current_profile_role() in ('dentist','associate_dentist')
       and exists (
         select 1 from public.providers pr
         where pr.profile_id = auth.uid()
           and pr.id::text = p_provider_id
+          and pr.status in ('active','on_leave')
       )
     )
     or (
@@ -55,14 +59,16 @@ set search_path = public
 stable
 as $$
   select
-    public.is_management_role()
+    public.has_profile_permission('system_admin.manage'::text)
     or public.has_profile_permission('tasks.update'::text)
     or (
-      p_assignee_profile_id = auth.uid()
+      public.is_internal_profile()
+      and p_assignee_profile_id = auth.uid()
       and public.current_profile_role() in ('staff','dentist','associate_dentist')
     )
     or (
-      p_branch_id is not null
+      public.is_internal_profile()
+      and p_branch_id is not null
       and public.current_profile_role() = 'staff'
       and public.profile_has_active_branch(p_branch_id)
       and public.has_profile_permission('tasks.update'::text)
@@ -106,7 +112,7 @@ begin
   if p_created_source = 'user' then
     if not (
       public.has_profile_permission('tasks.create'::text)
-      or public.is_management_role()
+      or public.has_profile_permission('system_admin.manage'::text)
     ) then
       raise exception 'Not authorized to create tasks.';
     end if;
@@ -173,7 +179,9 @@ declare
 begin
   select * into v_task from public.operational_tasks where id = p_task_id for update;
   if not found then raise exception 'Task not found.'; end if;
-  if not (public.has_profile_permission('tasks.claim'::text) or public.is_management_role()) then raise exception 'Not authorized to claim tasks.'; end if;
+  if not (public.has_profile_permission('tasks.claim'::text) or public.has_profile_permission('system_admin.manage'::text)) then
+    raise exception 'Not authorized to claim tasks.';
+  end if;
   if v_task.assignee_profile_id is not null and v_task.assignee_profile_id <> auth.uid() then raise exception 'Task has already been assigned.'; end if;
   if v_task.updated_at is distinct from p_expected_updated_at then raise exception 'Task changed since it was loaded. Refresh and try again.'; end if;
   if not public.can_view_operational_task(v_task.branch_id, v_task.provider_id, v_task.assignee_profile_id) then raise exception 'Not authorized for this task.'; end if;
@@ -188,12 +196,19 @@ begin
 end;
 $$;
 
+-- Remove default PUBLIC execute grants from the task mutation surface.
 revoke all on function public.can_view_operational_task(text,text,uuid) from public;
 revoke all on function public.can_manage_operational_task(text,uuid) from public;
 revoke all on function public.create_operational_task(text,text,text,text,text,text,text,text,text,text,text,timestamptz,uuid,text,text) from public;
 revoke all on function public.claim_operational_task(uuid,timestamptz) from public;
+revoke all on function public.update_operational_task_state(uuid,text,timestamptz,text,text,timestamptz) from public;
+revoke all on function public.assign_operational_task(uuid,uuid,timestamptz) from public;
+revoke all on function public.add_operational_task_note(uuid,text) from public;
 
 grant execute on function public.can_view_operational_task(text,text,uuid) to authenticated;
 grant execute on function public.can_manage_operational_task(text,uuid) to authenticated;
 grant execute on function public.create_operational_task(text,text,text,text,text,text,text,text,text,text,text,timestamptz,uuid,text,text) to authenticated, service_role;
 grant execute on function public.claim_operational_task(uuid,timestamptz) to authenticated;
+grant execute on function public.update_operational_task_state(uuid,text,timestamptz,text,text,timestamptz) to authenticated;
+grant execute on function public.assign_operational_task(uuid,uuid,timestamptz) to authenticated;
+grant execute on function public.add_operational_task_note(uuid,text) to authenticated;
