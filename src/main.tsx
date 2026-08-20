@@ -12,6 +12,7 @@ import './styles/forms-consent-actions.css'
 import './styles/design-system-47a.css'
 import './styles/design-system-components-47a.css'
 import './styles/auth-47c.css'
+import './styles/patient-portal-47d.css'
 import App from './App.tsx'
 import { registerPatientPortalPwa } from './features/patientPortal/pwaRegistration'
 
