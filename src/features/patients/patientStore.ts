@@ -23,7 +23,23 @@ function safeParsePatients(value: string | null): Patient[] | null {
 }
 
 function generateUUID() {
-  return `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+    return crypto.randomUUID()
+  }
+
+  const bytes = new Uint8Array(16)
+  if (typeof crypto !== 'undefined' && typeof crypto.getRandomValues === 'function') {
+    crypto.getRandomValues(bytes)
+  } else {
+    for (let index = 0; index < bytes.length; index += 1) {
+      bytes[index] = Math.floor(Math.random() * 256)
+    }
+  }
+
+  bytes[6] = (bytes[6] & 0x0f) | 0x40
+  bytes[8] = (bytes[8] & 0x3f) | 0x80
+  const hex = Array.from(bytes, (value) => value.toString(16).padStart(2, '0')).join('')
+  return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20)}`
 }
 
 export function normalizePatientEmail(email: string) {
@@ -254,10 +270,9 @@ export function createPatient(values: PatientFormValues & { patientId?: string }
 
   const nextPatients = [...patients, patient]
   saveStoredPatients(nextPatients)
-  
-  // Persist to Supabase asynchronously
+
   void insertRemoteTableRow('patients', mapPatientToRemoteRow(patient))
-  
+
   recordAuditEntry({
     user: getCurrentSessionUserName(),
     action: 'patient_created',
@@ -295,10 +310,9 @@ export function updatePatient(id: string, values: PatientFormValues): Patient | 
 
   const nextPatients = patients.map((patient) => (patient.id === id ? updated : patient))
   saveStoredPatients(nextPatients)
-  
-  // Persist to Supabase asynchronously
+
   void updateRemoteTableRow('patients', id, mapPatientToRemoteRow(updated))
-  
+
   recordAuditEntry({
     user: getCurrentSessionUserName(),
     action: 'patient_updated',
@@ -312,17 +326,16 @@ export function updatePatient(id: string, values: PatientFormValues): Patient | 
 export function deletePatient(id: string): boolean {
   const patients = getStoredPatients()
   const index = patients.findIndex((p) => p.id === id)
-  
+
   if (index === -1) {
     return false
   }
-  
+
   patients.splice(index, 1)
   saveStoredPatients(patients)
-  
-  // Delete from Supabase asynchronously
+
   void deleteRemoteTableRow('patients', id)
-  
+
   return true
 }
 
@@ -330,7 +343,7 @@ export function searchPatients(query: string): Patient[] {
   if (!query.trim()) {
     return getStoredPatients()
   }
-  
+
   const lower = query.toLowerCase()
   return getStoredPatients().filter((patient) => {
     return (
@@ -346,11 +359,11 @@ export function searchPatients(query: string): Patient[] {
 
 export function filterPatients(patients: Patient[], filters: { status?: string }): Patient[] {
   let result = patients
-  
+
   if (filters.status) {
     result = result.filter((p) => p.status === filters.status)
   }
-  
+
   return result
 }
 
@@ -358,11 +371,11 @@ export type SortKey = 'name' | 'patientId' | 'registrationDate' | 'status' | 'da
 
 export function sortPatients(patients: Patient[], key: SortKey, direction: 'asc' | 'desc'): Patient[] {
   const sorted = [...patients]
-  
+
   sorted.sort((a, b) => {
     let aVal: string | number
     let bVal: string | number
-    
+
     switch (key) {
       case 'name':
         aVal = `${a.firstName} ${a.lastName}`.toLowerCase()
@@ -387,14 +400,14 @@ export function sortPatients(patients: Patient[], key: SortKey, direction: 'asc'
       default:
         return 0
     }
-    
+
     if (typeof aVal === 'string') {
       return direction === 'asc' ? aVal.localeCompare(bVal as string) : (bVal as string).localeCompare(aVal)
     }
-    
+
     return direction === 'asc' ? (aVal as number) - (bVal as number) : (bVal as number) - (aVal as number)
   })
-  
+
   return sorted
 }
 
