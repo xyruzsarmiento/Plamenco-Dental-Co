@@ -25,7 +25,7 @@ import { LandingPage } from '../pages/LandingPage'
 import { ManagementReportAutomationPage } from '../pages/ManagementReportAutomationPage'
 import { NotFoundPage } from '../pages/NotFoundPage'
 import { NotificationsPage } from '../pages/NotificationsPage'
-import { OperationalTasksPage } from '../pages/OperationalTasksPage'
+import { OperationalTasksPageV17 } from '../pages/OperationalTasksPageV17'
 import { PatientIntakePage } from '../pages/PatientIntakePage'
 import { PatientsPageV10 } from '../pages/PatientsPageV10'
 import { RecallFollowUpPage } from '../pages/RecallFollowUpPage'
@@ -101,7 +101,7 @@ export function AppRouter() {
           <Route path="notifications" element={<RequirePermission permission="notifications.view"><NotificationsPage /></RequirePermission>} />
           <Route path="communications" element={<RequirePermission anyOf={['communications.manage', 'notifications.send', 'notifications.view']}><CommunicationsPage /></RequirePermission>} />
           <Route path="recalls" element={<RequirePermission anyOf={['appointments.view', 'clinical_records.view', 'communications.manage']}><RecallFollowUpPage /></RequirePermission>} />
-          <Route path="tasks" element={<RequirePermission anyOf={['appointments.view', 'clinical_records.view', 'system_admin.view']}><OperationalTasksPage /></RequirePermission>} />
+          <Route path="tasks" element={<RequirePermission anyOf={['appointments.view', 'clinical_records.view', 'system_admin.view']}><OperationalTasksPageV17 /></RequirePermission>} />
           <Route path="forms-consent" element={<RequirePermission permission="settings.manage"><FormsConsentAdminPage /></RequirePermission>} />
           <Route path="settings" element={<RequirePermission permission="settings.manage"><SettingsPage /></RequirePermission>} />
           <Route path="system-admin" element={<RequireRole allowedRoles={['super_admin']}><SystemAdministrationPage /></RequireRole>} />
