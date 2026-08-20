@@ -66,6 +66,34 @@ Do not guess these values. Record the clinic owner's decision, date, and approve
 | What is the incident escalation owner for suspected patient-data exposure or incorrect financial posting? | Pending clinic owner/security confirmation |
 | Which Critical/High issues, if any, are explicitly accepted as launch blockers versus deferred non-blocking work? | Pending launch review; Critical integrity/privacy issues may not be silently waived |
 
+## Part 41 — Operational Task & Automation Decisions
+
+| Decision Needed | Current Status |
+|---|---|
+| Which task automation rules should be enabled? | Pending clinic operations confirmation; all rules are disabled by default |
+| Can staff manually create general operational tasks? | Pending operations/security confirmation |
+| Can staff assign tasks to other staff or claim unassigned tasks? | Pending operations/security confirmation |
+| Who may reassign, cancel, or reopen tasks? | Pending operations/security confirmation |
+| Are blocked reasons mandatory for all task types? | Pending operations confirmation; current task RPC requires a reason for Blocked |
+| Which task types, if any, may use Critical operational priority? | Pending clinic owner/operations confirmation |
+| What does Critical operational priority mean for this clinic? | Pending clinic owner/operations confirmation; it must not imply medical urgency |
+| Should front desk see all tasks for assigned branches or only individually assigned work? | Pending operations/security confirmation |
+| Should dentists see only their own provider/clinical tasks? | Pending clinical/security confirmation |
+| Can Associate Dentists receive and complete clinical operational tasks? | Pending clinical/security confirmation |
+| Should accepted treatment-plan items automatically create scheduling tasks? | Pending clinical/operations confirmation |
+| Should undecided treatment plans create follow-up tasks? | Pending clinical/operations confirmation |
+| Should pending consents create tasks automatically, and how close to an appointment? | Pending clinical/operations confirmation |
+| Should actual payment failures always create Payment Review tasks? | Pending billing/operations confirmation |
+| Which failed communication states should create exception tasks? | Pending communication/operations confirmation |
+| Should due recalls create staff tasks automatically? | Pending recall/operations confirmation |
+| Should configured inventory reorder or expiry conditions create tasks automatically? | Pending inventory/operations confirmation |
+| Should expenses awaiting approval generate tasks? | Pending finance/operations confirmation |
+| Should overdue tasks notify supervisors, and after what configured threshold? | Pending operations/security confirmation |
+| Are task due windows configured per task type? | Pending operations confirmation |
+| Who may manage automation rules? | Pending clinic owner/security confirmation |
+| Should branch managers see workload metrics? | Pending clinic owner/operations confirmation |
+| Should task completion metrics be shown by individual staff member? | Pending clinic owner/HR/privacy confirmation; no employee ranking is implemented |
+
 ## Existing decisions from Parts 1–32
 
 The previously tracked decisions remain in project history and implementation documentation, including branch identity/hours, appointment policies, deposits, payment gateway and manual payment methods, service catalog/pricing, provider schedules/roles, staff permissions, compensation rules, inventory opening stock/reorder/cost rules, expense approvals, SMS/email/Messenger providers and consent, historical Excel migration/linking, retention/privacy, clinical visibility, patient exports, procurement/stock transfer/count workflows, backup/recovery ownership, deployment domains/projects, daily clinic workflow, queue/check-in/no-show permissions, patient booking/rescheduling, reminders, online payments, and patient-facing price presentation.
