@@ -4,6 +4,7 @@ import {
   Building2,
   CalendarDays,
   DatabaseZap,
+  ClipboardCheck,
   ClipboardList,
   CreditCard,
   FileSignature,
@@ -56,6 +57,7 @@ export const navigationGroups: NavigationGroup[] = [
   {
     title: 'Operations',
     items: [
+      { label: 'Tasks / Work Queue', path: '/app/tasks', icon: ClipboardCheck, anyOf: ['appointments.view', 'clinical_records.view', 'system_admin.view'] },
       { label: 'Recall & Follow-Up', path: '/app/recalls', icon: RefreshCcw, anyOf: ['appointments.view', 'clinical_records.view', 'communications.manage'] },
       { label: 'Reports', path: '/app/reports', icon: BarChart3, anyOf: ['reports.view'] },
       { label: 'Data Import', path: '/app/data-import', icon: DatabaseZap, anyOf: ['patients.import'] },
