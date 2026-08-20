@@ -227,13 +227,13 @@ export function findPotentialPatientDuplicates(
     .filter((match): match is PotentialPatientDuplicate => Boolean(match))
 }
 
-export function createPatient(values: PatientFormValues): Patient {
+export function createPatient(values: PatientFormValues & { patientId?: string }): Patient {
   const patients = getStoredPatients()
   const now = new Date().toISOString()
 
   const patient: Patient = {
     id: generateUUID(),
-    patientId: generatePatientId(patients),
+    patientId: values.patientId?.trim() || generatePatientId(patients),
     ...values,
     authUserId: values.authUserId ?? undefined,
     fullName: values.fullName ?? [values.firstName, values.middleName, values.lastName].filter(Boolean).join(' '),

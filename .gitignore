@@ -12,6 +12,45 @@ dist
 dist-ssr
 *.local
 
+# Environment files and deployment-local state.
+.env
+.env.*
+!.env.example
+*.env
+.vercel/
+
+# Client migration files contain patient data. Keep them out of Git.
+*.xlsx
+*.xls
+*.xlsm
+*.csv
+imports/
+migration-data/
+client-data/
+
+# Private exports, backups, dumps, credentials, and certificates.
+exports/private/
+private-exports/
+database-dumps/
+backups/
+credentials/
+secrets/
+certificates/
+*.dump
+*.backup
+*.bak
+*.sql.gz
+*.tar
+*.tgz
+*.zip
+*.7z
+*.pem
+*.key
+*.p12
+*.pfx
+*.crt
+*.cer
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

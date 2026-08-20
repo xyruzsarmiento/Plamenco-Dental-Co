@@ -110,12 +110,12 @@ test('buildReportSnapshot calculates revenue, patient, appointment, and service 
       { id: 'a4', patientId: 'p1', serviceId: 's3', date: today.toISOString().slice(0, 10), status: 'pending', startTime: '15:00', endTime: '16:00', notes: '', createdBy: 'admin', createdAt: today.toISOString(), updatedAt: today.toISOString() },
     ],
     invoices: [
-      { id: 'i1', patientId: 'p1', invoiceDate: today.toISOString().slice(0, 10), totalCents: 3000, amountPaidCents: 3000, balanceCents: 0, status: 'paid', notes: '', createdAt: today.toISOString(), updatedAt: today.toISOString(), items: [{ id: 'it1', description: 'Consultation', quantity: 1, unitPriceCents: 3000 }], invoiceNumber: 'INV-1001' },
-      { id: 'i2', patientId: 'p2', invoiceDate: dayOne, totalCents: 5000, amountPaidCents: 2000, balanceCents: 3000, status: 'partially_paid', notes: '', createdAt: dayOne, updatedAt: dayOne, items: [{ id: 'it2', description: 'Cleaning', quantity: 1, unitPriceCents: 5000 }], invoiceNumber: 'INV-1002' },
+      { id: 'i1', patientId: 'p1', invoiceDate: today.toISOString().slice(0, 10), subtotalCents: 3000, discountCents: 0, totalCents: 3000, amountPaidCents: 3000, balanceCents: 0, status: 'paid', notes: '', createdBy: 'admin', createdAt: today.toISOString(), updatedAt: today.toISOString(), items: [{ id: 'it1', description: 'Consultation', quantity: 1, unitPriceCents: 3000 }], invoiceNumber: 'INV-1001' },
+      { id: 'i2', patientId: 'p2', invoiceDate: dayOne, subtotalCents: 5000, discountCents: 0, totalCents: 5000, amountPaidCents: 2000, balanceCents: 3000, status: 'partially_paid', notes: '', createdBy: 'admin', createdAt: dayOne, updatedAt: dayOne, items: [{ id: 'it2', description: 'Cleaning', quantity: 1, unitPriceCents: 5000 }], invoiceNumber: 'INV-1002' },
     ],
     payments: [
-      { id: 'pay1', patientId: 'p1', invoiceId: 'i1', amountCents: 3000, paymentMethod: 'cash', date: today.toISOString().slice(0, 10), recordedBy: 'admin', createdAt: today.toISOString() },
-      { id: 'pay2', patientId: 'p2', invoiceId: 'i2', amountCents: 2000, paymentMethod: 'gcash', date: dayOne, recordedBy: 'admin', createdAt: dayOne },
+      { id: 'pay1', paymentNumber: 'PAY-1001', patientId: 'p1', invoiceId: 'i1', amountCents: 3000, allocatedCents: 3000, refundableCents: 3000, paymentMethod: 'cash', source: 'manual', status: 'completed', date: today.toISOString().slice(0, 10), recordedBy: 'admin', createdAt: today.toISOString() },
+      { id: 'pay2', paymentNumber: 'PAY-1002', patientId: 'p2', invoiceId: 'i2', amountCents: 2000, allocatedCents: 2000, refundableCents: 2000, paymentMethod: 'gcash', source: 'manual', status: 'completed', date: dayOne, recordedBy: 'admin', createdAt: dayOne },
     ],
     services: [
       { id: 's1', name: 'Consultation', description: '', duration: 30, price: 3000, category: 'General', status: 'active', createdAt: '2026-08-01', updatedAt: '2026-08-01' },

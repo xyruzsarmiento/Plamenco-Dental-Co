@@ -6,6 +6,7 @@ import { getRolePermissions } from './permissions'
 import { findStaffByEmail } from './staffStore'
 
 const STORAGE_KEY = 'plamenco.auth.user'
+const allowLegacyLocalAuth = import.meta.env.DEV && import.meta.env.VITE_ENABLE_LEGACY_LOCAL_AUTH === 'true'
 
 function readStoredUser(): AuthUser | null {
   try {
@@ -16,7 +17,7 @@ function readStoredUser(): AuthUser | null {
   }
 }
 
-function buildPatientUserFromSupabase(sessionUser: { id: string; email?: string | null; user_metadata?: Record<string, unknown> }, patientId?: string): AuthUser | null {
+function buildPatientUserFromSupabase(sessionUser: { id: string; email?: string | null; user_metadata?: Record<string, unknown> }, patientId?: string, status: AccountStatus = 'active'): AuthUser | null {
   if (!sessionUser.email) {
     return null
   }
@@ -30,7 +31,7 @@ function buildPatientUserFromSupabase(sessionUser: { id: string; email?: string 
     name: `${firstName} ${lastName}`.trim() || sessionUser.email.split('@')[0] || 'Patient',
     email: sessionUser.email.toLowerCase(),
     role: 'patient',
-    status: 'active',
+    status,
     permissions: getRolePermissions('patient'),
     patientId: patientId ?? (typeof metadata.patient_id === 'string' ? metadata.patient_id : undefined),
   }
@@ -107,8 +108,11 @@ async function buildUserFromSupabaseSession(sessionUser: { id: string; email?: s
     return profileUser
   }
 
-  const patientId = await ensurePatientProfileForSession(sessionUser)
-  return buildPatientUserFromSupabase(sessionUser, patientId)
+  const metadataRole = sessionUser.user_metadata?.role
+  if (!profile && isUserRole(metadataRole) && metadataRole !== 'patient') return null
+
+  const patientProfile = await ensurePatientProfileForSession(sessionUser)
+  return buildPatientUserFromSupabase(sessionUser, patientProfile?.patientId, patientProfile?.status)
 }
 
 async function ensurePatientProfileForSession(sessionUser: { id: string; email?: string | null; user_metadata?: Record<string, unknown> }) {
@@ -118,12 +122,15 @@ async function ensurePatientProfileForSession(sessionUser: { id: string; email?:
 
   const { data: existingProfile, error: lookupError } = await supabase
     .from('patients')
-    .select('patient_id')
+    .select('patient_id, status')
     .eq('auth_user_id', sessionUser.id)
     .maybeSingle()
 
   if (!lookupError && existingProfile?.patient_id) {
-    return existingProfile.patient_id as string
+    return {
+      patientId: existingProfile.patient_id as string,
+      status: isAccountStatus(existingProfile.status) ? existingProfile.status : 'active',
+    }
   }
 
   const metadata = sessionUser.user_metadata ?? {}
@@ -157,10 +164,10 @@ async function ensurePatientProfileForSession(sessionUser: { id: string; email?:
 
   if (insertError) {
     console.error('Failed to create patient profile for authenticated user:', insertError)
-    return generatedPatientId
+    return { patientId: generatedPatientId, status: 'active' as AccountStatus }
   }
 
-  return createdProfile?.patient_id ?? generatedPatientId
+  return { patientId: createdProfile?.patient_id ?? generatedPatientId, status: 'active' as AccountStatus }
 }
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
@@ -238,7 +245,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
         const normalizedEmail = email.trim().toLowerCase()
 
-        const staff = findStaffByEmail(normalizedEmail)
+        const staff = allowLegacyLocalAuth ? findStaffByEmail(normalizedEmail) : undefined
         if (staff && staff.password === password && staff.status === 'active') {
           const nextUser: AuthUser = {
             id: staff.id,
@@ -360,6 +367,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
         if (profileError) {
           console.error('Supabase patient profile creation failed:', profileError)
+          setAuthError('Your sign-in account was created, but we could not create the linked patient profile. Please contact the clinic before logging in.')
+          return {
+            success: false,
+            message: 'Your sign-in account was created, but we could not create the linked patient profile. Please contact the clinic before logging in.',
+          }
         }
 
         return {

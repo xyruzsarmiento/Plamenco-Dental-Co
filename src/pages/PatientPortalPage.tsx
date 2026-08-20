@@ -34,8 +34,11 @@ import { createAppointment, getAppointmentsByPatient } from '../features/appoint
 import { addMinutesToTime } from '../features/appointments/appointmentStore'
 import { getAvailableAppointmentSlots, getEligibleProviders } from '../features/appointments/availabilityEngine'
 import {
+  getInvoicesByPatient,
   getOutstandingBalanceByPatient,
   getPaymentsByPatient,
+  getReceiptsByPatient,
+  initiateOnlinePayment,
 } from '../features/billing/billingStore'
 import { getDentalRecordsByPatientId } from '../features/dentalRecords/dentalRecordStore'
 import { getDocumentsByPatient } from '../features/documents/documentStore'
@@ -90,6 +93,42 @@ function formatTimeDisplay(time: string): string {
   const suffix = hours >= 12 ? 'PM' : 'AM'
   const hour12 = hours % 12 || 12
   return `${hour12}:${String(minutes).padStart(2, '0')} ${suffix}`
+}
+
+function formatPatientStatus(value: string) {
+  const labels: Record<string, string> = {
+    pending: 'Awaiting confirmation',
+    confirmed: 'Confirmed',
+    rejected: 'Request not approved',
+    cancelled: 'Cancelled',
+    rescheduled: 'Rescheduled',
+    no_show: 'Missed appointment',
+    checked_in: 'Checked in',
+    waiting: 'Waiting at clinic',
+    in_progress: 'Visit in progress',
+    completed: 'Completed',
+    draft: 'Preparing summary',
+    finalized: 'Available',
+    amended: 'Updated',
+    unpaid: 'Payment due',
+    partially_paid: 'Partially paid',
+    paid: 'Paid',
+    void: 'Cancelled',
+    partially_refunded: 'Partially refunded',
+    refunded: 'Refunded',
+    pending_verification: 'Being confirmed',
+    processing: 'Processing',
+    failed: 'Unsuccessful',
+    voided: 'Cancelled',
+  }
+  return labels[value] ?? value.replaceAll('_', ' ')
+}
+
+function patientStatusTone(value: string): 'success' | 'warning' | 'danger' | 'info' {
+  if (['confirmed', 'completed', 'finalized', 'amended', 'paid'].includes(value)) return 'success'
+  if (['pending', 'checked_in', 'waiting', 'in_progress', 'partially_paid', 'pending_verification', 'processing'].includes(value)) return 'warning'
+  if (['rejected', 'cancelled', 'no_show', 'void', 'voided', 'failed'].includes(value)) return 'danger'
+  return 'info'
 }
 
 export function PatientPortalPage() {
@@ -225,9 +264,12 @@ export function PatientPortalPage() {
     [patient],
   )
   const prescriptions = useMemo(() => (patient ? getPrescriptionsByPatient(patient.patientId) : []), [patient])
+  const invoices = useMemo(() => (patient ? getInvoicesByPatient(patient.patientId) : []), [patient])
   const payments = useMemo(() => (patient ? getPaymentsByPatient(patient.patientId) : []), [patient])
+  const receipts = useMemo(() => (patient ? getReceiptsByPatient(patient.patientId) : []), [patient])
   const documents = useMemo(() => (patient ? getDocumentsByPatient(patient.patientId) : []), [patient])
   const balance = useMemo(() => (patient ? getOutstandingBalanceByPatient(patient.patientId) : 0), [patient])
+  const openInvoices = useMemo(() => invoices.filter((invoice) => invoice.balanceCents > 0 && invoice.status !== 'void'), [invoices])
 
   const nextAppointment = useMemo(() => {
     const upcoming = [...patientAppointments].sort(
@@ -291,8 +333,8 @@ export function PatientPortalPage() {
     const items = [
       ...patientAppointments.map((appointment) => ({
         date: `${appointment.date}T${appointment.startTime}`,
-        label: 'Appointment confirmed',
-        detail: `${appointment.serviceId} • ${appointment.status}`,
+        label: 'Appointment update',
+        detail: `${portalServiceMap.get(appointment.serviceId)?.name ?? 'Appointment'} - ${formatPatientStatus(appointment.status)}`,
       })),
       ...dentalRecords.map((record) => ({
         date: record.recordDate,
@@ -312,7 +354,7 @@ export function PatientPortalPage() {
     ]
 
     return items.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()).slice(0, 5)
-  }, [dentalRecords, patientAppointments, payments, prescriptions])
+  }, [dentalRecords, patientAppointments, payments, portalServiceMap, prescriptions])
 
   if (!resolvedPatientId) {
     return <Navigate to="/login" replace />
@@ -500,6 +542,28 @@ export function PatientPortalPage() {
       const message = error instanceof Error ? error.message : 'Something went wrong while saving your profile.'
       setProfileError(message)
       setProfileSaved('error')
+    }
+  }
+
+  function handlePayNow(invoiceId?: string) {
+    const invoice = invoiceId ? invoices.find((entry) => entry.id === invoiceId) : openInvoices[0]
+    if (!patient || !invoice || invoice.balanceCents <= 0) return
+
+    try {
+      initiateOnlinePayment({
+        patientId: patient.patientId,
+        invoiceId: invoice.id,
+        branchId: invoice.branchId,
+        amountCents: invoice.balanceCents,
+        paymentMethod: 'online_gateway',
+        date: new Date().toISOString().slice(0, 10),
+        recordedBy: patient.patientId,
+        gatewayProvider: 'not_configured',
+        notes: 'Patient portal payment initiated. Awaiting configured gateway verification.',
+      })
+      window.alert('Payment processing has been prepared. Online gateway secrets must be configured server-side before accepting live payments.')
+    } catch (error) {
+      window.alert(error instanceof Error ? error.message : 'Unable to start payment processing.')
     }
   }
 
@@ -1160,14 +1224,10 @@ export function PatientPortalPage() {
                       <div key={appointment.id} className="portal-premium-card info-row">
                         <div>
                           <strong>{formatDate(appointment.date)}</strong>
-                          <small>
-                            {appointment.startTime} - {appointment.endTime}
-                          </small>
+                          <small>{formatTimeDisplay(appointment.startTime)} - {formatTimeDisplay(appointment.endTime)}</small>
                         </div>
                         <div className="info-row-meta">
-                          <Badge tone={appointment.status === 'confirmed' ? 'success' : appointment.status === 'pending' ? 'warning' : 'info'}>
-                            {appointment.status}
-                          </Badge>
+                          <Badge tone={patientStatusTone(appointment.status)}>{formatPatientStatus(appointment.status)}</Badge>
                           <span>{service?.name ?? 'Service'} - {branch?.name ?? 'Branch pending'} - {provider?.displayName ?? 'Dentist pending'}</span>
                         </div>
                       </div>
@@ -1196,10 +1256,10 @@ export function PatientPortalPage() {
                     <div key={record.id} className="portal-premium-card record-card">
                       <div className="record-header">
                         <div>
-                          <p className="eyebrow">{record.visitType}</p>
+                          <p className="eyebrow">{formatPatientStatus(record.visitType)}</p>
                           <h4>{record.chiefComplaint}</h4>
                         </div>
-                        <Badge tone={record.status === 'finalized' || record.status === 'amended' ? 'success' : 'info'}>{record.status}</Badge>
+                        <Badge tone={patientStatusTone(record.status)}>{formatPatientStatus(record.status)}</Badge>
                       </div>
                       <div className="record-grid">
                         <div>
@@ -1253,7 +1313,7 @@ export function PatientPortalPage() {
                         </small>
                       </div>
                       <div className="info-row-meta">
-                        <Badge tone={treatment.status === 'completed' ? 'success' : 'info'}>{treatment.status}</Badge>
+                        <Badge tone={patientStatusTone(treatment.status)}>{formatPatientStatus(treatment.status)}</Badge>
                         <span>{formatCurrency(treatment.priceSnapshotCents)}</span>
                       </div>
                     </div>
@@ -1303,9 +1363,9 @@ export function PatientPortalPage() {
               <div className="portal-premium-header">
                 <div>
                   <p className="eyebrow">Financial overview</p>
-                  <h3>Payments</h3>
+                  <h3>Billing & Payments</h3>
                 </div>
-                <span className="portal-premium-chip">{payments.length} records</span>
+                <span className="portal-premium-chip">{invoices.length} invoices</span>
               </div>
 
               <div className="payment-balance-hero">
@@ -1323,11 +1383,42 @@ export function PatientPortalPage() {
                     ) : (
                       <>
                         <span className="status-badge status-pending">Pending</span>
-                        <small className="status-note">Due on first available</small>
+                        <Button size="sm" icon={<CreditCard size={14} />} onClick={() => handlePayNow()}>
+                          Pay Now
+                        </Button>
                       </>
                     )}
                   </div>
                 </div>
+              </div>
+
+              {openInvoices.length === 0 ? (
+                <p className="empty-inline">You&apos;re all settled.</p>
+              ) : (
+                <div className="portal-premium-list">
+                  {openInvoices.map((invoice) => (
+                    <div key={invoice.id} className="portal-premium-card info-row info-row-block">
+                      <div>
+                        <strong>{invoice.invoiceNumber}</strong>
+                        <small>{formatDate(invoice.invoiceDate)} - {formatPatientStatus(invoice.status)}</small>
+                      </div>
+                      <div className="payment-card-amount">
+                        <span className="payment-amount">{formatCurrency(invoice.balanceCents)}</span>
+                        <Button size="sm" variant="secondary" onClick={() => handlePayNow(invoice.id)}>
+                          Pay
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              <div className="portal-premium-header" style={{ marginTop: 20 }}>
+                <div>
+                  <p className="eyebrow">History</p>
+                  <h3>Payment History</h3>
+                </div>
+                <span className="portal-premium-chip">{payments.length} records</span>
               </div>
 
               {payments.length === 0 ? (
@@ -1336,22 +1427,40 @@ export function PatientPortalPage() {
                 <div className="portal-premium-list">
                   {payments.map((payment) => (
                     <div key={payment.id} className="payment-premium-card">
-                      <div className="payment-card-icon">
-                        {payment.paymentMethod.toLowerCase() === 'cash' && <span></span>}
-                        {payment.paymentMethod.toLowerCase() === 'card' && <span></span>}
-                        {payment.paymentMethod.toLowerCase() === 'bank transfer' && <span></span>}
-                        {payment.paymentMethod.toLowerCase() === 'check' && <span></span>}
-                        {!['cash', 'card', 'bank transfer', 'check'].includes(payment.paymentMethod.toLowerCase()) && <CreditCard size={16} />}
-                      </div>
+                      <div className="payment-card-icon"><CreditCard size={16} /></div>
                       <div className="payment-card-main">
                         <div>
-                          <strong className="payment-method">{payment.paymentMethod}</strong>
-                          <small className="payment-date">{formatDate(payment.date)}</small>
+                          <strong className="payment-method">{formatPatientStatus(payment.paymentMethod)}</strong>
+                          <small className="payment-date">{formatDate(payment.date)} - {formatPatientStatus(payment.status)}</small>
                         </div>
                       </div>
                       <div className="payment-card-amount">
                         <span className="payment-amount">{formatCurrency(payment.amountCents)}</span>
                       </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              <div className="portal-premium-header" style={{ marginTop: 20 }}>
+                <div>
+                  <p className="eyebrow">Acknowledgements</p>
+                  <h3>Receipts</h3>
+                </div>
+                <span className="portal-premium-chip">{receipts.length} receipts</span>
+              </div>
+
+              {receipts.length === 0 ? (
+                <p className="empty-inline">No receipts are available yet.</p>
+              ) : (
+                <div className="portal-premium-list">
+                  {receipts.map((receipt) => (
+                    <div key={receipt.id} className="portal-premium-card info-row info-row-block">
+                      <div>
+                        <strong>{receipt.receiptNumber}</strong>
+                        <small>{formatDate(receipt.issuedAt)} • Payment acknowledgement</small>
+                      </div>
+                      <span className="payment-amount">{formatCurrency(receipt.amountCents)}</span>
                     </div>
                   ))}
                 </div>

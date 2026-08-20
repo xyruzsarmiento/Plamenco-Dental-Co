@@ -1,4 +1,5 @@
-import { Navigate, Route, BrowserRouter as Router, Routes } from 'react-router-dom'
+import { useEffect } from 'react'
+import { Navigate, Route, BrowserRouter as Router, Routes, useLocation } from 'react-router-dom'
 import { AppLayout } from '../components/layout/AppLayout'
 import { ForgotPasswordPage } from '../features/auth/ForgotPasswordPage'
 import { LoginPage } from '../features/auth/LoginPage'
@@ -12,9 +13,13 @@ import { ResetPasswordPage } from '../features/auth/ResetPasswordPage'
 import { AppointmentsPage } from '../pages/AppointmentsPage'
 import { BillingPage } from '../pages/BillingPage'
 import { BranchesPage } from '../pages/BranchesPage'
+import { CommunicationsPage } from '../pages/CommunicationsPage'
 import { DashboardPage } from '../pages/DashboardPage'
+import { DataImportPage } from '../pages/DataImportPage'
 import { DentalRecordsPage } from '../pages/DentalRecordsPage'
 import { DentistsPage } from '../pages/DentistsPage'
+import { ExpensesPage } from '../pages/ExpensesPage'
+import { InventoryPage } from '../pages/InventoryPage'
 import { LandingPage } from '../pages/LandingPage'
 import { NotFoundPage } from '../pages/NotFoundPage'
 import { NotificationsPage } from '../pages/NotificationsPage'
@@ -25,6 +30,7 @@ import { ReportsPage } from '../pages/ReportsPage'
 import { ServicesPage } from '../pages/ServicesPage'
 import { SettingsPage } from '../pages/SettingsPage'
 import { StaffPage } from '../pages/StaffPage'
+import { SystemAdministrationPage } from '../pages/SystemAdministrationPage'
 import { TreatmentsPage } from '../pages/TreatmentsPage'
 import { UnauthorizedPage } from '../pages/UnauthorizedPage'
 
@@ -38,9 +44,26 @@ function BookRoute() {
   return <PublicBookingPage />
 }
 
+function RouteRobotsMeta() {
+  const location = useLocation()
+
+  useEffect(() => {
+    const robots = document.querySelector<HTMLMetaElement>('meta[name="robots"]')
+    if (!robots) return
+    const deploymentEnvironment = (import.meta.env.VITE_DEPLOYMENT_ENV ?? 'development').toLowerCase()
+    const isNonProductionDeployment = deploymentEnvironment !== 'production'
+    const privateRoutePrefixes = ['/app', '/portal', '/staff', '/dentist', '/super-admin', '/login', '/register', '/forgot-password', '/reset-password']
+    const isPrivateOrAuthRoute = privateRoutePrefixes.some((prefix) => location.pathname === prefix || location.pathname.startsWith(`${prefix}/`))
+    robots.content = isNonProductionDeployment || isPrivateOrAuthRoute ? 'noindex, nofollow' : 'index, follow'
+  }, [location.pathname])
+
+  return null
+}
+
 export function AppRouter() {
   return (
     <Router>
+      <RouteRobotsMeta />
       <Routes>
         <Route path="/" element={<LandingPage />} />
         <Route path="/login" element={<LoginPage />} />
@@ -84,6 +107,14 @@ export function AppRouter() {
             }
           />
           <Route
+            path="patients/:patientId"
+            element={
+              <RequirePermission permission="patients.view">
+                <PatientsPage />
+              </RequirePermission>
+            }
+          />
+          <Route
             path="dental-records"
             element={
               <RequirePermission permission="clinical_records.view">
@@ -116,6 +147,22 @@ export function AppRouter() {
             }
           />
           <Route
+            path="inventory"
+            element={
+              <RequirePermission permission="inventory.view">
+                <InventoryPage />
+              </RequirePermission>
+            }
+          />
+          <Route
+            path="expenses"
+            element={
+              <RequirePermission permission="expenses.view">
+                <ExpensesPage />
+              </RequirePermission>
+            }
+          />
+          <Route
             path="staff"
             element={
               <RequirePermission anyOf={['staff.manage', 'dentists.manage']}>
@@ -142,8 +189,16 @@ export function AppRouter() {
           <Route
             path="reports"
             element={
-              <RequirePermission anyOf={['reports.view', 'reports.view_limited']}>
+              <RequirePermission permission="reports.view">
                 <ReportsPage />
+              </RequirePermission>
+            }
+          />
+          <Route
+            path="data-import"
+            element={
+              <RequirePermission permission="patients.import">
+                <DataImportPage />
               </RequirePermission>
             }
           />
@@ -156,11 +211,27 @@ export function AppRouter() {
             }
           />
           <Route
+            path="communications"
+            element={
+              <RequirePermission anyOf={['communications.manage', 'notifications.send', 'notifications.view']}>
+                <CommunicationsPage />
+              </RequirePermission>
+            }
+          />
+          <Route
             path="settings"
             element={
               <RequirePermission permission="settings.manage">
                 <SettingsPage />
               </RequirePermission>
+            }
+          />
+          <Route
+            path="system-admin"
+            element={
+              <RequireRole allowedRoles={['super_admin']}>
+                <SystemAdministrationPage />
+              </RequireRole>
             }
           />
           <Route path="unauthorized" element={<UnauthorizedPage />} />
@@ -170,7 +241,7 @@ export function AppRouter() {
           element={
             <RequireAuth>
               <RequireRole allowedRoles={['super_admin']}>
-                <Navigate to="/app" replace />
+                <Navigate to="/app/system-admin" replace />
               </RequireRole>
             </RequireAuth>
           }

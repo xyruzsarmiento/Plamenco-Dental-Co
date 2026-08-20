@@ -1,115 +1,39 @@
-import { Download, FileText, TrendingUp } from 'lucide-react'
+import { BarChart3, Download, FileSpreadsheet, FileText, Printer, RefreshCw, TrendingUp } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { Button } from '../components/ui/Button'
 import { useAuth } from '../features/auth/AuthContext'
-import { getStoredAppointments } from '../features/appointments/appointmentStore'
-import { getStoredPatients } from '../features/patients/patientStore'
-import { getStoredPayments } from '../features/billing/billingStore'
+import { getStoredBranches } from '../features/branches/branchStore'
+import { getStoredProviders } from '../features/dentists/dentistStore'
+import { getExpenseCategories, getExpenseVendors } from '../features/expenses/expenseStore'
+import { getInventoryCategories, getSuppliers } from '../features/inventory/inventoryStore'
+import { buildExecutiveWorkbook } from '../features/reports/executiveWorkbook'
+import {
+  buildEnterpriseReportSnapshot,
+  exportEnterpriseReportCsv,
+  formatReportCurrency,
+  getReportingDatePresetRange,
+  type DateRangePreset,
+} from '../features/reports/reportStore'
 import { getStoredServices } from '../features/services/serviceStore'
 
-const branchOptions = [
-  { value: 'all', label: 'All branches' },
-  { value: 'Pulilan', label: 'Pulilan' },
-  { value: 'Plaridel', label: 'Plaridel' },
+const presets: Array<{ value: DateRangePreset; label: string }> = [
+  { value: 'today', label: 'Today' },
+  { value: 'yesterday', label: 'Yesterday' },
+  { value: 'this_week', label: 'This week' },
+  { value: 'last_7_days', label: 'Last 7 days' },
+  { value: 'this_month', label: 'This month' },
+  { value: 'last_month', label: 'Last month' },
+  { value: 'last_30_days', label: 'Last 30 days' },
+  { value: 'this_quarter', label: 'This quarter' },
+  { value: 'this_year', label: 'This year' },
+  { value: 'custom', label: 'Custom range' },
 ]
 
-const statusOptions = [
-  { value: 'all', label: 'All statuses' },
-  { value: 'pending', label: 'Pending' },
-  { value: 'confirmed', label: 'Confirmed' },
-  { value: 'checked_in', label: 'Checked in' },
-  { value: 'in_progress', label: 'In progress' },
-  { value: 'completed', label: 'Completed' },
-  { value: 'cancelled', label: 'Cancelled' },
-  { value: 'no_show', label: 'No show' },
-]
+const appointmentStatuses = ['all', 'pending', 'confirmed', 'rejected', 'cancelled', 'rescheduled', 'no_show', 'checked_in', 'waiting', 'in_progress', 'completed']
+const invoiceStatuses = ['all', 'draft', 'unpaid', 'partially_paid', 'paid', 'partially_refunded', 'refunded']
+const paymentMethods = ['all', 'cash', 'gcash', 'maya', 'bank_transfer', 'card', 'online_gateway', 'other']
 
-const statusColors: Record<string, string> = {
-  pending: '#d3a55a',
-  confirmed: '#5f7f76',
-  checked_in: '#8b6833',
-  in_progress: '#336b7a',
-  completed: '#2d6a52',
-  cancelled: '#b7594d',
-  no_show: '#8b5e3c',
-}
-
-const branchNames = new Set(branchOptions.map((option) => option.value).filter((value) => value !== 'all'))
-
-function formatCurrency(cents: number) {
-  return new Intl.NumberFormat('en-PH', {
-    style: 'currency',
-    currency: 'PHP',
-  }).format(cents / 100)
-}
-
-function formatDate(value: string) {
-  const date = new Date(`${value}T00:00:00`)
-  if (Number.isNaN(date.getTime())) return value
-  return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
-}
-
-function getDateRangeBounds(dates: string[]) {
-  const validDates = dates.filter(Boolean).sort()
-  if (!validDates.length) {
-    const today = new Date().toISOString().slice(0, 10)
-    return { startDate: today, endDate: today }
-  }
-  return {
-    startDate: validDates[0],
-    endDate: validDates[validDates.length - 1],
-  }
-}
-
-function formatCsv(rows: Record<string, string | number>[]) {
-  if (!rows.length) return ''
-  const headers = Object.keys(rows[0])
-  const lines = [headers.join(',')]
-
-  rows.forEach((row) => {
-    lines.push(
-      headers
-        .map((header) => {
-          const value = row[header]
-          const safe = String(value ?? '').replace(/"/g, '""')
-          return `"${safe}"`
-        })
-        .join(','),
-    )
-  })
-
-  return lines.join('\n')
-}
-
-function createPdfDocument(title: string, lines: string[]) {
-  const content = lines.map((line) => `${line}\n`).join('')
-  const stream = `BT\n/F1 12 Tf\n50 760 Td\n(${title}) Tj\n0 -20 Td\n(${content.replace(/\(/g, '\\(').replace(/\)/g, '\\)')}) Tj\nET`
-  const objects = [
-    '<< /Type /Catalog /Pages 2 0 R >>',
-    '<< /Type /Pages /Kids [3 0 R] /Count 1 >>',
-    `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 4 0 R /Resources << /Font << /F1 5 0 R >> >> >>`,
-    `<< /Length ${stream.length} >>\nstream\n${stream}\nendstream`,
-    '<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>',
-  ]
-
-  let pdf = '%PDF-1.4\n'
-  const offsets: number[] = [0]
-
-  objects.forEach((object, index) => {
-    offsets.push(pdf.length)
-    pdf += `${index + 1} 0 obj\n${object}\nendobj\n`
-  })
-
-  const xrefOffset = pdf.length
-  pdf += `xref\n0 ${objects.length + 1}\n0000000000 65535 f \n`
-  offsets.slice(1).forEach((offset) => {
-    pdf += `${String(offset).padStart(10, '0')} 00000 n \n`
-  })
-  pdf += `trailer\n<< /Size ${objects.length + 1} /Root 1 0 R >>\nstartxref\n${xrefOffset}\n%%EOF`
-  return pdf
-}
-
-function downloadBlob(filename: string, content: string, mimeType: string) {
+function downloadText(filename: string, content: string, mimeType: string) {
   const blob = new Blob([content], { type: mimeType })
   const url = URL.createObjectURL(blob)
   const anchor = document.createElement('a')
@@ -119,493 +43,347 @@ function downloadBlob(filename: string, content: string, mimeType: string) {
   URL.revokeObjectURL(url)
 }
 
-function getSeriesPath(values: number[], width: number, height: number, padding: number) {
-  if (!values.length) return ''
-  const max = Math.max(...values, 1)
-  return values
-    .map((value, index) => {
-      const x = padding + (index * (width - padding * 2)) / Math.max(values.length - 1, 1)
-      const y = height - padding - (value / max) * (height - padding * 2)
-      return `${index === 0 ? 'M' : 'L'} ${x} ${y}`
-    })
-    .join(' ')
+function downloadBytes(filename: string, content: Uint8Array, mimeType: string) {
+  const body = content.buffer.slice(content.byteOffset, content.byteOffset + content.byteLength) as ArrayBuffer
+  const blob = new Blob([body], { type: mimeType })
+  const url = URL.createObjectURL(blob)
+  const anchor = document.createElement('a')
+  anchor.href = url
+  anchor.download = filename
+  anchor.click()
+  URL.revokeObjectURL(url)
 }
 
-function getAreaPath(values: number[], width: number, height: number, padding: number) {
-  const line = getSeriesPath(values, width, height, padding)
-  if (!line) return ''
-  const firstX = padding
-  const lastX = width - padding
-  return `${line} L ${lastX} ${height - padding} L ${firstX} ${height - padding} Z`
+function formatPercent(value: number) {
+  return `${(value * 100).toFixed(1)}%`
 }
 
-function buildDateSeries(items: Array<{ date: string; value: number }>, rangeStart: string, rangeEnd: string, formatLabel: boolean) {
-  const start = new Date(`${rangeStart}T00:00:00`)
-  const end = new Date(`${rangeEnd}T00:00:00`)
-  const daysBetween = Math.max(1, Math.round((end.getTime() - start.getTime()) / 86400000) + 1)
-  const map = new Map<string, number>()
-
-  items.forEach((item) => {
-    map.set(item.date, (map.get(item.date) ?? 0) + item.value)
-  })
-
-  const series = Array.from({ length: daysBetween }, (_, index) => {
-    const current = new Date(start)
-    current.setDate(start.getDate() + index)
-    const key = current.toISOString().slice(0, 10)
-    return {
-      label: formatLabel ? formatDate(key) : key.slice(5),
-      value: map.get(key) ?? 0,
-    }
-  })
-
-  return series
+function formatChange(value: number | null) {
+  if (value === null) return 'No previous period'
+  return `${value >= 0 ? '+' : ''}${value.toFixed(1)}% vs previous`
 }
 
-function statusDonutSegments(counts: Record<string, number>) {
-  const statusKeys = Object.keys(statusColors)
-  const total = statusKeys.reduce((sum, key) => sum + (counts[key] ?? 0), 0)
+function labelize(value: string) {
+  return value.replaceAll('_', ' ')
+}
 
-  if (!total) return ''
+function maxOf(values: number[]) {
+  return Math.max(...values, 1)
+}
 
-  let start = 0
-  return statusKeys
-    .filter((key) => (counts[key] ?? 0) > 0)
-    .map((key) => {
-      const fraction = (counts[key] ?? 0) / total
-      const end = start + fraction
-      const segment = `${statusColors[key]} ${start * 100}% ${end * 100}%`
-      start = end
-      return segment
-    })
-    .join(', ')
+function printSnapshot(snapshot: ReturnType<typeof buildEnterpriseReportSnapshot>) {
+  const printWindow = window.open('', '_blank', 'width=960,height=720')
+  if (!printWindow) return
+  printWindow.document.write(`
+    <html>
+      <head><title>Plamenco Reports</title></head>
+      <body>
+        <h1>Plamenco Dental Co. Reports & Analytics</h1>
+        <p>${snapshot.filters.startDate} to ${snapshot.filters.endDate}</p>
+        <h2>Financial Summary</h2>
+        <ul>
+          <li>Revenue: ${formatReportCurrency(snapshot.executive.billedRevenueCents)}</li>
+          <li>Collections: ${formatReportCurrency(snapshot.executive.collectedCashCents)}</li>
+          <li>Outstanding receivables: ${formatReportCurrency(snapshot.executive.outstandingReceivablesCents)}</li>
+          <li>Recorded expenses: ${formatReportCurrency(snapshot.executive.operatingExpensesCents)}</li>
+          <li>Net operating result: ${formatReportCurrency(snapshot.executive.netOperatingResultCents)}</li>
+          <li>Completed appointments: ${snapshot.executive.completedVisits}</li>
+          <li>No-show rate: ${(snapshot.executive.noShowRate * 100).toFixed(1)}%</li>
+        </ul>
+        <h2>Branch Performance</h2>
+        <table border="1" cellspacing="0" cellpadding="6">
+          <tr><th>Branch</th><th>Appointments</th><th>Collections</th><th>Expenses</th><th>Receivables</th></tr>
+          ${snapshot.branches.map((branch) => `<tr><td>${branch.branchName}</td><td>${branch.appointments}</td><td>${formatReportCurrency(branch.collectionsCents)}</td><td>${formatReportCurrency(branch.expensesCents)}</td><td>${formatReportCurrency(branch.outstandingReceivablesCents)}</td></tr>`).join('')}
+        </table>
+        <h2>Provider Activity</h2>
+        <table border="1" cellspacing="0" cellpadding="6">
+          <tr><th>Provider</th><th>Patients</th><th>Completed</th><th>Treatments</th><th>Revenue</th><th>No Shows</th></tr>
+          ${snapshot.providers.map((provider) => `<tr><td>${provider.providerName}</td><td>${provider.patientsSeen}</td><td>${provider.completedVisits}</td><td>${provider.treatments}</td><td>${formatReportCurrency(provider.billedRevenueCents)}</td><td>${provider.noShows}</td></tr>`).join('')}
+        </table>
+        <footer><p>Generated ${new Date().toLocaleString()} from the selected report snapshot.</p></footer>
+      </body>
+    </html>
+  `)
+  printWindow.document.close()
+  printWindow.print()
 }
 
 export function ReportsPage() {
   const { user } = useAuth()
-  const canExport = user?.role === 'admin'
-  const appointments = useMemo(() => getStoredAppointments(), [])
-  const patients = useMemo(() => getStoredPatients(), [])
-  const payments = useMemo(() => getStoredPayments(), [])
-  const services = useMemo(() => getStoredServices(), [])
-
-  const allDates = [
-    ...appointments.map((item) => item.date),
-    ...payments.map((item) => item.date),
-    ...patients.map((item) => item.registrationDate),
-  ].filter(Boolean)
-
-  const defaultRange = getDateRangeBounds(allDates)
+  const canExport = user?.role === 'admin' || user?.role === 'super_admin' || user?.permissions?.some((permission) => permission.startsWith('reports.export'))
+  const defaultRange = getReportingDatePresetRange('this_month')
+  const [refreshKey, setRefreshKey] = useState(0)
+  const [preset, setPreset] = useState<DateRangePreset>('this_month')
   const [startDate, setStartDate] = useState(defaultRange.startDate)
   const [endDate, setEndDate] = useState(defaultRange.endDate)
-  const [branch, setBranch] = useState('all')
+  const [branchId, setBranchId] = useState('all')
+  const [providerId, setProviderId] = useState('all')
   const [serviceId, setServiceId] = useState('all')
-  const [status, setStatus] = useState('all')
+  const [appointmentStatus, setAppointmentStatus] = useState('all')
+  const [invoiceStatus, setInvoiceStatus] = useState('all')
+  const [paymentMethod, setPaymentMethod] = useState('all')
+  const [expenseCategoryId, setExpenseCategoryId] = useState('all')
+  const [vendorId, setVendorId] = useState('all')
+  const [inventoryCategoryId, setInventoryCategoryId] = useState('all')
+  const [supplierId, setSupplierId] = useState('all')
 
-  const serviceOptions = useMemo(
-    () => [
-      { value: 'all', label: 'All services' },
-      ...services.map((service) => ({ value: service.id, label: service.name })),
-    ],
-    [services],
-  )
-
-  const filteredAppointments = useMemo(() => {
-    return appointments.filter((appointment) => {
-      const matchesDate = appointment.date >= startDate && appointment.date <= endDate
-      const matchesService = serviceId === 'all' || appointment.serviceId === serviceId
-      const matchesStatus = status === 'all' || appointment.status === status
-      const matchesBranch = branch === 'all' || branchNames.has(branch)
-      return matchesDate && matchesService && matchesStatus && matchesBranch
-    })
-  }, [appointments, branch, endDate, serviceId, startDate, status])
-
-  const filteredPayments = useMemo(() => {
-    const appointmentDates = new Set(filteredAppointments.map((appointment) => appointment.date))
-    return payments.filter((payment) => {
-      const matchesDate = payment.date >= startDate && payment.date <= endDate
-      const matchesByAppointment = !appointmentDates.size || appointmentDates.has(payment.date)
-      return matchesDate && matchesByAppointment
-    })
-  }, [filteredAppointments, endDate, payments, startDate])
-
-  const filteredPatients = useMemo(() => {
-    return patients.filter((patient) => patient.registrationDate >= startDate && patient.registrationDate <= endDate)
-  }, [endDate, patients, startDate])
-
-  const appointmentTrend = useMemo(() => {
-    const dateSeries = buildDateSeries(
-      filteredAppointments.map((appointment) => ({ date: appointment.date, value: 1 })),
-      startDate,
-      endDate,
-      true,
-    )
-    return dateSeries
-  }, [endDate, filteredAppointments, startDate])
-
-  const revenueTrend = useMemo(() => {
-    const series = buildDateSeries(
-      filteredPayments.map((payment) => ({ date: payment.date, value: payment.amountCents })),
-      startDate,
-      endDate,
-      true,
-    )
-    return series
-  }, [endDate, filteredPayments, startDate])
-
-  const serviceBreakdown = useMemo(() => {
-    const grouped = new Map<string, { name: string; count: number; revenue: number }>()
-
-    filteredAppointments.forEach((appointment) => {
-      const service = services.find((entry) => entry.id === appointment.serviceId)
-      const key = appointment.serviceId
-      const current = grouped.get(key) ?? { name: service?.name ?? 'Unknown service', count: 0, revenue: 0 }
-      current.count += 1
-      current.revenue += service?.price ?? 0
-      grouped.set(key, current)
-    })
-
-    return [...grouped.values()].sort((a, b) => b.count - a.count || b.revenue - a.revenue).slice(0, 5)
-  }, [filteredAppointments, services])
-
-  const patientGrowth = useMemo(() => {
-    const series = new Map<string, number>()
-
-    filteredPatients.forEach((patient) => {
-      const month = patient.registrationDate.slice(0, 7)
-      series.set(month, (series.get(month) ?? 0) + 1)
-    })
-
-    const entries = [...series.entries()].sort(([a], [b]) => a.localeCompare(b))
-    return entries.map(([label, value]) => ({ label, value }))
-  }, [filteredPatients])
-
-  const statusCounts = useMemo(() => {
-    return filteredAppointments.reduce<Record<string, number>>(
-      (accumulator, appointment) => {
-        accumulator[appointment.status] = (accumulator[appointment.status] ?? 0) + 1
-        return accumulator
+  const branches = useMemo(() => {
+    void refreshKey
+    return getStoredBranches()
+  }, [refreshKey])
+  const providers = useMemo(() => {
+    void refreshKey
+    return getStoredProviders()
+  }, [refreshKey])
+  const services = useMemo(() => {
+    void refreshKey
+    return getStoredServices()
+  }, [refreshKey])
+  const expenseCategories = useMemo(() => {
+    void refreshKey
+    return getExpenseCategories()
+  }, [refreshKey])
+  const vendors = useMemo(() => {
+    void refreshKey
+    return getExpenseVendors()
+  }, [refreshKey])
+  const inventoryCategories = useMemo(() => {
+    void refreshKey
+    return getInventoryCategories()
+  }, [refreshKey])
+  const suppliers = useMemo(() => {
+    void refreshKey
+    return getSuppliers()
+  }, [refreshKey])
+  const snapshot = useMemo(() => {
+    void refreshKey
+    return buildEnterpriseReportSnapshot({
+      filters: {
+        preset,
+        startDate,
+        endDate,
+        branchId,
+        providerId,
+        serviceId,
+        appointmentStatus: appointmentStatus as never,
+        invoiceStatus: invoiceStatus as never,
+        paymentMethod: paymentMethod as never,
+        expenseCategoryId,
+        vendorId,
+        inventoryCategoryId,
+        supplierId,
       },
-      { pending: 0, confirmed: 0, checked_in: 0, in_progress: 0, completed: 0, cancelled: 0, no_show: 0 },
-    )
-  }, [filteredAppointments])
+    })
+  }, [appointmentStatus, branchId, endDate, expenseCategoryId, inventoryCategoryId, invoiceStatus, paymentMethod, preset, providerId, refreshKey, serviceId, startDate, supplierId, vendorId])
 
-  const totalRevenue = filteredPayments.reduce((sum, payment) => sum + payment.amountCents, 0)
-  const totalAppointments = filteredAppointments.length
-  const completedAppointments = filteredAppointments.filter((appointment) => appointment.status === 'completed').length
-  const summaryPatients = filteredPatients.length
-  const avgRevenuePerVisit = totalAppointments > 0 ? totalRevenue / totalAppointments : 0
+  const trendMax = maxOf(snapshot.trend.flatMap((entry) => [entry.collectionsCents, entry.expensesCents, entry.billedRevenueCents]))
+  const statusMax = maxOf(snapshot.appointments.byStatus.map((entry) => entry.count))
+  const branchMax = maxOf(snapshot.branches.flatMap((entry) => [entry.collectionsCents, entry.expensesCents]))
+  const hasData = snapshot.executive.appointments || snapshot.executive.billedRevenueCents || snapshot.executive.collectedCashCents || snapshot.executive.operatingExpensesCents || snapshot.inventory.stockRows.length
 
-  const hasAnyData = totalAppointments > 0 || filteredPayments.length > 0 || summaryPatients > 0
-  const donutGradient = statusDonutSegments(statusCounts)
-
-  const appointmentPath = getSeriesPath(
-    appointmentTrend.map((entry) => entry.value),
-    520,
-    180,
-    24,
-  )
-  const appointmentArea = getAreaPath(
-    appointmentTrend.map((entry) => entry.value),
-    520,
-    180,
-    24,
-  )
-  const patientPath = getSeriesPath(
-    patientGrowth.map((entry) => entry.value),
-    520,
-    180,
-    24,
-  )
-  const revenueMax = Math.max(...revenueTrend.map((entry) => entry.value), 1)
-  const serviceMax = Math.max(...serviceBreakdown.map((item) => item.count), 1)
-
-  const handleExportCsv = () => {
-    if (!canExport) return
-
-    const rowData = [
-      { 
-        period: `${startDate} to ${endDate}`,
-        totalRevenue: totalRevenue,
-        totalAppointments,
-        completedAppointments,
-        totalPatients: summaryPatients,
-      },
-      ...serviceBreakdown.map((service) => ({
-        period: `${startDate} to ${endDate}`,
-        service: service.name,
-        count: service.count,
-        revenue: service.revenue,
-      })),
-    ]
-
-    downloadBlob('clinic-analytics.csv', formatCsv(rowData), 'text/csv;charset=utf-8;')
-  }
-
-  const handleExportPdf = () => {
-    if (!canExport) return
-
-    const lines = [
-      `Plamenco Dental Co — Reports & Analytics`,
-      `Period: ${startDate} to ${endDate}`,
-      `Revenue: ${formatCurrency(totalRevenue)}`,
-      `Appointments: ${totalAppointments}`,
-      `Completed visits: ${completedAppointments}`,
-      `Patients: ${summaryPatients}`,
-      ...serviceBreakdown.map((service) => `${service.name}: ${service.count} visits • ${formatCurrency(service.revenue)}`),
-    ]
-
-    downloadBlob('clinic-analytics.pdf', createPdfDocument('Plamenco Dental Co — Reports & Analytics', lines), 'application/pdf')
+  const handlePresetChange = (value: DateRangePreset) => {
+    setPreset(value)
+    if (value !== 'custom') {
+      const range = getReportingDatePresetRange(value)
+      setStartDate(range.startDate)
+      setEndDate(range.endDate)
+    }
   }
 
   return (
     <section className="page-stack reports-analytics-page">
       <div className="section-header reports-header">
         <div>
-          <span className="eyebrow">Admin analytics</span>
+          <span className="eyebrow">Enterprise reporting</span>
           <h2>Reports &amp; Analytics</h2>
-          <p>Clinic performance and operational insights</p>
+          <p>Executive, financial, branch, clinical, inventory, and purchasing reporting from real clinic records.</p>
         </div>
-
-        {canExport && (
-          <div className="report-export-actions">
-            <Button variant="secondary" size="sm" icon={<Download size={14} />} onClick={handleExportCsv}>
-              CSV
-            </Button>
-            <Button variant="secondary" size="sm" icon={<FileText size={14} />} onClick={handleExportPdf}>
-              PDF
-            </Button>
-          </div>
-        )}
+        <div className="report-export-actions">
+          <Button variant="secondary" size="sm" icon={<RefreshCw size={14} />} onClick={() => setRefreshKey((value) => value + 1)}>Refresh</Button>
+          {canExport && (
+            <>
+              <Button variant="secondary" size="sm" icon={<Download size={14} />} onClick={() => downloadText('plamenco-enterprise-report.csv', exportEnterpriseReportCsv(snapshot), 'text/csv;charset=utf-8;')}>CSV</Button>
+              <Button variant="secondary" size="sm" icon={<FileSpreadsheet size={14} />} onClick={() => downloadBytes('plamenco-executive-report.xlsx', buildExecutiveWorkbook(snapshot), 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')}>Excel</Button>
+              <Button variant="secondary" size="sm" icon={<Printer size={14} />} onClick={() => printSnapshot(snapshot)}>PDF</Button>
+            </>
+          )}
+        </div>
       </div>
 
       <div className="reports-filter-panel panel">
         <div className="reports-filter-grid">
-          <label className="report-control">
-            <span>Start date</span>
-            <input type="date" value={startDate} onChange={(event) => setStartDate(event.target.value)} min={defaultRange.startDate} max={defaultRange.endDate} />
-          </label>
-
-          <label className="report-control">
-            <span>End date</span>
-            <input type="date" value={endDate} onChange={(event) => setEndDate(event.target.value)} min={defaultRange.startDate} max={defaultRange.endDate} />
-          </label>
-
-          <label className="report-control">
-            <span>Branch</span>
-            <select value={branch} onChange={(event) => setBranch(event.target.value)}>
-              {branchOptions.map((option) => (
-                <option key={option.value} value={option.value}>{option.label}</option>
-              ))}
-            </select>
-          </label>
-
-          <label className="report-control">
-            <span>Service</span>
-            <select value={serviceId} onChange={(event) => setServiceId(event.target.value)}>
-              {serviceOptions.map((option) => (
-                <option key={option.value} value={option.value}>{option.label}</option>
-              ))}
-            </select>
-          </label>
-
-          <label className="report-control">
-            <span>Status</span>
-            <select value={status} onChange={(event) => setStatus(event.target.value)}>
-              {statusOptions.map((option) => (
-                <option key={option.value} value={option.value}>{option.label}</option>
-              ))}
-            </select>
-          </label>
+          <label className="report-control"><span>Range</span><select value={preset} onChange={(event) => handlePresetChange(event.target.value as DateRangePreset)}>{presets.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}</select></label>
+          <label className="report-control"><span>Start date</span><input type="date" value={startDate} onChange={(event) => { setPreset('custom'); setStartDate(event.target.value) }} /></label>
+          <label className="report-control"><span>End date</span><input type="date" value={endDate} onChange={(event) => { setPreset('custom'); setEndDate(event.target.value) }} /></label>
+          <label className="report-control"><span>Branch</span><select value={branchId} onChange={(event) => setBranchId(event.target.value)}><option value="all">All authorized branches</option>{branches.map((branch) => <option key={branch.id} value={branch.id}>{branch.name}</option>)}</select></label>
+          <label className="report-control"><span>Dentist / Provider</span><select value={providerId} onChange={(event) => setProviderId(event.target.value)}><option value="all">All providers</option>{providers.map((provider) => <option key={provider.id} value={provider.id}>{provider.displayName}</option>)}</select></label>
+          <label className="report-control"><span>Service</span><select value={serviceId} onChange={(event) => setServiceId(event.target.value)}><option value="all">All services</option>{services.map((service) => <option key={service.id} value={service.id}>{service.name}</option>)}</select></label>
+          <label className="report-control"><span>Appointment status</span><select value={appointmentStatus} onChange={(event) => setAppointmentStatus(event.target.value)}>{appointmentStatuses.map((status) => <option key={status} value={status}>{labelize(status)}</option>)}</select></label>
+          <label className="report-control"><span>Invoice status</span><select value={invoiceStatus} onChange={(event) => setInvoiceStatus(event.target.value)}>{invoiceStatuses.map((status) => <option key={status} value={status}>{labelize(status)}</option>)}</select></label>
+          <label className="report-control"><span>Payment method</span><select value={paymentMethod} onChange={(event) => setPaymentMethod(event.target.value)}>{paymentMethods.map((method) => <option key={method} value={method}>{labelize(method)}</option>)}</select></label>
+          <label className="report-control"><span>Expense category</span><select value={expenseCategoryId} onChange={(event) => setExpenseCategoryId(event.target.value)}><option value="all">All categories</option>{expenseCategories.map((category) => <option key={category.id} value={category.id}>{category.name}</option>)}</select></label>
+          <label className="report-control"><span>Vendor</span><select value={vendorId} onChange={(event) => setVendorId(event.target.value)}><option value="all">All vendors</option>{vendors.map((vendor) => <option key={vendor.id} value={vendor.id}>{vendor.name}</option>)}</select></label>
+          <label className="report-control"><span>Inventory category</span><select value={inventoryCategoryId} onChange={(event) => setInventoryCategoryId(event.target.value)}><option value="all">All inventory</option>{inventoryCategories.map((category) => <option key={category.id} value={category.id}>{category.name}</option>)}</select></label>
+          <label className="report-control"><span>Supplier</span><select value={supplierId} onChange={(event) => setSupplierId(event.target.value)}><option value="all">All suppliers</option>{suppliers.map((supplier) => <option key={supplier.id} value={supplier.id}>{supplier.name}</option>)}</select></label>
         </div>
       </div>
 
-      {!hasAnyData ? (
+      {!hasData && (
         <div className="panel chart-panel chart-empty-panel">
           <div className="chart-empty-state">
-            <TrendingUp size={28} />
-            <h3>No data available for this period.</h3>
-            <p>Once appointments, payments, or patient records are created, the analytics workspace will populate automatically.</p>
+            <BarChart3 size={28} />
+            <h3>No reportable records found for this filter context.</h3>
+            <p>Reports will populate from appointments, invoices, payments, expenses, inventory, and purchase records.</p>
           </div>
         </div>
-      ) : (
-        <>
-          <div className="report-summary-grid">
-            <article className="summary-kpi">
-              <span>Total revenue</span>
-              <strong>{formatCurrency(totalRevenue)}</strong>
-              <small>{filteredPayments.length} payment entries</small>
-            </article>
-            <article className="summary-kpi">
-              <span>Appointments</span>
-              <strong>{totalAppointments}</strong>
-              <small>{completedAppointments} completed</small>
-            </article>
-            <article className="summary-kpi">
-              <span>Patients</span>
-              <strong>{summaryPatients}</strong>
-              <small>registered in period</small>
-            </article>
-            <article className="summary-kpi">
-              <span>Avg. revenue / visit</span>
-              <strong>{formatCurrency(avgRevenuePerVisit)}</strong>
-              <small>based on selected activity</small>
-            </article>
-          </div>
-
-          <div className="analytics-grid">
-            <article className="panel chart-panel chart-panel-wide">
-              <div className="chart-header">
-                <div>
-                  <span className="chart-kicker">Appointments</span>
-                  <h3>Appointments over time</h3>
-                </div>
-              </div>
-
-              {appointmentTrend.every((entry) => entry.value === 0) ? (
-                <div className="chart-empty-state compact">
-                  <p>No appointment data available for this period.</p>
-                </div>
-              ) : (
-                <div className="chart-svg-wrap">
-                  <svg viewBox="0 0 520 180" preserveAspectRatio="none" className="chart-svg" role="img" aria-label="Appointments over time chart">
-                    <defs>
-                      <linearGradient id="appointmentsGradient" x1="0" x2="0" y1="0" y2="1">
-                        <stop offset="0%" stopColor="rgba(183, 153, 96, 0.45)" />
-                        <stop offset="100%" stopColor="rgba(183, 153, 96, 0)" />
-                      </linearGradient>
-                    </defs>
-                    <path d={appointmentArea} fill="url(#appointmentsGradient)" />
-                    <path d={appointmentPath} fill="none" stroke="#8b6833" strokeWidth="2.5" strokeLinejoin="round" strokeLinecap="round" />
-                  </svg>
-                  <div className="chart-labels">
-                    {appointmentTrend.slice(0, 6).map((entry) => (
-                      <span key={entry.label}>{entry.label}</span>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </article>
-
-            <article className="panel chart-panel">
-              <div className="chart-header">
-                <div>
-                  <span className="chart-kicker">Distribution</span>
-                  <h3>Appointment status</h3>
-                </div>
-              </div>
-
-              {Object.values(statusCounts).every((count) => count === 0) ? (
-                <div className="chart-empty-state compact">
-                  <p>No appointment status data available for this period.</p>
-                </div>
-              ) : (
-                <div className="donut-wrap">
-                  <div className="donut-chart" style={{ background: `conic-gradient(${donutGradient})` }} aria-label="Appointment status donut chart">
-                    <div className="donut-center">
-                      <strong>{totalAppointments}</strong>
-                      <span>Visits</span>
-                    </div>
-                  </div>
-
-                  <div className="legend-list">
-                    {Object.entries(statusColors).map(([key, color]) => (
-                      <div className="legend-item" key={key}>
-                        <span className="legend-swatch" style={{ background: color }} />
-                        <span>{key.replace('_', ' ')}</span>
-                        <strong>{statusCounts[key] ?? 0}</strong>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </article>
-
-            <article className="panel chart-panel chart-panel-wide">
-              <div className="chart-header">
-                <div>
-                  <span className="chart-kicker">Revenue</span>
-                  <h3>Revenue over time</h3>
-                </div>
-              </div>
-
-              {revenueTrend.every((entry) => entry.value === 0) ? (
-                <div className="chart-empty-state compact">
-                  <p>No revenue data available for this period.</p>
-                </div>
-              ) : (
-                <div className="bar-chart">
-                  {revenueTrend.map((entry) => (
-                    <div className="bar-col" key={entry.label} title={`${entry.label}: ${formatCurrency(entry.value)}`}>
-                      <span className="bar-value">{formatCurrency(entry.value)}</span>
-                      <div className="bar-track">
-                        <span style={{ height: `${Math.max((entry.value / revenueMax) * 100, entry.value > 0 ? 12 : 0)}%` }} />
-                      </div>
-                      <small>{entry.label}</small>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </article>
-
-            <article className="panel chart-panel chart-panel-wide">
-              <div className="chart-header">
-                <div>
-                  <span className="chart-kicker">Services</span>
-                  <h3>Services performed</h3>
-                </div>
-              </div>
-
-              {serviceBreakdown.length === 0 ? (
-                <div className="chart-empty-state compact">
-                  <p>No service activity recorded for this period.</p>
-                </div>
-              ) : (
-                <div className="service-bars">
-                  {serviceBreakdown.map((service) => (
-                    <div className="service-bar-row" key={service.name}>
-                      <div className="service-label-group">
-                        <strong>{service.name}</strong>
-                        <span>{service.count} visits</span>
-                      </div>
-                      <div className="service-bar-track">
-                        <span style={{ width: `${(service.count / serviceMax) * 100}%` }} />
-                      </div>
-                      <em>{formatCurrency(service.revenue)}</em>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </article>
-
-            <article className="panel chart-panel chart-panel-wide">
-              <div className="chart-header">
-                <div>
-                  <span className="chart-kicker">Growth</span>
-                  <h3>Patient growth</h3>
-                </div>
-              </div>
-
-              {patientGrowth.length === 0 ? (
-                <div className="chart-empty-state compact">
-                  <p>No patient growth data available for this period.</p>
-                </div>
-              ) : (
-                <div className="chart-svg-wrap">
-                  <svg viewBox="0 0 520 180" preserveAspectRatio="none" className="chart-svg" role="img" aria-label="Patient growth chart">
-                    <path d={patientPath} fill="none" stroke="#a7773d" strokeWidth="2.5" strokeLinejoin="round" strokeLinecap="round" />
-                  </svg>
-                  <div className="chart-labels">
-                    {patientGrowth.map((entry) => (
-                      <span key={entry.label}>{entry.label.slice(5)}</span>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </article>
-          </div>
-        </>
       )}
+
+      <div className="report-summary-grid">
+        <article className="summary-kpi"><span>Billed revenue</span><strong>{formatReportCurrency(snapshot.executive.billedRevenueCents)}</strong><small>invoice totals, not collections</small></article>
+        <article className="summary-kpi"><span>Collected cash</span><strong>{formatReportCurrency(snapshot.executive.collectedCashCents)}</strong><small>{formatChange(snapshot.executive.collectionsComparison.changePercent)}</small></article>
+        <article className="summary-kpi"><span>Receivables</span><strong>{formatReportCurrency(snapshot.executive.outstandingReceivablesCents)}</strong><small>open invoice balances</small></article>
+        <article className="summary-kpi"><span>Expenses</span><strong>{formatReportCurrency(snapshot.executive.operatingExpensesCents)}</strong><small>{formatChange(snapshot.executive.expensesComparison.changePercent)}</small></article>
+        <article className="summary-kpi"><span>Net operating result</span><strong>{formatReportCurrency(snapshot.executive.netOperatingResultCents)}</strong><small>collections - expenses</small></article>
+        <article className="summary-kpi"><span>No-show rate</span><strong>{formatPercent(snapshot.executive.noShowRate)}</strong><small>{snapshot.executive.appointments} appointments</small></article>
+        <article className="summary-kpi"><span>Discounts</span><strong>{formatReportCurrency(snapshot.revenue.discountCents)}</strong><small>invoice discount totals</small></article>
+        <article className="summary-kpi"><span>Refunds</span><strong>{formatReportCurrency(snapshot.revenue.refundsCents)}</strong><small>{snapshot.revenue.refundCount} completed refunds</small></article>
+      </div>
+
+      <div className="analytics-grid">
+        <article className="panel chart-panel chart-panel-wide">
+          <div className="chart-header"><div><span className="chart-kicker">Executive trend</span><h3>Collections, expenses, and billed revenue</h3></div></div>
+          <div className="bar-chart">
+            {snapshot.trend.map((entry) => (
+              <div className="bar-col" key={entry.date} title={`${entry.date}: collections ${formatReportCurrency(entry.collectionsCents)}, expenses ${formatReportCurrency(entry.expensesCents)}`}>
+                <span className="bar-value">{formatReportCurrency(Math.max(entry.collectionsCents, entry.expensesCents, entry.billedRevenueCents))}</span>
+                <div className="bar-track"><span style={{ height: `${Math.max((entry.collectionsCents / trendMax) * 100, entry.collectionsCents ? 8 : 0)}%`, background: '#2d6a52' }} /></div>
+                <div className="bar-track"><span style={{ height: `${Math.max((entry.expensesCents / trendMax) * 100, entry.expensesCents ? 8 : 0)}%`, background: '#b7594d' }} /></div>
+                <small>{entry.label}</small>
+              </div>
+            ))}
+          </div>
+        </article>
+
+        <article className="panel chart-panel">
+          <div className="chart-header"><div><span className="chart-kicker">Appointments</span><h3>Status distribution</h3></div></div>
+          <div className="service-bars">
+            {snapshot.appointments.byStatus.map((entry) => (
+              <div className="service-bar-row" key={entry.status}>
+                <div className="service-label-group"><strong>{labelize(entry.status)}</strong><span>{entry.count} records</span></div>
+                <div className="service-bar-track"><span style={{ width: `${(entry.count / statusMax) * 100}%` }} /></div>
+              </div>
+            ))}
+          </div>
+        </article>
+
+        <article className="panel chart-panel">
+          <div className="chart-header"><div><span className="chart-kicker">Patient growth</span><h3>New and returning patients</h3></div></div>
+          <div className="service-bars">
+            {snapshot.patients.growthTrend.slice(0, 10).map((entry) => (
+              <div className="service-bar-row compact" key={entry.date}>
+                <div className="service-label-group"><strong>{entry.label}</strong><span>{entry.newPatients} new, {entry.returningPatients} returning</span></div>
+                <div className="service-bar-track"><span style={{ width: `${((entry.newPatients + entry.returningPatients) / maxOf(snapshot.patients.growthTrend.map((row) => row.newPatients + row.returningPatients))) * 100}%` }} /></div>
+              </div>
+            ))}
+          </div>
+        </article>
+
+        <article className="panel chart-panel chart-panel-wide">
+          <div className="chart-header"><div><span className="chart-kicker">Branch performance</span><h3>Pulilan vs Plaridel</h3></div></div>
+          <div className="service-bars">
+            {snapshot.branches.map((branch) => (
+              <div className="service-bar-row" key={branch.branchId}>
+                <div className="service-label-group"><strong>{branch.branchName}</strong><span>{branch.completedVisits} completed visits, {branch.noShows} no-shows</span></div>
+                <div className="service-bar-track"><span style={{ width: `${(branch.collectionsCents / branchMax) * 100}%`, background: '#2d6a52' }} /></div>
+                <em>{formatReportCurrency(branch.collectionsCents)} collected</em>
+              </div>
+            ))}
+          </div>
+        </article>
+
+        <article className="panel chart-panel chart-panel-wide">
+          <div className="chart-header"><div><span className="chart-kicker">Treatments & services</span><h3>Performed services and revenue basis</h3></div></div>
+          <div className="service-bars">
+            {snapshot.treatments.slice(0, 8).map((service) => (
+              <div className="service-bar-row" key={service.serviceId}>
+                <div className="service-label-group"><strong>{service.serviceName}</strong><span>{service.performedCount} completed, {service.plannedCount} planned</span></div>
+                <div className="service-bar-track"><span style={{ width: `${(service.billedRevenueCents / maxOf(snapshot.treatments.map((entry) => entry.billedRevenueCents))) * 100}%` }} /></div>
+                <em>{formatReportCurrency(service.billedRevenueCents)}</em>
+              </div>
+            ))}
+          </div>
+        </article>
+
+        <article className="panel chart-panel">
+          <div className="chart-header"><div><span className="chart-kicker">Busiest days</span><h3>Appointment volume by weekday</h3></div></div>
+          <div className="service-bars">
+            {snapshot.appointments.busiestDays.map((day) => (
+              <div className="service-bar-row compact" key={day.day}>
+                <div className="service-label-group"><strong>{day.day}</strong><span>{day.count} appointments</span></div>
+                <div className="service-bar-track"><span style={{ width: `${(day.count / maxOf(snapshot.appointments.busiestDays.map((row) => row.count))) * 100}%` }} /></div>
+              </div>
+            ))}
+          </div>
+        </article>
+
+        <article className="panel chart-panel">
+          <div className="chart-header"><div><span className="chart-kicker">Busiest hours</span><h3>Appointment volume by start time</h3></div></div>
+          <div className="service-bars">
+            {snapshot.appointments.busiestHours.slice(0, 8).map((hour) => (
+              <div className="service-bar-row compact" key={hour.hour}>
+                <div className="service-label-group"><strong>{hour.hour}</strong><span>{hour.count} appointments</span></div>
+                <div className="service-bar-track"><span style={{ width: `${(hour.count / maxOf(snapshot.appointments.busiestHours.map((row) => row.count))) * 100}%` }} /></div>
+              </div>
+            ))}
+          </div>
+        </article>
+      </div>
+
+      <div className="analytics-grid">
+        <section className="panel table-panel">
+          <div className="chart-header"><div><span className="chart-kicker">Accounts receivable</span><h3>Open invoices</h3></div><FileText size={18} /></div>
+          <div className="table-scroll"><table className="table"><thead><tr><th>Invoice</th><th>Patient</th><th>Branch</th><th>Status</th><th>Balance</th></tr></thead><tbody>
+            {snapshot.revenue.accountsReceivable.slice(0, 8).map((invoice) => <tr key={invoice.invoiceNumber}><td><strong>{invoice.invoiceNumber}</strong><span>{invoice.invoiceDate}</span></td><td>{invoice.patientName}</td><td>{invoice.branchName}</td><td>{labelize(invoice.status)}</td><td>{formatReportCurrency(invoice.balanceCents)}</td></tr>)}
+          </tbody></table></div>
+        </section>
+
+        <section className="panel table-panel">
+          <div className="chart-header"><div><span className="chart-kicker">Receivable aging</span><h3>Open balance buckets</h3></div><FileText size={18} /></div>
+          <div className="table-scroll"><table className="table"><thead><tr><th>Bucket</th><th>Invoices</th><th>Balance</th></tr></thead><tbody>
+            {snapshot.revenue.receivableAging.map((bucket) => <tr key={bucket.bucket}><td><strong>{bucket.bucket}</strong></td><td>{bucket.count}</td><td>{formatReportCurrency(bucket.balanceCents)}</td></tr>)}
+          </tbody></table></div>
+        </section>
+
+        <section className="panel table-panel">
+          <div className="chart-header"><div><span className="chart-kicker">Expenses</span><h3>Category and vendor detail</h3></div><TrendingUp size={18} /></div>
+          <div className="table-scroll"><table className="table"><thead><tr><th>Expense</th><th>Payee</th><th>Category</th><th>Status</th><th>Total</th></tr></thead><tbody>
+            {snapshot.expenses.details.slice(0, 8).map((expense) => <tr key={expense.expenseNumber}><td><strong>{expense.expenseNumber}</strong><span>{expense.expenseDate}</span></td><td>{expense.payeeName}</td><td>{expense.categoryName}</td><td>{labelize(expense.status)}</td><td>{formatReportCurrency(expense.totalCents)}</td></tr>)}
+          </tbody></table></div>
+        </section>
+
+        <section className="panel table-panel">
+          <div className="chart-header"><div><span className="chart-kicker">Provider performance</span><h3>Dentist workload</h3></div><BarChart3 size={18} /></div>
+          <div className="table-scroll"><table className="table"><thead><tr><th>Provider</th><th>Branch</th><th>Patients</th><th>Completed</th><th>Treatments</th><th>Revenue</th><th>Avg Value</th><th>No Shows</th></tr></thead><tbody>
+            {snapshot.providers.slice(0, 8).map((provider) => <tr key={provider.providerId}><td><strong>{provider.providerName}</strong></td><td>{provider.branchNames}</td><td>{provider.patientsSeen}</td><td>{provider.completedVisits}</td><td>{provider.treatments}</td><td>{formatReportCurrency(provider.billedRevenueCents)}</td><td>{formatReportCurrency(provider.averageTreatmentValueCents)}</td><td>{provider.noShows}</td></tr>)}
+          </tbody></table></div>
+        </section>
+
+        <section className="panel table-panel">
+          <div className="chart-header"><div><span className="chart-kicker">Inventory & purchasing</span><h3>Stock and supplier analytics</h3></div><FileSpreadsheet size={18} /></div>
+          <div className="table-scroll"><table className="table"><thead><tr><th>Item</th><th>Branch</th><th>Category</th><th>Status</th><th>Value</th></tr></thead><tbody>
+            {snapshot.inventory.stockRows.slice(0, 8).map((stock) => <tr key={`${stock.itemId}-${stock.branchName}`}><td><strong>{stock.itemName}</strong><span>{stock.quantityOnHand} on hand / reorder {stock.reorderLevel}</span></td><td>{stock.branchName}</td><td>{stock.categoryName}</td><td>{labelize(stock.status)}</td><td>{formatReportCurrency(stock.valuationCents)}</td></tr>)}
+          </tbody></table></div>
+        </section>
+
+        {snapshot.dataQuality.length > 0 && (
+          <section className="panel table-panel">
+            <div className="chart-header"><div><span className="chart-kicker">Data quality</span><h3>Records requiring review</h3></div><BarChart3 size={18} /></div>
+            <div className="table-scroll"><table className="table"><thead><tr><th>Area</th><th>Records</th><th>Review note</th></tr></thead><tbody>
+              {snapshot.dataQuality.map((issue) => <tr key={issue.area}><td><strong>{issue.area}</strong></td><td>{issue.count}</td><td>{issue.message}</td></tr>)}
+            </tbody></table></div>
+          </section>
+        )}
+      </div>
     </section>
   )
 }

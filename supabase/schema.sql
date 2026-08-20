@@ -1,5 +1,8 @@
 -- Plamenco Dental Co database schema
--- Paste this into Supabase SQL Editor and run it.
+-- LEGACY BASELINE ONLY.
+-- The canonical production schema is the ordered migration set in supabase/migrations.
+-- Do not paste this file into a production Supabase SQL editor.
+-- Regenerate this file only after a clean staging replay of all migrations.
 
 create extension if not exists pgcrypto;
 

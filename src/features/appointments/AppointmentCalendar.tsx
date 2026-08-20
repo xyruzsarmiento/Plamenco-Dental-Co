@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { Fragment, useState } from 'react'
 import { CalendarDays, ChevronLeft, ChevronRight, Plus, X } from 'lucide-react'
 import { Button } from '../../components/ui/Button'
 import type { Branch } from '../branches/branchTypes'
@@ -7,6 +7,7 @@ import type { Patient } from '../patients/patientTypes'
 import type { Service } from '../services/serviceTypes'
 import type { Appointment } from './appointmentTypes'
 import { formatAppointmentTime, getCalendarOperatingHours } from './availabilityEngine'
+import { getProviderBranchAssignments } from '../dentists/dentistStore'
 
 type CalendarViewType = 'day' | 'week' | 'month' | 'agenda'
 
@@ -57,7 +58,7 @@ export function AppointmentCalendar({
   providers,
   services,
 }: AppointmentCalendarProps) {
-  const [view, setView] = useState<CalendarViewType>('month')
+  const [view, setView] = useState<CalendarViewType>('week')
   const [currentDate, setCurrentDate] = useState(new Date())
 
   function goToPrevious() {
@@ -210,25 +211,49 @@ function DayView(props: ViewProps) {
     .filter((appointment) => appointment.date === dateStr)
     .sort((a, b) => a.startTime.localeCompare(b.startTime))
   const hours = getHours(props.branchFilter)
+  const assignments = getProviderBranchAssignments()
+  const providerColumns = Array.from(props.providers.values())
+    .filter((provider) => provider.status === 'active')
+    .filter((provider) => !props.branchFilter || props.branchFilter === 'all' || assignments.some((assignment) => assignment.providerId === provider.id && assignment.branchId === props.branchFilter && assignment.status === 'active'))
+    .sort((a, b) => a.displayName.localeCompare(b.displayName))
+  const visibleProviders = providerColumns.length ? providerColumns : [{ id: 'unassigned', displayName: 'Unassigned', role: 'dentist' as const, email: '', phone: '', specialization: '', licenseNumber: '', bio: '', photoUrl: '', status: 'active' as const, createdAt: '', updatedAt: '' }]
 
   return (
     <CalendarShell {...props} title={getDateLabel(dateStr)}>
-      <div className="advanced-day-view">
+      <div className="provider-day-view" style={{ gridTemplateColumns: `92px repeat(${visibleProviders.length}, minmax(190px, 1fr))` }}>
+        <div className="provider-day-corner">Time</div>
+        {visibleProviders.map((provider) => (
+          <div key={provider.id} className="provider-day-heading">
+            <strong>{provider.displayName}</strong>
+            <span>{provider.role.replace('_', ' ')}</span>
+          </div>
+        ))}
         {hours.map((hour) => {
           const time = `${String(hour).padStart(2, '0')}:00`
-          const slotAppointments = dayAppointments.filter((appointment) => appointment.startTime >= time && appointment.startTime < `${String(hour + 1).padStart(2, '0')}:00`)
+          const nextHour = `${String(hour + 1).padStart(2, '0')}:00`
           return (
-            <div key={hour} className="advanced-time-row">
-              <div className="advanced-time-label">{formatAppointmentTime(time)}</div>
-              <div className="advanced-time-content">
-                {slotAppointments.map((appointment) => (
-                  <AppointmentCard key={appointment.id} appointment={appointment} branches={props.branches} onSelectAppointment={props.onSelectAppointment} patients={props.patients} providers={props.providers} services={props.services} />
-                ))}
-                <button type="button" className="add-slot" onClick={() => props.onAddAppointment(dateStr, time)}>
-                  <Plus size={14} /> Add
-                </button>
-              </div>
-            </div>
+            <Fragment key={`hour-${hour}`}>
+              <div key={`label-${hour}`} className="provider-day-time">{formatAppointmentTime(time)}</div>
+              {visibleProviders.map((provider) => {
+                const slotAppointments = dayAppointments.filter((appointment) => (
+                  appointment.startTime >= time &&
+                  appointment.startTime < nextHour &&
+                  (provider.id === 'unassigned' ? !appointment.providerId : appointment.providerId === provider.id)
+                ))
+                return (
+                  <div key={`${provider.id}-${hour}`} className="provider-day-cell" onDoubleClick={() => props.onAddAppointment(dateStr, time)}>
+                    {slotAppointments.map((appointment) => (
+                      <AppointmentCard key={appointment.id} appointment={appointment} branches={props.branches} onSelectAppointment={props.onSelectAppointment} patients={props.patients} providers={props.providers} services={props.services} />
+                    ))}
+                    {slotAppointments.length === 0 && (
+                      <button type="button" className="add-slot" onClick={() => props.onAddAppointment(dateStr, time)}>
+                        <Plus size={14} /> Add
+                      </button>
+                    )}
+                  </div>
+                )
+              })}
+            </Fragment>
           )
         })}
       </div>

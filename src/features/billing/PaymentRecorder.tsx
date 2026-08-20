@@ -6,6 +6,7 @@ import { Select } from '../../components/ui/Select'
 import {
   getStoredInvoices,
   applyPayment,
+  getActivePaymentMethods,
   type PaymentMethod,
 } from './billingStore'
 import { getStoredPatients } from '../patients/patientStore'
@@ -44,12 +45,15 @@ export function PaymentRecorder({ onClose, onSuccess }: PaymentRecorderProps) {
   )
 
   const selectedInvoice = invoices.find((inv) => inv.id === selectedInvoiceId)
+  const paymentMethods = useMemo(() => getActivePaymentMethods(), [])
+  const selectedMethod = paymentMethods.find((entry) => entry.id === method)
   const amountCents = Math.round(parseFloat(amount || '0') * 100)
   const isValid =
     selectedPatientId &&
     selectedInvoiceId &&
     amountCents > 0 &&
-    amountCents <= (selectedInvoice?.balanceCents || 0)
+    amountCents <= (selectedInvoice?.balanceCents || 0) &&
+    (!selectedMethod?.requiresReference || reference.trim().length > 0)
 
   async function handleSubmit() {
     if (!isValid) {
@@ -82,14 +86,6 @@ export function PaymentRecorder({ onClose, onSuccess }: PaymentRecorderProps) {
       setLoading(false)
     }
   }
-
-  const paymentMethods = [
-    { value: 'cash' as PaymentMethod, label: 'Cash' },
-    { value: 'gcash' as PaymentMethod, label: 'GCash' },
-    { value: 'maya' as PaymentMethod, label: 'Maya' },
-    { value: 'card' as PaymentMethod, label: 'Card' },
-    { value: 'bank_transfer' as PaymentMethod, label: 'Bank Transfer' },
-  ]
 
   if (success) {
     return (
@@ -203,7 +199,7 @@ export function PaymentRecorder({ onClose, onSuccess }: PaymentRecorderProps) {
             label="Method"
             value={method}
             onChange={(e) => setMethod(e.target.value as PaymentMethod)}
-            options={paymentMethods}
+            options={paymentMethods.map((entry) => ({ value: entry.id, label: entry.label }))}
           />
         </div>
 
@@ -211,7 +207,7 @@ export function PaymentRecorder({ onClose, onSuccess }: PaymentRecorderProps) {
           <h4>Additional information</h4>
           <div className="form-grid">
             <Input
-              label="Reference number (optional)"
+              label={selectedMethod?.requiresReference ? 'Reference number' : 'Reference number (optional)'}
               placeholder="Check number, transaction ID, etc."
               value={reference}
               onChange={(e) => setReference(e.target.value)}

@@ -3,13 +3,16 @@ import { useMemo, useState } from 'react'
 import { Badge } from '../components/ui/Badge'
 import { Button } from '../components/ui/Button'
 import { Select } from '../components/ui/Select'
-import { getRecentAuditLogs, type AuditAction } from '../features/security/auditLogStore'
+import { getRecentAuditLogs, recordAuditEntry, type AuditAction } from '../features/security/auditLogStore'
 import { getStoredStaff } from '../features/auth/staffStore'
+import { useAuth } from '../features/auth/AuthContext'
+import { getCurrentSessionUserName } from '../features/security/security'
 
 const auditActionLabels: Record<AuditAction, string> = {
   patient_created: 'Patient Created',
   patient_updated: 'Patient Updated',
   patient_import_completed: 'Patient Import Completed',
+  patient_import_rolled_back: 'Patient Import Rolled Back',
   appointment_status_changed: 'Appointment Status Changed',
   communication_preference_changed: 'Communication Preference Changed',
   communication_template_updated: 'Communication Template Updated',
@@ -24,14 +27,57 @@ const auditActionLabels: Record<AuditAction, string> = {
   dental_record_created: 'Dental Record Created',
   dental_record_updated: 'Dental Record Updated',
   treatment_created: 'Treatment Created',
+  charge_added: 'Charge Added',
   invoice_created: 'Invoice Created',
+  invoice_voided: 'Invoice Voided',
+  discount_applied: 'Discount Applied',
+  payment_submitted: 'Payment Submitted',
   payment_recorded: 'Payment Recorded',
+  payment_approved: 'Payment Approved',
+  payment_rejected: 'Payment Rejected',
+  payment_gateway_event_processed: 'Gateway Event Processed',
+  refund_completed: 'Refund Completed',
+  inventory_item_created: 'Inventory Item Created',
+  inventory_item_updated: 'Inventory Item Updated',
+  stock_movement_posted: 'Stock Movement Posted',
+  stock_transfer_initiated: 'Stock Transfer Initiated',
+  stock_transfer_received: 'Stock Transfer Received',
+  purchase_order_created: 'Purchase Order Created',
+  purchase_order_approved: 'Purchase Order Approved',
+  purchase_received: 'Purchase Received',
+  supplier_changed: 'Supplier Changed',
+  expense_created: 'Expense Created',
+  expense_updated: 'Expense Updated',
+  expense_approved: 'Expense Approved',
+  expense_paid: 'Expense Paid',
+  expense_partial_payment_recorded: 'Expense Partial Payment',
+  expense_attachment_uploaded: 'Expense Attachment Uploaded',
+  expense_voided: 'Expense Voided',
+  expense_recurring_template_created: 'Recurring Expense Created',
+  expense_recurring_template_changed: 'Recurring Expense Changed',
+  expense_vendor_changed: 'Expense Vendor Changed',
+  purchase_linked_expense_generated: 'Purchase Expense Generated',
+  cashier_session_opened: 'Cashier Session Opened',
+  cashier_session_closed: 'Cashier Session Closed',
+  cash_movement_recorded: 'Cash Movement Recorded',
+  petty_cash_disbursed: 'Petty Cash Disbursed',
+  report_exported: 'Report Exported',
+  report_view_saved: 'Report View Saved',
+  backup_evidence_recorded: 'Backup Evidence Recorded',
+  backup_verification_recorded: 'Backup Verification Recorded',
+  restore_plan_created: 'Restore Plan Created',
+  restore_plan_approved: 'Restore Plan Approved',
   staff_account_changed: 'Staff Account Changed',
+  staff_shift_planned: 'Staff Shift Planned',
+  staff_attendance_recorded: 'Staff Attendance Recorded',
   provider_created: 'Dentist Account Created',
   provider_updated: 'Dentist Account Updated',
   provider_branch_assignment_changed: 'Dentist Branch Assignment Updated',
   provider_schedule_updated: 'Dentist Schedule Updated',
   provider_availability_changed: 'Dentist Availability Updated',
+  provider_compensation_rule_changed: 'Provider Compensation Changed',
+  provider_payout_created: 'Provider Payout Created',
+  provider_payout_processed: 'Provider Payout Processed',
   branch_updated: 'Branch Information Updated',
   settings_changed: 'Settings Changed',
 }
@@ -40,6 +86,7 @@ const auditActionTones: Record<AuditAction, 'info' | 'success' | 'warning' | 'da
   patient_created: 'info',
   patient_updated: 'info',
   patient_import_completed: 'info',
+  patient_import_rolled_back: 'warning',
   appointment_status_changed: 'info',
   communication_preference_changed: 'info',
   communication_template_updated: 'warning',
@@ -54,14 +101,57 @@ const auditActionTones: Record<AuditAction, 'info' | 'success' | 'warning' | 'da
   dental_record_created: 'success',
   dental_record_updated: 'success',
   treatment_created: 'success',
+  charge_added: 'warning',
   invoice_created: 'warning',
+  invoice_voided: 'danger',
+  discount_applied: 'warning',
+  payment_submitted: 'info',
   payment_recorded: 'success',
+  payment_approved: 'success',
+  payment_rejected: 'danger',
+  payment_gateway_event_processed: 'info',
+  refund_completed: 'warning',
+  inventory_item_created: 'success',
+  inventory_item_updated: 'info',
+  stock_movement_posted: 'info',
+  stock_transfer_initiated: 'warning',
+  stock_transfer_received: 'success',
+  purchase_order_created: 'warning',
+  purchase_order_approved: 'success',
+  purchase_received: 'success',
+  supplier_changed: 'info',
+  expense_created: 'warning',
+  expense_updated: 'info',
+  expense_approved: 'success',
+  expense_paid: 'success',
+  expense_partial_payment_recorded: 'warning',
+  expense_attachment_uploaded: 'info',
+  expense_voided: 'danger',
+  expense_recurring_template_created: 'warning',
+  expense_recurring_template_changed: 'info',
+  expense_vendor_changed: 'info',
+  purchase_linked_expense_generated: 'warning',
+  cashier_session_opened: 'info',
+  cashier_session_closed: 'success',
+  cash_movement_recorded: 'warning',
+  petty_cash_disbursed: 'warning',
+  report_exported: 'info',
+  report_view_saved: 'success',
+  backup_evidence_recorded: 'warning',
+  backup_verification_recorded: 'warning',
+  restore_plan_created: 'danger',
+  restore_plan_approved: 'danger',
   staff_account_changed: 'warning',
+  staff_shift_planned: 'info',
+  staff_attendance_recorded: 'success',
   provider_created: 'success',
   provider_updated: 'info',
   provider_branch_assignment_changed: 'info',
   provider_schedule_updated: 'info',
   provider_availability_changed: 'warning',
+  provider_compensation_rule_changed: 'warning',
+  provider_payout_created: 'warning',
+  provider_payout_processed: 'success',
   branch_updated: 'info',
   settings_changed: 'danger',
 }
@@ -84,10 +174,35 @@ function formatTime(isoString: string) {
   })
 }
 
+const CLINIC_SETTINGS_KEY = 'plamenco.settings.clinic'
+
+type ClinicSettings = {
+  name: string
+  address: string
+  phone: string
+}
+
+const defaultClinicSettings: ClinicSettings = {
+  name: 'Plamenco Dental Clinic',
+  address: 'Metro Manila, Philippines',
+  phone: '+63 900 000 1000',
+}
+
+function readClinicSettings(): ClinicSettings {
+  try {
+    const stored = window.localStorage.getItem(CLINIC_SETTINGS_KEY)
+    return stored ? { ...defaultClinicSettings, ...JSON.parse(stored) } : defaultClinicSettings
+  } catch {
+    return defaultClinicSettings
+  }
+}
+
 export function SettingsPage() {
+  const { signOut } = useAuth()
   const [activeTab, setActiveTab] = useState<'audit' | 'clinic' | 'security'>('audit')
   const [auditFilter, setAuditFilter] = useState<'all' | AuditAction>('all')
   const [auditSearchEntity, setAuditSearchEntity] = useState<string>('')
+  const [clinicSettings, setClinicSettings] = useState<ClinicSettings>(() => readClinicSettings())
 
   const allLogs = useMemo(() => getRecentAuditLogs(100), [])
 
@@ -116,6 +231,17 @@ export function SettingsPage() {
     })
     return map
   }, [])
+
+  function saveClinicSettings() {
+    window.localStorage.setItem(CLINIC_SETTINGS_KEY, JSON.stringify(clinicSettings))
+    recordAuditEntry({
+      user: getCurrentSessionUserName(),
+      action: 'settings_changed',
+      entity: 'clinic_settings',
+      entityId: 'clinic-profile',
+      metadata: { updatedFields: 'name,address,phone' },
+    })
+  }
 
   return (
     <section className="page-stack">
@@ -439,7 +565,8 @@ export function SettingsPage() {
                   <input
                     type="text"
                     placeholder="Plamenco Dental Clinic"
-                    defaultValue="Plamenco Dental Clinic"
+                    value={clinicSettings.name}
+                    onChange={(event) => setClinicSettings((current) => ({ ...current, name: event.target.value }))}
                     style={{
                       width: '100%',
                       minHeight: '42px',
@@ -457,7 +584,8 @@ export function SettingsPage() {
                   <input
                     type="text"
                     placeholder="Clinic address"
-                    defaultValue="Metro Manila, Philippines"
+                    value={clinicSettings.address}
+                    onChange={(event) => setClinicSettings((current) => ({ ...current, address: event.target.value }))}
                     style={{
                       width: '100%',
                       minHeight: '42px',
@@ -474,7 +602,8 @@ export function SettingsPage() {
                   <input
                     type="tel"
                     placeholder="+63 900 000 1000"
-                    defaultValue="+63 900 000 1000"
+                    value={clinicSettings.phone}
+                    onChange={(event) => setClinicSettings((current) => ({ ...current, phone: event.target.value }))}
                     style={{
                       width: '100%',
                       minHeight: '42px',
@@ -487,7 +616,7 @@ export function SettingsPage() {
                   />
                 </div>
                 <div style={{ marginTop: '12px' }}>
-                  <Button>Save Changes</Button>
+                  <Button onClick={saveClinicSettings}>Save Changes</Button>
                 </div>
               </div>
             </div>
@@ -543,7 +672,7 @@ export function SettingsPage() {
                   Your current session is stored securely. Sign out to end your session.
                 </p>
                 <div>
-                  <Button variant="danger" icon={<LogOut size={16} />}>
+                  <Button variant="danger" icon={<LogOut size={16} />} onClick={() => void signOut()}>
                     Sign Out
                   </Button>
                 </div>

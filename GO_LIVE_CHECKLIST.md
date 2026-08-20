@@ -1,0 +1,46 @@
+# Plamenco Dental Co. Go-Live Checklist
+
+Do not mark an item complete until it has been verified in the actual production or approved sandbox environment.
+
+- [ ] Production Supabase project ready
+- [ ] Migrations applied
+- [ ] RLS reviewed
+- [ ] Production environment variables configured
+- [ ] Production Site URL configured
+- [ ] Auth redirect URLs configured
+- [ ] Domain configured
+- [ ] HTTPS active
+- [ ] Email production credentials configured
+- [ ] SMS production credentials configured
+- [ ] SMS sender configuration approved
+- [ ] Meta App configured
+- [ ] Facebook Page connected
+- [ ] Meta webhook verified
+- [ ] Payment gateway production account approved
+- [ ] Payment sandbox keys tested
+- [ ] Payment production keys configured
+- [ ] Payment webhook configured
+- [ ] Payment webhook signature verified
+- [ ] Storage buckets reviewed for public/private access
+- [ ] Storage policies verified
+- [ ] Database backup strategy confirmed
+- [ ] Clinic data migration completed
+- [ ] Staff accounts created
+- [ ] Dentist accounts created
+- [ ] Branch configuration reviewed
+- [ ] Service prices reviewed
+- [ ] Schedules reviewed
+- [ ] Notification templates approved
+- [ ] Appointment workflow tested
+- [ ] Walk-in workflow tested
+- [ ] No-show workflow tested
+- [ ] Payment workflow tested
+- [ ] Refund workflow tested
+- [ ] Inventory workflow tested
+- [ ] Expense workflow tested
+- [ ] Reports verified
+- [ ] PDF verified
+- [ ] Excel verified
+- [ ] Mobile verified
+- [ ] Desktop verified
+- [ ] Clinic UAT completed

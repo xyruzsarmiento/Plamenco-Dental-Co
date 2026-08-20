@@ -1,29 +1,35 @@
 import {
+  AlertCircle,
   ArrowRight,
   CalendarDays,
   CheckCircle2,
   Clock3,
-  AlertCircle,
   FileText,
+  MapPin,
   ShieldCheck,
   Sparkles,
+  Stethoscope,
   UserRound,
 } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Button } from '../components/ui/Button'
-import { useAuth } from '../features/auth/AuthContext'
 import { Input } from '../components/ui/Input'
 import { Textarea } from '../components/ui/Textarea'
-import { getStoredServices, loadServicesFromSupabase } from '../features/services/serviceStore'
+import { getEligibleProviders } from '../features/appointments/availabilityEngine'
+import { useAuth } from '../features/auth/AuthContext'
+import { getStoredBranches } from '../features/branches/branchStore'
 import { createPublicBooking, getAvailableBookingTimes } from '../features/patientPortal/patientPortalStore'
+import { getStoredServices, loadServicesFromSupabase } from '../features/services/serviceStore'
 
 type ServiceLoadState = 'loading' | 'loaded' | 'no-services' | 'error'
 
-const steps = ['Select service', 'Select date', 'Select time', 'Patient details', 'Confirm']
+const steps = ['Branch', 'Service', 'Dentist', 'Date', 'Time', 'Details', 'Confirm']
 
 type BookingForm = {
+  branchId: string
   serviceId: string
+  providerId: string
   date: string
   startTime: string
   firstName: string
@@ -34,7 +40,9 @@ type BookingForm = {
 }
 
 const emptyForm: BookingForm = {
+  branchId: '',
   serviceId: '',
+  providerId: '',
   date: '',
   startTime: '',
   firstName: '',
@@ -44,11 +52,33 @@ const emptyForm: BookingForm = {
   notes: '',
 }
 
+function formatPrice(value: number) {
+  if (value <= 0) return 'Price available upon consultation'
+  return new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP' }).format(value / 100)
+}
+
+function formatTime(value: string) {
+  const [hours, minutes] = value.split(':').map(Number)
+  if (!Number.isFinite(hours) || !Number.isFinite(minutes)) return value
+  const suffix = hours >= 12 ? 'PM' : 'AM'
+  const hour = hours % 12 || 12
+  return `${hour}:${String(minutes).padStart(2, '0')} ${suffix}`
+}
+
+function formatDate(value: string) {
+  if (!value) return 'Date'
+  return new Date(`${value}T00:00:00`).toLocaleDateString('en-PH', { month: 'long', day: 'numeric', year: 'numeric' })
+}
+
 export function PublicBookingPage() {
   const { user, isLoading: authLoading } = useAuth()
   const [services, setServices] = useState<ReturnType<typeof getStoredServices>>([])
   const [serviceLoadState, setServiceLoadState] = useState<ServiceLoadState>('loading')
   const [serviceLoadError, setServiceLoadError] = useState<string | null>(null)
+  const [form, setForm] = useState<BookingForm>(emptyForm)
+  const [step, setStep] = useState(0)
+  const [error, setError] = useState('')
+  const [bookingId, setBookingId] = useState('')
 
   useEffect(() => {
     let isMounted = true
@@ -57,48 +87,28 @@ export function PublicBookingPage() {
       try {
         setServiceLoadState('loading')
         setServiceLoadError(null)
-
         const loaded = await loadServicesFromSupabase()
-
         if (!isMounted) return
-
-        if (!loaded || loaded.length === 0) {
-          setServices([])
-          setServiceLoadState('no-services')
-          return
-        }
-
         setServices(loaded)
-        setServiceLoadState('loaded')
-      } catch (error) {
+        setServiceLoadState(loaded.length ? 'loaded' : 'no-services')
+      } catch (loadError) {
         if (!isMounted) return
-
-        const message = error instanceof Error ? error.message : 'Failed to load services'
-        console.error('[services load error]', error)
-        setServiceLoadError(message)
+        setServiceLoadError(loadError instanceof Error ? loadError.message : 'Failed to load services')
         setServiceLoadState('error')
         setServices([])
       }
     }
 
     void loadServices()
-
     return () => {
       isMounted = false
     }
   }, [])
 
-  const [form, setForm] = useState<BookingForm>(emptyForm)
-  const [step, setStep] = useState(0)
-  const [error, setError] = useState('')
-  const [bookingId, setBookingId] = useState('')
-
   useEffect(() => {
     if (!user) return
-
     const [firstName, ...rest] = (user.name || '').split(' ')
     const lastName = rest.join(' ')
-
     setForm((current) => ({
       ...current,
       firstName: current.firstName || firstName || '',
@@ -107,95 +117,44 @@ export function PublicBookingPage() {
     }))
   }, [user])
 
-  const selectedService = useMemo(
-    () => services.find((service) => service.id === form.serviceId),
-    [form.serviceId, services]
-  )
-
+  const branches = useMemo(() => getStoredBranches().filter((branch) => branch.status === 'active'), [])
+  const selectedBranch = useMemo(() => branches.find((branch) => branch.id === form.branchId), [branches, form.branchId])
+  const selectedService = useMemo(() => services.find((service) => service.id === form.serviceId), [form.serviceId, services])
+  const eligibleProviders = useMemo(() => form.branchId ? getEligibleProviders(form.branchId) : [], [form.branchId])
+  const selectedProvider = useMemo(() => eligibleProviders.find((provider) => provider.id === form.providerId), [eligibleProviders, form.providerId])
   const availableTimes = useMemo(() => {
-    if (!form.date || !form.serviceId) return []
-    return getAvailableBookingTimes(form.serviceId, form.date)
-  }, [form.date, form.serviceId])
-
-  // Show loading while auth is being resolved
-  if (authLoading) {
-    return (
-      <div className="auth-page">
-        <div className="loading-state">Loading your account...</div>
-      </div>
-    )
-  }
-
-  // The public booking flow is intentionally available without requiring a patient login.
-  // If a user is already authenticated, we keep their details prefilled when possible.
-
-  // Show error if services failed to load from database
-  if (serviceLoadState === 'error') {
-    return (
-      <div className="auth-page">
-        <div className="error-state" style={{ textAlign: 'center', padding: '48px 20px' }}>
-          <AlertCircle size={48} style={{ marginBottom: '16px', color: 'var(--danger)' }} />
-          <h2>Unable to load services</h2>
-          <p style={{ color: 'var(--text-muted)', marginBottom: '24px' }}>
-            {serviceLoadError || 'There was a problem loading available services. Please try again later.'}
-          </p>
-          <Link to={user?.patientId ? `/portal/${user.patientId}` : '/login'}>
-            <Button variant="secondary">Return to patient portal</Button>
-          </Link>
-        </div>
-      </div>
-    )
-  }
-
-  // Show no services state if database is empty
-  if (serviceLoadState === 'no-services') {
-    return (
-      <div className="auth-page">
-        <div className="empty-state" style={{ textAlign: 'center', padding: '48px 20px' }}>
-          <FileText size={48} style={{ marginBottom: '16px', color: 'var(--text-muted)' }} />
-          <h2>No services available</h2>
-          <p style={{ color: 'var(--text-muted)', marginBottom: '24px' }}>
-            The clinic has not configured any services for booking yet. Please contact the clinic directly or try again later.
-          </p>
-          <Link to={user?.patientId ? `/portal/${user.patientId}` : '/login'}>
-            <Button variant="secondary">Return to patient portal</Button>
-          </Link>
-        </div>
-      </div>
-    )
-  }
-
-  // Show loading while services are being fetched (only for the first load)
-  if (serviceLoadState === 'loading') {
-    return (
-      <div className="auth-page">
-        <div className="loading-state">Preparing your booking...</div>
-      </div>
-    )
-  }
+    if (!form.date || !form.serviceId || !form.branchId) return []
+    return getAvailableBookingTimes(form.serviceId, form.date, form.branchId, form.providerId || undefined)
+  }, [form.branchId, form.date, form.providerId, form.serviceId])
 
   const nextDisabled = (() => {
-    if (step === 0) return !form.serviceId
-    if (step === 1) return !form.date
-    if (step === 2) return !form.startTime
-    if (step === 3) return !form.firstName.trim() || !form.lastName.trim() || !form.email.trim() || !form.phone.trim()
+    if (step === 0) return !form.branchId
+    if (step === 1) return !form.serviceId
+    if (step === 3) return !form.date
+    if (step === 4) return !form.startTime
+    if (step === 5) return !form.firstName.trim() || !form.lastName.trim() || !form.email.trim() || !form.phone.trim()
     return false
   })()
 
-  const formatPrice = (value: number) =>
-    new Intl.NumberFormat('en-PH', {
-      style: 'currency',
-      currency: 'PHP',
-    }).format(value / 100)
-
   function updateForm<K extends keyof BookingForm>(key: K, value: BookingForm[K]) {
-    setForm((current) => ({ ...current, [key]: value }))
+    setForm((current) => {
+      const next = { ...current, [key]: value }
+      if (key === 'branchId') {
+        next.providerId = ''
+        next.date = ''
+        next.startTime = ''
+      }
+      if (key === 'serviceId' || key === 'providerId' || key === 'date') {
+        next.startTime = ''
+      }
+      return next
+    })
     setError('')
   }
 
   function handleNext() {
     if (nextDisabled) {
-      setError('Please complete the current step before continuing.')
+      setError('Please complete this step before continuing.')
       return
     }
 
@@ -206,7 +165,9 @@ export function PublicBookingPage() {
 
     try {
       const appointment = createPublicBooking({
+        branchId: form.branchId,
         serviceId: form.serviceId,
+        providerId: form.providerId,
         date: form.date,
         startTime: form.startTime,
         firstName: form.firstName,
@@ -215,11 +176,10 @@ export function PublicBookingPage() {
         phone: form.phone,
         notes: form.notes,
       })
-      setBookingId(appointment.id)
+      setBookingId(appointment.appointmentNumber ?? appointment.id)
       setStep(steps.length)
     } catch (bookingError) {
-      const message = bookingError instanceof Error ? bookingError.message : 'Unable to create booking.'
-      setError(message)
+      setError(bookingError instanceof Error ? bookingError.message : 'Unable to create booking.')
     }
   }
 
@@ -229,6 +189,36 @@ export function PublicBookingPage() {
 
   const portalHref = user?.role === 'patient' && user.patientId ? `/portal/${user.patientId}` : '/login'
 
+  if (authLoading) return <div className="auth-page"><div className="loading-state">Loading your account...</div></div>
+
+  if (serviceLoadState === 'error') {
+    return (
+      <div className="auth-page">
+        <div className="error-state" style={{ textAlign: 'center', padding: '48px 20px' }}>
+          <AlertCircle size={48} style={{ marginBottom: '16px', color: 'var(--danger)' }} />
+          <h2>Unable to load services</h2>
+          <p style={{ color: 'var(--text-muted)', marginBottom: '24px' }}>{serviceLoadError || 'There was a problem loading available services. Please try again later.'}</p>
+          <Link to={portalHref}><Button variant="secondary">Return to patient portal</Button></Link>
+        </div>
+      </div>
+    )
+  }
+
+  if (serviceLoadState === 'no-services') {
+    return (
+      <div className="auth-page">
+        <div className="empty-state" style={{ textAlign: 'center', padding: '48px 20px' }}>
+          <FileText size={48} style={{ marginBottom: '16px', color: 'var(--text-muted)' }} />
+          <h2>No services available</h2>
+          <p style={{ color: 'var(--text-muted)', marginBottom: '24px' }}>The clinic has not configured services for online booking yet. Please contact the clinic directly or try again later.</p>
+          <Link to={portalHref}><Button variant="secondary">Return to patient portal</Button></Link>
+        </div>
+      </div>
+    )
+  }
+
+  if (serviceLoadState === 'loading') return <div className="auth-page"><div className="loading-state">Preparing your booking...</div></div>
+
   return (
     <div className="public-booking-page">
       <div className="public-booking-shell">
@@ -237,9 +227,7 @@ export function PublicBookingPage() {
             <p className="eyebrow">Online booking</p>
             <h1>Schedule your visit</h1>
           </div>
-          <Link className="btn btn-ghost btn-sm" to={portalHref}>
-            Return to portal
-          </Link>
+          <Link className="btn btn-ghost btn-sm" to={portalHref}>Return to portal</Link>
         </div>
 
         <div className="booking-progress" aria-label="Booking progress">
@@ -259,84 +247,76 @@ export function PublicBookingPage() {
 
                 {step === 0 && (
                   <div className="booking-section">
-                    <div className="section-title-row">
-                      <FileText size={18} />
-                      <h2>Select service</h2>
+                    <div className="section-title-row"><MapPin size={18} /><h2>Choose clinic branch</h2></div>
+                    <div className="branch-choice-grid">
+                      {branches.map((branch) => (
+                        <button key={branch.id} type="button" className={`branch-choice ${form.branchId === branch.id ? 'is-selected' : ''}`} onClick={() => updateForm('branchId', branch.id)}>
+                          <strong>{branch.name}</strong>
+                          <small>{[branch.city, branch.province].filter(Boolean).join(', ') || 'Clinic location'}</small>
+                          {(branch.openingTime || branch.closingTime) && <span>{branch.openingTime} - {branch.closingTime}</span>}
+                        </button>
+                      ))}
                     </div>
-                    {services.length === 0 ? (
-                      <div className="empty-inline" style={{ padding: '20px', textAlign: 'center', color: 'var(--text-muted)' }}>
-                        <p>No services available to display.</p>
-                      </div>
-                    ) : (
-                      <div className="service-option-list">
-                        {services.map((service) => (
-                          <button
-                            key={service.id}
-                            type="button"
-                            className={`service-option ${form.serviceId === service.id ? 'is-selected' : ''}`}
-                            onClick={() => updateForm('serviceId', service.id)}
-                          >
-                            <div className="service-option-copy">
-                              <strong>{service.name}</strong>
-                              <small>{service.category}</small>
-                            </div>
-                            <div className="service-option-meta">
-                              <strong>{formatPrice(service.price)}</strong>
-                              <small>{service.duration} min</small>
-                            </div>
-                          </button>
-                        ))}
-                      </div>
-                    )}
                   </div>
                 )}
 
                 {step === 1 && (
                   <div className="booking-section">
-                    <div className="section-title-row">
-                      <CalendarDays size={18} />
-                      <h2>Select date</h2>
+                    <div className="section-title-row"><FileText size={18} /><h2>Select service</h2></div>
+                    <div className="service-option-list">
+                      {services.map((service) => (
+                        <button key={service.id} type="button" className={`service-option ${form.serviceId === service.id ? 'is-selected' : ''}`} onClick={() => updateForm('serviceId', service.id)}>
+                          <div className="service-option-copy"><strong>{service.name}</strong><small>{service.description || service.category}</small></div>
+                          <div className="service-option-meta"><strong>{formatPrice(service.price)}</strong><small>{service.duration} min</small></div>
+                        </button>
+                      ))}
                     </div>
-                    <Input
-                      label="Preferred date"
-                      type="date"
-                      value={form.date}
-                      onChange={(event) => updateForm('date', event.target.value)}
-                    />
                   </div>
                 )}
 
                 {step === 2 && (
                   <div className="booking-section">
-                    <div className="section-title-row">
-                      <Clock3 size={18} />
-                      <h2>Select available time</h2>
+                    <div className="section-title-row"><Stethoscope size={18} /><h2>Choose dentist</h2></div>
+                    <div className="branch-choice-grid">
+                      <button type="button" className={`branch-choice ${!form.providerId ? 'is-selected' : ''}`} onClick={() => updateForm('providerId', '')}>
+                        <strong>Any available dentist</strong>
+                        <small>The clinic will assign an eligible dentist for your chosen slot.</small>
+                      </button>
+                      {eligibleProviders.map((provider) => (
+                        <button key={provider.id} type="button" className={`branch-choice ${form.providerId === provider.id ? 'is-selected' : ''}`} onClick={() => updateForm('providerId', provider.id)}>
+                          <strong>{provider.displayName}</strong>
+                          <small>{provider.specialization || (provider.role === 'associate_dentist' ? 'Associate Dentist' : 'Dentist')}</small>
+                        </button>
+                      ))}
                     </div>
+                  </div>
+                )}
+
+                {step === 3 && (
+                  <div className="booking-section">
+                    <div className="section-title-row"><CalendarDays size={18} /><h2>Select date</h2></div>
+                    <Input label="Preferred date" type="date" value={form.date} onChange={(event) => updateForm('date', event.target.value)} />
+                  </div>
+                )}
+
+                {step === 4 && (
+                  <div className="booking-section">
+                    <div className="section-title-row"><Clock3 size={18} /><h2>Select available time</h2></div>
                     {availableTimes.length === 0 ? (
                       <div className="empty-inline">No time slots are available for this date. Please choose another day.</div>
                     ) : (
                       <div className="time-slot-grid">
                         {availableTimes.map((time) => (
-                          <button
-                            key={time}
-                            type="button"
-                            className={`time-slot ${form.startTime === time ? 'is-selected' : ''}`}
-                            onClick={() => updateForm('startTime', time)}
-                          >
-                            {time}
-                          </button>
+                          <button key={time} type="button" className={`time-slot ${form.startTime === time ? 'is-selected' : ''}`} onClick={() => updateForm('startTime', time)}>{formatTime(time)}</button>
                         ))}
                       </div>
                     )}
                   </div>
                 )}
 
-                {step === 3 && (
+                {step === 5 && (
                   <div className="booking-section">
-                    <div className="section-title-row">
-                      <UserRound size={18} />
-                      <h2>Enter patient information</h2>
-                    </div>
+                    <div className="section-title-row"><UserRound size={18} /><h2>Enter patient information</h2></div>
                     <div className="form-grid">
                       <Input label="First name" value={form.firstName} onChange={(event) => updateForm('firstName', event.target.value)} />
                       <Input label="Last name" value={form.lastName} onChange={(event) => updateForm('lastName', event.target.value)} />
@@ -347,99 +327,46 @@ export function PublicBookingPage() {
                   </div>
                 )}
 
-                {step === 4 && (
+                {step === 6 && (
                   <div className="booking-section">
-                    <div className="section-title-row">
-                      <ShieldCheck size={18} />
-                      <h2>Confirm booking</h2>
-                    </div>
+                    <div className="section-title-row"><ShieldCheck size={18} /><h2>Confirm booking</h2></div>
                     <div className="confirmation-card">
-                      <div className="confirm-row">
-                        <span>Service</span>
-                        <strong>{selectedService?.name ?? 'Service'}</strong>
-                      </div>
-                      <div className="confirm-row">
-                        <span>Date</span>
-                        <strong>{form.date}</strong>
-                      </div>
-                      <div className="confirm-row">
-                        <span>Time</span>
-                        <strong>{form.startTime}</strong>
-                      </div>
-                      <div className="confirm-row">
-                        <span>Patient</span>
-                        <strong>
-                          {form.firstName} {form.lastName}
-                        </strong>
-                      </div>
-                      <div className="confirm-row">
-                        <span>Est. total</span>
-                        <strong>{selectedService ? formatPrice(selectedService.price) : '—'}</strong>
-                      </div>
+                      <div className="confirm-row"><span>Branch</span><strong>{selectedBranch?.name ?? 'Clinic branch'}</strong></div>
+                      <div className="confirm-row"><span>Service</span><strong>{selectedService?.name ?? 'Service'}</strong></div>
+                      <div className="confirm-row"><span>Dentist</span><strong>{selectedProvider?.displayName ?? 'Any available dentist'}</strong></div>
+                      <div className="confirm-row"><span>Date</span><strong>{formatDate(form.date)}</strong></div>
+                      <div className="confirm-row"><span>Time</span><strong>{form.startTime ? formatTime(form.startTime) : 'Time'}</strong></div>
+                      <div className="confirm-row"><span>Patient</span><strong>{form.firstName} {form.lastName}</strong></div>
+                      <div className="confirm-row"><span>Estimated fee</span><strong>{selectedService ? formatPrice(selectedService.price) : 'To be confirmed'}</strong></div>
+                      <p className="muted-label">Final cost may vary depending on your treatment needs.</p>
                     </div>
                   </div>
                 )}
 
                 <div className="booking-actions">
-                  <Button variant="secondary" onClick={handleBack} disabled={step === 0}>
-                    Back
-                  </Button>
-                  <Button onClick={handleNext} disabled={nextDisabled}>
-                    {step === steps.length - 1 ? 'Review booking' : step === steps.length - 2 ? 'Confirm booking' : 'Continue'}
-                  </Button>
+                  <Button variant="secondary" onClick={handleBack} disabled={step === 0}>Back</Button>
+                  <Button onClick={handleNext} disabled={nextDisabled}>{step === steps.length - 1 ? 'Confirm appointment' : 'Continue'}</Button>
                 </div>
               </div>
 
               <aside className="booking-summary">
                 <div className="booking-summary-hero">
-                  <div className="summary-badge">
-                    <Sparkles size={14} />
-                    Premium care
-                  </div>
+                  <div className="summary-badge"><Sparkles size={14} /> Premium care</div>
                   <h3>Your visit snapshot</h3>
                 </div>
-
-                <div className="summary-card">
-                  <span className="summary-label">Selected treatment</span>
-                  <strong>{selectedService?.name ?? 'Choose a service'}</strong>
-                  <small>{selectedService ? `${selectedService.duration} minute appointment` : 'We’ll tailor the time to your needs.'}</small>
-                </div>
-
+                <div className="summary-card"><span className="summary-label">Selected treatment</span><strong>{selectedService?.name ?? 'Choose a service'}</strong><small>{selectedService ? `${selectedService.duration} minute appointment` : 'We will tailor the time to your needs.'}</small></div>
+                <div className="summary-card"><span className="summary-label">Clinic branch</span><strong>{selectedBranch?.name ?? 'Choose a branch'}</strong><small>{selectedProvider?.displayName ?? 'Any available dentist'}</small></div>
                 <div className="summary-grid">
-                  <div>
-                    <span>Date</span>
-                    <strong>{form.date || '—'}</strong>
-                  </div>
-                  <div>
-                    <span>Time</span>
-                    <strong>{form.startTime || '—'}</strong>
-                  </div>
+                  <div><span>Date</span><strong>{form.date ? new Date(`${form.date}T00:00:00`).toLocaleDateString('en-PH', { month: 'short', day: 'numeric' }) : '-'}</strong></div>
+                  <div><span>Time</span><strong>{form.startTime ? formatTime(form.startTime) : '-'}</strong></div>
                 </div>
-
-                <div className="summary-price">
-                  <span>Estimated total</span>
-                  <strong>{selectedService ? formatPrice(selectedService.price) : '—'}</strong>
-                </div>
-
+                <div className="summary-price"><span>Estimated fee</span><strong>{selectedService ? formatPrice(selectedService.price) : '-'}</strong></div>
                 <ul className="summary-list">
-                  <li>
-                    <CheckCircle2 size={16} />
-                    Friendly appointment coordination
-                  </li>
-                  <li>
-                    <CheckCircle2 size={16} />
-                    Digital intake and reminders
-                  </li>
-                  <li>
-                    <CheckCircle2 size={16} />
-                    Same-day support for urgent care
-                  </li>
+                  <li><CheckCircle2 size={16} /> Friendly appointment coordination</li>
+                  <li><CheckCircle2 size={16} /> Digital reminders when configured</li>
+                  <li><CheckCircle2 size={16} /> Same-day support for urgent care</li>
                 </ul>
-
-                <Link className="summary-cta" to={portalHref}>
-                  Return to portal
-                  <ArrowRight size={16} />
-                </Link>
+                <Link className="summary-cta" to={portalHref}>Return to portal <ArrowRight size={16} /></Link>
               </aside>
             </>
           ) : (
@@ -448,20 +375,8 @@ export function PublicBookingPage() {
               <h2>Booking request submitted</h2>
               <p>Your appointment is pending confirmation by the clinic team. Reference number: {bookingId}</p>
               <div className="booking-actions">
-                <Link className="btn btn-primary" to={portalHref}>
-                  View patient portal
-                </Link>
-                <Button
-                  variant="secondary"
-                  onClick={() => {
-                    setForm(emptyForm)
-                    setStep(0)
-                    setError('')
-                    setBookingId('')
-                  }}
-                >
-                  Book another visit
-                </Button>
+                <Link className="btn btn-primary" to={portalHref}>View patient portal</Link>
+                <Button variant="secondary" onClick={() => { setForm(emptyForm); setStep(0); setError(''); setBookingId('') }}>Book another visit</Button>
               </div>
             </div>
           )}

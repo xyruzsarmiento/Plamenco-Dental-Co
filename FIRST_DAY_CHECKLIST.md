@@ -1,0 +1,22 @@
+# Plamenco Dental Co. First-Day Checklist
+
+- [ ] Staff can log in
+- [ ] Dentists can log in
+- [ ] Super Admin can log in
+- [ ] Calendar date, timezone, and branch context are correct
+- [ ] Today's appointments are correct
+- [ ] Patient search works
+- [ ] Walk-in workflow works
+- [ ] Check-in workflow works
+- [ ] Queue statuses work
+- [ ] Clinical workflow works
+- [ ] Manual payment works
+- [ ] Receipt generation works
+- [ ] Inventory stock lookup works
+- [ ] Expenses can be recorded
+- [ ] Reports load and totals look reasonable
+- [ ] Notifications are visible
+- [ ] No cross-patient leakage
+- [ ] No cross-branch leakage
+- [ ] No unexpected security errors
+- [ ] First-day records reconcile with clinic log

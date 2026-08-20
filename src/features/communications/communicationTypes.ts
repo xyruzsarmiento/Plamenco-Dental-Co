@@ -11,6 +11,12 @@ export type CommunicationTemplateKey =
   | 'appointment_reminder'
   | 'appointment_no_show'
   | 'no_show_follow_up'
+  | 'invoice.created'
+  | 'invoice.paid'
+  | 'payment.submitted'
+  | 'payment.confirmed'
+  | 'payment.rejected'
+  | 'payment.refunded'
 
 export type CommunicationStatus = 'queued' | 'sending' | 'sent' | 'delivered' | 'failed' | 'skipped'
 
@@ -51,7 +57,11 @@ export type CommunicationTemplate = {
 export type CommunicationDeliveryLog = {
   id: string
   patientId: string
+  branchId?: string
   appointmentId?: string
+  paymentId?: string
+  relatedType?: 'appointment' | 'payment' | 'invoice' | 'patient' | 'manual' | 'system'
+  relatedId?: string
   channel: CommunicationChannel
   templateKey: CommunicationTemplateKey
   recipient: string
@@ -61,11 +71,17 @@ export type CommunicationDeliveryLog = {
   provider: string
   providerMessageId?: string
   attemptCount: number
+  maxAttempts?: number
   idempotencyKey: string
+  dispatchMode?: 'automated' | 'manual'
+  sentBy?: string
+  businessEvent?: string
   queuedAt?: string
   sentAt?: string
   deliveredAt?: string
   failedAt?: string
+  nextRetryAt?: string
+  lastRetryAt?: string
   failureReason?: string
   createdAt: string
   updatedAt: string
@@ -76,9 +92,12 @@ export type CommunicationOutboxEntry = {
   deliveryLogId: string
   channel: CommunicationChannel
   provider: string
+  patientId?: string
+  branchId?: string
   payload: Record<string, string | number | boolean | null | undefined>
   status: 'queued' | 'processing' | 'sent' | 'failed'
   attempts: number
+  maxAttempts?: number
   nextAttemptAt: string
   createdAt: string
   updatedAt: string

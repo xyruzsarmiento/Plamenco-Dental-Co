@@ -9,7 +9,7 @@ import type { Branch } from '../branches/branchTypes'
 import type { Provider } from '../dentists/dentistTypes'
 import type { Service } from '../services/serviceTypes'
 import type { AppointmentFormValues } from './appointmentTypes'
-import { addMinutesToTime } from './appointmentStore'
+import { addMinutesToTime, getOperatories } from './appointmentStore'
 import { formatAppointmentTime, getAvailableAppointmentSlots } from './availabilityEngine'
 
 type AppointmentFormModalProps = {
@@ -48,6 +48,8 @@ export function AppointmentFormModal({
   const selectedService = services.find((service) => service.id === values.serviceId)
   const selectedBranch = branches.find((branch) => branch.id === values.branchId)
   const selectedProvider = providers.find((provider) => provider.id === values.providerId)
+  const operatories = getOperatories().filter((operatory) => operatory.branchId === values.branchId && operatory.status === 'active')
+  const selectedOperatory = operatories.find((operatory) => operatory.id === values.operatoryId)
   const activeServices = services.filter((service) => service.status === 'active')
   const filteredPatients = useMemo(() => {
     const query = patientSearch.trim().toLowerCase()
@@ -69,8 +71,9 @@ export function AppointmentFormModal({
       serviceId: values.serviceId,
       date: values.date,
       providerId: values.providerId || undefined,
+      operatoryId: values.operatoryId || undefined,
     })
-  }, [values.branchId, values.date, values.providerId, values.serviceId])
+  }, [values.branchId, values.date, values.operatoryId, values.providerId, values.serviceId])
 
   const steps = ['Patient', 'Branch', 'Service', 'Dentist', 'Date & Time', 'Review']
 
@@ -98,11 +101,12 @@ export function AppointmentFormModal({
     })
   }
 
-  function chooseSlot(startTime: string, providerId: string) {
+  function chooseSlot(startTime: string, providerId: string, operatoryId?: string) {
     if (!selectedService) return
     onChange({
       ...values,
       providerId,
+      operatoryId: operatoryId || values.operatoryId || undefined,
       startTime,
       endTime: addMinutesToTime(startTime, selectedService.duration),
       durationMinutes: selectedService.duration,
@@ -249,18 +253,27 @@ export function AppointmentFormModal({
                 onChange={(event) => onChange({ ...values, date: event.target.value, startTime: '' })}
                 required
               />
+              {operatories.length > 0 && (
+                <label className="report-control">
+                  <span>Operatory / chair</span>
+                  <select value={values.operatoryId ?? ''} onChange={(event) => onChange({ ...values, operatoryId: event.target.value || undefined, startTime: '' })}>
+                    <option value="">Any available operatory</option>
+                    {operatories.map((operatory) => <option key={operatory.id} value={operatory.id}>{operatory.name}</option>)}
+                  </select>
+                </label>
+              )}
               {values.branchId && values.serviceId && values.date ? (
                 <div className="appointment-slot-grid">
                   {availableSlots.map((slot) => (
                     <button
-                      key={`${slot.providerId}-${slot.startTime}`}
+                      key={`${slot.providerId}-${slot.operatoryId ?? 'any'}-${slot.startTime}`}
                       type="button"
                       className={values.startTime === slot.startTime && values.providerId === slot.providerId ? 'is-selected' : ''}
-                      onClick={() => chooseSlot(slot.startTime, slot.providerId)}
+                      onClick={() => chooseSlot(slot.startTime, slot.providerId, slot.operatoryId)}
                     >
                       <CalendarDays size={15} />
                       <strong>{formatAppointmentTime(slot.startTime)}</strong>
-                      <span>{slot.providerName}</span>
+                      <span>{slot.providerName}{slot.operatoryName ? ` - ${slot.operatoryName}` : ''}</span>
                     </button>
                   ))}
                   {availableSlots.length === 0 && <div className="empty-inline">No available slots for this date and selection.</div>}
@@ -278,10 +291,23 @@ export function AppointmentFormModal({
                 <div><span>Branch</span><strong>{selectedBranch?.name ?? 'No branch selected'}</strong></div>
                 <div><span>Service</span><strong>{selectedService?.name ?? 'No service selected'}</strong></div>
                 <div><span>Dentist</span><strong>{selectedProvider?.displayName ?? 'No dentist selected'}</strong></div>
+                <div><span>Operatory</span><strong>{selectedOperatory?.name ?? 'Not assigned'}</strong></div>
                 <div><span>Time</span><strong>{values.startTime ? `${formatAppointmentTime(values.startTime)} - ${formatAppointmentTime(values.endTime)}` : 'No time selected'}</strong></div>
-                <div><span>Duration</span><strong>{selectedService?.duration ?? 0} minutes</strong></div>
+                <div><span>Duration</span><strong>{values.durationMinutes ?? selectedService?.duration ?? 0} minutes</strong></div>
+                <div><span>Deposit</span><strong>{values.depositStatus?.replace('_', ' ') ?? 'not required'}</strong></div>
                 <div><span>Estimated price</span><strong>{selectedService?.price ? new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP' }).format(selectedService.price / 100) : 'Price to be confirmed'}</strong></div>
               </div>
+              <Input
+                label="Custom duration in minutes"
+                type="number"
+                min="5"
+                step="5"
+                value={values.durationMinutes ?? selectedService?.duration ?? ''}
+                onChange={(event) => {
+                  const duration = Number(event.target.value)
+                  onChange({ ...values, durationMinutes: duration, endTime: values.startTime ? addMinutesToTime(values.startTime, duration) : values.endTime })
+                }}
+              />
               <Textarea
                 label="Reason for visit"
                 value={values.reasonForVisit ?? ''}

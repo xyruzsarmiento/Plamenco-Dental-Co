@@ -4,9 +4,11 @@ import { Button } from '../../components/ui/Button'
 import { Select } from '../../components/ui/Select'
 import {
   confirmPatientImport,
+  analyzeImportSheet,
   createSuggestedPatientMapping,
   parsePatientWorkbook,
   patientImportFieldOptions,
+  runPatientImportDryRun,
   validatePatientImportRows,
   type ParsedPatientWorkbook,
   type PatientImportMapping,
@@ -23,8 +25,9 @@ function countRows(rows: ValidatedImportRow[]) {
     ready: rows.filter((row) => row.status === 'ready').length,
     warning: rows.filter((row) => row.status === 'warning').length,
     duplicate: rows.filter((row) => row.status === 'duplicate').length,
+    possible: rows.filter((row) => row.status === 'possible_match').length,
     error: rows.filter((row) => row.status === 'error').length,
-    selected: rows.filter((row) => row.decision === 'import' && row.status !== 'error').length,
+    selected: rows.filter((row) => row.decision === 'create_new' && (row.status === 'ready' || row.status === 'warning')).length,
   }
 }
 
@@ -42,6 +45,8 @@ export function PatientImportModal({ onClose, onImported }: PatientImportModalPr
     [selectedSheetName, workbook],
   )
   const summary = useMemo(() => countRows(rows), [rows])
+  const dryRun = useMemo(() => runPatientImportDryRun(rows), [rows])
+  const sheetProfile = useMemo(() => selectedSheet ? analyzeImportSheet(selectedSheet, mapping) : null, [mapping, selectedSheet])
 
   async function handleFileChange(file: File | undefined) {
     if (!file) return
@@ -85,7 +90,11 @@ export function PatientImportModal({ onClose, onImported }: PatientImportModalPr
 
   function handleConfirm() {
     if (!workbook || !selectedSheet || rows.length === 0) return
-    const batch = confirmPatientImport(workbook.fileName, selectedSheet.name, rows)
+    const batch = confirmPatientImport(workbook.fileName, selectedSheet.name, rows, {
+      mapping,
+      sheetProfile: sheetProfile ?? undefined,
+      fileSizeBytes: workbook.fileSizeBytes,
+    })
     setResult(`Import batch ${batch.id} completed: ${batch.importedRows} imported, ${batch.skippedRows} skipped.`)
     onImported()
   }
@@ -107,10 +116,10 @@ export function PatientImportModal({ onClose, onImported }: PatientImportModalPr
           <label className="import-upload-zone">
             <Upload size={22} />
             <strong>{workbook?.fileName ?? 'Upload Excel or CSV file'}</strong>
-            <span>{isParsing ? 'Reading workbook...' : 'Choose .xlsx, .xls, or .csv. No records import until confirmation.'}</span>
+            <span>{isParsing ? 'Reading workbook...' : 'Choose .xlsx or .csv. No records import until confirmation.'}</span>
             <input
               type="file"
-              accept=".xlsx,.xls,.csv,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel"
+              accept=".xlsx,.csv,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
               onChange={(event) => void handleFileChange(event.target.files?.[0])}
             />
           </label>
@@ -179,6 +188,7 @@ export function PatientImportModal({ onClose, onImported }: PatientImportModalPr
               <div><span>Ready</span><strong>{summary.ready}</strong></div>
               <div><span>Warnings</span><strong>{summary.warning}</strong></div>
               <div><span>Duplicates</span><strong>{summary.duplicate}</strong></div>
+              <div><span>Possible</span><strong>{summary.possible}</strong></div>
               <div><span>Errors</span><strong>{summary.error}</strong></div>
             </div>
 
@@ -197,8 +207,9 @@ export function PatientImportModal({ onClose, onImported }: PatientImportModalPr
                     value={row.decision}
                     onChange={(event) => handleDecisionChange(row.rowNumber, event.target.value as ValidatedImportRow['decision'])}
                     options={[
-                      { label: row.status === 'duplicate' ? 'Skip for review' : 'Skip', value: 'skip' },
-                      { label: 'Import as new', value: 'import' },
+                      { label: 'Review later', value: 'review_later' },
+                      { label: 'Skip', value: 'skip' },
+                      { label: 'Import as new', value: 'create_new' },
                     ]}
                   />
                 </div>
@@ -213,7 +224,7 @@ export function PatientImportModal({ onClose, onImported }: PatientImportModalPr
         <div className="modal-actions">
           <Button variant="secondary" type="button" onClick={onClose}>Close</Button>
           <Button variant="secondary" type="button" onClick={handleValidate} disabled={!selectedSheet}>Validate rows</Button>
-          <Button type="button" onClick={handleConfirm} disabled={rows.length === 0 || summary.selected === 0}>Confirm import</Button>
+          <Button type="button" onClick={handleConfirm} disabled={rows.length === 0 || summary.selected === 0 || !dryRun.canImport}>Confirm import</Button>
         </div>
       </section>
     </div>

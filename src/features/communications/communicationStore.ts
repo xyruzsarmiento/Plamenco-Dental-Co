@@ -103,6 +103,8 @@ export function createCommunicationDeliveryLog(
   const log: CommunicationDeliveryLog = {
     id: `comm-log-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
     attemptCount: input.attemptCount ?? 0,
+    maxAttempts: input.maxAttempts ?? getCommunicationSettings().maxRetryAttempts,
+    dispatchMode: input.dispatchMode ?? 'automated',
     createdAt: now,
     updatedAt: now,
     ...input,
@@ -139,6 +141,7 @@ export function createCommunicationOutboxEntry(input: Omit<CommunicationOutboxEn
   const entry: CommunicationOutboxEntry = {
     id: `comm-outbox-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
     attempts: 0,
+    maxAttempts: input.maxAttempts ?? getCommunicationSettings().maxRetryAttempts,
     createdAt: now,
     updatedAt: now,
     ...input,
@@ -149,19 +152,90 @@ export function createCommunicationOutboxEntry(input: Omit<CommunicationOutboxEn
     delivery_log_id: entry.deliveryLogId,
     channel: entry.channel,
     provider: entry.provider,
+    patient_id: entry.patientId ?? null,
+    branch_id: entry.branchId ?? null,
     payload: entry.payload,
     status: entry.status,
     attempts: entry.attempts,
+    max_attempts: entry.maxAttempts ?? null,
     next_attempt_at: entry.nextAttemptAt,
   })
   return entry
+}
+
+export function updateCommunicationOutboxEntry(id: string, updates: Partial<CommunicationOutboxEntry>) {
+  const entries = getCommunicationOutbox()
+  const index = entries.findIndex((entry) => entry.id === id)
+  if (index === -1) return null
+  const updated = { ...entries[index], ...updates, updatedAt: nowIso() }
+  entries[index] = updated
+  saveCommunicationOutbox(entries)
+  void updateRemoteTableRow('communication_outbox', id, {
+    delivery_log_id: updated.deliveryLogId,
+    channel: updated.channel,
+    provider: updated.provider,
+    patient_id: updated.patientId ?? null,
+    branch_id: updated.branchId ?? null,
+    payload: updated.payload,
+    status: updated.status,
+    attempts: updated.attempts,
+    max_attempts: updated.maxAttempts ?? null,
+    next_attempt_at: updated.nextAttemptAt,
+  })
+  return updated
+}
+
+export function retryCommunicationDelivery(logId: string, actor: string) {
+  const log = getCommunicationDeliveryLogs().find((entry) => entry.id === logId)
+  if (!log) throw new Error('Communication delivery log not found.')
+  if (!['failed', 'queued', 'sending'].includes(log.status)) throw new Error('Only failed or queued communications can be retried.')
+  const settings = getCommunicationSettings()
+  const nextAttemptAt = new Date().toISOString()
+  const updatedLog = updateCommunicationDeliveryLog(log.id, {
+    status: 'queued',
+    queuedAt: nextAttemptAt,
+    failedAt: undefined,
+    nextRetryAt: nextAttemptAt,
+    lastRetryAt: nextAttemptAt,
+    failureReason: '',
+    attemptCount: log.attemptCount + 1,
+  }) ?? log
+  const existingOutbox = getCommunicationOutbox().find((entry) => entry.deliveryLogId === log.id && entry.status !== 'sent')
+  if (existingOutbox) {
+    updateCommunicationOutboxEntry(existingOutbox.id, {
+      status: 'queued',
+      attempts: existingOutbox.attempts + 1,
+      nextAttemptAt,
+    })
+  } else {
+    createCommunicationOutboxEntry({
+      deliveryLogId: log.id,
+      channel: log.channel,
+      provider: log.provider,
+      patientId: log.patientId,
+      branchId: log.branchId,
+      payload: {
+        recipient: log.recipient,
+        subject: log.subject,
+        message: log.message,
+      },
+      status: 'queued',
+      maxAttempts: log.maxAttempts ?? settings.maxRetryAttempts,
+      nextAttemptAt,
+    })
+  }
+  return updateCommunicationDeliveryLog(updatedLog.id, { businessEvent: updatedLog.businessEvent ?? `retry_requested_by:${actor}` }) ?? updatedLog
 }
 
 function mapDeliveryLogToRemoteRow(log: CommunicationDeliveryLog) {
   return {
     id: log.id,
     patient_id: log.patientId,
+    branch_id: log.branchId ?? null,
     appointment_id: log.appointmentId ?? null,
+    payment_id: log.paymentId ?? null,
+    related_type: log.relatedType ?? null,
+    related_id: log.relatedId ?? null,
     channel: log.channel,
     template_key: log.templateKey,
     recipient: log.recipient,
@@ -171,11 +245,17 @@ function mapDeliveryLogToRemoteRow(log: CommunicationDeliveryLog) {
     provider: log.provider,
     provider_message_id: log.providerMessageId ?? '',
     attempt_count: log.attemptCount,
+    max_attempts: log.maxAttempts ?? null,
     idempotency_key: log.idempotencyKey,
+    dispatch_mode: log.dispatchMode ?? 'automated',
+    sent_by: log.sentBy ?? '',
+    business_event: log.businessEvent ?? '',
     queued_at: log.queuedAt ?? null,
     sent_at: log.sentAt ?? null,
     delivered_at: log.deliveredAt ?? null,
     failed_at: log.failedAt ?? null,
+    next_retry_at: log.nextRetryAt ?? null,
+    last_retry_at: log.lastRetryAt ?? null,
     failure_reason: log.failureReason ?? '',
   }
 }

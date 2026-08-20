@@ -3,13 +3,18 @@ import {
   BellRing,
   Building2,
   CalendarDays,
+  DatabaseZap,
   ClipboardList,
   CreditCard,
   FileText,
   LayoutDashboard,
+  PackageSearch,
+  ReceiptText,
   Settings,
+  ShieldCheck,
   UserRoundCog,
   UsersRound,
+  MessagesSquare,
 } from 'lucide-react'
 import type { ComponentType } from 'react'
 import type { PermissionKey } from '../../features/auth/permissions'
@@ -48,10 +53,15 @@ export const navigationGroups: NavigationGroup[] = [
   {
     title: 'Operations',
     items: [
-      { label: 'Reports', path: '/app/reports', icon: BarChart3, anyOf: ['reports.view', 'reports.view_limited'] },
+      { label: 'Reports', path: '/app/reports', icon: BarChart3, anyOf: ['reports.view'] },
+      { label: 'Data Import', path: '/app/data-import', icon: DatabaseZap, anyOf: ['patients.import'] },
+      { label: 'Inventory', path: '/app/inventory', icon: PackageSearch, anyOf: ['inventory.view'] },
+      { label: 'Expenses', path: '/app/expenses', icon: ReceiptText, anyOf: ['expenses.view'] },
+      { label: 'Communications Hub', path: '/app/communications', icon: MessagesSquare, anyOf: ['communications.manage', 'notifications.send', 'notifications.view'] },
       { label: 'Announcements / Notifications', path: '/app/notifications', icon: BellRing, anyOf: ['notifications.view'] },
       { label: 'Team & Access', path: '/app/staff', icon: UserRoundCog, anyOf: ['staff.manage', 'dentists.manage'] },
       { label: 'Branches', path: '/app/branches', icon: Building2, anyOf: ['branches.view', 'branches.manage'] },
+      { label: 'System Administration', path: '/app/system-admin', icon: ShieldCheck, anyOf: ['system_admin.view'] },
       { label: 'Settings', path: '/app/settings', icon: Settings, anyOf: ['settings.manage'] },
     ],
   },

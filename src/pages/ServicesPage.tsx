@@ -11,11 +11,9 @@ import {
   createService,
   updateService,
   toggleServiceStatus,
-  searchServices,
   filterServices,
   sortServices,
   paginateServices,
-  getCategories,
 } from '../features/services/serviceStore'
 
 function formatPrice(value: number): string {
@@ -43,10 +41,18 @@ export function ServicesPage() {
   const [feedback, setFeedback] = useState<{ tone: 'success' | 'error'; message: string } | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
 
-  const categories = useMemo(() => getCategories(), [services])
+  const categories = useMemo(() => Array.from(new Set(services.map((service) => service.category))).sort(), [services])
 
   const filteredServices = useMemo(() => {
-    let result = searchServices(searchQuery)
+    const query = searchQuery.trim().toLowerCase()
+    let result = query
+      ? services.filter(
+          (service) =>
+            service.name.toLowerCase().includes(query) ||
+            service.description.toLowerCase().includes(query) ||
+            service.category.toLowerCase().includes(query),
+        )
+      : services
 
     result = filterServices(result, {
       status: statusFilter || undefined,

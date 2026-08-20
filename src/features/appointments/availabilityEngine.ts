@@ -9,7 +9,7 @@ import {
 } from '../dentists/dentistStore'
 import type { Service } from '../services/serviceTypes'
 import { getStoredServices } from '../services/serviceStore'
-import { addMinutesToTime, checkScheduleConflict, getStoredAppointments } from './appointmentStore'
+import { addMinutesToTime, checkScheduleConflict, getOperatories, getScheduleConflictDetail, getStoredAppointments } from './appointmentStore'
 
 export type ProviderChoice = Provider & { label: string }
 
@@ -18,6 +18,8 @@ export type AvailabilitySlot = {
   endTime: string
   providerId: string
   providerName: string
+  operatoryId?: string
+  operatoryName?: string
 }
 
 type AvailabilityInput = {
@@ -25,6 +27,7 @@ type AvailabilityInput = {
   serviceId: string
   date: string
   providerId?: string
+  operatoryId?: string
   excludeAppointmentId?: string
   slotIntervalMinutes?: number
 }
@@ -109,11 +112,13 @@ export function isProviderAvailable({
   date,
   endTime,
   excludeAppointmentId,
+  operatoryId,
   providerId,
   startTime,
 }: {
   branchId: string
   providerId: string
+  operatoryId?: string
   date: string
   startTime: string
   endTime: string
@@ -138,13 +143,16 @@ export function isProviderAvailable({
   })
   if (blockedByOverride) return false
 
-  return !checkScheduleConflict(date, startTime, endTime, excludeAppointmentId, providerId, branchId)
+  if (getScheduleConflictDetail(date, startTime, endTime, excludeAppointmentId, providerId, branchId, operatoryId)) return false
+
+  return !checkScheduleConflict(date, startTime, endTime, excludeAppointmentId, providerId, branchId, operatoryId)
 }
 
 export function getAvailableAppointmentSlots({
   branchId,
   date,
   excludeAppointmentId,
+  operatoryId,
   providerId,
   serviceId,
   slotIntervalMinutes = 30,
@@ -154,6 +162,8 @@ export function getAvailableAppointmentSlots({
   if (!branch || !service || !date || service.duration <= 0) return []
 
   const providers = providerId ? getEligibleProviders(branchId).filter((provider) => provider.id === providerId) : getEligibleProviders(branchId)
+  const operatories = getOperatories().filter((operatory) => operatory.branchId === branchId && operatory.status === 'active')
+  const candidateOperatories = operatoryId ? operatories.filter((operatory) => operatory.id === operatoryId) : operatories
   const slots: AvailabilitySlot[] = []
 
   providers.forEach((provider) => {
@@ -165,7 +175,20 @@ export function getAvailableAppointmentSlots({
       for (let cursor = windowStart; cursor + service.duration <= windowEnd; cursor += slotIntervalMinutes) {
         const startTime = minutesToTime(cursor)
         const endTime = addMinutesToTime(startTime, service.duration)
-        if (isProviderAvailable({ branchId, providerId: provider.id, date, startTime, endTime, excludeAppointmentId })) {
+        if (candidateOperatories.length) {
+          candidateOperatories.forEach((operatory) => {
+            if (isProviderAvailable({ branchId, providerId: provider.id, operatoryId: operatory.id, date, startTime, endTime, excludeAppointmentId })) {
+              slots.push({
+                startTime,
+                endTime,
+                providerId: provider.id,
+                providerName: provider.displayName,
+                operatoryId: operatory.id,
+                operatoryName: operatory.name,
+              })
+            }
+          })
+        } else if (isProviderAvailable({ branchId, providerId: provider.id, date, startTime, endTime, excludeAppointmentId })) {
           slots.push({
             startTime,
             endTime,
@@ -179,8 +202,8 @@ export function getAvailableAppointmentSlots({
 
   const unique = new Map<string, AvailabilitySlot>()
   slots
-    .sort((a, b) => `${a.startTime}-${a.providerName}`.localeCompare(`${b.startTime}-${b.providerName}`))
-    .forEach((slot) => unique.set(`${slot.startTime}-${slot.providerId}`, slot))
+    .sort((a, b) => `${a.startTime}-${a.providerName}-${a.operatoryName ?? ''}`.localeCompare(`${b.startTime}-${b.providerName}-${b.operatoryName ?? ''}`))
+    .forEach((slot) => unique.set(`${slot.startTime}-${slot.providerId}-${slot.operatoryId ?? 'no-operatory'}`, slot))
 
   return Array.from(unique.values())
 }

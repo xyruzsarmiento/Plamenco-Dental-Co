@@ -7,6 +7,8 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "oxlint",
+    "verify:schema": "node scripts/verify-schema-artifacts.mjs",
+    "verify:deployment": "node scripts/verify-deployment-readiness.mjs",
     "preview": "vite preview"
   },
   "dependencies": {

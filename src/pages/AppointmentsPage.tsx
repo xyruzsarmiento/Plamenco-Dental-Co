@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { CheckCircle2, Clock, Filter, Plus, Search, XCircle } from 'lucide-react'
 import { AppointmentCalendar } from '../features/appointments/AppointmentCalendar'
 import { AppointmentDetails } from '../features/appointments/AppointmentDetails'
@@ -12,6 +13,8 @@ import {
   addMinutesToTime,
   checkScheduleConflict,
   createAppointment,
+  getOperatories,
+  getScheduleConflictDetail,
   getStoredAppointments,
   getAppointmentHistory,
   resendAppointmentCommunication,
@@ -19,7 +22,7 @@ import {
 } from '../features/appointments/appointmentStore'
 import { createClinicalVisitFromAppointment } from '../features/dentalRecords/dentalRecordStore'
 import type { DentalRecord } from '../features/dentalRecords/dentalRecordTypes'
-import { getAvailableAppointmentSlots, getEligibleProviders } from '../features/appointments/availabilityEngine'
+import { formatAppointmentTime, getAvailableAppointmentSlots, getEligibleProviders } from '../features/appointments/availabilityEngine'
 import { usePermissions } from '../features/auth/permissions'
 import { getStoredBranches } from '../features/branches/branchStore'
 import type { Branch } from '../features/branches/branchTypes'
@@ -40,6 +43,7 @@ type OperationAction = {
 } | null
 
 export function AppointmentsPage() {
+  const navigate = useNavigate()
   const { user } = useAuth()
   const permissions = usePermissions()
   const [appointments, setAppointments] = useState<Appointment[]>(getStoredAppointments())
@@ -68,6 +72,9 @@ export function AppointmentsPage() {
     durationMinutes: undefined,
     estimatedAmountCents: undefined,
     paymentStatus: 'not_billed',
+    depositStatus: 'not_required',
+    depositRequiredCents: 0,
+    depositPaidCents: 0,
     bookingSource: 'staff_entry',
     reasonForVisit: '',
     patientNotes: '',
@@ -131,6 +138,7 @@ export function AppointmentsPage() {
   const serviceMap = useMemo(() => new Map(services.map((s) => [s.id, s])), [services])
   const branchMap = useMemo(() => new Map(branches.map((branch) => [branch.id, branch])), [branches])
   const providerMap = useMemo(() => new Map(providers.map((provider) => [provider.id, provider])), [providers])
+  const operatoryMap = useMemo(() => new Map(getOperatories().map((operatory) => [operatory.id, operatory])), [])
 
   function handleAddAppointment(date: string, time?: string) {
     setSelectedAppointment(null)
@@ -145,6 +153,9 @@ export function AppointmentsPage() {
       durationMinutes: undefined,
       estimatedAmountCents: undefined,
       paymentStatus: 'not_billed',
+      depositStatus: 'not_required',
+      depositRequiredCents: 0,
+      depositPaidCents: 0,
       bookingSource: 'staff_entry',
       reasonForVisit: '',
       patientNotes: '',
@@ -162,9 +173,14 @@ export function AppointmentsPage() {
 
     // Check for conflicts
     if (values.date && values.startTime && values.endTime) {
-      const hasConflict = checkScheduleConflict(values.date, values.startTime, values.endTime, undefined, values.providerId, values.branchId)
-      if (hasConflict) {
-        setConflictError('This dentist already has an overlapping appointment. Please choose another time.')
+      const conflict = getScheduleConflictDetail(values.date, values.startTime, values.endTime, undefined, values.providerId, values.branchId, values.operatoryId)
+      if (conflict && 'appointment' in conflict) {
+        const provider = conflict.appointment.providerId ? providerMap.get(conflict.appointment.providerId) : undefined
+        setConflictError(`${provider?.displayName ?? 'The selected resource'} already has an appointment from ${formatAppointmentTime(conflict.appointment.startTime)} to ${formatAppointmentTime(conflict.appointment.endTime)}.`)
+      } else if (conflict && 'block' in conflict) {
+        setConflictError(`This time is blocked for ${conflict.block.reason || conflict.block.type.replace('_', ' ')}.`)
+      } else if (checkScheduleConflict(values.date, values.startTime, values.endTime, undefined, values.providerId, values.branchId, values.operatoryId)) {
+        setConflictError('This time overlaps an existing appointment. Please choose another slot.')
       } else {
         setConflictError(null)
       }
@@ -221,6 +237,9 @@ export function AppointmentsPage() {
       endTime,
       durationMinutes: selectedService?.duration,
       estimatedAmountCents: selectedService?.price,
+      depositStatus: formValues.depositStatus ?? 'not_required',
+      depositRequiredCents: formValues.depositRequiredCents ?? 0,
+      depositPaidCents: formValues.depositPaidCents ?? 0,
     }, user?.email ?? 'staff-entry')
     if (!result) {
       setFormError('Failed to create appointment. Time slot may be booked.')
@@ -719,12 +738,14 @@ export function AppointmentsPage() {
           service={selectedAppointmentData.service}
           branch={selectedAppointment.branchId ? branchMap.get(selectedAppointment.branchId) : undefined}
           provider={selectedAppointment.providerId ? providerMap.get(selectedAppointment.providerId) : undefined}
+          operatory={selectedAppointment.operatoryId ? operatoryMap.get(selectedAppointment.operatoryId) : undefined}
           history={getAppointmentHistory(selectedAppointment.id)}
           canManage={Boolean(user && user.role !== 'patient')}
           onClose={() => setSelectedAppointment(null)}
           onStatusChange={handleStatusChange}
           onActionRequest={(appointment, status, label, requiresReason) => openOperationAction(appointment, status, label, requiresReason)}
           onManualResend={handleManualResend}
+          onOpenPatientRecord={() => navigate('/app/patients')}
           onOpenClinicalRecord={openClinicalRecord}
         />
       )}

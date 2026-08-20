@@ -9,6 +9,7 @@ import type { Patient } from '../patients/patientTypes'
 import type { Service } from '../services/serviceTypes'
 import type { Branch } from '../branches/branchTypes'
 import type { Provider } from '../dentists/dentistTypes'
+import type { Operatory } from './appointmentTypes'
 
 type AppointmentDetailsProps = {
   appointment: Appointment
@@ -16,10 +17,12 @@ type AppointmentDetailsProps = {
   service?: Service
   branch?: Branch
   provider?: Provider
+  operatory?: Operatory
   onClose: () => void
   onStatusChange: (status: AppointmentStatus) => void
   onActionRequest?: (appointment: Appointment, status: AppointmentStatus, label: string, requiresReason?: boolean) => void
   onManualResend?: (appointment: Appointment, templateKey: CommunicationTemplateKey) => void
+  onOpenPatientRecord?: (appointment: Appointment) => void
   onOpenClinicalRecord?: (appointment: Appointment) => void
   history?: Array<{
     id: string
@@ -112,10 +115,12 @@ export function AppointmentDetails({
   patient,
   branch,
   provider,
+  operatory,
   service,
   history = [],
   onActionRequest,
   onManualResend,
+  onOpenPatientRecord,
   onOpenClinicalRecord,
   canManage,
 }: AppointmentDetailsProps) {
@@ -234,12 +239,23 @@ export function AppointmentDetails({
                 <span className="value">{provider?.displayName ?? 'No dentist assigned'}</span>
               </div>
               <div className="detail-item">
+                <span className="label">Operatory / Chair</span>
+                <span className="value">{operatory?.name ?? 'Not assigned'}</span>
+              </div>
+              <div className="detail-item">
                 <span className="label">Estimated Amount</span>
                 <span className="value">{appointment.estimatedAmountCents || service?.price ? new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP' }).format((appointment.estimatedAmountCents ?? service?.price ?? 0) / 100) : 'Price to be confirmed'}</span>
               </div>
               <div className="detail-item">
                 <span className="label">Payment Status</span>
                 <span className="value">{(appointment.paymentStatus ?? 'not_billed').replaceAll('_', ' ')}</span>
+              </div>
+              <div className="detail-item">
+                <span className="label">Deposit</span>
+                <span className="value">
+                  {(appointment.depositStatus ?? 'not_required').replaceAll('_', ' ')}
+                  {appointment.depositRequiredCents ? ` - ${new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP' }).format((appointment.depositPaidCents ?? 0) / 100)} paid of ${new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP' }).format(appointment.depositRequiredCents / 100)}` : ''}
+                </span>
               </div>
               <div className="detail-item">
                 <span className="label">Booking Source</span>
@@ -286,10 +302,12 @@ export function AppointmentDetails({
             <div className="details-section">
               <h3>Quick Actions</h3>
               <div className="action-buttons">
-                <Button size="sm" variant="secondary">
-                  <UserRound size={14} />
-                  Open Patient Record
-                </Button>
+                {onOpenPatientRecord && (
+                  <Button size="sm" variant="secondary" onClick={() => onOpenPatientRecord(appointment)}>
+                    <UserRound size={14} />
+                    Open Patient Record
+                  </Button>
+                )}
                 {appointment.status === 'in_progress' && onOpenClinicalRecord && (
                   <Button size="sm" variant="secondary" onClick={() => onOpenClinicalRecord(appointment)}>
                     <ClipboardList size={14} />

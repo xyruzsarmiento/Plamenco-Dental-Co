@@ -1,4 +1,4 @@
-import type { Appointment, AppointmentFormValues, AppointmentStatus, AppointmentStatusHistoryEntry } from './appointmentTypes'
+import type { Appointment, AppointmentFormValues, AppointmentStatus, AppointmentStatusHistoryEntry, AppointmentWaitlistEntry, Operatory, ScheduleBlock } from './appointmentTypes'
 import { insertRemoteTableRow, updateRemoteTableRow } from '../../lib/supabaseSync'
 import { notifyAppointmentTransition, sendAppointmentCommunication } from '../communications/communicationService'
 import { getCommunicationLogsByAppointment } from '../communications/communicationStore'
@@ -7,6 +7,13 @@ import { recordAuditEntry } from '../security/auditLogStore'
 
 const APPOINTMENT_STORAGE_KEY = 'plamenco.appointments'
 const APPOINTMENT_HISTORY_STORAGE_KEY = 'plamenco.appointmentStatusHistory'
+const OPERATORY_STORAGE_KEY = 'plamenco.appointment.operatories'
+const SCHEDULE_BLOCK_STORAGE_KEY = 'plamenco.appointment.scheduleBlocks'
+const WAITLIST_STORAGE_KEY = 'plamenco.appointment.waitlist'
+
+type ScheduleConflictDetail =
+  | { type: 'provider' | 'operatory'; appointment: Appointment }
+  | { type: 'block'; block: ScheduleBlock }
 
 const seedAppointments: Appointment[] = []
 
@@ -40,6 +47,9 @@ function normalizeAppointment(appointment: Appointment): Appointment {
     appointmentNumber: appointment.appointmentNumber ?? generateDisplayAppointmentNumber([appointment], appointment.id),
     bookingSource: appointment.bookingSource ?? (appointment.createdBy === 'patient-portal' ? 'patient_portal' : 'staff_entry'),
     paymentStatus: appointment.paymentStatus ?? 'not_billed',
+    depositStatus: appointment.depositStatus ?? 'not_required',
+    depositRequiredCents: appointment.depositRequiredCents ?? 0,
+    depositPaidCents: appointment.depositPaidCents ?? 0,
   }
 }
 
@@ -51,12 +61,16 @@ function mapAppointmentToRemoteRow(appointment: Appointment) {
     branch_id: appointment.branchId || null,
     provider_id: appointment.providerId || null,
     service_id: appointment.serviceId,
+    operatory_id: appointment.operatoryId || null,
     appointment_date: appointment.date,
     start_time: appointment.startTime,
     end_time: appointment.endTime,
     duration_minutes: appointment.durationMinutes ?? null,
     estimated_amount_cents: appointment.estimatedAmountCents ?? null,
     payment_status: appointment.paymentStatus ?? 'not_billed',
+    deposit_status: appointment.depositStatus ?? 'not_required',
+    deposit_required_cents: appointment.depositRequiredCents ?? 0,
+    deposit_paid_cents: appointment.depositPaidCents ?? 0,
     reason_for_visit: appointment.reasonForVisit ?? '',
     patient_notes: appointment.patientNotes ?? '',
     internal_notes: appointment.internalNotes ?? '',
@@ -88,6 +102,20 @@ function safeParseHistory(value: string | null): AppointmentStatusHistoryEntry[]
   } catch {
     return []
   }
+}
+
+function safeParseList<T>(value: string | null): T[] {
+  if (!value) return []
+  try {
+    const parsed = JSON.parse(value) as T[]
+    return Array.isArray(parsed) ? parsed : []
+  } catch {
+    return []
+  }
+}
+
+function nowIso() {
+  return new Date().toISOString()
 }
 
 export const allowedAppointmentTransitions: Record<AppointmentStatus, AppointmentStatus[]> = {
@@ -130,6 +158,115 @@ function appendAppointmentHistory(entry: AppointmentStatusHistoryEntry) {
     reason: entry.reason ?? '',
     notes: entry.notes ?? '',
     metadata: entry.metadata ?? {},
+  })
+  return entry
+}
+
+export function getOperatories(): Operatory[] {
+  return safeParseList<Operatory>(window.localStorage.getItem(OPERATORY_STORAGE_KEY))
+}
+
+export function saveOperatories(operatories: Operatory[]) {
+  window.localStorage.setItem(OPERATORY_STORAGE_KEY, JSON.stringify(operatories))
+}
+
+export function createOperatory(input: Omit<Operatory, 'id' | 'createdAt' | 'updatedAt'>) {
+  const timestamp = nowIso()
+  const operatory: Operatory = {
+    id: `operatory-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+    ...input,
+    createdAt: timestamp,
+    updatedAt: timestamp,
+  }
+  saveOperatories([operatory, ...getOperatories()])
+  void insertRemoteTableRow('operatories', {
+    id: operatory.id,
+    name: operatory.name,
+    branch_id: operatory.branchId,
+    status: operatory.status,
+    notes: operatory.notes,
+  })
+  return operatory
+}
+
+export function getScheduleBlocks(): ScheduleBlock[] {
+  return safeParseList<ScheduleBlock>(window.localStorage.getItem(SCHEDULE_BLOCK_STORAGE_KEY))
+}
+
+export function saveScheduleBlocks(blocks: ScheduleBlock[]) {
+  window.localStorage.setItem(SCHEDULE_BLOCK_STORAGE_KEY, JSON.stringify(blocks))
+}
+
+export function createScheduleBlock(input: Omit<ScheduleBlock, 'id' | 'createdAt' | 'updatedAt'>) {
+  const timestamp = nowIso()
+  const block: ScheduleBlock = {
+    id: `block-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+    ...input,
+    createdAt: timestamp,
+    updatedAt: timestamp,
+  }
+  saveScheduleBlocks([block, ...getScheduleBlocks()])
+  void insertRemoteTableRow('schedule_blocks', {
+    id: block.id,
+    branch_id: block.branchId,
+    provider_id: block.providerId || null,
+    operatory_id: block.operatoryId || null,
+    block_date: block.date,
+    start_time: block.fullDay ? null : block.startTime || null,
+    end_time: block.fullDay ? null : block.endTime || null,
+    full_day: block.fullDay,
+    block_type: block.type,
+    reason: block.reason,
+    notes: block.notes,
+    created_by: block.createdBy,
+  })
+  return block
+}
+
+export function getAffectedAppointmentsForScheduleBlock(block: Pick<ScheduleBlock, 'branchId' | 'date' | 'endTime' | 'fullDay' | 'operatoryId' | 'providerId' | 'startTime'>) {
+  return getStoredAppointments().filter((appointment) => {
+    if (!isBlockingAppointmentStatus(appointment.status)) return false
+    if (appointment.date !== block.date) return false
+    if (appointment.branchId !== block.branchId) return false
+    if (block.providerId && appointment.providerId !== block.providerId) return false
+    if (block.operatoryId && appointment.operatoryId !== block.operatoryId) return false
+    if (block.fullDay) return true
+    if (!block.startTime || !block.endTime) return true
+    return appointment.startTime < block.endTime && appointment.endTime > block.startTime
+  })
+}
+
+export function getWaitlistEntries(): AppointmentWaitlistEntry[] {
+  return safeParseList<AppointmentWaitlistEntry>(window.localStorage.getItem(WAITLIST_STORAGE_KEY))
+}
+
+export function saveWaitlistEntries(entries: AppointmentWaitlistEntry[]) {
+  window.localStorage.setItem(WAITLIST_STORAGE_KEY, JSON.stringify(entries))
+}
+
+export function createWaitlistEntry(input: Omit<AppointmentWaitlistEntry, 'id' | 'createdAt' | 'updatedAt'>) {
+  const timestamp = nowIso()
+  const entry: AppointmentWaitlistEntry = {
+    id: `waitlist-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+    ...input,
+    createdAt: timestamp,
+    updatedAt: timestamp,
+  }
+  saveWaitlistEntries([entry, ...getWaitlistEntries()])
+  void insertRemoteTableRow('appointment_waitlist', {
+    id: entry.id,
+    patient_id: entry.patientId,
+    branch_id: entry.branchId,
+    service_id: entry.serviceId,
+    preferred_provider_id: entry.preferredProviderId || null,
+    preferred_date_start: entry.preferredDateStart,
+    preferred_date_end: entry.preferredDateEnd,
+    preferred_time_start: entry.preferredTimeStart || null,
+    preferred_time_end: entry.preferredTimeEnd || null,
+    priority: entry.priority,
+    status: entry.status,
+    notes: entry.notes,
+    created_by: entry.createdBy,
   })
   return entry
 }
@@ -214,14 +351,18 @@ export function checkScheduleConflict(
   endTime: string,
   excludeId?: string,
   providerId?: string,
-  branchId?: string
+  branchId?: string,
+  operatoryId?: string
 ): boolean {
   const appointments = getAppointmentsByDate(date).filter(
     (appt) =>
       isBlockingAppointmentStatus(appt.status) &&
       (!excludeId || appt.id !== excludeId) &&
-      (!providerId || appt.providerId === providerId) &&
-      (!branchId || !appt.providerId || appt.branchId === branchId)
+      (
+        (!!providerId && appt.providerId === providerId) ||
+        (!!operatoryId && appt.operatoryId === operatoryId)
+      ) &&
+      (!branchId || appt.branchId === branchId)
   )
 
   for (const appt of appointments) {
@@ -237,11 +378,46 @@ export function checkScheduleConflict(
   return false
 }
 
+export function getScheduleConflictDetail(
+  date: string,
+  startTime: string,
+  endTime: string,
+  excludeId?: string,
+  providerId?: string,
+  branchId?: string,
+  operatoryId?: string
+): ScheduleConflictDetail | null {
+  const appointmentConflict = getAppointmentsByDate(date).find((appt) => (
+    isBlockingAppointmentStatus(appt.status) &&
+    (!excludeId || appt.id !== excludeId) &&
+    (!branchId || appt.branchId === branchId) &&
+    (
+      (!!providerId && appt.providerId === providerId) ||
+      (!!operatoryId && appt.operatoryId === operatoryId)
+    ) &&
+    startTime < appt.endTime &&
+    endTime > appt.startTime
+  ))
+  if (appointmentConflict) {
+    return { type: appointmentConflict.providerId === providerId ? 'provider' : 'operatory', appointment: appointmentConflict }
+  }
+
+  const blockConflict = getScheduleBlocks().find((block) => (
+    block.date === date &&
+    block.branchId === branchId &&
+    (block.fullDay || (!!block.startTime && !!block.endTime && startTime < block.endTime && endTime > block.startTime)) &&
+    (!block.providerId || block.providerId === providerId) &&
+    (!block.operatoryId || block.operatoryId === operatoryId)
+  ))
+  if (blockConflict) return { type: 'block', block: blockConflict }
+  return null
+}
+
 export function createAppointment(
   values: AppointmentFormValues,
   createdBy: string
 ): Appointment | null {
-  if (checkScheduleConflict(values.date, values.startTime, values.endTime, undefined, values.providerId, values.branchId)) {
+  if (checkScheduleConflict(values.date, values.startTime, values.endTime, undefined, values.providerId, values.branchId, values.operatoryId)) {
     return null
   }
 
@@ -257,6 +433,9 @@ export function createAppointment(
     durationMinutes: values.durationMinutes ?? service?.duration ?? undefined,
     estimatedAmountCents: values.estimatedAmountCents ?? service?.price ?? undefined,
     paymentStatus: values.paymentStatus ?? 'not_billed',
+    depositStatus: values.depositStatus ?? 'not_required',
+    depositRequiredCents: values.depositRequiredCents ?? 0,
+    depositPaidCents: values.depositPaidCents ?? 0,
     bookingSource: values.bookingSource ?? (createdBy === 'patient-portal' ? 'patient_portal' : 'staff_entry'),
     createdBy,
     createdAt: now,

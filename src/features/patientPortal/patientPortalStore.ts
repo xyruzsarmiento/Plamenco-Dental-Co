@@ -5,6 +5,8 @@ import { getStoredServices } from '../services/serviceStore.ts'
 
 export type PublicBookingInput = {
   serviceId: string
+  branchId?: string
+  providerId?: string
   date: string
   startTime: string
   firstName: string
@@ -63,35 +65,55 @@ function minutesToTime(totalMinutes: number): string {
 export function createPublicBooking(input: PublicBookingInput) {
   const service = getStoredServices().find((item) => item.id === input.serviceId)
   if (!service) throw new Error('Selected service is not available.')
+  if (input.branchId) {
+    const available = getAvailableAppointmentSlots({
+      branchId: input.branchId,
+      providerId: input.providerId || undefined,
+      serviceId: input.serviceId,
+      date: input.date,
+    }).some((slot) => slot.startTime === input.startTime && (!input.providerId || slot.providerId === input.providerId))
+    if (!available) throw new Error('That time is no longer available. Please choose another time.')
+  }
 
-  const patient = getStoredPatients().find((entry) => entry.email.toLowerCase() === input.email.trim().toLowerCase())
+  const email = input.email.trim().toLowerCase()
+  const phone = input.phone.trim()
+  const patient = getStoredPatients().find((entry) => entry.email.toLowerCase() === email || (!!phone && entry.phone.trim() === phone))
   const nextPatient = patient ?? createPatient({
     firstName: input.firstName.trim(),
     middleName: '',
     lastName: input.lastName.trim(),
-    dateOfBirth: '2000-01-01',
+    dateOfBirth: '',
     sex: 'prefer_not_to_say',
-    phone: input.phone.trim(),
-    email: input.email.trim(),
-    address: 'Pending patient profile update',
-    emergencyContact: 'Pending',
-    emergencyContactPhone: 'Pending',
+    phone,
+    email,
+    address: '',
+    emergencyContact: '',
+    emergencyContactPhone: '',
     registrationDate: new Date().toISOString().split('T')[0],
     status: 'active',
-    allergies: 'None reported',
-    medicalConditions: 'None reported',
-    currentMedications: 'None',
-    previousSurgeries: 'None',
-    medicalNotes: `Public booking requested for ${service.name}.`,
+    allergies: '',
+    medicalConditions: '',
+    currentMedications: '',
+    previousSurgeries: '',
+    medicalNotes: '',
   })
 
   const appointment = createAppointment(
     {
       patientId: nextPatient.patientId,
+      branchId: input.branchId,
+      providerId: input.providerId,
       serviceId: input.serviceId,
       date: input.date,
       startTime: input.startTime,
       endTime: minutesToTime(timeToMinutes(input.startTime) + service.duration),
+      durationMinutes: service.duration,
+      estimatedAmountCents: service.price,
+      bookingSource: 'patient_portal',
+      paymentStatus: 'not_billed',
+      depositStatus: 'not_required',
+      patientNotes: input.notes?.trim() ?? '',
+      reasonForVisit: service.name,
       notes: input.notes?.trim() || `Online booking for ${service.name}.`,
       status: 'pending',
     },

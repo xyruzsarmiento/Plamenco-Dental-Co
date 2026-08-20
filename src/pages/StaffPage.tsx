@@ -1,17 +1,36 @@
 import { useMemo, useState } from 'react'
-import { Edit3, Plus, Search, ShieldCheck, ToggleLeft, ToggleRight, Trash2 } from 'lucide-react'
+import { Banknote, CalendarClock, Clock3, Edit3, Plus, Search, ShieldCheck, Stethoscope, ToggleLeft, ToggleRight } from 'lucide-react'
 import { Badge } from '../components/ui/Badge'
 import { Button } from '../components/ui/Button'
 import { EmptyState } from '../components/ui/EmptyState'
 import { Select } from '../components/ui/Select'
-import { deleteStaffMember, getStoredStaff, saveStoredStaff } from '../features/auth/staffStore'
+import { getStoredStaff, saveStoredStaff } from '../features/auth/staffStore'
 import { StaffFormModal } from '../features/staff/StaffFormModal'
 import { recordAuditEntry } from '../features/security/auditLogStore'
 import { getCurrentSessionUserName } from '../features/security/security'
 import { permissionGroups, roleLabels, rolePermissions } from '../features/auth/permissions'
+import { updateInternalAccountStatus } from '../features/admin/systemAdminStore'
+import { getStoredBranches } from '../features/branches/branchStore'
+import { getProviderBranchAssignments, getProviderScheduleBlocks, getStoredProviders } from '../features/dentists/dentistStore'
+import {
+  clockInStaff,
+  clockOutStaff,
+  createProviderCompensationRule,
+  createProviderPayout,
+  createStaffShiftPlan,
+  getAttendanceRecords,
+  getProviderCompensationRules,
+  getProviderPayouts,
+  getProviderWorkload,
+  getStaffShiftPlans,
+  getWorkforceOverview,
+  markStaffAttendance,
+  processProviderPayout,
+} from '../features/staff/workforceStore'
 import type { StaffFormMode, StaffFormValues, StaffMember, StaffStatus, UserRole } from '../features/staff/staffTypes'
 
 type InternalAccountRole = Exclude<UserRole, 'patient'>
+type StaffTab = 'directory' | 'attendance' | 'providers' | 'compensation'
 
 const emptyForm: StaffFormValues = {
   name: '',
@@ -20,7 +39,7 @@ const emptyForm: StaffFormValues = {
   position: '',
   role: 'staff',
   status: 'active',
-  password: 'clinic123',
+  password: '',
 }
 
 function toFormValues(staff: StaffMember): StaffFormValues {
@@ -35,8 +54,18 @@ function toFormValues(staff: StaffMember): StaffFormValues {
   }
 }
 
+function formatMoney(cents: number) {
+  return new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP' }).format(cents / 100)
+}
+
+function formatDate(value: string) {
+  return new Date(`${value}T00:00:00`).toLocaleDateString('en-PH', { month: 'short', day: 'numeric', year: 'numeric' })
+}
+
 export function StaffPage() {
   const [staff, setStaff] = useState<StaffMember[]>(() => getStoredStaff())
+  const [refreshKey, setRefreshKey] = useState(0)
+  const [activeTab, setActiveTab] = useState<StaffTab>('directory')
   const [selectedStaffId, setSelectedStaffId] = useState(staff[0]?.id ?? '')
   const [query, setQuery] = useState('')
   const [roleFilter, setRoleFilter] = useState<'all' | InternalAccountRole>('all')
@@ -65,6 +94,32 @@ export function StaffPage() {
   const activeStaff = staff.filter((member) => member.status === 'active').length
   const clinicalUsers = staff.filter((member) => member.role === 'dentist' || member.role === 'associate_dentist').length
   const managedUsers = staff.filter((member) => member.role === 'super_admin' || member.role === 'admin').length
+  const today = new Date().toISOString().slice(0, 10)
+  const branches = getStoredBranches()
+  const providers = useMemo(() => {
+    void refreshKey
+    return getStoredProviders()
+  }, [refreshKey])
+  const shifts = useMemo(() => {
+    void refreshKey
+    return getStaffShiftPlans()
+  }, [refreshKey])
+  const attendance = useMemo(() => {
+    void refreshKey
+    return getAttendanceRecords()
+  }, [refreshKey])
+  const compensationRules = useMemo(() => {
+    void refreshKey
+    return getProviderCompensationRules()
+  }, [refreshKey])
+  const payouts = useMemo(() => {
+    void refreshKey
+    return getProviderPayouts()
+  }, [refreshKey])
+  const workforceOverview = useMemo(() => {
+    void refreshKey
+    return getWorkforceOverview(today)
+  }, [refreshKey, today])
 
   function persistStaff(nextStaff: StaffMember[]) {
     setStaff(nextStaff)
@@ -162,34 +217,125 @@ export function StaffPage() {
 
   function toggleStatus(member: StaffMember) {
     const nextStatus: StaffStatus = member.status === 'active' ? 'inactive' : 'active'
-    const nextStaff = staff.map((item) =>
-      item.id === member.id ? { ...item, status: nextStatus, updatedAt: new Date().toISOString() } : item,
-    )
-    persistStaff(nextStaff)
-    recordAuditEntry({
-      user: getCurrentSessionUserName(),
-      action: 'staff_account_changed',
-      entity: 'staff',
-      entityId: member.id,
-      metadata: { staffId: member.id, status: nextStatus },
-    })
+    try {
+      const nextStaff = updateInternalAccountStatus(member.id, nextStatus, getCurrentSessionUserName())
+      setStaff(nextStaff)
+    } catch (error) {
+      setFormError(error instanceof Error ? error.message : 'Account status could not be changed.')
+    }
   }
 
-  function deleteMember(member: StaffMember) {
-    const nextStaff = deleteStaffMember(member.id)
-    persistStaff(nextStaff)
-    recordAuditEntry({
-      user: getCurrentSessionUserName(),
-      action: 'staff_account_changed',
-      entity: 'staff',
-      entityId: member.id,
-      metadata: { staffId: member.id, action: 'delete' },
-    })
+  function refreshWorkforce() {
+    setRefreshKey((key) => key + 1)
+  }
 
-    if (selectedStaffId === member.id) {
-      const remaining = nextStaff[0]
-      setSelectedStaffId(remaining?.id ?? '')
-    }
+  function branchName(branchId?: string) {
+    return branches.find((branch) => branch.id === branchId)?.name ?? branchId ?? 'No branch'
+  }
+
+  function providerName(providerId: string) {
+    return providers.find((provider) => provider.id === providerId)?.displayName ?? providerId
+  }
+
+  function staffName(staffId: string) {
+    return staff.find((member) => member.id === staffId)?.name ?? staffId
+  }
+
+  function chooseBranch() {
+    const branch = window.prompt(`Branch ID\n${branches.map((entry) => `${entry.id}: ${entry.name}`).join('\n')}`, branches[0]?.id ?? 'branch-pulilan')
+    return branch || null
+  }
+
+  function handlePlanShift() {
+    const member = selectedStaff
+    if (!member) return
+    const branchId = chooseBranch()
+    if (!branchId) return
+    createStaffShiftPlan({
+      staffId: member.id,
+      branchId,
+      workDate: window.prompt('Work date YYYY-MM-DD', today) ?? today,
+      startTime: window.prompt('Start time HH:mm', '09:00') ?? '09:00',
+      endTime: window.prompt('End time HH:mm', '18:00') ?? '18:00',
+      notes: window.prompt('Shift notes', '') ?? '',
+      createdBy: getCurrentSessionUserName(),
+    })
+    refreshWorkforce()
+  }
+
+  function handleClockIn(member: StaffMember) {
+    const branchId = chooseBranch()
+    if (!branchId) return
+    clockInStaff({
+      staffId: member.id,
+      branchId,
+      workDate: today,
+      timeIn: window.prompt('Time in HH:mm', new Date().toTimeString().slice(0, 5)) ?? new Date().toTimeString().slice(0, 5),
+      recordedBy: getCurrentSessionUserName(),
+    })
+    refreshWorkforce()
+  }
+
+  function handleClockOut() {
+    const openRecord = attendance.find((record) => record.staffId === selectedStaff?.id && record.workDate === today && record.timeIn && !record.timeOut)
+    if (!openRecord) return
+    clockOutStaff(openRecord.id, window.prompt('Time out HH:mm', new Date().toTimeString().slice(0, 5)) ?? new Date().toTimeString().slice(0, 5))
+    refreshWorkforce()
+  }
+
+  function handleMarkAttendance(status: 'absent' | 'on_leave') {
+    const member = selectedStaff
+    if (!member) return
+    const branchId = chooseBranch()
+    if (!branchId) return
+    markStaffAttendance({
+      staffId: member.id,
+      branchId,
+      workDate: today,
+      status,
+      reason: window.prompt('Reason', '') ?? '',
+      recordedBy: getCurrentSessionUserName(),
+    })
+    refreshWorkforce()
+  }
+
+  function handleCompensationRule() {
+    const provider = providers[0]
+    if (!provider) return
+    const providerId = window.prompt(`Provider ID\n${providers.map((entry) => `${entry.id}: ${entry.displayName}`).join('\n')}`, provider.id)
+    if (!providerId) return
+    const basis = (window.prompt('Basis: percentage, fixed_per_treatment, none', 'percentage') ?? 'percentage') as 'percentage' | 'fixed_per_treatment' | 'none'
+    const rate = Number(window.prompt('Commission percent', basis === 'percentage' ? '10' : '0') ?? 0)
+    const fixed = Number(window.prompt('Fixed amount per completed treatment in PHP', basis === 'fixed_per_treatment' ? '500' : '0') ?? 0)
+    createProviderCompensationRule({
+      providerId,
+      branchId: window.prompt('Optional branch ID, blank for all assigned branches', '') || undefined,
+      basis,
+      commissionRatePercent: rate,
+      fixedAmountCents: Math.round(fixed * 100),
+      status: 'active',
+      notes: window.prompt('Notes', '') ?? '',
+      createdBy: getCurrentSessionUserName(),
+    })
+    refreshWorkforce()
+  }
+
+  function handleCreatePayout() {
+    const provider = providers[0]
+    const branch = branches[0]
+    if (!provider || !branch) return
+    const providerId = window.prompt(`Provider ID\n${providers.map((entry) => `${entry.id}: ${entry.displayName}`).join('\n')}`, provider.id)
+    const branchId = window.prompt(`Branch ID\n${branches.map((entry) => `${entry.id}: ${entry.name}`).join('\n')}`, branch.id)
+    if (!providerId || !branchId) return
+    createProviderPayout({
+      providerId,
+      branchId,
+      periodStart: window.prompt('Period start YYYY-MM-DD', `${today.slice(0, 7)}-01`) ?? `${today.slice(0, 7)}-01`,
+      periodEnd: window.prompt('Period end YYYY-MM-DD', today) ?? today,
+      createdBy: getCurrentSessionUserName(),
+      notes: window.prompt('Payout notes', '') ?? '',
+    })
+    refreshWorkforce()
   }
 
   return (
@@ -221,8 +367,33 @@ export function StaffPage() {
           <strong>{clinicalUsers}</strong>
           <small>Dentist account foundation</small>
         </article>
+        <article className="stat-card">
+          <span>Working today</span>
+          <strong>{workforceOverview.clockedIn}</strong>
+          <small>{workforceOverview.scheduledToday} scheduled shifts</small>
+        </article>
+        <article className="stat-card">
+          <span>Dentists available</span>
+          <strong>{workforceOverview.providersAvailable}</strong>
+          <small>{workforceOverview.activeProviderAssignments} branch assignments</small>
+        </article>
+        <article className="stat-card">
+          <span>Pending payouts</span>
+          <strong>{formatMoney(workforceOverview.pendingPayoutsCents)}</strong>
+          <small>Draft or approved provider payouts</small>
+        </article>
       </div>
 
+      <div className="toolbar-row" style={{ flexWrap: 'wrap' }}>
+        {(['directory', 'attendance', 'providers', 'compensation'] as StaffTab[]).map((tab) => (
+          <button key={tab} type="button" className={`tab-button ${activeTab === tab ? 'active' : ''}`} onClick={() => setActiveTab(tab)}>
+            {tab}
+          </button>
+        ))}
+      </div>
+
+      {activeTab === 'directory' && (
+      <>
       <div className="staff-toolbar">
         <label className="search-field staff-search">
           <Search size={16} />
@@ -314,17 +485,6 @@ export function StaffPage() {
                           >
                             {member.status === 'active' ? <ToggleRight size={17} /> : <ToggleLeft size={17} />}
                           </button>
-                          <button
-                            className="icon-button danger"
-                            type="button"
-                            aria-label={`Delete ${member.name}`}
-                            onClick={(event) => {
-                              event.stopPropagation()
-                              deleteMember(member)
-                            }}
-                          >
-                            <Trash2 size={16} />
-                          </button>
                         </div>
                       </td>
                     </tr>
@@ -376,13 +536,6 @@ export function StaffPage() {
                 >
                   {selectedStaff.status === 'active' ? 'Deactivate' : 'Activate'}
                 </Button>
-                <Button
-                  variant="danger"
-                  icon={<Trash2 size={16} />}
-                  onClick={() => deleteMember(selectedStaff)}
-                >
-                  Delete
-                </Button>
               </div>
               <div className="permissions-preview">
                 <p className="eyebrow">Permission preview</p>
@@ -404,6 +557,125 @@ export function StaffPage() {
           )}
         </aside>
       </div>
+      </>
+      )}
+
+      {activeTab === 'attendance' && (
+        <section className="panel table-panel">
+          <div className="section-header">
+            <div>
+              <Badge tone="info">Today</Badge>
+              <h3>Staff Scheduling & Attendance</h3>
+              <p>{workforceOverview.late} late, {workforceOverview.absent} absent, {workforceOverview.onLeave} on leave.</p>
+            </div>
+            <div className="toolbar-row">
+              <Button size="sm" icon={<CalendarClock size={14} />} onClick={handlePlanShift}>Plan Shift</Button>
+              {selectedStaff && <Button size="sm" variant="secondary" icon={<Clock3 size={14} />} onClick={() => handleClockIn(selectedStaff)}>Time In</Button>}
+              <Button size="sm" variant="secondary" onClick={handleClockOut}>Time Out</Button>
+              <Button size="sm" variant="secondary" onClick={() => handleMarkAttendance('absent')}>Absent</Button>
+              <Button size="sm" variant="secondary" onClick={() => handleMarkAttendance('on_leave')}>Leave</Button>
+            </div>
+          </div>
+          <div className="table-scroll">
+            <table className="table">
+              <thead><tr><th>Staff</th><th>Branch</th><th>Shift</th><th>Attendance</th><th>Reason</th></tr></thead>
+              <tbody>
+                {shifts.filter((shift) => shift.workDate === today).map((shift) => {
+                  const record = attendance.find((entry) => entry.staffId === shift.staffId && entry.workDate === shift.workDate)
+                  return (
+                    <tr key={shift.id}>
+                      <td><strong>{staffName(shift.staffId)}</strong><span>{formatDate(shift.workDate)}</span></td>
+                      <td>{branchName(shift.branchId)}</td>
+                      <td>{shift.startTime} - {shift.endTime}</td>
+                      <td><Badge tone={record?.status === 'late' || record?.status === 'absent' ? 'warning' : record?.status === 'on_leave' ? 'info' : 'success'}>{record?.status?.replaceAll('_', ' ') ?? 'scheduled'}</Badge><span>{record?.timeIn ? `${record.timeIn}${record.timeOut ? ` - ${record.timeOut}` : ''}` : ''}</span></td>
+                      <td>{record?.reason || shift.notes || 'No notes'}</td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
+          </div>
+          {shifts.filter((shift) => shift.workDate === today).length === 0 && <EmptyState title="No shifts today" message="Plan a branch shift for the selected staff member." />}
+        </section>
+      )}
+
+      {activeTab === 'providers' && (
+        <section className="panel table-panel">
+          <div className="section-header">
+            <div>
+              <Badge tone="success">Dentist directory</Badge>
+              <h3>Provider Workload</h3>
+              <p>Provider schedules, branch assignments, appointments, treatments, and value stay linked to provider profiles.</p>
+            </div>
+            <Stethoscope size={20} />
+          </div>
+          <div className="table-scroll">
+            <table className="table">
+              <thead><tr><th>Provider</th><th>Branches</th><th>Schedule Blocks</th><th>Today Workload</th><th>Treatment Value</th></tr></thead>
+              <tbody>
+                {providers.map((provider) => {
+                  const assignments = getProviderBranchAssignments().filter((assignment) => assignment.providerId === provider.id && assignment.status === 'active')
+                  const workload = getProviderWorkload(provider.id, today, today)
+                  return (
+                    <tr key={provider.id}>
+                      <td><strong>{provider.displayName}</strong><span>{provider.role.replaceAll('_', ' ')} - {provider.licenseNumber || 'No license stored'}</span></td>
+                      <td>{assignments.map((assignment) => branchName(assignment.branchId)).join(', ') || 'No branch'}</td>
+                      <td>{getProviderScheduleBlocks().filter((block) => block.providerId === provider.id && block.status === 'active').length}</td>
+                      <td>{workload.appointmentsCount} appts / {workload.treatmentCount} treatments</td>
+                      <td>{formatMoney(workload.grossTreatmentValueCents)}</td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
+          </div>
+          {providers.length === 0 && <EmptyState title="No providers found" message="Create dentist/provider profiles from the dentist management workflow." />}
+        </section>
+      )}
+
+      {activeTab === 'compensation' && (
+        <section className="panel table-panel">
+          <div className="section-header">
+            <div>
+              <Badge tone="warning">Restricted financial workflow</Badge>
+              <h3>Dentist Compensation & Payouts</h3>
+              <p>Draft payouts are calculated from completed treatment value and posted as payroll compensation expenses only when processed.</p>
+            </div>
+            <div className="toolbar-row">
+              <Button size="sm" icon={<Banknote size={14} />} onClick={handleCompensationRule}>Comp Rule</Button>
+              <Button size="sm" variant="secondary" onClick={handleCreatePayout}>Create Payout</Button>
+            </div>
+          </div>
+          <div className="workspace-list">
+            {compensationRules.map((rule) => (
+              <div key={rule.id} className="workspace-row">
+                <div><strong>{providerName(rule.providerId)}</strong><span>{rule.basis.replaceAll('_', ' ')} - {rule.branchId ? branchName(rule.branchId) : 'All assigned branches'}</span><small>{rule.notes || 'No notes'}</small></div>
+                <strong>{rule.basis === 'percentage' ? `${rule.commissionRatePercent}%` : formatMoney(rule.fixedAmountCents)}</strong>
+              </div>
+            ))}
+          </div>
+          <div className="table-scroll">
+            <table className="table">
+              <thead><tr><th>Payout</th><th>Provider</th><th>Branch</th><th>Period</th><th>Basis</th><th>Amount</th><th>Status</th><th>Action</th></tr></thead>
+              <tbody>
+                {payouts.map((payout) => (
+                  <tr key={payout.id}>
+                    <td><strong>{payout.payoutNumber}</strong><span>{payout.treatmentCount} treatments</span></td>
+                    <td>{providerName(payout.providerId)}</td>
+                    <td>{branchName(payout.branchId)}</td>
+                    <td>{formatDate(payout.periodStart)} - {formatDate(payout.periodEnd)}</td>
+                    <td>{payout.commissionRatePercent}% / {formatMoney(payout.fixedAmountCents)}</td>
+                    <td>{formatMoney(payout.payoutAmountCents)}</td>
+                    <td><Badge tone={payout.status === 'processed' ? 'success' : 'warning'}>{payout.status}</Badge></td>
+                    <td>{payout.status !== 'processed' && <Button size="sm" onClick={() => { processProviderPayout(payout.id, getCurrentSessionUserName()); refreshWorkforce() }}>Process</Button>}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          {payouts.length === 0 && <EmptyState title="No payouts calculated" message="Create a payout after completed treatments exist for the selected provider and branch." />}
+        </section>
+      )}
 
       {modalMode && (
         <StaffFormModal

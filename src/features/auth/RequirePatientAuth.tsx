@@ -18,6 +18,10 @@ export function RequirePatientAuth({ children }: { children: React.ReactNode }) 
     return <Navigate to="/login" state={{ from: location }} replace />
   }
 
+  if (user.status === 'inactive' || user.status === 'suspended') {
+    return <Navigate to="/unauthorized" state={{ from: location }} replace />
+  }
+
   if (!user.patientId) {
     return <Navigate to="/login" replace />
   }
