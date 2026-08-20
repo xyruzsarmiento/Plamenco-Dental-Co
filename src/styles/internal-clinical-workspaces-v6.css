@@ -1,0 +1,536 @@
+/* Internal clinical workspaces v6
+   Page-content only. Navigation intentionally excluded. */
+
+.page-dental-records,
+.page-treatments,
+.page-treatment-plans,
+.page-services,
+.page-dentists {
+  --cx-blue: #2563eb;
+  --cx-blue-deep: #1d4ed8;
+  --cx-blue-soft: #eaf2ff;
+  --cx-bg: #f7f9fc;
+  --cx-surface: #fff;
+  --cx-text: #172033;
+  --cx-muted: #6b7280;
+  --cx-border: #e5e7eb;
+  --cx-border-soft: #edf1f6;
+  --cx-success: #16a34a;
+  --cx-warning: #d97706;
+  --cx-danger: #dc2626;
+  --cx-shadow: 0 12px 30px rgba(15, 23, 42, .055);
+}
+
+.page-dental-records .content-area,
+.page-treatments .content-area,
+.page-treatment-plans .content-area,
+.page-services .content-area,
+.page-dentists .content-area {
+  max-width: 1800px;
+  padding: clamp(20px, 2.4vw, 38px);
+  background: var(--cx-bg);
+}
+
+.page-dental-records .premium-page-header,
+.page-treatments .premium-page-header,
+.page-treatment-plans .premium-page-header,
+.page-services .premium-page-header,
+.page-dentists .premium-section-header {
+  align-items: flex-end;
+  padding-bottom: 8px;
+}
+
+.page-dental-records .premium-page-heading h2,
+.page-treatments .premium-page-heading h2,
+.page-treatment-plans .premium-page-heading h2,
+.page-services .premium-page-heading h2,
+.page-dentists .premium-section-header h2 {
+  margin: 4px 0 7px;
+  color: var(--cx-text);
+  font-size: clamp(1.65rem, 2.2vw, 2.35rem);
+  line-height: 1.05;
+  letter-spacing: -.045em;
+}
+
+.page-dental-records .premium-page-heading p,
+.page-treatments .premium-page-heading p,
+.page-treatment-plans .premium-page-heading p,
+.page-services .premium-page-heading p,
+.page-dentists .premium-section-header p {
+  max-width: 760px;
+  color: var(--cx-muted);
+}
+
+/* ---------- Dental records: patient directory + clinical record timeline ---------- */
+.page-dental-records .dental-records-workspace {
+  display: grid;
+  grid-template-columns: minmax(250px, 300px) minmax(0, 1fr);
+  gap: 20px;
+  align-items: start;
+}
+
+.page-dental-records .dental-records-sidebar {
+  position: sticky;
+  top: 96px;
+  max-height: calc(100vh - 124px);
+  overflow: hidden;
+  padding: 0 !important;
+  border: 1px solid var(--cx-border-soft) !important;
+  border-radius: 18px !important;
+  background: #fff !important;
+  box-shadow: 0 5px 18px rgba(15,23,42,.035) !important;
+}
+
+.page-dental-records .dental-records-sidebar > .sidebar-header {
+  padding: 18px 18px 14px;
+  border-bottom: 1px solid var(--cx-border-soft);
+  background: #fff;
+}
+
+.page-dental-records .dental-records-sidebar .search-field-inline {
+  margin: 14px 14px 10px;
+  border-radius: 11px;
+  background: #f8fafc;
+}
+
+.page-dental-records .patient-strip-list {
+  display: grid;
+  gap: 4px;
+  max-height: calc(100vh - 285px);
+  overflow: auto;
+  padding: 4px 10px 14px;
+}
+
+.page-dental-records .patient-select-card {
+  display: grid;
+  grid-template-columns: 38px minmax(0,1fr) auto;
+  align-items: center;
+  gap: 10px;
+  min-height: 62px;
+  padding: 10px;
+  border: 1px solid transparent;
+  border-radius: 12px;
+  background: transparent;
+  color: #475467;
+  text-align: left;
+  transition: background 140ms ease, border-color 140ms ease, color 140ms ease;
+}
+
+.page-dental-records .patient-select-card:hover { background: #f8fbff; border-color: #e2ebf9; }
+.page-dental-records .patient-select-card.is-active { background: var(--cx-blue-soft); border-color: #d4e4ff; color: var(--cx-blue-deep); }
+.page-dental-records .patient-select-card .avatar-badge {
+  width: 38px;
+  height: 38px;
+  display: grid;
+  place-items: center;
+  border-radius: 11px;
+  background: #eef4ff;
+  color: var(--cx-blue-deep);
+  font-size: .76rem;
+  font-weight: 800;
+}
+
+.page-dental-records .dental-records-main { display: grid; gap: 16px; min-width: 0; }
+.page-dental-records .records-header-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+  padding: 22px !important;
+  border: 1px solid #dfe8f6 !important;
+  border-radius: 18px !important;
+  background: #fff !important;
+  box-shadow: var(--cx-shadow) !important;
+}
+
+.page-dental-records .patient-header-main { display: flex; align-items: center; gap: 14px; min-width: 0; }
+.page-dental-records .patient-header-avatar {
+  width: 54px;
+  height: 54px;
+  flex: 0 0 54px;
+  display: grid;
+  place-items: center;
+  border-radius: 16px;
+  background: var(--cx-blue);
+  color: #fff;
+  font-weight: 800;
+}
+
+.page-dental-records .patient-header-main h2 { margin: 2px 0 7px; font-size: clamp(1.25rem,1.7vw,1.65rem); letter-spacing: -.03em; }
+.page-dental-records .patient-header-meta { display: flex; flex-wrap: wrap; gap: 8px 14px; color: var(--cx-muted); font-size: .8rem; }
+.page-dental-records .patient-header-meta span { display: inline-flex; align-items: center; gap: 5px; }
+
+.page-dental-records .records-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(4,minmax(0,1fr));
+  gap: 12px;
+}
+.page-dental-records .records-summary-grid .stat-card {
+  min-height: 112px;
+  padding: 16px 17px;
+  border: 1px solid var(--cx-border-soft) !important;
+  border-radius: 15px !important;
+  background: #fff !important;
+  box-shadow: none !important;
+}
+.page-dental-records .records-summary-grid .stat-card span { color: var(--cx-muted); font-size: .75rem; font-weight: 700; }
+.page-dental-records .records-summary-grid .stat-card strong { display: block; margin-top: 14px; color: var(--cx-text); font-size: 1.2rem; letter-spacing: -.025em; }
+
+.page-dental-records .patient-contact-card { padding: 18px 20px !important; }
+.page-dental-records .patient-contact-grid { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 14px; }
+.page-dental-records .patient-contact-grid > div {
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: #f8fafc;
+  border: 1px solid #eef2f7;
+}
+.page-dental-records .patient-contact-grid .label { color: #7b8495; font-size: .7rem; font-weight: 750; text-transform: uppercase; letter-spacing: .055em; }
+.page-dental-records .patient-contact-grid p { margin: 5px 0 0; color: #344054; font-weight: 650; }
+
+.page-dental-records .clinical-timeline-section { padding: 20px !important; }
+.page-dental-records .clinical-timeline { position: relative; display: grid; gap: 0; padding-left: 12px; }
+.page-dental-records .clinical-timeline::before { content: ''; position: absolute; left: 19px; top: 8px; bottom: 8px; width: 1px; background: #dfe7f2; }
+.page-dental-records .clinical-visit {
+  position: relative;
+  display: grid;
+  grid-template-columns: 18px minmax(0,1fr);
+  gap: 14px;
+  padding: 0 0 18px;
+  border: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  cursor: pointer;
+}
+.page-dental-records .clinical-visit-marker {
+  position: relative;
+  z-index: 1;
+  width: 10px;
+  height: 10px;
+  margin-top: 20px;
+  border: 2px solid #fff;
+  border-radius: 999px;
+  background: var(--cx-blue);
+  box-shadow: 0 0 0 3px #dbe8ff;
+}
+.page-dental-records .clinical-visit-body {
+  padding: 16px 17px;
+  border: 1px solid var(--cx-border-soft);
+  border-radius: 14px;
+  background: #fff;
+  transition: border-color 140ms ease, box-shadow 140ms ease, transform 140ms ease;
+}
+.page-dental-records .clinical-visit:hover .clinical-visit-body { border-color: #d7e4f7; box-shadow: 0 8px 22px rgba(15,23,42,.05); transform: translateY(-1px); }
+
+/* ---------- Treatments: patient selector + active treatment workspace ---------- */
+.page-treatments .treatment-layout {
+  display: grid;
+  grid-template-columns: minmax(250px, 300px) minmax(0,1fr);
+  gap: 20px;
+  align-items: start;
+}
+.page-treatments .treatment-sidebar { position: sticky; top: 96px; }
+.page-treatments .treatment-main { display: grid; gap: 16px; min-width: 0; }
+.page-treatments .patient-selector,
+.page-treatments .patient-header,
+.page-treatments .treatment-operations-filter,
+.page-treatments .treatment-timeline,
+.page-treatments .panel {
+  border-color: var(--cx-border-soft) !important;
+  background: #fff !important;
+  box-shadow: 0 4px 16px rgba(15,23,42,.035) !important;
+}
+.page-treatments .treatment-operations-filter { padding: 16px !important; border-radius: 16px !important; }
+.page-treatments .treatment-filter-heading { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; color: #475467; }
+.page-treatments .treatment-filter-heading > span { margin-left: auto; color: var(--cx-muted); font-size: .78rem; }
+.page-treatments .treatment-filter-grid { display: grid; grid-template-columns: minmax(210px,1.2fr) repeat(6,minmax(130px,.7fr)); gap: 9px; }
+.page-treatments .treatment-timeline-item,
+.page-treatments .timeline-card,
+.page-treatments .treatment-card {
+  border: 1px solid var(--cx-border-soft) !important;
+  border-radius: 14px !important;
+  background: #fff !important;
+  box-shadow: none !important;
+}
+.page-treatments .status-planned { --status-accent: #2563eb; }
+.page-treatments .status-in_progress,
+.page-treatments .status-active { --status-accent: #d97706; }
+.page-treatments .status-completed { --status-accent: #16a34a; }
+.page-treatments .status-voided,
+.page-treatments .status-cancelled { --status-accent: #dc2626; }
+.page-treatments .treatment-timeline-item,
+.page-treatments .treatment-card { border-left: 3px solid var(--status-accent, #dfe5ee) !important; }
+
+/* ---------- Treatment plans: care-plan viewer, estimate distinct from billing ---------- */
+.page-treatment-plans .premium-page-scaffold > .panel:first-of-type {
+  padding: 14px 16px !important;
+  border-radius: 14px !important;
+  box-shadow: none !important;
+}
+.page-treatment-plans .panel-grid {
+  display: grid;
+  grid-template-columns: repeat(2,minmax(0,1fr));
+  gap: 16px;
+}
+.page-treatment-plans .panel-grid > article.panel {
+  position: relative;
+  overflow: hidden;
+  display: grid;
+  gap: 16px;
+  padding: 20px !important;
+  border: 1px solid var(--cx-border-soft) !important;
+  border-radius: 18px !important;
+  background: #fff !important;
+  box-shadow: 0 7px 24px rgba(15,23,42,.045) !important;
+}
+.page-treatment-plans .panel-grid > article.panel::before {
+  content: 'Treatment estimate — billing is separate';
+  display: block;
+  width: fit-content;
+  padding: 5px 9px;
+  border-radius: 999px;
+  background: var(--cx-blue-soft);
+  color: var(--cx-blue-deep);
+  font-size: .68rem;
+  font-weight: 760;
+  letter-spacing: .02em;
+}
+.page-treatment-plans .metric-grid.compact {
+  display: grid;
+  grid-template-columns: repeat(4,minmax(0,1fr));
+  gap: 8px;
+}
+.page-treatment-plans .metric-grid.compact > div {
+  padding: 11px 12px;
+  border: 1px solid #eef2f7;
+  border-radius: 11px;
+  background: #f8fafc;
+}
+.page-treatment-plans .metric-grid.compact span { color: var(--cx-muted); font-size: .7rem; font-weight: 700; }
+.page-treatment-plans .metric-grid.compact strong { display: block; margin-top: 5px; color: var(--cx-text); font-size: 1rem; }
+.page-treatment-plans .treatment-operations-list { display: grid; gap: 7px; }
+.page-treatment-plans .treatment-operations-row {
+  display: grid;
+  grid-template-columns: minmax(0,1fr) auto auto;
+  align-items: center;
+  gap: 14px;
+  padding: 11px 12px;
+  border: 1px solid #eef2f7;
+  border-radius: 11px;
+  background: #fff;
+}
+
+/* ---------- Services: compact catalogue, not generic CRUD cards ---------- */
+.page-services .services-workspace { display: grid; gap: 16px; }
+.page-services .services-hero {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 17px 18px;
+  border: 1px solid var(--cx-border-soft);
+  border-radius: 15px;
+  background: #fff;
+}
+.page-services .services-hero h3 { margin: 2px 0 0; font-size: 1.05rem; color: var(--cx-text); }
+.page-services .section-kicker { color: var(--cx-blue); font-size: .68rem; font-weight: 800; letter-spacing: .075em; text-transform: uppercase; }
+.page-services .services-summary { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 12px; }
+.page-services .summary-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 88px;
+  padding: 15px 16px;
+  border: 1px solid var(--cx-border-soft);
+  border-radius: 14px;
+  background: #fff;
+}
+.page-services .summary-icon { width: 38px; height: 38px; display: grid; place-items: center; border-radius: 11px; background: var(--cx-blue-soft); color: var(--cx-blue); }
+.page-services .summary-icon-active { background: #ecfdf3; color: var(--cx-success); }
+.page-services .summary-icon-muted { background: #f2f4f7; color: #667085; }
+.page-services .summary-card span { color: var(--cx-muted); font-size: .75rem; }
+.page-services .summary-card strong { display: block; color: var(--cx-text); font-size: 1.45rem; letter-spacing: -.03em; }
+.page-services .services-toolbar {
+  display: grid;
+  grid-template-columns: minmax(260px,1fr) auto;
+  gap: 14px;
+  align-items: end;
+  padding: 14px;
+  border: 1px solid var(--cx-border-soft);
+  border-radius: 14px;
+  background: #fff;
+}
+.page-services .toolbar-filters { display: grid; grid-template-columns: repeat(2,minmax(160px,210px)); gap: 9px; }
+.page-services .service-list,
+.page-services .service-grid { gap: 10px !important; }
+.page-services .service-card,
+.page-services .service-list-item {
+  border: 1px solid var(--cx-border-soft) !important;
+  border-radius: 14px !important;
+  background: #fff !important;
+  box-shadow: none !important;
+}
+.page-services .service-card:hover,
+.page-services .service-list-item:hover { border-color: #d8e4f5 !important; box-shadow: 0 8px 22px rgba(15,23,42,.045) !important; }
+
+/* ---------- Dentists: provider directory + availability cockpit ---------- */
+.page-dentists .dentist-toolbar {
+  display: grid;
+  grid-template-columns: minmax(260px,1.2fr) repeat(3,minmax(150px,.6fr));
+  gap: 10px;
+  align-items: end;
+  padding: 14px;
+  border: 1px solid var(--cx-border-soft);
+  border-radius: 14px;
+  background: #fff;
+}
+.page-dentists .dentist-workspace-grid {
+  display: grid;
+  grid-template-columns: minmax(270px,330px) minmax(0,1fr);
+  gap: 20px;
+  align-items: start;
+}
+.page-dentists .dentist-directory {
+  display: grid;
+  gap: 8px;
+  position: sticky;
+  top: 96px;
+  max-height: calc(100vh - 126px);
+  overflow: auto;
+  padding: 10px;
+  border: 1px solid var(--cx-border-soft);
+  border-radius: 16px;
+  background: #fff;
+}
+.page-dentists .dentist-entry {
+  display: grid;
+  grid-template-columns: 44px minmax(0,1fr) auto;
+  align-items: center;
+  gap: 10px;
+  padding: 11px;
+  border: 1px solid transparent;
+  border-radius: 12px;
+  background: transparent;
+  color: #475467;
+  text-align: left;
+}
+.page-dentists .dentist-entry:hover { background: #f8fbff; border-color: #e4ebf6; }
+.page-dentists .dentist-entry.is-selected { background: var(--cx-blue-soft); border-color: #d7e6ff; }
+.page-dentists .provider-avatar { width: 44px; height: 44px; display: grid; place-items: center; overflow: hidden; border-radius: 13px; background: #eef4ff; color: var(--cx-blue-deep); font-weight: 800; }
+.page-dentists .provider-avatar img { width: 100%; height: 100%; object-fit: cover; }
+.page-dentists .dentist-entry-main { min-width: 0; }
+.page-dentists .dentist-entry-main strong,
+.page-dentists .dentist-entry-main small,
+.page-dentists .dentist-entry-main em { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.page-dentists .dentist-entry-main small,
+.page-dentists .dentist-entry-main em { color: var(--cx-muted); font-size: .73rem; font-style: normal; }
+.page-dentists .dentist-profile-panel,
+.page-dentists .provider-detail-panel,
+.page-dentists .panel { border-color: var(--cx-border-soft) !important; background: #fff !important; box-shadow: 0 4px 16px rgba(15,23,42,.035) !important; }
+
+/* ---------- shared clinical controls ---------- */
+.page-dental-records .content-area input,
+.page-dental-records .content-area select,
+.page-dental-records .content-area textarea,
+.page-treatments .content-area input,
+.page-treatments .content-area select,
+.page-treatments .content-area textarea,
+.page-treatment-plans .content-area input,
+.page-treatment-plans .content-area select,
+.page-treatment-plans .content-area textarea,
+.page-services .content-area input,
+.page-services .content-area select,
+.page-dentists .content-area input,
+.page-dentists .content-area select,
+.page-dentists .content-area textarea {
+  border-color: #dbe3ee !important;
+  background: #fff !important;
+  color: var(--cx-text) !important;
+  box-shadow: none !important;
+}
+
+.page-dental-records .content-area input:focus,
+.page-dental-records .content-area select:focus,
+.page-dental-records .content-area textarea:focus,
+.page-treatments .content-area input:focus,
+.page-treatments .content-area select:focus,
+.page-treatments .content-area textarea:focus,
+.page-treatment-plans .content-area input:focus,
+.page-treatment-plans .content-area select:focus,
+.page-treatment-plans .content-area textarea:focus,
+.page-services .content-area input:focus,
+.page-services .content-area select:focus,
+.page-dentists .content-area input:focus,
+.page-dentists .content-area select:focus,
+.page-dentists .content-area textarea:focus {
+  border-color: #8fb1ff !important;
+  box-shadow: 0 0 0 3px rgba(37,99,235,.10) !important;
+}
+
+@media (max-width: 1180px) {
+  .page-dental-records .records-summary-grid { grid-template-columns: repeat(2,minmax(0,1fr)); }
+  .page-treatment-plans .panel-grid { grid-template-columns: 1fr; }
+  .page-treatments .treatment-filter-grid { grid-template-columns: repeat(3,minmax(0,1fr)); }
+  .page-dentists .dentist-toolbar { grid-template-columns: repeat(2,minmax(0,1fr)); }
+}
+
+@media (max-width: 920px) {
+  .page-dental-records .dental-records-workspace,
+  .page-treatments .treatment-layout,
+  .page-dentists .dentist-workspace-grid { grid-template-columns: 1fr; }
+  .page-dental-records .dental-records-sidebar,
+  .page-treatments .treatment-sidebar,
+  .page-dentists .dentist-directory { position: static; max-height: none; }
+  .page-dental-records .patient-strip-list,
+  .page-dentists .dentist-directory { max-height: 300px; }
+  .page-dental-records .patient-contact-grid { grid-template-columns: repeat(2,minmax(0,1fr)); }
+  .page-services .services-toolbar { grid-template-columns: 1fr; }
+  .page-services .toolbar-filters { grid-template-columns: repeat(2,minmax(0,1fr)); }
+}
+
+@media (max-width: 680px) {
+  .page-dental-records .content-area,
+  .page-treatments .content-area,
+  .page-treatment-plans .content-area,
+  .page-services .content-area,
+  .page-dentists .content-area { padding: 16px; }
+  .page-dental-records .premium-page-header,
+  .page-treatments .premium-page-header,
+  .page-treatment-plans .premium-page-header,
+  .page-services .premium-page-header,
+  .page-dentists .premium-section-header { align-items: stretch; }
+  .page-dental-records .premium-page-actions,
+  .page-treatments .premium-page-actions,
+  .page-treatment-plans .premium-page-actions,
+  .page-services .premium-page-actions { width: 100%; }
+  .page-dental-records .records-header-card { align-items: flex-start; flex-direction: column; padding: 18px !important; }
+  .page-dental-records .patient-header-main { align-items: flex-start; }
+  .page-dental-records .patient-header-meta { display: grid; gap: 5px; }
+  .page-dental-records .records-summary-grid,
+  .page-services .services-summary { grid-template-columns: 1fr; }
+  .page-dental-records .patient-contact-grid { grid-template-columns: 1fr; }
+  .page-treatment-plans .metric-grid.compact { grid-template-columns: repeat(2,minmax(0,1fr)); }
+  .page-treatment-plans .treatment-operations-row { grid-template-columns: 1fr; gap: 7px; }
+  .page-treatments .treatment-filter-grid,
+  .page-dentists .dentist-toolbar,
+  .page-services .toolbar-filters { grid-template-columns: 1fr; }
+  .page-services .services-hero { align-items: stretch; flex-direction: column; }
+  .page-dentists .dentist-entry { grid-template-columns: 42px minmax(0,1fr); }
+  .page-dentists .dentist-entry > .badge { grid-column: 2; justify-self: start; }
+}
+
+@media (max-width: 430px) {
+  .page-dental-records .content-area,
+  .page-treatments .content-area,
+  .page-treatment-plans .content-area,
+  .page-services .content-area,
+  .page-dentists .content-area { padding: 14px; }
+  .page-dental-records .records-summary-grid { grid-template-columns: 1fr; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .page-dental-records *,
+  .page-treatments *,
+  .page-treatment-plans *,
+  .page-services *,
+  .page-dentists * { scroll-behavior: auto !important; transition-duration: .01ms !important; animation-duration: .01ms !important; }
+}
