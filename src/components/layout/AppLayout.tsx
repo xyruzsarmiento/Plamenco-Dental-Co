@@ -22,7 +22,10 @@ export function AppLayout() {
 
   const visibleGroups = navigationGroups.map((group) => ({
     ...group,
-    items: group.items.filter((item) => !item.anyOf || canAny(item.anyOf)),
+    items: group.items.filter((item) => {
+      if (user?.role === 'admin' && item.path === '/app/system-admin') return false
+      return !item.anyOf || canAny(item.anyOf)
+    }),
   })).filter((group) => group.items.length > 0)
 
   const workspaceEyebrow =
@@ -30,7 +33,11 @@ export function AppLayout() {
       ? 'Front desk operations'
       : user?.role === 'dentist' || user?.role === 'associate_dentist'
         ? 'Clinical workspace'
-        : 'Clinic management'
+        : user?.role === 'admin'
+          ? 'Clinic operations'
+          : user?.role === 'super_admin'
+            ? 'System administration'
+            : 'Clinic management'
 
   return (
     <div className={`app-shell role-${user?.role ?? 'guest'}`}>
