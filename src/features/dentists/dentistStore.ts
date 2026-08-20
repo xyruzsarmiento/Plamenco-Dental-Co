@@ -15,6 +15,22 @@ const PROVIDER_AVAILABILITY_STORAGE_KEY = 'plamenco.providerAvailabilityOverride
 
 const nowIso = () => new Date().toISOString()
 
+function generateUUID() {
+  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') return crypto.randomUUID()
+
+  const bytes = new Uint8Array(16)
+  if (typeof crypto !== 'undefined' && typeof crypto.getRandomValues === 'function') {
+    crypto.getRandomValues(bytes)
+  } else {
+    for (let index = 0; index < bytes.length; index += 1) bytes[index] = Math.floor(Math.random() * 256)
+  }
+
+  bytes[6] = (bytes[6] & 0x0f) | 0x40
+  bytes[8] = (bytes[8] & 0x3f) | 0x80
+  const hex = Array.from(bytes, (value) => value.toString(16).padStart(2, '0')).join('')
+  return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20)}`
+}
+
 function parseList<T>(value: string | null): T[] {
   if (!value) return []
   try {
@@ -165,7 +181,7 @@ export async function loadProviderFoundationFromSupabase(options: { strict?: boo
 export function createProvider(values: ProviderFormValues, branchIds: string[]): Provider {
   const timestamp = nowIso()
   const provider: Provider = {
-    id: `provider-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+    id: generateUUID(),
     ...values,
     createdAt: timestamp,
     updatedAt: timestamp,
@@ -219,7 +235,7 @@ export function saveProviderAssignments(providerId: string, branchIds: string[])
   const existing = getProviderBranchAssignments().filter((assignment) => assignment.providerId !== providerId)
   const timestamp = nowIso()
   const nextAssignments = branchIds.map((branchId, index): ProviderBranchAssignment => ({
-    id: `assignment-${providerId}-${branchId}`,
+    id: generateUUID(),
     providerId,
     branchId,
     isPrimary: index === 0,
@@ -243,8 +259,8 @@ export function saveProviderAssignments(providerId: string, branchIds: string[])
 export function saveScheduleBlocks(providerId: string, blocks: Omit<ProviderScheduleBlock, 'id' | 'providerId' | 'createdAt' | 'updatedAt'>[]) {
   const existing = getProviderScheduleBlocks().filter((block) => block.providerId !== providerId)
   const timestamp = nowIso()
-  const nextBlocks = blocks.map((block, index): ProviderScheduleBlock => ({
-    id: `schedule-${providerId}-${block.dayOfWeek}-${index}-${Date.now()}`,
+  const nextBlocks = blocks.map((block): ProviderScheduleBlock => ({
+    id: generateUUID(),
     providerId,
     ...block,
     createdAt: timestamp,
@@ -268,7 +284,7 @@ export function saveScheduleBlocks(providerId: string, blocks: Omit<ProviderSche
 export function createAvailabilityOverride(input: Omit<ProviderAvailabilityOverride, 'id' | 'createdAt' | 'updatedAt'>) {
   const timestamp = nowIso()
   const override: ProviderAvailabilityOverride = {
-    id: `override-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+    id: generateUUID(),
     ...input,
     createdAt: timestamp,
     updatedAt: timestamp,
