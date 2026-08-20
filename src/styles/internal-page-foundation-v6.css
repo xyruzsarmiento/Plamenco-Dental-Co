@@ -1,0 +1,68 @@
+/* Shared page-content foundation. Navigation is handled separately. */
+.app-shell[class*="page-"] .content-area {
+  --primary:#2563eb;
+  --primary-strong:#1d4ed8;
+  --primary-soft:#eaf2ff;
+  --secondary:#2563eb;
+  --secondary-soft:#eaf2ff;
+  --accent:#2563eb;
+  --accent-soft:#eaf2ff;
+  --bg:#f7f9fc;
+  --surface:#fff;
+  --text:#172033;
+  --text-strong:#111827;
+  --text-muted:#6b7280;
+  --border:#e5e7eb;
+  --border-subtle:#edf1f6;
+  color:#172033;
+}
+
+.premium-page-scaffold { gap:16px; }
+.premium-page-header {
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:20px;
+}
+.premium-page-heading { min-width:0; }
+.premium-page-heading>.badge { margin-bottom:8px; }
+.premium-page-heading h2 { margin:0; }
+.premium-page-heading p { margin:7px 0 0;line-height:1.6; }
+.premium-page-actions { display:flex;align-items:center;gap:8px;flex-wrap:wrap; }
+
+.app-shell[class*="page-"] .content-area .eyebrow,
+.app-shell[class*="page-"] .content-area .chart-kicker,
+.app-shell[class*="page-"] .content-area .section-kicker { color:#2563eb!important; }
+
+.app-shell[class*="page-"] .content-area .panel,
+.app-shell[class*="page-"] .content-area .workspace-panel,
+.app-shell[class*="page-"] .content-area .table-panel,
+.app-shell[class*="page-"] .content-area .filter-panel {
+  border-color:#edf1f6!important;
+  background:#fff!important;
+}
+
+.app-shell[class*="page-"] .content-area .btn-primary,
+.app-shell[class*="page-"] .content-area button.btn-primary {
+  background:#2563eb!important;
+  border-color:#2563eb!important;
+  color:#fff!important;
+}
+.app-shell[class*="page-"] .content-area .btn-primary:hover:not(:disabled),
+.app-shell[class*="page-"] .content-area button.btn-primary:hover:not(:disabled) {
+  background:#1d4ed8!important;
+  border-color:#1d4ed8!important;
+}
+
+.app-shell[class*="page-"] .content-area :is(input,select,textarea):focus-visible,
+.app-shell[class*="page-"] .content-area button:focus-visible,
+.app-shell[class*="page-"] .content-area a:focus-visible {
+  outline:3px solid rgba(37,99,235,.16);
+  outline-offset:2px;
+}
+
+@media(max-width:700px){
+  .premium-page-header{align-items:stretch;flex-direction:column;}
+  .premium-page-actions{width:100%;}
+  .premium-page-actions>.btn{flex:1 1 auto;min-height:44px;}
+}
