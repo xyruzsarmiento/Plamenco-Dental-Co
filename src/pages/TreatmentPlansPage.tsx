@@ -2,7 +2,6 @@ import { useEffect, useMemo, useState } from 'react'
 import { CheckCircle2, ClipboardList, Plus, Send, XCircle } from 'lucide-react'
 import { Button } from '../components/ui/Button'
 import { PageScaffold } from '../components/ui/PageScaffold'
-import { useAuth } from '../features/auth/AuthContext'
 import { usePermissions } from '../features/auth/permissions'
 import { getStoredBranches } from '../features/branches/branchStore'
 import { getStoredProviders } from '../features/dentists/dentistStore'
@@ -21,7 +20,6 @@ function humanize(value: string) {
 }
 
 export function TreatmentPlansPage() {
-  const { user } = useAuth()
   const { can } = usePermissions()
   const patients = useMemo(() => getStoredPatients(), [])
   const services = useMemo(() => getStoredServices().filter((service) => service.status === 'active'), [])
