@@ -20,6 +20,7 @@ import './styles/super-admin-portal-47h.css'
 import './styles/final-polish-47i.css'
 import './styles/corrective-redesign-48a.css'
 import './styles/page-redesign-v4.css'
+import './styles/internal-pages-redesign-v5.css'
 import App from './App.tsx'
 import { registerPatientPortalPwa } from './features/patientPortal/pwaRegistration'
 
