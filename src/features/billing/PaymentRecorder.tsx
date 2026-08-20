@@ -142,12 +142,16 @@ export function PaymentRecorder({ onClose, onSuccess }: PaymentRecorderProps) {
 
       await confirmRemotePayment(payment)
       setSuccessMessage(`${formatCurrency(amountCents)} was recorded against ${selectedInvoice.invoiceNumber}.`)
-      onSuccess()
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : 'Unable to record this payment.')
     } finally {
       setLoading(false)
     }
+  }
+
+  function finishSuccess() {
+    onSuccess()
+    onClose()
   }
 
   return (
@@ -167,7 +171,7 @@ export function PaymentRecorder({ onClose, onSuccess }: PaymentRecorderProps) {
         <button
           type="button"
           className="icon-button"
-          onClick={onClose}
+          onClick={successMessage ? finishSuccess : onClose}
           aria-label="Close record payment dialog"
           disabled={loading}
         >
@@ -315,7 +319,7 @@ export function PaymentRecorder({ onClose, onSuccess }: PaymentRecorderProps) {
 
         <div className="recorder-actions">
           {successMessage ? (
-            <Button onClick={onClose}>Done</Button>
+            <Button onClick={finishSuccess}>Done</Button>
           ) : (
             <>
               <Button variant="secondary" onClick={onClose} disabled={loading}>Cancel</Button>
@@ -344,11 +348,7 @@ export function PaymentRecorderButton({ onSuccess }: PaymentRecorderButtonProps)
       </Button>
 
       {showRecorder && (
-        <div
-          className="modal-backdrop payment-recorder-backdrop"
-          role="presentation"
-          onClick={() => setShowRecorder(false)}
-        >
+        <div className="modal-backdrop payment-recorder-backdrop" role="presentation">
           <PaymentRecorder
             onClose={() => setShowRecorder(false)}
             onSuccess={() => onSuccess?.()}
