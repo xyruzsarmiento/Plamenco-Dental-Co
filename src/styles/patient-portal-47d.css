@@ -1,0 +1,501 @@
+/* UI REDESIGN 47D — Patient Portal visual system only.
+   Frontend-only overrides: no persistence, booking, billing, auth, or API behavior changes. */
+
+.patient-portal-shell {
+  min-height: 100vh;
+  background: #f7f9fc;
+  color: #172033;
+  --portal-blue: #2563eb;
+  --portal-blue-deep: #1d4ed8;
+  --portal-blue-soft: #eaf2ff;
+  --portal-surface: #ffffff;
+  --portal-border: #e5e7eb;
+  --portal-muted: #6b7280;
+  --portal-success: #16a34a;
+  --portal-warning: #d97706;
+  --portal-danger: #dc2626;
+}
+
+.patient-portal-shell .sidebar {
+  width: 252px;
+  background: #fff;
+  border-right: 1px solid var(--portal-border);
+  box-shadow: none;
+}
+
+.patient-portal-shell .sidebar-header {
+  min-height: 76px;
+  padding: 18px 20px;
+  border-bottom: 1px solid #eef2f7;
+}
+
+.patient-portal-shell .brand-lockup {
+  display: grid;
+  grid-template-columns: 40px 1fr;
+  grid-template-rows: auto auto;
+  align-items: center;
+  column-gap: 10px;
+}
+
+.patient-portal-shell .brand-symbol {
+  grid-row: 1 / 3;
+  width: 40px;
+  height: 40px;
+  display: grid;
+  place-items: center;
+  border-radius: 12px;
+  background: var(--portal-blue);
+  color: #fff !important;
+  font-size: 1rem !important;
+}
+
+.patient-portal-shell .brand-lockup strong { font-size: .93rem; color: #172033; }
+.patient-portal-shell .brand-lockup small { color: var(--portal-muted); font-size: .72rem; }
+
+.patient-portal-shell .sidebar-nav {
+  padding: 14px 12px;
+  gap: 12px;
+}
+
+.patient-portal-shell .sidebar-nav .nav-section { gap: 4px; }
+.patient-portal-shell .sidebar-nav button {
+  width: 100%;
+  min-height: 42px;
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: #4b5563;
+  font: inherit;
+  font-size: .86rem;
+  font-weight: 650;
+  cursor: pointer;
+  transition: background 160ms ease, color 160ms ease, transform 160ms ease;
+}
+
+.patient-portal-shell .sidebar-nav button:hover { background: #f5f8ff; color: var(--portal-blue-deep); }
+.patient-portal-shell .sidebar-nav button.active {
+  background: var(--portal-blue-soft);
+  color: var(--portal-blue-deep);
+}
+.patient-portal-shell .sidebar-nav button.active svg { color: var(--portal-blue); }
+
+.patient-portal-shell .sidebar-footer {
+  border-top: 1px solid #eef2f7;
+  padding: 14px;
+  gap: 10px;
+}
+
+.patient-portal-shell .user-card {
+  padding: 10px;
+  border: 1px solid #eef2f7;
+  border-radius: 12px;
+  background: #fbfcfe;
+}
+
+.patient-portal-shell .user-card .avatar {
+  width: 36px;
+  height: 36px;
+  background-color: var(--portal-blue-soft);
+  color: var(--portal-blue-deep);
+}
+
+.patient-portal-shell .portal-main {
+  min-width: 0;
+  margin-left: 252px;
+  background: #f7f9fc;
+}
+
+.patient-portal-shell .portal-topbar {
+  min-height: 78px;
+  position: sticky;
+  top: 0;
+  z-index: 35;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 14px clamp(20px, 3vw, 36px);
+  background: rgba(255,255,255,.96);
+  border-bottom: 1px solid #e9edf3;
+  backdrop-filter: blur(12px);
+}
+
+.patient-portal-shell .portal-topbar .eyebrow {
+  margin: 0 0 3px;
+  color: var(--portal-blue);
+  font-size: .7rem;
+  font-weight: 800;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+.patient-portal-shell .portal-topbar h1 {
+  margin: 0;
+  font-size: clamp(1.15rem, 2vw, 1.45rem);
+  line-height: 1.15;
+  letter-spacing: -.02em;
+}
+
+.patient-portal-shell .patient-portal-book-btn {
+  min-height: 40px;
+  padding-inline: 17px;
+  border-radius: 10px;
+}
+
+.patient-portal-shell .portal-content {
+  width: min(100%, 1460px);
+  margin: 0 auto;
+  padding: clamp(18px, 2.6vw, 34px);
+}
+
+.patient-portal-shell .panel,
+.patient-portal-shell .portal-dashboard-panel,
+.patient-portal-shell .dashboard-metric,
+.patient-portal-shell .portal-booking-panel,
+.patient-portal-shell .portal-booking-summary {
+  border: 1px solid var(--portal-border);
+  background: var(--portal-surface);
+  box-shadow: 0 4px 16px rgba(15, 23, 42, .045);
+  border-radius: 16px;
+}
+
+.patient-portal-shell .portal-dashboard-shell { display: grid; gap: 20px; }
+
+.patient-portal-shell .portal-dashboard-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 24px;
+  align-items: center;
+  padding: clamp(22px, 3vw, 34px);
+  border: 1px solid #dbe7ff;
+  border-radius: 20px;
+  background: linear-gradient(120deg, #fff 0%, #f7faff 55%, #eef5ff 100%);
+  box-shadow: 0 8px 28px rgba(37, 99, 235, .07);
+}
+
+.patient-portal-shell .portal-dashboard-hero h2 {
+  margin: 8px 0 8px;
+  color: #172033;
+  font-size: clamp(1.65rem, 3vw, 2.35rem);
+  line-height: 1.08;
+  letter-spacing: -.035em;
+}
+.patient-portal-shell .portal-dashboard-hero p { max-width: 720px; margin: 0; color: var(--portal-muted); line-height: 1.65; }
+.patient-portal-shell .portal-dashboard-chip { background: var(--portal-blue-soft); color: var(--portal-blue-deep); border-color: #cfe0ff; }
+.patient-portal-shell .portal-dashboard-status { color: #4b5563; }
+.patient-portal-shell .portal-dashboard-status .status-dot { background: var(--portal-success); }
+
+.patient-portal-shell .portal-dashboard-hero-metric {
+  min-width: 176px;
+  padding: 18px;
+  border: 1px solid #dbe7ff;
+  border-radius: 16px;
+  background: rgba(255,255,255,.86);
+}
+.patient-portal-shell .portal-dashboard-hero-metric strong { color: var(--portal-blue-deep); }
+
+.patient-portal-shell .portal-dashboard-metrics {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.patient-portal-shell .dashboard-metric {
+  min-height: 138px;
+  padding: 17px;
+  background: #fff !important;
+}
+.patient-portal-shell .dashboard-metric-header span:first-child { color: var(--portal-muted); font-size: .78rem; font-weight: 700; }
+.patient-portal-shell .dashboard-metric-icon { background: var(--portal-blue-soft) !important; color: var(--portal-blue) !important; }
+.patient-portal-shell .dashboard-metric > strong { margin-top: 18px; color: #172033 !important; font-size: 1.35rem; }
+.patient-portal-shell .dashboard-metric > small { color: var(--portal-muted) !important; }
+
+.patient-portal-shell .portal-dashboard-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(300px, .8fr);
+  gap: 16px;
+}
+.patient-portal-shell .portal-dashboard-panel { padding: 20px; }
+.patient-portal-shell .portal-panel-header h3 { margin: 2px 0 0; color: #172033; }
+
+/* Remove the decorative fake trend visual from prominence in the redesign. */
+.patient-portal-shell .care-chart-wrap { display: none; }
+.patient-portal-shell .care-chart-meta {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid #eef2f7;
+}
+
+.patient-portal-shell .plan-progress-track,
+.patient-portal-shell .progress-track { background: #edf1f7; }
+.patient-portal-shell .plan-progress-fill,
+.patient-portal-shell .progress-fill { background: var(--portal-blue); }
+
+.patient-portal-shell .portal-booking-shell { display: grid; gap: 18px; }
+.patient-portal-shell .portal-booking-header h2 { margin: 4px 0 0; font-size: clamp(1.5rem, 2.6vw, 2rem); }
+
+.patient-portal-shell .portal-booking-progress {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 8px;
+  padding: 10px;
+  border: 1px solid var(--portal-border);
+  border-radius: 14px;
+  background: #fff;
+}
+.patient-portal-shell .portal-booking-step {
+  min-width: 0;
+  padding: 8px;
+  border-radius: 9px;
+  color: #8a94a3;
+}
+.patient-portal-shell .portal-booking-step.is-active { background: var(--portal-blue-soft); color: var(--portal-blue-deep); }
+.patient-portal-shell .portal-booking-step span { background: #eef2f7; color: #657082; }
+.patient-portal-shell .portal-booking-step.is-active span { background: var(--portal-blue); color: #fff; }
+
+.patient-portal-shell .portal-booking-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.45fr) minmax(280px, .65fr);
+  gap: 16px;
+  align-items: start;
+}
+.patient-portal-shell .portal-booking-panel { padding: clamp(18px, 2.4vw, 26px); }
+.patient-portal-shell .portal-booking-summary { position: sticky; top: 98px; padding: 20px; }
+.patient-portal-shell .section-title-row svg { color: var(--portal-blue); }
+.patient-portal-shell .section-title-row h3 { color: #172033; }
+
+.patient-portal-shell .service-option,
+.patient-portal-shell .branch-choice,
+.patient-portal-shell .time-slot {
+  border: 1px solid var(--portal-border);
+  background: #fff;
+  box-shadow: none;
+  border-radius: 12px;
+}
+.patient-portal-shell .service-option:hover,
+.patient-portal-shell .branch-choice:hover,
+.patient-portal-shell .time-slot:hover {
+  border-color: #b7ccff;
+  background: #fbfdff;
+  transform: none;
+}
+.patient-portal-shell .service-option.is-selected,
+.patient-portal-shell .branch-choice.is-selected,
+.patient-portal-shell .time-slot.is-selected {
+  border-color: var(--portal-blue);
+  background: var(--portal-blue-soft);
+  box-shadow: 0 0 0 2px rgba(37,99,235,.08);
+}
+.patient-portal-shell .service-option-meta strong { color: var(--portal-blue-deep); }
+
+.patient-portal-shell input,
+.patient-portal-shell select,
+.patient-portal-shell textarea {
+  min-height: 44px;
+  border: 1px solid #d9e0e8;
+  border-radius: 10px;
+  background: #fff;
+  color: #172033;
+  font: inherit;
+}
+.patient-portal-shell textarea { min-height: 108px; resize: vertical; }
+.patient-portal-shell input:focus,
+.patient-portal-shell select:focus,
+.patient-portal-shell textarea:focus {
+  outline: none;
+  border-color: var(--portal-blue);
+  box-shadow: 0 0 0 3px rgba(37,99,235,.12);
+}
+
+.patient-portal-shell .confirmation-card,
+.patient-portal-shell .summary-card,
+.patient-portal-shell .summary-grid > div,
+.patient-portal-shell .summary-price {
+  border-color: #e8edf4;
+  background: #fbfcfe;
+  border-radius: 12px;
+}
+.patient-portal-shell .summary-badge { color: var(--portal-blue-deep); background: var(--portal-blue-soft); }
+
+.patient-portal-shell .btn-primary,
+.patient-portal-shell .btn.btn-primary {
+  background: var(--portal-blue);
+  border-color: var(--portal-blue);
+  color: #fff;
+  box-shadow: 0 4px 10px rgba(37,99,235,.15);
+}
+.patient-portal-shell .btn-primary:hover,
+.patient-portal-shell .btn.btn-primary:hover { background: var(--portal-blue-deep); border-color: var(--portal-blue-deep); }
+.patient-portal-shell .btn-secondary,
+.patient-portal-shell .btn.btn-secondary { background: #fff; border-color: #d8e0ea; color: #344054; box-shadow: none; }
+
+.patient-portal-shell .badge-info { background: var(--portal-blue-soft); color: var(--portal-blue-deep); }
+.patient-portal-shell .badge-success { background: #ecfdf3; color: #15803d; }
+.patient-portal-shell .badge-warning { background: #fff7ed; color: #b45309; }
+.patient-portal-shell .badge-danger { background: #fef2f2; color: #b91c1c; }
+
+.patient-portal-shell .portal-sidebar-toggle {
+  display: none;
+  z-index: 70;
+  border: 1px solid #d9e0e8;
+  background: #fff;
+  color: #334155;
+}
+
+/* Existing appointment/payment/document table-like layouts become compact, card-oriented on narrow screens. */
+.patient-portal-shell .table-scroll { border-radius: 12px; border: 1px solid #e8edf4; background: #fff; }
+.patient-portal-shell .table { min-width: 680px; }
+.patient-portal-shell .table th { background: #f8fafc; color: #667085; font-size: .72rem; letter-spacing: .02em; }
+.patient-portal-shell .table td { color: #344054; }
+
+/* Mobile navigation: keep the full drawer for secondary areas and turn the first five portal destinations into a bottom nav. */
+@media (max-width: 900px) {
+  .patient-portal-shell { padding-bottom: 76px; }
+  .patient-portal-shell .portal-main { margin-left: 0; }
+  .patient-portal-shell .portal-topbar { min-height: 68px; padding: 10px 16px 10px 58px; }
+  .patient-portal-shell .portal-content { padding: 16px; }
+  .patient-portal-shell .portal-sidebar-toggle { display: grid; place-items: center; position: fixed; top: 14px; left: 14px; width: 38px; height: 38px; border-radius: 10px; }
+
+  .patient-portal-shell .sidebar {
+    position: fixed;
+    inset: 0 auto 0 0;
+    z-index: 65;
+    width: min(84vw, 320px);
+    transform: translateX(-104%);
+    transition: transform 220ms ease;
+    box-shadow: 18px 0 50px rgba(15,23,42,.12);
+  }
+  .patient-portal-shell .sidebar.is-open { transform: translateX(0); }
+
+  .patient-portal-shell .portal-sidebar-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 60;
+    pointer-events: none;
+    opacity: 0;
+    background: rgba(15,23,42,.36);
+    transition: opacity 180ms ease;
+  }
+  .patient-portal-shell .portal-sidebar-overlay.is-visible { pointer-events: auto; opacity: 1; }
+
+  .patient-portal-shell .portal-dashboard-hero { grid-template-columns: 1fr; padding: 22px; }
+  .patient-portal-shell .portal-dashboard-hero-metric { min-width: 0; }
+  .patient-portal-shell .portal-dashboard-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .patient-portal-shell .portal-dashboard-grid { grid-template-columns: 1fr; }
+  .patient-portal-shell .portal-booking-grid { grid-template-columns: 1fr; }
+  .patient-portal-shell .portal-booking-summary { position: static; order: -1; }
+}
+
+@media (max-width: 640px) {
+  .patient-portal-shell { background: #f8fafd; }
+  .patient-portal-shell .portal-topbar h1 { font-size: 1.06rem; }
+  .patient-portal-shell .portal-topbar .eyebrow { font-size: .62rem; }
+  .patient-portal-shell .patient-portal-book-btn { min-height: 36px; padding-inline: 12px; font-size: .78rem; }
+  .patient-portal-shell .portal-content { padding: 12px 12px 18px; }
+
+  .patient-portal-shell .portal-dashboard-shell { gap: 12px; }
+  .patient-portal-shell .portal-dashboard-hero { padding: 18px; border-radius: 16px; }
+  .patient-portal-shell .portal-dashboard-hero h2 { font-size: 1.6rem; }
+  .patient-portal-shell .portal-dashboard-hero p { font-size: .9rem; line-height: 1.55; }
+  .patient-portal-shell .portal-dashboard-pill-row { align-items: flex-start; gap: 7px; flex-direction: column; }
+
+  .patient-portal-shell .portal-dashboard-metrics { gap: 9px; }
+  .patient-portal-shell .dashboard-metric { min-height: 116px; padding: 13px; border-radius: 13px; }
+  .patient-portal-shell .dashboard-metric > strong { margin-top: 12px; font-size: 1.1rem; }
+  .patient-portal-shell .dashboard-metric > small { font-size: .7rem; line-height: 1.35; }
+  .patient-portal-shell .dashboard-metric-icon { width: 32px; height: 32px; }
+
+  .patient-portal-shell .portal-dashboard-panel { padding: 15px; border-radius: 14px; }
+
+  .patient-portal-shell .portal-booking-progress {
+    display: flex;
+    overflow-x: auto;
+    scrollbar-width: none;
+    padding: 7px;
+    gap: 5px;
+  }
+  .patient-portal-shell .portal-booking-progress::-webkit-scrollbar { display: none; }
+  .patient-portal-shell .portal-booking-step { flex: 0 0 auto; min-width: 70px; padding: 7px 6px; }
+  .patient-portal-shell .portal-booking-step small { font-size: .62rem; }
+  .patient-portal-shell .portal-booking-panel,
+  .patient-portal-shell .portal-booking-summary { padding: 14px; border-radius: 14px; }
+  .patient-portal-shell .service-option { align-items: flex-start; padding: 13px; gap: 8px; }
+  .patient-portal-shell .service-option-copy small { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .patient-portal-shell .branch-choice-grid { grid-template-columns: 1fr; }
+  .patient-portal-shell .booking-date-time-grid { grid-template-columns: 1fr; }
+  .patient-portal-shell .time-slot-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .patient-portal-shell .booking-actions { position: sticky; bottom: 70px; z-index: 15; margin: 16px -14px -14px; padding: 12px 14px; background: rgba(255,255,255,.97); border-top: 1px solid #e8edf4; }
+  .patient-portal-shell .booking-actions .btn { flex: 1; }
+
+  .patient-portal-shell .table-scroll { border: 0; overflow: visible; }
+  .patient-portal-shell .table { min-width: 0; display: block; }
+  .patient-portal-shell .table thead { display: none; }
+  .patient-portal-shell .table tbody { display: grid; gap: 10px; }
+  .patient-portal-shell .table tr { display: grid; gap: 7px; padding: 13px; border: 1px solid #e4eaf2; border-radius: 12px; background: #fff; }
+  .patient-portal-shell .table td { display: flex; justify-content: space-between; gap: 12px; padding: 0; border: 0; font-size: .8rem; }
+
+  /* Bottom navigation mirrors the five primary actions without changing tab/state logic. */
+  .patient-portal-shell .sidebar-nav > .nav-section:first-child {
+    position: fixed;
+    left: 8px;
+    right: 8px;
+    bottom: 8px;
+    z-index: 80;
+    height: 60px;
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 2px;
+    padding: 5px;
+    border: 1px solid #dfe6ef;
+    border-radius: 16px;
+    background: rgba(255,255,255,.97);
+    box-shadow: 0 10px 34px rgba(15,23,42,.13);
+    backdrop-filter: blur(14px);
+    transform: translateX(0);
+  }
+  .patient-portal-shell .sidebar-nav > .nav-section:first-child button {
+    min-height: 48px;
+    display: grid;
+    place-items: center;
+    align-content: center;
+    gap: 2px;
+    padding: 3px;
+    border-radius: 11px;
+    font-size: .58rem;
+    line-height: 1;
+  }
+  .patient-portal-shell .sidebar-nav > .nav-section:first-child button svg { width: 18px; height: 18px; }
+  .patient-portal-shell .sidebar-nav > .nav-section:first-child button.active { background: var(--portal-blue-soft); color: var(--portal-blue-deep); }
+  .patient-portal-shell .sidebar:not(.is-open) .sidebar-nav > .nav-section:first-child { visibility: visible; }
+}
+
+@media (max-width: 390px) {
+  .patient-portal-shell .portal-content { padding-inline: 10px; }
+  .patient-portal-shell .portal-dashboard-metrics { grid-template-columns: 1fr 1fr; }
+  .patient-portal-shell .dashboard-metric { padding: 11px; }
+  .patient-portal-shell .time-slot-grid { grid-template-columns: 1fr 1fr; }
+}
+
+@media (min-width: 1440px) {
+  .patient-portal-shell .portal-main { margin-left: 264px; }
+  .patient-portal-shell .sidebar { width: 264px; }
+  .patient-portal-shell .portal-content { padding-inline: 42px; }
+}
+
+@media (min-width: 1920px) {
+  .patient-portal-shell .portal-content { max-width: 1540px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .patient-portal-shell *,
+  .patient-portal-shell *::before,
+  .patient-portal-shell *::after {
+    scroll-behavior: auto !important;
+    transition-duration: .01ms !important;
+    animation-duration: .01ms !important;
+  }
+}
