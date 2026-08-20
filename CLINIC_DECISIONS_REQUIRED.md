@@ -29,6 +29,27 @@ Do not guess these values. Record the clinic owner's decision, date, and approve
 | If inventory valuation is required, what approved cost basis should be used? | Pending clinic owner/accountant confirmation |
 | Does the clinic expect formal accounting integration later? This system will not implement a general ledger, tax filing, balance sheet, or formal income statement in Part 33. | Pending clinic owner/accountant confirmation |
 
+## Part 39 — Recall & Follow-Up Decisions
+
+| Decision Needed | Current Status |
+|---|---|
+| Does the clinic want routine recall automation? | Pending clinic owner/clinical confirmation |
+| Which services create routine recall, and what interval applies to each? | Pending clinical confirmation; no interval is assumed |
+| Can dentists override configured recall dates? | Pending clinical confirmation |
+| Can staff create manual recalls/follow-ups? | Pending operations confirmation |
+| Which roles may dismiss recalls, and is a reason mandatory? | Pending operations/security confirmation |
+| What exactly counts as a completed recall? | Pending clinical/operations confirmation |
+| Does a matching future appointment automatically mark a recall booked, and how must service/context match? | Pending operations confirmation |
+| Can recalls transfer branches or providers? | Pending operations/clinical confirmation |
+| Which channels may be used for recall reminders? | Pending communication/privacy confirmation |
+| Are automated SMS/email/Messenger/in-app reminders enabled? | Pending clinic owner/provider confirmation |
+| What reminder timing, maximum attempts, cooldown, and quiet hours apply? | Pending communication/privacy confirmation |
+| Is bulk reminder sending allowed, and which roles may initiate it? | Pending security/operations confirmation |
+| What counts as an inactive patient for reactivation? | Pending clinic owner confirmation; no 6/12 month default exists |
+| Is reactivation outreach enabled? | Pending clinic owner/privacy confirmation |
+| Should accepted but unscheduled or undecided treatment plans create follow-up tasks? | Pending clinical/operations confirmation |
+| Should management see provider-specific recall metrics? | Pending clinic owner/provider confirmation |
+
 ## Existing decisions from Parts 1–32
 
 The previously tracked decisions remain in project history and implementation documentation, including branch identity/hours, appointment policies, deposits, payment gateway and manual payment methods, service catalog/pricing, provider schedules/roles, staff permissions, compensation rules, inventory opening stock/reorder/cost rules, expense approvals, SMS/email/Messenger providers and consent, historical Excel migration/linking, retention/privacy, clinical visibility, patient exports, procurement/stock transfer/count workflows, backup/recovery ownership, deployment domains/projects, daily clinic workflow, queue/check-in/no-show permissions, patient booking/rescheduling, reminders, online payments, and patient-facing price presentation.
