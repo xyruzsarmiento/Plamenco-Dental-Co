@@ -43,7 +43,7 @@ function BookRoute() {
   const { user, isAuthenticated } = useAuth()
 
   if (isAuthenticated && user?.role === 'patient' && user.patientId) {
-    return <Navigate to={`/portal/${user.patientId}`} replace />
+    return <Navigate to={`/portal/${user.patientId}?tab=booking`} replace />
   }
 
   return <Navigate to="/login" replace state={{ from: { pathname: '/book' } }} />
