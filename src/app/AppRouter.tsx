@@ -20,7 +20,7 @@ import { DentalRecordsPageV11 } from '../pages/DentalRecordsPageV11'
 import { DentistsPageV16 } from '../pages/DentistsPageV16'
 import { ExpensesPage46F } from '../pages/ExpensesPage46F'
 import { FormsConsentAdminPage } from '../pages/FormsConsentAdminPage'
-import { InventoryPage } from '../pages/InventoryPage'
+import { InventoryPageV22 } from '../pages/InventoryPageV22'
 import { LandingPage } from '../pages/LandingPage'
 import { ManagementReportAutomationPageV20 } from '../pages/ManagementReportAutomationPageV20'
 import { NotFoundPage } from '../pages/NotFoundPage'
@@ -90,7 +90,7 @@ export function AppRouter() {
           <Route path="treatment-plans" element={<RequirePermission permission="treatments.view"><TreatmentPlansPageV13 /></RequirePermission>} />
           <Route path="billing" element={<RequirePermission anyOf={['billing.view', 'payments.view']}><BillingPageV14 /></RequirePermission>} />
           <Route path="services" element={<RequirePermission anyOf={['services.view', 'services.manage']}><ServicesPageV15 /></RequirePermission>} />
-          <Route path="inventory" element={<RequirePermission permission="inventory.view"><InventoryPage /></RequirePermission>} />
+          <Route path="inventory" element={<RequirePermission permission="inventory.view"><InventoryPageV22 /></RequirePermission>} />
           <Route path="expenses" element={<RequirePermission permission="expenses.view"><ExpensesPage46F /></RequirePermission>} />
           <Route path="staff" element={<RequirePermission anyOf={['staff.manage', 'dentists.manage']}><StaffPage /></RequirePermission>} />
           <Route path="dentists" element={<RequirePermission permission="dentists.manage"><DentistsPageV16 /></RequirePermission>} />
