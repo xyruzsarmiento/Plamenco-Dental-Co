@@ -18,6 +18,7 @@ import { DataImportPage } from '../pages/DataImportPage'
 import { DentalRecordsPage } from '../pages/DentalRecordsPage'
 import { DentistsPage } from '../pages/DentistsPage'
 import { ExpensesPage } from '../pages/ExpensesPage'
+import { FormsConsentAdminPage } from '../pages/FormsConsentAdminPage'
 import { InventoryPage } from '../pages/InventoryPage'
 import { LandingPage } from '../pages/LandingPage'
 import { NotFoundPage } from '../pages/NotFoundPage'
@@ -233,6 +234,14 @@ export function AppRouter() {
             element={
               <RequirePermission anyOf={['communications.manage', 'notifications.send', 'notifications.view']}>
                 <CommunicationsPage />
+              </RequirePermission>
+            }
+          />
+          <Route
+            path="forms-consent"
+            element={
+              <RequirePermission permission="settings.manage">
+                <FormsConsentAdminPage />
               </RequirePermission>
             }
           />
