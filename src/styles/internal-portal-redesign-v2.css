@@ -1,0 +1,335 @@
+/* Internal portals v2 — premium blue enterprise UI for super admin, admin, staff and dentist roles.
+   Frontend-only. This file intentionally loads last and neutralizes legacy ivory/gold presentation. */
+
+.app-shell.role-super_admin,
+.app-shell.role-admin,
+.app-shell.role-staff,
+.app-shell.role-dentist,
+.app-shell.role-associate_dentist {
+  --bg: #f4f7fb !important;
+  --bg-subtle: #f8fafc !important;
+  --surface: #ffffff !important;
+  --surface-alt: #f8fbff !important;
+  --surface-muted: #f1f5f9 !important;
+  --text: #172033 !important;
+  --text-strong: #0f172a !important;
+  --text-muted: #64748b !important;
+  --border: #dfe7f1 !important;
+  --border-subtle: #edf2f7 !important;
+  --primary: #2563eb !important;
+  --primary-strong: #1d4ed8 !important;
+  --primary-soft: #eaf2ff !important;
+  --secondary: #2563eb !important;
+  --secondary-soft: #eaf2ff !important;
+  --accent: #2563eb !important;
+  --accent-soft: #eff6ff !important;
+  --gold: #2563eb !important;
+  --gold-light: #dbeafe !important;
+  --gold-dark: #1d4ed8 !important;
+  --cream: #f8fafc !important;
+  --ivory: #ffffff !important;
+  --shadow-xs: 0 1px 2px rgba(15,23,42,.04);
+  --shadow-sm: 0 6px 18px rgba(15,23,42,.06);
+  --shadow-md: 0 14px 34px rgba(15,23,42,.08);
+  min-height: 100vh;
+  background: #f4f7fb !important;
+  color: #172033;
+}
+
+.app-shell.role-super_admin .main-shell,
+.app-shell.role-admin .main-shell,
+.app-shell.role-staff .main-shell,
+.app-shell.role-dentist .main-shell,
+.app-shell.role-associate_dentist .main-shell {
+  min-width: 0;
+  background: #f4f7fb !important;
+}
+
+/* Sidebar rebuilt from scratch */
+.app-shell.role-super_admin .sidebar,
+.app-shell.role-admin .sidebar,
+.app-shell.role-staff .sidebar,
+.app-shell.role-dentist .sidebar,
+.app-shell.role-associate_dentist .sidebar {
+  width: 276px;
+  background: #0f172a !important;
+  border-right: 0 !important;
+  box-shadow: 12px 0 36px rgba(15,23,42,.14) !important;
+  color: #e2e8f0;
+}
+
+.app-shell.role-super_admin .sidebar-header,
+.app-shell.role-admin .sidebar-header,
+.app-shell.role-staff .sidebar-header,
+.app-shell.role-dentist .sidebar-header,
+.app-shell.role-associate_dentist .sidebar-header {
+  min-height: 84px;
+  padding: 20px 18px;
+  border-bottom: 1px solid rgba(255,255,255,.08) !important;
+  background: #0f172a !important;
+}
+
+.app-shell .brand-lockup-modern { display:flex; align-items:center; gap:12px; min-width:0; }
+.app-shell .brand-mark-modern {
+  width: 40px; height: 40px; flex: 0 0 40px; display:grid; place-items:center;
+  border-radius: 12px; background:#2563eb; color:#fff; font-weight:800; letter-spacing:-.03em;
+  box-shadow: 0 8px 22px rgba(37,99,235,.34);
+}
+.app-shell .brand-copy-modern { min-width:0; display:flex; flex-direction:column; line-height:1.15; }
+.app-shell .brand-copy-modern strong { color:#fff !important; font-size:.97rem; font-weight:760; letter-spacing:-.02em; }
+.app-shell .brand-copy-modern small { margin-top:4px; color:#94a3b8 !important; font-size:.72rem; font-weight:600; }
+
+.app-shell.role-super_admin .sidebar-nav,
+.app-shell.role-admin .sidebar-nav,
+.app-shell.role-staff .sidebar-nav,
+.app-shell.role-dentist .sidebar-nav,
+.app-shell.role-associate_dentist .sidebar-nav {
+  padding: 18px 12px 22px;
+  gap: 20px;
+}
+
+.app-shell.role-super_admin .nav-section-label,
+.app-shell.role-admin .nav-section-label,
+.app-shell.role-staff .nav-section-label,
+.app-shell.role-dentist .nav-section-label,
+.app-shell.role-associate_dentist .nav-section-label {
+  margin: 0 0 7px;
+  padding: 0 10px;
+  color:#64748b !important;
+  font-size:.66rem;
+  line-height:1.2;
+  font-weight:800;
+  letter-spacing:.12em;
+  text-transform:uppercase;
+}
+
+.app-shell.role-super_admin .sidebar-nav a,
+.app-shell.role-admin .sidebar-nav a,
+.app-shell.role-staff .sidebar-nav a,
+.app-shell.role-dentist .sidebar-nav a,
+.app-shell.role-associate_dentist .sidebar-nav a {
+  min-height: 42px;
+  margin:2px 0;
+  padding: 9px 11px;
+  border-radius: 10px;
+  color:#aebbd0 !important;
+  font-size:.875rem;
+  font-weight:620;
+  border:1px solid transparent;
+  background:transparent !important;
+  box-shadow:none !important;
+  transition: background .16s ease,color .16s ease,border-color .16s ease,transform .16s ease;
+}
+.app-shell.role-super_admin .sidebar-nav a svg,
+.app-shell.role-admin .sidebar-nav a svg,
+.app-shell.role-staff .sidebar-nav a svg,
+.app-shell.role-dentist .sidebar-nav a svg,
+.app-shell.role-associate_dentist .sidebar-nav a svg { color:#7182a0 !important; }
+.app-shell.role-super_admin .sidebar-nav a:hover,
+.app-shell.role-admin .sidebar-nav a:hover,
+.app-shell.role-staff .sidebar-nav a:hover,
+.app-shell.role-dentist .sidebar-nav a:hover,
+.app-shell.role-associate_dentist .sidebar-nav a:hover {
+  background:#17223a !important; color:#fff !important; border-color:rgba(148,163,184,.10); transform:none !important;
+}
+.app-shell.role-super_admin .sidebar-nav a.active,
+.app-shell.role-admin .sidebar-nav a.active,
+.app-shell.role-staff .sidebar-nav a.active,
+.app-shell.role-dentist .sidebar-nav a.active,
+.app-shell.role-associate_dentist .sidebar-nav a.active {
+  background:#1d4ed8 !important; color:#fff !important; border-color:#2563eb !important;
+  box-shadow:0 8px 22px rgba(29,78,216,.24) !important;
+}
+.app-shell.role-super_admin .sidebar-nav a.active svg,
+.app-shell.role-admin .sidebar-nav a.active svg,
+.app-shell.role-staff .sidebar-nav a.active svg,
+.app-shell.role-dentist .sidebar-nav a.active svg,
+.app-shell.role-associate_dentist .sidebar-nav a.active svg { color:#fff !important; }
+
+.app-shell.role-super_admin .sidebar-footer,
+.app-shell.role-admin .sidebar-footer,
+.app-shell.role-staff .sidebar-footer,
+.app-shell.role-dentist .sidebar-footer,
+.app-shell.role-associate_dentist .sidebar-footer {
+  padding:14px; background:#0b1220 !important; border-top:1px solid rgba(255,255,255,.08) !important;
+}
+.app-shell .sidebar-profile-modern { display:flex; align-items:center; gap:10px; min-width:0; margin-bottom:10px; }
+.app-shell .sidebar-profile-modern .avatar { width:36px; height:36px; flex:0 0 36px; background:#1e3a8a !important; color:#dbeafe !important; border:1px solid #3156a5 !important; }
+.app-shell .sidebar-profile-copy { min-width:0; display:flex; flex-direction:column; }
+.app-shell .sidebar-profile-copy strong { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:#f8fafc !important; font-size:.82rem; }
+.app-shell .sidebar-profile-copy small { color:#8493aa !important; font-size:.7rem; }
+.app-shell .sidebar-signout-modern { width:100%; min-height:36px; background:rgba(255,255,255,.04) !important; color:#cbd5e1 !important; border-color:rgba(255,255,255,.10) !important; }
+.app-shell .sidebar-signout-modern:hover { background:rgba(255,255,255,.08) !important; color:#fff !important; }
+
+/* Topbar */
+.app-shell .topbar-modern {
+  min-height:82px; padding:14px clamp(20px,2vw,34px);
+  display:flex; align-items:center; gap:16px;
+  background:rgba(255,255,255,.96) !important;
+  border-bottom:1px solid #e8eef5 !important;
+  box-shadow:0 1px 0 rgba(15,23,42,.025) !important;
+  backdrop-filter:blur(12px);
+}
+.app-shell .topbar-heading-modern { min-width:0; flex:1; }
+.app-shell .topbar-heading-modern .eyebrow { margin:0 0 3px; color:#2563eb !important; font-size:.66rem; letter-spacing:.11em; font-weight:800; text-transform:uppercase; }
+.app-shell .topbar-heading-modern h1 { margin:0; color:#0f172a !important; font-size:clamp(1.15rem,1.45vw,1.42rem); line-height:1.2; font-weight:760; letter-spacing:-.035em; }
+.app-shell .topbar-meta-modern { display:flex; align-items:center; gap:9px; }
+.app-shell .role-chip-modern { display:inline-flex; align-items:center; gap:7px; min-height:34px; padding:6px 10px; border:1px solid #dbe7f5; border-radius:999px; background:#f8fbff; color:#475569; font-size:.75rem; font-weight:700; white-space:nowrap; }
+.app-shell .role-chip-dot { width:7px;height:7px;border-radius:999px;background:#2563eb; }
+
+.app-shell.role-super_admin .content-area,
+.app-shell.role-admin .content-area,
+.app-shell.role-staff .content-area,
+.app-shell.role-dentist .content-area,
+.app-shell.role-associate_dentist .content-area {
+  width:100%; max-width:1760px; margin-inline:auto; padding:clamp(20px,2.1vw,34px) !important;
+}
+
+/* Normalize all legacy page headers and gold surfaces */
+.app-shell.role-super_admin :is(.page-header,.section-header,.premium-section-header,.executive-header,.reports-header,.inventory-page-header,.expenses-page-header),
+.app-shell.role-admin :is(.page-header,.section-header,.premium-section-header,.executive-header,.reports-header,.inventory-page-header,.expenses-page-header),
+.app-shell.role-staff :is(.page-header,.section-header,.premium-section-header,.executive-header,.reports-header,.inventory-page-header,.expenses-page-header),
+.app-shell.role-dentist :is(.page-header,.section-header,.premium-section-header,.executive-header,.reports-header,.inventory-page-header,.expenses-page-header),
+.app-shell.role-associate_dentist :is(.page-header,.section-header,.premium-section-header,.executive-header,.reports-header,.inventory-page-header,.expenses-page-header) {
+  background:transparent !important; color:#172033 !important; border-color:#e5edf6 !important; box-shadow:none !important;
+}
+.app-shell :is(.page-header,.section-header,.premium-section-header,.executive-header) h1,
+.app-shell :is(.page-header,.section-header,.premium-section-header,.executive-header) h2,
+.app-shell :is(.page-header,.section-header,.premium-section-header,.executive-header) h3 { color:#0f172a !important; letter-spacing:-.03em; }
+.app-shell :is(.page-header,.section-header,.premium-section-header,.executive-header) p { color:#64748b !important; }
+
+/* Cards, panels, KPI blocks */
+.app-shell.role-super_admin :is(.panel,.card,.workspace-panel,.dashboard-panel,.table-panel,.reports-filter-panel,.filter-panel,.nested-panel,.inventory-panel,.expense-panel,.analytics-card,.report-card,.settings-card),
+.app-shell.role-admin :is(.panel,.card,.workspace-panel,.dashboard-panel,.table-panel,.reports-filter-panel,.filter-panel,.nested-panel,.inventory-panel,.expense-panel,.analytics-card,.report-card,.settings-card),
+.app-shell.role-staff :is(.panel,.card,.workspace-panel,.dashboard-panel,.table-panel,.reports-filter-panel,.filter-panel,.nested-panel,.inventory-panel,.expense-panel,.analytics-card,.report-card,.settings-card),
+.app-shell.role-dentist :is(.panel,.card,.workspace-panel,.dashboard-panel,.table-panel,.reports-filter-panel,.filter-panel,.nested-panel,.inventory-panel,.expense-panel,.analytics-card,.report-card,.settings-card),
+.app-shell.role-associate_dentist :is(.panel,.card,.workspace-panel,.dashboard-panel,.table-panel,.reports-filter-panel,.filter-panel,.nested-panel,.inventory-panel,.expense-panel,.analytics-card,.report-card,.settings-card) {
+  background:#fff !important; border:1px solid #e5edf6 !important; border-radius:16px !important; box-shadow:0 5px 20px rgba(15,23,42,.045) !important; color:#172033 !important;
+}
+.app-shell :is(.stat-card,.summary-kpi,.metric-card,.executive-metric,.super-admin-kpis > article,.staff-metric-grid > article) {
+  background:#fff !important; border:1px solid #e5edf6 !important; border-radius:14px !important; box-shadow:0 4px 16px rgba(15,23,42,.04) !important; color:#172033 !important;
+}
+.app-shell :is(.stat-card,.summary-kpi,.metric-card,.executive-metric) strong { color:#0f172a !important; }
+.app-shell :is(.stat-card,.summary-kpi,.metric-card,.executive-metric) span,
+.app-shell :is(.stat-card,.summary-kpi,.metric-card,.executive-metric) small { color:#64748b !important; }
+
+/* Buttons and interactive states */
+.app-shell :is(.btn-primary,button.primary,.primary-button) { background:#2563eb !important; color:#fff !important; border-color:#2563eb !important; box-shadow:0 6px 16px rgba(37,99,235,.18) !important; }
+.app-shell :is(.btn-primary,button.primary,.primary-button):hover:not(:disabled) { background:#1d4ed8 !important; border-color:#1d4ed8 !important; transform:translateY(-1px); }
+.app-shell .btn-secondary { background:#fff !important; color:#334155 !important; border-color:#d8e2ee !important; }
+.app-shell .btn-secondary:hover:not(:disabled) { background:#f8fafc !important; border-color:#cbd8e6 !important; color:#0f172a !important; }
+.app-shell :is(.text-button,a.text-button) { color:#2563eb !important; font-weight:700; }
+.app-shell :is(.text-button,a.text-button):hover { color:#1d4ed8 !important; }
+.app-shell :is(button,a,input,select,textarea,[tabindex]):focus-visible { outline:3px solid rgba(37,99,235,.22) !important; outline-offset:2px !important; }
+
+/* Forms / filters */
+.app-shell :is(input,select,textarea) { background:#fff !important; color:#0f172a !important; border-color:#d8e2ee !important; border-radius:10px !important; box-shadow:none !important; }
+.app-shell :is(input,select,textarea):hover { border-color:#bccddd !important; }
+.app-shell :is(input,select,textarea):focus { border-color:#80a7f8 !important; box-shadow:0 0 0 3px rgba(37,99,235,.10) !important; }
+.app-shell :is(.filter-bar,.filters-row,.executive-filter-panel,.reports-filter-panel,.inventory-filter-bar,.expense-filter-bar) { background:#fff !important; border:1px solid #e5edf6 !important; border-radius:14px !important; box-shadow:0 3px 14px rgba(15,23,42,.035) !important; }
+
+/* Tables */
+.app-shell .table-scroll,
+.app-shell .daily-flow-table-wrap { border:1px solid #e5edf6 !important; border-radius:13px !important; background:#fff !important; overflow:auto; }
+.app-shell table { background:#fff !important; color:#334155 !important; }
+.app-shell table thead th { background:#f8fafc !important; color:#64748b !important; border-bottom:1px solid #dfe7f1 !important; font-size:.72rem; letter-spacing:.04em; text-transform:uppercase; }
+.app-shell table tbody td { background:#fff !important; color:#334155 !important; border-bottom:1px solid #eef2f7 !important; }
+.app-shell table tbody tr:hover td { background:#f8fbff !important; }
+.app-shell table strong { color:#0f172a !important; }
+
+/* Tabs and badges */
+.app-shell :is(.tab-button,.tabs button,.segmented-control button) { color:#64748b !important; background:transparent !important; border-color:transparent !important; }
+.app-shell :is(.tab-button,.tabs button,.segmented-control button):hover { color:#1d4ed8 !important; background:#eff6ff !important; }
+.app-shell :is(.tab-button.active,.tabs button.active,.segmented-control button.active,[aria-selected="true"]) { color:#1d4ed8 !important; background:#eaf2ff !important; border-color:#cfe0ff !important; }
+.app-shell .badge-info { background:#eff6ff !important; color:#1d4ed8 !important; }
+.app-shell .badge-success { background:#ecfdf3 !important; color:#15803d !important; }
+.app-shell .badge-warning { background:#fff7e8 !important; color:#b45309 !important; }
+.app-shell .badge-danger { background:#fef2f2 !important; color:#b91c1c !important; }
+.app-shell .badge-neutral { background:#f1f5f9 !important; color:#64748b !important; }
+
+/* Modals / drawers */
+.app-shell ~ .modal-backdrop,
+.modal-backdrop { background:rgba(15,23,42,.48) !important; backdrop-filter:blur(5px); }
+.modal-backdrop > .modal,
+[role="dialog"].modal,
+.drawer-panel,
+.treatment-drawer { background:#fff !important; color:#172033 !important; border:1px solid #e5edf6 !important; border-radius:18px !important; box-shadow:0 28px 70px rgba(15,23,42,.22) !important; }
+.modal-header,.drawer-header { background:#fff !important; border-bottom:1px solid #edf2f7 !important; }
+
+/* Empty, error, loading */
+.app-shell :is(.empty-state,.empty-state-panel,.staff-empty-state,.chart-empty-panel) { background:#f8fafc !important; color:#64748b !important; border:1px dashed #d7e0eb !important; border-radius:14px !important; }
+.app-shell :is(.error-alert,.alert.danger) { background:#fef2f2 !important; color:#b91c1c !important; border-color:#fecaca !important; }
+.app-shell :is(.success-alert,.alert.success) { background:#ecfdf3 !important; color:#166534 !important; border-color:#bbf7d0 !important; }
+.app-shell .ui-skeleton { background:linear-gradient(90deg,#edf2f7 25%,#f8fafc 50%,#edf2f7 75%) !important; background-size:200% 100% !important; }
+
+/* Dashboard chart surfaces */
+.app-shell :is(.dashboard-chart,.analytics-chart,.chart-card,.chart-panel,.report-chart,.super-admin-chart-card) {
+  background:#fff !important; border:1px solid #e5edf6 !important; border-radius:16px !important; box-shadow:0 5px 20px rgba(15,23,42,.045) !important;
+}
+.app-shell :is(.bar,.chart-bar,.progress-track span) { background:#2563eb !important; }
+.app-shell svg :is(.chart-line,.line-series) { stroke:#2563eb !important; }
+
+/* Remove remaining decorative gold/ivory inline-style leaks where semantic classes exist */
+.app-shell.role-super_admin [style*="#C8A96B"],
+.app-shell.role-admin [style*="#C8A96B"],
+.app-shell.role-staff [style*="#C8A96B"],
+.app-shell.role-dentist [style*="#C8A96B"],
+.app-shell.role-associate_dentist [style*="#C8A96B"] { color:#2563eb !important; border-color:#dbeafe !important; }
+
+/* Responsive */
+@media (max-width: 1100px) {
+  .app-shell.role-super_admin .sidebar,
+  .app-shell.role-admin .sidebar,
+  .app-shell.role-staff .sidebar,
+  .app-shell.role-dentist .sidebar,
+  .app-shell.role-associate_dentist .sidebar { width:270px; }
+  .app-shell .topbar-modern { padding-inline:18px; }
+}
+
+@media (max-width: 760px) {
+  .app-shell.role-super_admin .sidebar,
+  .app-shell.role-admin .sidebar,
+  .app-shell.role-staff .sidebar,
+  .app-shell.role-dentist .sidebar,
+  .app-shell.role-associate_dentist .sidebar { width:min(88vw,310px); }
+  .app-shell .topbar-modern { min-height:70px; padding:11px 14px; }
+  .app-shell .topbar-heading-modern h1 { font-size:1.08rem; }
+  .app-shell .topbar-meta-modern { display:none; }
+  .app-shell.role-super_admin .content-area,
+  .app-shell.role-admin .content-area,
+  .app-shell.role-staff .content-area,
+  .app-shell.role-dentist .content-area,
+  .app-shell.role-associate_dentist .content-area { padding:16px !important; }
+  .app-shell :is(.stats-grid,.report-summary-grid,.executive-summary-grid,.dashboard-stats-grid) { grid-template-columns:repeat(2,minmax(0,1fr)) !important; }
+  .app-shell table { min-width:720px; }
+}
+
+@media (max-width: 430px) {
+  .app-shell.role-super_admin .content-area,
+  .app-shell.role-admin .content-area,
+  .app-shell.role-staff .content-area,
+  .app-shell.role-dentist .content-area,
+  .app-shell.role-associate_dentist .content-area { padding:13px !important; }
+  .app-shell :is(.stats-grid,.report-summary-grid,.executive-summary-grid,.dashboard-stats-grid) { grid-template-columns:1fr !important; }
+  .app-shell :is(.panel,.card,.workspace-panel,.dashboard-panel,.table-panel) { border-radius:14px !important; }
+}
+
+@media (min-width: 1440px) {
+  .app-shell.role-super_admin .content-area,
+  .app-shell.role-admin .content-area,
+  .app-shell.role-staff .content-area,
+  .app-shell.role-dentist .content-area,
+  .app-shell.role-associate_dentist .content-area { padding-inline:36px !important; }
+}
+
+@media (min-width: 1920px) {
+  .app-shell.role-super_admin .content-area,
+  .app-shell.role-admin .content-area,
+  .app-shell.role-staff .content-area,
+  .app-shell.role-dentist .content-area,
+  .app-shell.role-associate_dentist .content-area { max-width:1840px; padding-inline:42px !important; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .app-shell *, .modal-backdrop *, .drawer-panel * { animation-duration:.001ms !important; animation-iteration-count:1 !important; transition-duration:.001ms !important; scroll-behavior:auto !important; }
+}
