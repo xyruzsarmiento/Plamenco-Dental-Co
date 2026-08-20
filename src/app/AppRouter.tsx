@@ -27,6 +27,7 @@ import { PatientIntakePage } from '../pages/PatientIntakePage'
 import { PatientPortalPage } from '../pages/PatientPortalPage'
 import { PatientsPage } from '../pages/PatientsPage'
 import { PublicBookingPage } from '../pages/PublicBookingPage'
+import { RecallFollowUpPage } from '../pages/RecallFollowUpPage'
 import { ReportsPage } from '../pages/ReportsPage'
 import { RoleHomePage } from '../pages/RoleHomePage'
 import { ServicesPage } from '../pages/ServicesPage'
@@ -101,198 +102,32 @@ export function AppRouter() {
           }
         >
           <Route index element={<RoleHomePage />} />
-          <Route
-            path="appointments"
-            element={
-              <RequirePermission permission="appointments.view">
-                <AppointmentsPage />
-              </RequirePermission>
-            }
-          />
-          <Route
-            path="patients"
-            element={
-              <RequirePermission permission="patients.view">
-                <PatientsPage />
-              </RequirePermission>
-            }
-          />
-          <Route
-            path="patients/:patientId"
-            element={
-              <RequirePermission permission="patients.view">
-                <PatientsPage />
-              </RequirePermission>
-            }
-          />
-          <Route
-            path="dental-records"
-            element={
-              <RequirePermission permission="clinical_records.view">
-                <DentalRecordsPage />
-              </RequirePermission>
-            }
-          />
-          <Route
-            path="treatments"
-            element={
-              <RequirePermission permission="treatments.view">
-                <TreatmentsPage />
-              </RequirePermission>
-            }
-          />
-          <Route
-            path="treatment-plans"
-            element={
-              <RequirePermission permission="treatments.view">
-                <TreatmentPlansPage />
-              </RequirePermission>
-            }
-          />
-          <Route
-            path="billing"
-            element={
-              <RequirePermission anyOf={['billing.view', 'payments.view']}>
-                <BillingPage />
-              </RequirePermission>
-            }
-          />
-          <Route
-            path="services"
-            element={
-              <RequirePermission anyOf={['services.view', 'services.manage']}>
-                <ServicesPage />
-              </RequirePermission>
-            }
-          />
-          <Route
-            path="inventory"
-            element={
-              <RequirePermission permission="inventory.view">
-                <InventoryPage />
-              </RequirePermission>
-            }
-          />
-          <Route
-            path="expenses"
-            element={
-              <RequirePermission permission="expenses.view">
-                <ExpensesPage />
-              </RequirePermission>
-            }
-          />
-          <Route
-            path="staff"
-            element={
-              <RequirePermission anyOf={['staff.manage', 'dentists.manage']}>
-                <StaffPage />
-              </RequirePermission>
-            }
-          />
-          <Route
-            path="dentists"
-            element={
-              <RequirePermission permission="dentists.manage">
-                <DentistsPage />
-              </RequirePermission>
-            }
-          />
-          <Route
-            path="branches"
-            element={
-              <RequirePermission anyOf={['branches.view', 'branches.manage']}>
-                <BranchesPage />
-              </RequirePermission>
-            }
-          />
-          <Route
-            path="reports"
-            element={
-              <RequirePermission permission="reports.view">
-                <ReportsPage />
-              </RequirePermission>
-            }
-          />
-          <Route
-            path="data-import"
-            element={
-              <RequirePermission permission="patients.import">
-                <DataImportPage />
-              </RequirePermission>
-            }
-          />
-          <Route
-            path="notifications"
-            element={
-              <RequirePermission permission="notifications.view">
-                <NotificationsPage />
-              </RequirePermission>
-            }
-          />
-          <Route
-            path="communications"
-            element={
-              <RequirePermission anyOf={['communications.manage', 'notifications.send', 'notifications.view']}>
-                <CommunicationsPage />
-              </RequirePermission>
-            }
-          />
-          <Route
-            path="forms-consent"
-            element={
-              <RequirePermission permission="settings.manage">
-                <FormsConsentAdminPage />
-              </RequirePermission>
-            }
-          />
-          <Route
-            path="settings"
-            element={
-              <RequirePermission permission="settings.manage">
-                <SettingsPage />
-              </RequirePermission>
-            }
-          />
-          <Route
-            path="system-admin"
-            element={
-              <RequireRole allowedRoles={['super_admin']}>
-                <SystemAdministrationPage />
-              </RequireRole>
-            }
-          />
+          <Route path="appointments" element={<RequirePermission permission="appointments.view"><AppointmentsPage /></RequirePermission>} />
+          <Route path="patients" element={<RequirePermission permission="patients.view"><PatientsPage /></RequirePermission>} />
+          <Route path="patients/:patientId" element={<RequirePermission permission="patients.view"><PatientsPage /></RequirePermission>} />
+          <Route path="dental-records" element={<RequirePermission permission="clinical_records.view"><DentalRecordsPage /></RequirePermission>} />
+          <Route path="treatments" element={<RequirePermission permission="treatments.view"><TreatmentsPage /></RequirePermission>} />
+          <Route path="treatment-plans" element={<RequirePermission permission="treatments.view"><TreatmentPlansPage /></RequirePermission>} />
+          <Route path="billing" element={<RequirePermission anyOf={['billing.view', 'payments.view']}><BillingPage /></RequirePermission>} />
+          <Route path="services" element={<RequirePermission anyOf={['services.view', 'services.manage']}><ServicesPage /></RequirePermission>} />
+          <Route path="inventory" element={<RequirePermission permission="inventory.view"><InventoryPage /></RequirePermission>} />
+          <Route path="expenses" element={<RequirePermission permission="expenses.view"><ExpensesPage /></RequirePermission>} />
+          <Route path="staff" element={<RequirePermission anyOf={['staff.manage', 'dentists.manage']}><StaffPage /></RequirePermission>} />
+          <Route path="dentists" element={<RequirePermission permission="dentists.manage"><DentistsPage /></RequirePermission>} />
+          <Route path="branches" element={<RequirePermission anyOf={['branches.view', 'branches.manage']}><BranchesPage /></RequirePermission>} />
+          <Route path="reports" element={<RequirePermission permission="reports.view"><ReportsPage /></RequirePermission>} />
+          <Route path="data-import" element={<RequirePermission permission="patients.import"><DataImportPage /></RequirePermission>} />
+          <Route path="notifications" element={<RequirePermission permission="notifications.view"><NotificationsPage /></RequirePermission>} />
+          <Route path="communications" element={<RequirePermission anyOf={['communications.manage', 'notifications.send', 'notifications.view']}><CommunicationsPage /></RequirePermission>} />
+          <Route path="recalls" element={<RequirePermission anyOf={['appointments.view', 'clinical_records.view', 'communications.manage']}><RecallFollowUpPage /></RequirePermission>} />
+          <Route path="forms-consent" element={<RequirePermission permission="settings.manage"><FormsConsentAdminPage /></RequirePermission>} />
+          <Route path="settings" element={<RequirePermission permission="settings.manage"><SettingsPage /></RequirePermission>} />
+          <Route path="system-admin" element={<RequireRole allowedRoles={['super_admin']}><SystemAdministrationPage /></RequireRole>} />
           <Route path="unauthorized" element={<UnauthorizedPage />} />
         </Route>
-        <Route
-          path="/super-admin/*"
-          element={
-            <RequireAuth>
-              <RequireRole allowedRoles={['super_admin']}>
-                <Navigate to="/app/system-admin" replace />
-              </RequireRole>
-            </RequireAuth>
-          }
-        />
-        <Route
-          path="/dentist/*"
-          element={
-            <RequireAuth>
-              <RequireRole allowedRoles={['dentist', 'associate_dentist']}>
-                <Navigate to="/app" replace />
-              </RequireRole>
-            </RequireAuth>
-          }
-        />
-        <Route
-          path="/staff/*"
-          element={
-            <RequireAuth>
-              <RequireRole allowedRoles={['staff', 'admin', 'super_admin']}>
-                <Navigate to="/app" replace />
-              </RequireRole>
-            </RequireAuth>
-          }
-        />
+        <Route path="/super-admin/*" element={<RequireAuth><RequireRole allowedRoles={['super_admin']}><Navigate to="/app/system-admin" replace /></RequireRole></RequireAuth>} />
+        <Route path="/dentist/*" element={<RequireAuth><RequireRole allowedRoles={['dentist', 'associate_dentist']}><Navigate to="/app" replace /></RequireRole></RequireAuth>} />
+        <Route path="/staff/*" element={<RequireAuth><RequireRole allowedRoles={['staff', 'admin', 'super_admin']}><Navigate to="/app" replace /></RequireRole></RequireAuth>} />
         <Route path="/dashboard" element={<Navigate to="/app" replace />} />
         <Route path="*" element={<NotFoundPage />} />
       </Routes>
