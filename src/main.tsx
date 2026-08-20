@@ -36,6 +36,7 @@ import './styles/super-admin-dental-records-v11.css'
 import './styles/super-admin-treatments-v12.css'
 import './styles/super-admin-treatment-plans-v13.css'
 import './styles/super-admin-billing-v14.css'
+import './styles/super-admin-services-v15.css'
 import App from './App.tsx'
 import { registerPatientPortalPwa } from './features/patientPortal/pwaRegistration'
 
