@@ -46,6 +46,7 @@ import './styles/super-admin-data-import-v21.css'
 import './styles/super-admin-inventory-v22.css'
 import './styles/super-admin-expenses-v23.css'
 import './styles/super-admin-communications-v24.css'
+import './styles/super-admin-notifications-v25.css'
 import App from './App.tsx'
 import { registerPatientPortalPwa } from './features/patientPortal/pwaRegistration'
 
