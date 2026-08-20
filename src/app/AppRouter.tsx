@@ -32,6 +32,7 @@ import { ServicesPage } from '../pages/ServicesPage'
 import { SettingsPage } from '../pages/SettingsPage'
 import { StaffPage } from '../pages/StaffPage'
 import { SystemAdministrationPage } from '../pages/SystemAdministrationPage'
+import { TreatmentPlansPage } from '../pages/TreatmentPlansPage'
 import { TreatmentsPage } from '../pages/TreatmentsPage'
 import { UnauthorizedPage } from '../pages/UnauthorizedPage'
 
@@ -136,6 +137,14 @@ export function AppRouter() {
             element={
               <RequirePermission permission="treatments.view">
                 <TreatmentsPage />
+              </RequirePermission>
+            }
+          />
+          <Route
+            path="treatment-plans"
+            element={
+              <RequirePermission permission="treatments.view">
+                <TreatmentPlansPage />
               </RequirePermission>
             }
           />
