@@ -1,0 +1,89 @@
+/* Internal navigation contract — intentionally shell-only.
+   Page redesigns live in domain-specific stylesheets and must not restyle this navigation. */
+
+.app-shell {
+  --nav-blue: #2563eb;
+  --nav-blue-deep: #1d4ed8;
+  --nav-blue-soft: #eaf2ff;
+  --nav-text: #172033;
+  --nav-muted: #667085;
+  --nav-border: #edf1f6;
+}
+
+.app-shell > .sidebar {
+  background: #fff !important;
+  color: var(--nav-text) !important;
+  border-right: 1px solid var(--nav-border) !important;
+  box-shadow: 5px 0 22px rgba(15, 23, 42, .025) !important;
+}
+
+.app-shell > .sidebar .sidebar-header,
+.app-shell > .sidebar .sidebar-footer {
+  background: #fff !important;
+  border-color: var(--nav-border) !important;
+}
+
+.app-shell > .sidebar .brand-symbol {
+  background: var(--nav-blue) !important;
+  color: #fff !important;
+  box-shadow: 0 7px 18px rgba(37, 99, 235, .18) !important;
+}
+
+.app-shell > .sidebar .brand-lockup strong { color: var(--nav-text) !important; }
+.app-shell > .sidebar .brand-lockup small,
+.app-shell > .sidebar .nav-section-label { color: #98a2b3 !important; }
+
+.app-shell > .sidebar .sidebar-nav a {
+  color: #526077 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  border-radius: 10px !important;
+}
+
+.app-shell > .sidebar .sidebar-nav a:hover {
+  color: var(--nav-blue-deep) !important;
+  background: #f6f9ff !important;
+  transform: none !important;
+}
+
+.app-shell > .sidebar .sidebar-nav a.active {
+  color: var(--nav-blue-deep) !important;
+  background: var(--nav-blue-soft) !important;
+  box-shadow: inset 3px 0 0 var(--nav-blue) !important;
+}
+
+.app-shell > .sidebar .sidebar-nav a.active svg { color: var(--nav-blue) !important; }
+
+.app-shell > .sidebar .user-card {
+  background: #fbfcfe !important;
+  border: 1px solid var(--nav-border) !important;
+}
+
+.app-shell > .sidebar .avatar {
+  background: var(--nav-blue-soft) !important;
+  color: var(--nav-blue-deep) !important;
+  border-color: #dbe7ff !important;
+}
+
+.app-shell .topbar {
+  background: rgba(255,255,255,.97) !important;
+  border-bottom: 1px solid var(--nav-border) !important;
+  box-shadow: 0 1px 0 rgba(15,23,42,.02) !important;
+}
+
+.app-shell .topbar-account-pill {
+  display: inline-flex;
+  align-items: center;
+  min-height: 34px;
+  padding: 0 12px;
+  border-radius: 999px;
+  background: var(--nav-blue-soft);
+  border: 1px solid #d7e6ff;
+  color: var(--nav-blue-deep);
+  font-size: .75rem;
+  font-weight: 750;
+}
+
+@media (max-width: 860px) {
+  .app-shell > .sidebar { box-shadow: 14px 0 40px rgba(15,23,42,.14) !important; }
+}
