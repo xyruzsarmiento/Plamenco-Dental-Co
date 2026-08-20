@@ -71,7 +71,6 @@ Deno.serve(async (request) => {
 
   if (!email || !name || !role) return json({ error: 'Name, email, and role are required.' }, 400)
   if (!supportedRoles.includes(role)) return json({ error: 'Unsupported internal role.' }, 400)
-  if (role === 'patient') return json({ error: 'Patient accounts cannot be created from Team & Access.' }, 400)
 
   if (branchIds.length) {
     const { data: validBranches, error: branchError } = await adminClient
