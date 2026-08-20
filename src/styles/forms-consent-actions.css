@@ -1,0 +1,74 @@
+/* RC QA 46I — Forms & Consent modal visibility and interaction hardening.
+   Keep these rules scoped to the two admin dialogs so the Forms workspace can
+   share the global modal foundation without affecting unrelated screens. */
+
+.modal-backdrop > .modal[aria-labelledby="create-form-title"],
+.modal-backdrop > .modal[aria-labelledby="assign-form-title"] {
+  display: flex !important;
+  position: relative !important;
+  inset: auto !important;
+  width: min(760px, 100%);
+  max-width: 760px;
+  max-height: min(88vh, 860px);
+  overflow: auto;
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+}
+
+.modal-backdrop > .modal[aria-labelledby="create-form-title"] .modal-header,
+.modal-backdrop > .modal[aria-labelledby="assign-form-title"] .modal-header {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: var(--surface);
+}
+
+.modal-backdrop > .modal[aria-labelledby="create-form-title"] .action-buttons,
+.modal-backdrop > .modal[aria-labelledby="assign-form-title"] .action-buttons {
+  position: sticky;
+  bottom: 0;
+  z-index: 2;
+  margin-top: 16px;
+  padding-top: 12px;
+  padding-bottom: 4px;
+  background: linear-gradient(to bottom, color-mix(in srgb, var(--surface) 0%, transparent), var(--surface) 22%);
+}
+
+.modal-backdrop > .modal[aria-labelledby="create-form-title"] textarea {
+  min-height: 220px;
+  resize: vertical;
+}
+
+.modal-backdrop > .modal[aria-labelledby="create-form-title"] input,
+.modal-backdrop > .modal[aria-labelledby="create-form-title"] select,
+.modal-backdrop > .modal[aria-labelledby="create-form-title"] textarea,
+.modal-backdrop > .modal[aria-labelledby="assign-form-title"] input,
+.modal-backdrop > .modal[aria-labelledby="assign-form-title"] select,
+.modal-backdrop > .modal[aria-labelledby="assign-form-title"] textarea {
+  width: 100%;
+}
+
+.modal-backdrop > .modal[aria-labelledby="create-form-title"] :focus-visible,
+.modal-backdrop > .modal[aria-labelledby="assign-form-title"] :focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+@media (max-width: 640px) {
+  .modal-backdrop > .modal[aria-labelledby="create-form-title"],
+  .modal-backdrop > .modal[aria-labelledby="assign-form-title"] {
+    width: 100%;
+    max-width: 100%;
+    max-height: 94vh;
+    border-radius: 18px 18px 0 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .modal-backdrop > .modal[aria-labelledby="create-form-title"],
+  .modal-backdrop > .modal[aria-labelledby="assign-form-title"] {
+    animation: none !important;
+    transition: none !important;
+  }
+}
