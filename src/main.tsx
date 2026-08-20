@@ -6,6 +6,7 @@ import './styles/treatments.css'
 import './styles/release-polish.css'
 import './styles/modal-fixes.css'
 import './styles/payment-recorder.css'
+import './styles/inventory-actions.css'
 import App from './App.tsx'
 import { registerPatientPortalPwa } from './features/patientPortal/pwaRegistration'
 
