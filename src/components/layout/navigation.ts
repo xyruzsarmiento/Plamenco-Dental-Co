@@ -11,6 +11,7 @@ import {
   LayoutDashboard,
   PackageSearch,
   ReceiptText,
+  RefreshCcw,
   Settings,
   ShieldCheck,
   UserRoundCog,
@@ -55,6 +56,7 @@ export const navigationGroups: NavigationGroup[] = [
   {
     title: 'Operations',
     items: [
+      { label: 'Recall & Follow-Up', path: '/app/recalls', icon: RefreshCcw, anyOf: ['appointments.view', 'clinical_records.view', 'communications.manage'] },
       { label: 'Reports', path: '/app/reports', icon: BarChart3, anyOf: ['reports.view'] },
       { label: 'Data Import', path: '/app/data-import', icon: DatabaseZap, anyOf: ['patients.import'] },
       { label: 'Inventory', path: '/app/inventory', icon: PackageSearch, anyOf: ['inventory.view'] },
