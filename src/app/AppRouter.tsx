@@ -19,7 +19,7 @@ import { DataImportPageV21 } from '../pages/DataImportPageV21'
 import { DentalRecordsPageV11 } from '../pages/DentalRecordsPageV11'
 import { DentistsPageV16 } from '../pages/DentistsPageV16'
 import { ExpensesPageV23 } from '../pages/ExpensesPageV23'
-import { FormsConsentAdminPage } from '../pages/FormsConsentAdminPage'
+import { FormsConsentAdminPageV28 } from '../pages/FormsConsentAdminPageV28'
 import { InventoryPageV22 } from '../pages/InventoryPageV22'
 import { LandingPage } from '../pages/LandingPage'
 import { ManagementReportAutomationPageV20 } from '../pages/ManagementReportAutomationPageV20'
@@ -102,7 +102,7 @@ export function AppRouter() {
           <Route path="communications" element={<RequirePermission anyOf={['communications.manage', 'notifications.send', 'notifications.view']}><CommunicationsPageV24 /></RequirePermission>} />
           <Route path="recalls" element={<RequirePermission anyOf={['appointments.view', 'clinical_records.view', 'communications.manage']}><RecallFollowUpPageV18 /></RequirePermission>} />
           <Route path="tasks" element={<RequirePermission anyOf={['appointments.view', 'clinical_records.view', 'system_admin.view']}><OperationalTasksPageV17 /></RequirePermission>} />
-          <Route path="forms-consent" element={<RequirePermission permission="settings.manage"><FormsConsentAdminPage /></RequirePermission>} />
+          <Route path="forms-consent" element={<RequirePermission permission="settings.manage"><FormsConsentAdminPageV28 /></RequirePermission>} />
           <Route path="settings" element={<RequirePermission permission="settings.manage"><SettingsPage /></RequirePermission>} />
           <Route path="system-admin" element={<RequireRole allowedRoles={['super_admin']}><SystemAdministrationPage /></RequireRole>} />
           <Route path="unauthorized" element={<UnauthorizedPage />} />
