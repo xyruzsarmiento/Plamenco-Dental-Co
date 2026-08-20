@@ -94,6 +94,31 @@ Do not guess these values. Record the clinic owner's decision, date, and approve
 | Should branch managers see workload metrics? | Pending clinic owner/operations confirmation |
 | Should task completion metrics be shown by individual staff member? | Pending clinic owner/HR/privacy confirmation; no employee ranking is implemented |
 
+## Part 42 — Patient Portal & Self-Service Decisions
+
+| Decision Needed | Current Status |
+|---|---|
+| Can patients reschedule appointments themselves? | Pending clinic operations confirmation |
+| What reschedule cutoff and maximum reschedule count apply? | Pending clinic operations confirmation; no 24/48-hour rule is assumed |
+| Can patients cancel appointments themselves, and what cutoff/reason policy applies? | Pending clinic operations confirmation |
+| May a patient switch branch or provider during reschedule? | Pending operations/clinical confirmation |
+| Which appointment statuses and instructions are patient-visible? | Pending operations/clinical confirmation |
+| Can patients edit submitted medical history? | Pending clinical/privacy confirmation |
+| Which profile fields may patients edit, including login email? | Pending clinic/privacy/auth confirmation |
+| Which document categories are patient-visible? | Pending clinic/privacy confirmation |
+| May patients download/print signed forms? | Pending clinic/privacy/legal-process confirmation |
+| Can patients make treatment-plan decisions directly in the portal? | Pending clinical/operations confirmation |
+| Does treatment-plan acceptance require a consent/signature workflow? | Pending clinical/clinic-policy confirmation |
+| Can patients schedule accepted treatment directly? | Pending operations/clinical confirmation |
+| Which payment providers and invoices are enabled for online payment? | Pending clinic owner/accountant/provider confirmation |
+| Are partial online payments allowed? | Pending billing/accountant confirmation |
+| Which receipts are downloadable, and should refund history be patient-visible? | Pending billing/privacy confirmation |
+| Which recall/follow-up details are patient-visible, and may patients book from recall? | Pending clinical/operations confirmation |
+| Which notification categories should appear in the patient portal? | Pending operations/privacy confirmation |
+| Which communication preferences may patients control? | Pending privacy/communications confirmation |
+| Should Messenger preference appear only when Meta integration is configured? | Pending communications/provider confirmation |
+| Should the PWA install option be actively promoted in the portal? | Pending clinic owner/product confirmation |
+
 ## Existing decisions from Parts 1–32
 
 The previously tracked decisions remain in project history and implementation documentation, including branch identity/hours, appointment policies, deposits, payment gateway and manual payment methods, service catalog/pricing, provider schedules/roles, staff permissions, compensation rules, inventory opening stock/reorder/cost rules, expense approvals, SMS/email/Messenger providers and consent, historical Excel migration/linking, retention/privacy, clinical visibility, patient exports, procurement/stock transfer/count workflows, backup/recovery ownership, deployment domains/projects, daily clinic workflow, queue/check-in/no-show permissions, patient booking/rescheduling, reminders, online payments, and patient-facing price presentation.
