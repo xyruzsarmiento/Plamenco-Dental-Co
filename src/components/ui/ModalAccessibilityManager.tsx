@@ -12,7 +12,7 @@ const FOCUSABLE_SELECTOR = [
 function getVisibleDialogs() {
   return Array.from(
     document.querySelectorAll<HTMLElement>(
-      '.modal-backdrop [role="dialog"], .modal-backdrop > .modal, .treatment-drawer-backdrop [role="dialog"]',
+      '.modal-backdrop [role="dialog"], .modal-backdrop > .modal, .treatment-drawer-backdrop [role="dialog"], .expense-modal-backdrop [role="dialog"]',
     ),
   ).filter((dialog) => {
     const style = window.getComputedStyle(dialog)
