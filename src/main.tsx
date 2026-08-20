@@ -31,6 +31,7 @@ import './styles/settings-workspace-v6.css'
 import './styles/super-admin-dashboard-v7.css'
 import './styles/super-admin-appointments-v8.css'
 import './styles/super-admin-patients-v9.css'
+import './styles/super-admin-patients-v10.css'
 import App from './App.tsx'
 import { registerPatientPortalPwa } from './features/patientPortal/pwaRegistration'
 
