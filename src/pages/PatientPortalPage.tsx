@@ -32,7 +32,7 @@ import { Button } from '../components/ui/Button'
 import { useAuth } from '../features/auth/AuthContext'
 import { createAppointment, getAppointmentsByPatient } from '../features/appointments/appointmentStore'
 import { addMinutesToTime } from '../features/appointments/appointmentStore'
-import { getAvailableAppointmentSlots, getEligibleProviders } from '../features/appointments/availabilityEngine'
+import { getAppointmentAvailability, getEligibleProviders } from '../features/appointments/availabilityEngine'
 import {
   getInvoicesByPatient,
   getOutstandingBalanceByPatient,
@@ -72,12 +72,40 @@ function formatCurrency(cents: number) {
   }).format(cents / 100)
 }
 
+function formatServicePrice(pricePesos: number) {
+  if (!Number.isFinite(pricePesos) || pricePesos <= 0) return 'Price to be confirmed'
+  return new Intl.NumberFormat('en-PH', {
+    style: 'currency',
+    currency: 'PHP',
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(pricePesos)
+}
+
 function formatDate(value: string) {
   return new Date(value).toLocaleDateString(undefined, {
     month: 'short',
     day: 'numeric',
     year: 'numeric',
   })
+}
+
+function formatClinicDate(value: string) {
+  return new Date(`${value}T00:00:00+08:00`).toLocaleDateString('en-PH', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+    timeZone: 'Asia/Manila',
+  })
+}
+
+function getManilaToday() {
+  return new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Asia/Manila',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).format(new Date())
 }
 
 function getGreeting() {
@@ -317,9 +345,11 @@ export function PatientPortalPage() {
     [bookingForm.serviceId, bookingServices],
   )
 
-  const availableBookingTimes = useMemo(() => {
-    if (!bookingForm.date || !bookingForm.serviceId || !bookingForm.branchId) return []
-    return getAvailableAppointmentSlots({
+  const bookingAvailability = useMemo(() => {
+    if (!bookingForm.date || !bookingForm.serviceId || !bookingForm.branchId) {
+      return { status: 'missing_context' as const, slots: [], eligibleProviderCount: 0, scheduledProviderCount: 0 }
+    }
+    return getAppointmentAvailability({
       branchId: bookingForm.branchId,
       serviceId: bookingForm.serviceId,
       providerId: bookingForm.providerId || undefined,
@@ -327,6 +357,7 @@ export function PatientPortalPage() {
     })
   }, [bookingForm.branchId, bookingForm.date, bookingForm.providerId, bookingForm.serviceId])
 
+  const availableBookingTimes = bookingAvailability.slots
   const bookingSteps = ['Service', 'Location', 'Dentist', 'Date & time', 'Confirmation'] as const
 
   const recentActivity = useMemo(() => {
@@ -375,7 +406,13 @@ export function PatientPortalPage() {
   const fullName = `${patient.firstName} ${patient.middleName ? `${patient.middleName} ` : ''}${patient.lastName}`.trim()
 
   function handleBookingFieldChange<K extends 'serviceId' | 'branchId' | 'providerId' | 'date' | 'startTime' | 'notes'>(key: K, value: string) {
-    setBookingForm((current) => ({ ...current, [key]: value }))
+    setBookingForm((current) => {
+      if (key === 'serviceId') return { ...current, serviceId: value, startTime: '' }
+      if (key === 'branchId') return { ...current, branchId: value, providerId: '', date: '', startTime: '' }
+      if (key === 'providerId') return { ...current, providerId: value, startTime: '' }
+      if (key === 'date') return { ...current, date: value, startTime: '' }
+      return { ...current, [key]: value }
+    })
     setBookingError(null)
   }
 
@@ -429,7 +466,7 @@ export function PatientPortalPage() {
         startTime: bookingForm.startTime,
         endTime: addMinutesToTime(bookingForm.startTime, selectedBookingService.duration),
         durationMinutes: selectedBookingService.duration,
-        estimatedAmountCents: selectedBookingService.price,
+        estimatedAmountCents: Math.round(selectedBookingService.price * 100),
         paymentStatus: 'not_billed',
         bookingSource: 'patient_portal',
         patientNotes: bookingForm.notes.trim(),
@@ -578,13 +615,11 @@ export function PatientPortalPage() {
 
   return (
     <div className="patient-portal-shell">
-      {/* Mobile overlay */}
       <div 
         className={`portal-sidebar-overlay ${isSidebarOpen ? 'is-visible' : ''}`}
         onClick={() => setIsSidebarOpen(false)}
       />
 
-      {/* Mobile menu toggle */}
       <button
         type="button"
         className="portal-sidebar-toggle"
@@ -594,7 +629,6 @@ export function PatientPortalPage() {
         {isSidebarOpen ? <X size={20} /> : <Menu size={20} />}
       </button>
 
-      {/* Sidebar Navigation */}
       <aside className={`sidebar ${isSidebarOpen ? 'is-open' : ''}`}>
         <div className="sidebar-header">
           <div className="brand-lockup">
@@ -605,7 +639,6 @@ export function PatientPortalPage() {
         </div>
 
         <nav className="sidebar-nav" aria-label="Patient portal navigation">
-          {/* Main Navigation */}
           <div className="nav-section">
             {portalTabs.slice(0, 5).map(({ key, label, icon: Icon }) => (
               <button
@@ -623,7 +656,6 @@ export function PatientPortalPage() {
             ))}
           </div>
 
-          {/* Account Section */}
           <div className="nav-section">
             {portalTabs.slice(5).map(({ key, label, icon: Icon }) => (
               <button
@@ -642,7 +674,6 @@ export function PatientPortalPage() {
           </div>
         </nav>
 
-        {/* Sidebar Footer - User Card */}
         <div className="sidebar-footer">
           <div className="user-card">
             <span
@@ -671,7 +702,6 @@ export function PatientPortalPage() {
         </div>
       </aside>
 
-      {/* Main Portal Area */}
       <main className="portal-main">
         <header className="portal-topbar">
           <div>
@@ -691,7 +721,6 @@ export function PatientPortalPage() {
                   <p className="eyebrow">Appointment request</p>
                   <h2>Book your visit</h2>
                 </div>
-                
               </div>
 
               <div className="portal-booking-progress" aria-label="Booking progress">
@@ -741,7 +770,7 @@ export function PatientPortalPage() {
                                 <small>{service.description}</small>
                               </div>
                               <div className="service-option-meta">
-                                <strong>{service.price > 0 ? new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP' }).format(service.price / 100) : 'Price to be confirmed'}</strong>
+                                <strong>{formatServicePrice(service.price)}</strong>
                                 <small>{service.duration} min</small>
                               </div>
                             </button>
@@ -762,10 +791,7 @@ export function PatientPortalPage() {
                               key={branch.id}
                               type="button"
                               className={`branch-choice ${bookingForm.branchId === branch.id ? 'is-selected' : ''}`}
-                              onClick={() => {
-                                setBookingForm((current) => ({ ...current, branchId: branch.id, providerId: '', startTime: '' }))
-                                setBookingError(null)
-                              }}
+                              onClick={() => handleBookingFieldChange('branchId', branch.id)}
                             >
                               <strong>{branch.name}</strong>
                               <small>{branch.city}, {branch.province}</small>
@@ -818,7 +844,7 @@ export function PatientPortalPage() {
                             <input
                               type="date"
                               value={bookingForm.date}
-                              min={new Date().toISOString().slice(0, 10)}
+                              min={getManilaToday()}
                               onChange={(event) => handleBookingFieldChange('date', event.target.value)}
                             />
                           </label>
@@ -830,7 +856,7 @@ export function PatientPortalPage() {
                                 <div className="time-slot-grid">
                                   {availableBookingTimes.map((slot) => (
                                     <button
-                                      key={`${slot.providerId}-${slot.startTime}`}
+                                      key={`${slot.providerId}-${slot.startTime}-${slot.operatoryId ?? 'none'}`}
                                       type="button"
                                       className={`time-slot ${bookingForm.startTime === slot.startTime && (!bookingForm.providerId || bookingForm.providerId === slot.providerId) ? 'is-selected' : ''}`}
                                       onClick={() => {
@@ -843,8 +869,16 @@ export function PatientPortalPage() {
                                     </button>
                                   ))}
                                 </div>
+                              ) : bookingAvailability.status === 'no_eligible_provider' ? (
+                                <div className="empty-inline">No active dentist is assigned to this branch. Please choose another branch or contact the clinic.</div>
+                              ) : bookingAvailability.status === 'no_schedule' ? (
+                                <div className="empty-inline">No working schedule is configured for the selected dentist or branch on this day. Please choose another date.</div>
+                              ) : bookingAvailability.status === 'provider_unavailable' ? (
+                                <div className="empty-inline">The selected dentist is unavailable on this date. Choose another dentist or another day.</div>
+                              ) : bookingAvailability.status === 'no_slots' ? (
+                                <div className="empty-inline">All configured appointment times for this date are currently unavailable. Please choose another day.</div>
                               ) : (
-                                <div className="empty-inline">No available slots for this date. Please choose another day.</div>
+                                <div className="empty-inline">Choose a valid branch, service, dentist, and date to view appointment times.</div>
                               )
                             ) : (
                               <div className="empty-inline">Choose a service and date to view appointment times.</div>
@@ -865,9 +899,9 @@ export function PatientPortalPage() {
                           <div className="confirm-row"><span>Service</span><strong>{selectedBookingService?.name ?? '—'}</strong></div>
                           <div className="confirm-row"><span>Branch</span><strong>{selectedBookingBranch?.name ?? 'No branch selected'}</strong></div>
                           <div className="confirm-row"><span>Dentist</span><strong>{selectedBookingProvider?.displayName ?? 'Any available dentist'}</strong></div>
-                          <div className="confirm-row"><span>Date</span><strong>{bookingForm.date ? new Date(bookingForm.date).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }) : '—'}</strong></div>
+                          <div className="confirm-row"><span>Date</span><strong>{bookingForm.date ? formatClinicDate(bookingForm.date) : '—'}</strong></div>
                           <div className="confirm-row"><span>Time</span><strong>{bookingForm.startTime ? formatTimeDisplay(bookingForm.startTime) : '—'}</strong></div>
-                          <div className="confirm-row"><span>Estimated price</span><strong>{selectedBookingService ? (selectedBookingService.price > 0 ? new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP' }).format(selectedBookingService.price / 100) : 'Price to be confirmed') : '—'}</strong></div>
+                          <div className="confirm-row"><span>Estimated price</span><strong>{selectedBookingService ? formatServicePrice(selectedBookingService.price) : '—'}</strong></div>
                         </div>
 
                         <label className="booking-field">
@@ -922,7 +956,7 @@ export function PatientPortalPage() {
 
                     <div className="summary-price">
                       <span>Estimated total</span>
-                      <strong>{selectedBookingService ? (selectedBookingService.price > 0 ? new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP' }).format(selectedBookingService.price / 100) : 'Price to be confirmed') : '—'}</strong>
+                      <strong>{selectedBookingService ? formatServicePrice(selectedBookingService.price) : '—'}</strong>
                     </div>
 
                     <div className="summary-tight-list">
@@ -1502,7 +1536,6 @@ export function PatientPortalPage() {
 
           {activeTab === 'profile' && (
             <article className="portal-stack profile-page">
-              {/* Profile Header - Premium Welcome */}
               <section className="profile-header">
                 <div className="profile-header-content">
                   <div className="profile-avatar-section">
@@ -1543,7 +1576,6 @@ export function PatientPortalPage() {
                 )}
               </section>
 
-              {/* Feedback Messages */}
               {profileSaved === 'saved' && (
                 <div className="profile-feedback success">
                   <CheckCircle2 size={16} /> Profile saved successfully.
@@ -1555,7 +1587,6 @@ export function PatientPortalPage() {
                 </div>
               )}
 
-              {/* Edit Mode Header - Show when editing */}
               {isProfileEditing && (
                 <div className="profile-edit-header">
                   <div>
@@ -1600,11 +1631,8 @@ export function PatientPortalPage() {
                 </div>
               )}
 
-              {/* Main Content - Two Column Layout */}
               <div className="profile-content-grid">
-                {/* Left Column - Personal & Contact Info */}
                 <div className="profile-column">
-                  {/* Personal Information Section */}
                   <section className="profile-section">
                     <div className="section-header">
                       <div className="section-title-row">
@@ -1668,7 +1696,6 @@ export function PatientPortalPage() {
                     )}
                   </section>
 
-                  {/* Contact Information Section */}
                   <section className="profile-section">
                     <div className="section-header">
                       <div className="section-title-row">
@@ -1733,9 +1760,7 @@ export function PatientPortalPage() {
                   </section>
                 </div>
 
-                {/* Right Column - Emergency Contact & Account Security */}
                 <div className="profile-column">
-                  {/* Account & Security Section */}
                   <section className="profile-section">
                     <div className="section-header">
                       <div className="section-title-row">
@@ -1768,7 +1793,6 @@ export function PatientPortalPage() {
                     </div>
                   </section>
 
-                  {/* Emergency Contact Section */}
                   <section className="profile-section">
                     <div className="section-header">
                       <div className="section-title-row">
@@ -1825,7 +1849,6 @@ export function PatientPortalPage() {
                 </div>
               </div>
 
-              {/* Profile Photo Section - Full Width */}
               <section className="profile-section profile-photo-section">
                 <div className="section-header">
                   <div className="section-title-row">
