@@ -14,7 +14,6 @@ import { AppointmentsPage } from '../pages/AppointmentsPage'
 import { BillingPage } from '../pages/BillingPage'
 import { BranchesPage } from '../pages/BranchesPage'
 import { CommunicationsPage } from '../pages/CommunicationsPage'
-import { DashboardPage } from '../pages/DashboardPage'
 import { DataImportPage } from '../pages/DataImportPage'
 import { DentalRecordsPage } from '../pages/DentalRecordsPage'
 import { DentistsPage } from '../pages/DentistsPage'
@@ -27,6 +26,7 @@ import { PatientPortalPage } from '../pages/PatientPortalPage'
 import { PatientsPage } from '../pages/PatientsPage'
 import { PublicBookingPage } from '../pages/PublicBookingPage'
 import { ReportsPage } from '../pages/ReportsPage'
+import { RoleHomePage } from '../pages/RoleHomePage'
 import { ServicesPage } from '../pages/ServicesPage'
 import { SettingsPage } from '../pages/SettingsPage'
 import { StaffPage } from '../pages/StaffPage'
@@ -89,7 +89,7 @@ export function AppRouter() {
             </RequireAuth>
           }
         >
-          <Route index element={<DashboardPage />} />
+          <Route index element={<RoleHomePage />} />
           <Route
             path="appointments"
             element={
