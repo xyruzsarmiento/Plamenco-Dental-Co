@@ -22,6 +22,21 @@ export type AvailabilitySlot = {
   operatoryName?: string
 }
 
+export type AppointmentAvailabilityStatus =
+  | 'missing_context'
+  | 'no_eligible_provider'
+  | 'no_schedule'
+  | 'provider_unavailable'
+  | 'no_slots'
+  | 'ready'
+
+export type AppointmentAvailabilityResult = {
+  status: AppointmentAvailabilityStatus
+  slots: AvailabilitySlot[]
+  eligibleProviderCount: number
+  scheduledProviderCount: number
+}
+
 type AvailabilityInput = {
   branchId: string
   serviceId: string
@@ -96,15 +111,31 @@ function getProviderWindows(providerId: string, branchId: string, date: string) 
       (!override.branchId || override.branchId === branchId),
   )
 
-  const specialHours = overrides.filter((override) => override.type === 'special_hours' || override.type === 'available')
-  const baseWindows = specialHours.length
-    ? specialHours
-        .filter((override) => override.startTime && override.endTime)
-        .map((override) => ({ startTime: override.startTime!, endTime: override.endTime! }))
+  // Only a timed available/special-hours override replaces the weekly schedule.
+  // An "available" marker without explicit hours must not erase an otherwise valid
+  // weekly schedule and accidentally produce an empty day.
+  const timedSpecialHours = overrides.filter(
+    (override) =>
+      (override.type === 'special_hours' || override.type === 'available') &&
+      Boolean(override.startTime) &&
+      Boolean(override.endTime),
+  )
+  const baseWindows = timedSpecialHours.length
+    ? timedSpecialHours.map((override) => ({ startTime: override.startTime!, endTime: override.endTime! }))
     : regularBlocks.map((block) => ({ startTime: block.startTime, endTime: block.endTime }))
 
   const blockers = overrides.filter((override) => override.type === 'unavailable' || override.type === 'leave')
   return { baseWindows, blockers }
+}
+
+function isWindowFullyBlocked(
+  window: { startTime: string; endTime: string },
+  blockers: ReturnType<typeof getProviderWindows>['blockers'],
+) {
+  return blockers.some((override) => {
+    if (!override.startTime || !override.endTime) return true
+    return override.startTime <= window.startTime && override.endTime >= window.endTime
+  })
 }
 
 export function isProviderAvailable({
@@ -148,7 +179,7 @@ export function isProviderAvailable({
   return !checkScheduleConflict(date, startTime, endTime, excludeAppointmentId, providerId, branchId, operatoryId)
 }
 
-export function getAvailableAppointmentSlots({
+export function getAppointmentAvailability({
   branchId,
   date,
   excludeAppointmentId,
@@ -156,18 +187,38 @@ export function getAvailableAppointmentSlots({
   providerId,
   serviceId,
   slotIntervalMinutes = 30,
-}: AvailabilityInput): AvailabilitySlot[] {
+}: AvailabilityInput): AppointmentAvailabilityResult {
   const branch = getActiveBranch(branchId)
   const service = getService(serviceId)
-  if (!branch || !service || !date || service.duration <= 0) return []
+  if (!branch || !service || !date || service.duration <= 0) {
+    return { status: 'missing_context', slots: [], eligibleProviderCount: 0, scheduledProviderCount: 0 }
+  }
 
-  const providers = providerId ? getEligibleProviders(branchId).filter((provider) => provider.id === providerId) : getEligibleProviders(branchId)
+  const eligibleProviders = getEligibleProviders(branchId)
+  const providers = providerId
+    ? eligibleProviders.filter((provider) => provider.id === providerId)
+    : eligibleProviders
+
+  if (!providers.length) {
+    return {
+      status: providerId ? 'provider_unavailable' : 'no_eligible_provider',
+      slots: [],
+      eligibleProviderCount: eligibleProviders.length,
+      scheduledProviderCount: 0,
+    }
+  }
+
   const operatories = getOperatories().filter((operatory) => operatory.branchId === branchId && operatory.status === 'active')
   const candidateOperatories = operatoryId ? operatories.filter((operatory) => operatory.id === operatoryId) : operatories
   const slots: AvailabilitySlot[] = []
+  let scheduledProviderCount = 0
+  let hasUnblockedWindow = false
 
   providers.forEach((provider) => {
-    const { baseWindows } = getProviderWindows(provider.id, branchId, date)
+    const { baseWindows, blockers } = getProviderWindows(provider.id, branchId, date)
+    if (baseWindows.length) scheduledProviderCount += 1
+    if (baseWindows.some((window) => !isWindowFullyBlocked(window, blockers))) hasUnblockedWindow = true
+
     baseWindows.forEach((window) => {
       const windowStart = Math.max(timeToMinutes(window.startTime), timeToMinutes(branch.openingTime))
       const windowEnd = Math.min(timeToMinutes(window.endTime), timeToMinutes(branch.closingTime))
@@ -205,7 +256,44 @@ export function getAvailableAppointmentSlots({
     .sort((a, b) => `${a.startTime}-${a.providerName}-${a.operatoryName ?? ''}`.localeCompare(`${b.startTime}-${b.providerName}-${b.operatoryName ?? ''}`))
     .forEach((slot) => unique.set(`${slot.startTime}-${slot.providerId}-${slot.operatoryId ?? 'no-operatory'}`, slot))
 
-  return Array.from(unique.values())
+  const availableSlots = Array.from(unique.values())
+  if (availableSlots.length) {
+    return {
+      status: 'ready',
+      slots: availableSlots,
+      eligibleProviderCount: eligibleProviders.length,
+      scheduledProviderCount,
+    }
+  }
+
+  if (scheduledProviderCount === 0) {
+    return {
+      status: 'no_schedule',
+      slots: [],
+      eligibleProviderCount: eligibleProviders.length,
+      scheduledProviderCount,
+    }
+  }
+
+  if (!hasUnblockedWindow) {
+    return {
+      status: 'provider_unavailable',
+      slots: [],
+      eligibleProviderCount: eligibleProviders.length,
+      scheduledProviderCount,
+    }
+  }
+
+  return {
+    status: 'no_slots',
+    slots: [],
+    eligibleProviderCount: eligibleProviders.length,
+    scheduledProviderCount,
+  }
+}
+
+export function getAvailableAppointmentSlots(input: AvailabilityInput): AvailabilitySlot[] {
+  return getAppointmentAvailability(input).slots
 }
 
 export function getCalendarOperatingHours(branchId?: string) {
