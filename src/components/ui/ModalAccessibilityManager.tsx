@@ -9,14 +9,30 @@ const FOCUSABLE_SELECTOR = [
   '[tabindex]:not([tabindex="-1"])',
 ].join(',')
 
+function isVisible(element: HTMLElement) {
+  const style = window.getComputedStyle(element)
+  const rect = element.getBoundingClientRect()
+  return style.display !== 'none' && style.visibility !== 'hidden' && rect.width > 0 && rect.height > 0
+}
+
 function getVisibleDialogs() {
-  return Array.from(
-    document.querySelectorAll<HTMLElement>(
-      '.modal-backdrop [role="dialog"], .modal-backdrop > .modal, .treatment-drawer-backdrop [role="dialog"], .expense-modal-backdrop [role="dialog"]',
-    ),
-  ).filter((dialog) => {
-    const style = window.getComputedStyle(dialog)
-    return style.display !== 'none' && style.visibility !== 'hidden'
+  const selectors = [
+    '.modal-backdrop [role="dialog"]',
+    '.modal-backdrop > .modal',
+    '[class*="modal-backdrop"] [role="dialog"]',
+    '[class*="drawer-backdrop"] [role="dialog"]',
+    '.treatment-drawer-backdrop [role="dialog"]',
+    '.expense-modal-backdrop [role="dialog"]',
+    '[aria-modal="true"]',
+  ].join(',')
+
+  return Array.from(document.querySelectorAll<HTMLElement>(selectors)).filter(isVisible)
+}
+
+function getFocusable(dialog: HTMLElement) {
+  return Array.from(dialog.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR)).filter((element) => {
+    if (element.hasAttribute('disabled') || element.getAttribute('aria-hidden') === 'true') return false
+    return isVisible(element)
   })
 }
 
@@ -38,16 +54,22 @@ export function ModalAccessibilityManager() {
     let previouslyFocused: HTMLElement | null = null
     let previousBodyOverflow = ''
 
+    const deactivateDialog = () => {
+      if (!activeDialog) return
+      activeDialog.removeAttribute('data-focus-trap-active')
+      activeDialog = null
+    }
+
     const activateTopDialog = () => {
       const dialogs = getVisibleDialogs()
       const nextDialog = dialogs.length ? dialogs[dialogs.length - 1] : null
 
       if (!nextDialog) {
         if (activeDialog) {
+          deactivateDialog()
           document.body.style.overflow = previousBodyOverflow
-          previouslyFocused?.focus()
+          if (previouslyFocused && document.contains(previouslyFocused)) previouslyFocused.focus()
         }
-        activeDialog = null
         previouslyFocused = null
         return
       }
@@ -58,16 +80,21 @@ export function ModalAccessibilityManager() {
         previouslyFocused = document.activeElement instanceof HTMLElement ? document.activeElement : null
         previousBodyOverflow = document.body.style.overflow
         document.body.style.overflow = 'hidden'
+      } else {
+        deactivateDialog()
       }
 
       activeDialog = nextDialog
       if (!activeDialog.hasAttribute('tabindex')) activeDialog.setAttribute('tabindex', '-1')
       if (!activeDialog.hasAttribute('role')) activeDialog.setAttribute('role', 'dialog')
       activeDialog.setAttribute('aria-modal', 'true')
+      activeDialog.setAttribute('data-focus-trap-active', 'true')
 
       queueMicrotask(() => {
-        const firstFocusable = activeDialog?.querySelector<HTMLElement>(FOCUSABLE_SELECTOR)
-        ;(firstFocusable ?? activeDialog)?.focus()
+        if (!activeDialog) return
+        const preferred = activeDialog.querySelector<HTMLElement>('[autofocus], [data-initial-focus]')
+        const firstFocusable = preferred && isVisible(preferred) ? preferred : getFocusable(activeDialog)[0]
+        ;(firstFocusable ?? activeDialog).focus()
       })
     }
 
@@ -85,10 +112,7 @@ export function ModalAccessibilityManager() {
 
       if (event.key !== 'Tab') return
 
-      const focusable = Array.from(activeDialog.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR)).filter(
-        (element) => !element.hasAttribute('disabled') && element.getAttribute('aria-hidden') !== 'true',
-      )
-
+      const focusable = getFocusable(activeDialog)
       if (!focusable.length) {
         event.preventDefault()
         activeDialog.focus()
@@ -102,10 +126,17 @@ export function ModalAccessibilityManager() {
       if (event.shiftKey && (current === first || !activeDialog.contains(current))) {
         event.preventDefault()
         last.focus()
-      } else if (!event.shiftKey && current === last) {
+      } else if (!event.shiftKey && (current === last || !activeDialog.contains(current))) {
         event.preventDefault()
         first.focus()
       }
+    }
+
+    const onFocusIn = (event: FocusEvent) => {
+      if (!activeDialog || !(event.target instanceof Node)) return
+      if (activeDialog.contains(event.target)) return
+      const firstFocusable = getFocusable(activeDialog)[0]
+      ;(firstFocusable ?? activeDialog).focus()
     }
 
     const observer = new MutationObserver(activateTopDialog)
@@ -113,15 +144,20 @@ export function ModalAccessibilityManager() {
       childList: true,
       subtree: true,
       attributes: true,
-      attributeFilter: ['class', 'style'],
+      attributeFilter: ['class', 'style', 'aria-hidden', 'aria-modal'],
     })
     document.addEventListener('keydown', onKeyDown)
+    document.addEventListener('focusin', onFocusIn)
     activateTopDialog()
 
     return () => {
       observer.disconnect()
       document.removeEventListener('keydown', onKeyDown)
-      if (activeDialog) document.body.style.overflow = previousBodyOverflow
+      document.removeEventListener('focusin', onFocusIn)
+      if (activeDialog) {
+        deactivateDialog()
+        document.body.style.overflow = previousBodyOverflow
+      }
     }
   }, [])
 
