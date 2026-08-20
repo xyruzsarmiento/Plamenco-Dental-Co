@@ -1,0 +1,720 @@
+.role-super_admin .sa-appointments-page-v8 {
+  --appt-blue: #2563eb;
+  --appt-blue-strong: #1d4ed8;
+  --appt-blue-soft: #eaf2ff;
+  --appt-bg: #f7f9fc;
+  --appt-surface: #ffffff;
+  --appt-text: #172033;
+  --appt-muted: #6b7280;
+  --appt-border: #e5e7eb;
+  --appt-success: #16a34a;
+  --appt-warning: #d97706;
+  --appt-danger: #dc2626;
+  display: grid;
+  gap: 22px;
+  color: var(--appt-text);
+}
+
+.role-super_admin .sa-appointments-page-v8 .sa-appointments-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 28px;
+  padding: 6px 0 2px;
+}
+
+.role-super_admin .sa-appointments-header-copy {
+  max-width: 760px;
+}
+
+.role-super_admin .sa-appointments-kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--appt-blue-strong);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.role-super_admin .sa-appointments-header h2 {
+  margin: 6px 0 7px;
+  font-size: clamp(1.9rem, 2.4vw, 2.75rem);
+  line-height: 1.05;
+  letter-spacing: -0.04em;
+}
+
+.role-super_admin .sa-appointments-header p,
+.role-super_admin .sa-appointments-card-heading p,
+.role-super_admin .sa-appointments-flow-header p,
+.role-super_admin .sa-appointments-requests-heading p,
+.role-super_admin .sa-appointments-filter-bar p {
+  margin: 0;
+  color: var(--appt-muted);
+  line-height: 1.55;
+}
+
+.role-super_admin .sa-appointments-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.role-super_admin .sa-appointments-date-chip {
+  min-height: 42px;
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  padding: 0 14px;
+  border: 1px solid var(--appt-border);
+  border-radius: 11px;
+  background: var(--appt-surface);
+  color: var(--appt-text);
+  font: inherit;
+  font-size: 0.87rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: border-color 150ms ease, box-shadow 150ms ease, transform 150ms ease;
+}
+
+.role-super_admin .sa-appointments-date-chip:hover {
+  border-color: #bfdbfe;
+  box-shadow: 0 8px 20px rgba(37, 99, 235, 0.08);
+  transform: translateY(-1px);
+}
+
+.role-super_admin .sa-appointments-kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.role-super_admin .sa-appointments-kpi {
+  min-height: 112px;
+  display: grid;
+  grid-template-columns: 42px minmax(0, 1fr);
+  gap: 12px;
+  align-items: start;
+  padding: 17px;
+  border: 1px solid var(--appt-border);
+  border-radius: 14px;
+  background: var(--appt-surface);
+  box-shadow: 0 8px 26px rgba(23, 32, 51, 0.045);
+}
+
+.role-super_admin .sa-appointments-kpi.is-primary {
+  border-color: #cfe0ff;
+  background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+}
+
+.role-super_admin .sa-appointments-kpi-icon,
+.role-super_admin .sa-appointments-icon-tile {
+  width: 40px;
+  height: 40px;
+  display: inline-grid;
+  place-items: center;
+  border-radius: 10px;
+  background: var(--appt-blue-soft);
+  color: var(--appt-blue-strong);
+}
+
+.role-super_admin .sa-appointments-kpi > div {
+  min-width: 0;
+  display: grid;
+  gap: 2px;
+}
+
+.role-super_admin .sa-appointments-kpi span:not(.sa-appointments-kpi-icon) {
+  color: var(--appt-muted);
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.role-super_admin .sa-appointments-kpi strong {
+  font-size: 1.62rem;
+  letter-spacing: -0.035em;
+}
+
+.role-super_admin .sa-appointments-kpi small {
+  color: var(--appt-muted);
+  font-size: 0.72rem;
+  line-height: 1.35;
+}
+
+.role-super_admin .sa-appointments-insights-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.65fr) minmax(320px, 0.85fr);
+  gap: 14px;
+}
+
+.role-super_admin .sa-appointments-chart-card,
+.role-super_admin .sa-appointments-week-card,
+.role-super_admin .sa-appointments-branch-card,
+.role-super_admin .sa-appointments-calendar-workspace,
+.role-super_admin .sa-appointments-requests-panel,
+.role-super_admin .sa-appointments-flow-board {
+  border: 1px solid var(--appt-border);
+  border-radius: 16px;
+  background: var(--appt-surface);
+  box-shadow: 0 12px 34px rgba(23, 32, 51, 0.05);
+}
+
+.role-super_admin .sa-appointments-chart-card {
+  min-width: 0;
+  padding: 20px;
+}
+
+.role-super_admin .sa-appointments-card-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 14px;
+}
+
+.role-super_admin .sa-appointments-card-heading h3,
+.role-super_admin .sa-appointments-flow-header h3,
+.role-super_admin .sa-appointments-requests-heading h3 {
+  margin: 4px 0 4px;
+  font-size: 1.05rem;
+  letter-spacing: -0.02em;
+}
+
+.role-super_admin .sa-appointments-card-heading p {
+  font-size: 0.8rem;
+}
+
+.role-super_admin .sa-appointments-chart-scroll {
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding-top: 4px;
+}
+
+.role-super_admin .sa-appointments-chart-scroll svg {
+  display: block;
+  width: 100%;
+  min-width: 580px;
+  height: auto;
+}
+
+.role-super_admin .sa-appointments-chart-gridline {
+  stroke: #e9eef6;
+  stroke-width: 1;
+}
+
+.role-super_admin .sa-appointments-chart-area {
+  fill: rgba(37, 99, 235, 0.08);
+}
+
+.role-super_admin .sa-appointments-chart-line {
+  fill: none;
+  stroke: var(--appt-blue);
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.role-super_admin .sa-appointments-chart-point {
+  fill: #ffffff;
+  stroke: var(--appt-blue);
+  stroke-width: 3;
+}
+
+.role-super_admin .sa-appointments-chart-label {
+  fill: var(--appt-muted);
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.role-super_admin .sa-appointments-chart-value {
+  fill: var(--appt-text);
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.role-super_admin .sa-appointments-donut-layout {
+  min-height: 248px;
+  display: grid;
+  grid-template-columns: 150px minmax(0, 1fr);
+  align-items: center;
+  gap: 20px;
+}
+
+.role-super_admin .sa-appointments-donut-wrap {
+  position: relative;
+  width: 150px;
+  height: 150px;
+}
+
+.role-super_admin .sa-appointments-donut-wrap svg {
+  width: 150px;
+  height: 150px;
+  transform: rotate(-90deg);
+}
+
+.role-super_admin .sa-appointments-donut-base,
+.role-super_admin .sa-appointments-donut-segment {
+  fill: none;
+  stroke-width: 13;
+}
+
+.role-super_admin .sa-appointments-donut-base { stroke: #edf1f7; }
+.role-super_admin .sa-appointments-donut-segment { stroke-linecap: butt; }
+.role-super_admin .sa-appointments-donut-segment.status-confirmed { stroke: #2563eb; }
+.role-super_admin .sa-appointments-donut-segment.status-waiting { stroke: #60a5fa; }
+.role-super_admin .sa-appointments-donut-segment.status-in_progress { stroke: #7c3aed; }
+.role-super_admin .sa-appointments-donut-segment.status-completed { stroke: #16a34a; }
+.role-super_admin .sa-appointments-donut-segment.status-no_show { stroke: #dc2626; }
+
+.role-super_admin .sa-appointments-donut-center {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-content: center;
+  text-align: center;
+  pointer-events: none;
+}
+
+.role-super_admin .sa-appointments-donut-center strong {
+  font-size: 1.8rem;
+  line-height: 1;
+}
+
+.role-super_admin .sa-appointments-donut-center span {
+  margin-top: 3px;
+  color: var(--appt-muted);
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.role-super_admin .sa-appointments-status-legend {
+  display: grid;
+  gap: 10px;
+}
+
+.role-super_admin .sa-appointments-status-legend > div {
+  display: grid;
+  grid-template-columns: 9px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 9px;
+  font-size: 0.8rem;
+}
+
+.role-super_admin .sa-appointments-status-legend > div span:nth-child(2) { color: var(--appt-muted); }
+.role-super_admin .sa-appointments-status-legend strong { font-size: 0.86rem; }
+.role-super_admin .sa-appointments-legend-dot { width: 8px; height: 8px; border-radius: 999px; }
+.role-super_admin .sa-appointments-legend-dot.status-confirmed { background: #2563eb; }
+.role-super_admin .sa-appointments-legend-dot.status-waiting { background: #60a5fa; }
+.role-super_admin .sa-appointments-legend-dot.status-in_progress { background: #7c3aed; }
+.role-super_admin .sa-appointments-legend-dot.status-completed { background: #16a34a; }
+.role-super_admin .sa-appointments-legend-dot.status-no_show { background: #dc2626; }
+
+.role-super_admin .sa-appointments-overview-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.45fr) minmax(340px, 0.85fr);
+  gap: 14px;
+}
+
+.role-super_admin .sa-appointments-week-card,
+.role-super_admin .sa-appointments-branch-card {
+  padding: 18px;
+}
+
+.role-super_admin .sa-appointments-week-strip {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(70px, 1fr));
+  gap: 8px;
+}
+
+.role-super_admin .sa-appointments-week-strip button {
+  min-height: 98px;
+  display: grid;
+  place-items: center;
+  gap: 1px;
+  padding: 10px 6px;
+  border: 1px solid var(--appt-border);
+  border-radius: 12px;
+  background: #fff;
+  color: var(--appt-text);
+  cursor: pointer;
+  transition: border-color 150ms ease, background 150ms ease, transform 150ms ease;
+}
+
+.role-super_admin .sa-appointments-week-strip button:hover,
+.role-super_admin .sa-appointments-week-strip button.is-today {
+  border-color: #bfdbfe;
+  background: #f7fbff;
+  transform: translateY(-1px);
+}
+
+.role-super_admin .sa-appointments-week-strip button span,
+.role-super_admin .sa-appointments-week-strip button small {
+  color: var(--appt-muted);
+  font-size: 0.7rem;
+  font-weight: 700;
+}
+
+.role-super_admin .sa-appointments-week-strip button strong {
+  font-size: 1.2rem;
+}
+
+.role-super_admin .sa-appointments-branch-list {
+  display: grid;
+  gap: 9px;
+}
+
+.role-super_admin .sa-appointments-branch-list button {
+  display: grid;
+  grid-template-columns: minmax(120px, 1fr) minmax(90px, 1.3fr) 28px;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 9px 0;
+  border: 0;
+  border-bottom: 1px solid #eef1f5;
+  background: transparent;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.role-super_admin .sa-appointments-branch-list button:last-child { border-bottom: 0; }
+.role-super_admin .sa-appointments-branch-list button > div:first-child { display: grid; gap: 2px; }
+.role-super_admin .sa-appointments-branch-list button strong { font-size: 0.82rem; }
+.role-super_admin .sa-appointments-branch-list button span { color: var(--appt-muted); font-size: 0.72rem; }
+.role-super_admin .sa-appointments-branch-list button b { text-align: right; font-size: 0.86rem; }
+
+.role-super_admin .sa-appointments-branch-bar {
+  height: 6px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: #edf1f7;
+}
+
+.role-super_admin .sa-appointments-branch-bar span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--appt-blue);
+}
+
+.role-super_admin .sa-appointments-view-switcher {
+  display: inline-flex;
+  width: fit-content;
+  max-width: 100%;
+  gap: 4px;
+  padding: 4px;
+  border: 1px solid var(--appt-border);
+  border-radius: 12px;
+  background: #fff;
+  overflow-x: auto;
+}
+
+.role-super_admin .sa-appointments-view-switcher button {
+  min-height: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  white-space: nowrap;
+  padding: 0 14px;
+  border: 0;
+  border-radius: 9px;
+  background: transparent;
+  color: var(--appt-muted);
+  font: inherit;
+  font-size: 0.82rem;
+  font-weight: 750;
+  cursor: pointer;
+}
+
+.role-super_admin .sa-appointments-view-switcher button.is-active {
+  background: var(--appt-blue);
+  color: #fff;
+  box-shadow: 0 6px 16px rgba(37, 99, 235, 0.18);
+}
+
+.role-super_admin .sa-appointments-view-switcher button b {
+  min-width: 20px;
+  height: 20px;
+  display: inline-grid;
+  place-items: center;
+  border-radius: 999px;
+  background: rgba(255,255,255,.2);
+  font-size: 0.69rem;
+}
+
+.role-super_admin .sa-appointments-flow-board {
+  overflow: hidden;
+}
+
+.role-super_admin .sa-appointments-flow-header {
+  padding: 20px;
+  border-bottom: 1px solid var(--appt-border);
+  background: linear-gradient(180deg, #ffffff 0%, #fbfcfe 100%);
+}
+
+.role-super_admin .sa-appointments-flow-board .operations-columns {
+  gap: 0;
+  background: #f8fafc;
+}
+
+.role-super_admin .sa-appointments-flow-column {
+  min-width: 245px;
+  padding: 12px;
+  border-right: 1px solid #e9edf3;
+  background: transparent;
+}
+
+.role-super_admin .sa-appointments-flow-column:last-child { border-right: 0; }
+
+.role-super_admin .sa-appointments-flow-column .operations-column-header {
+  margin-bottom: 10px;
+  padding: 3px 2px 9px;
+  border-bottom: 1px solid #e5e9ef;
+}
+
+.role-super_admin .sa-appointments-flow-card {
+  border: 1px solid #e3e8ef;
+  border-left: 3px solid #93c5fd;
+  border-radius: 11px;
+  background: #fff;
+  box-shadow: 0 5px 16px rgba(23, 32, 51, 0.035);
+}
+
+.role-super_admin .sa-appointments-flow-card.status-waiting { border-left-color: #f59e0b; }
+.role-super_admin .sa-appointments-flow-card.status-in_progress { border-left-color: #7c3aed; }
+.role-super_admin .sa-appointments-flow-card.status-completed { border-left-color: #16a34a; }
+.role-super_admin .sa-appointments-flow-card.status-no_show { border-left-color: #dc2626; }
+
+.role-super_admin .sa-appointments-calendar-workspace,
+.role-super_admin .sa-appointments-requests-panel {
+  padding: 18px;
+}
+
+.role-super_admin .sa-appointments-filter-bar {
+  margin-bottom: 14px;
+  padding: 0 0 16px;
+  border: 0;
+  border-bottom: 1px solid var(--appt-border);
+  border-radius: 0;
+  box-shadow: none;
+}
+
+.role-super_admin .sa-appointments-filter-bar .calendar-filter-header {
+  margin-bottom: 13px;
+}
+
+.role-super_admin .sa-appointments-filter-bar .calendar-filter-grid {
+  grid-template-columns: repeat(5, minmax(140px, 1fr)) minmax(220px, 1.4fr);
+  gap: 10px;
+}
+
+.role-super_admin .sa-appointments-filter-bar input,
+.role-super_admin .sa-appointments-filter-bar select {
+  min-height: 42px;
+  border: 1px solid var(--appt-border);
+  border-radius: 9px;
+  background: #fff;
+}
+
+.role-super_admin .sa-appointments-calendar-shell {
+  overflow: hidden;
+  border: 1px solid #e7ebf1;
+  border-radius: 14px;
+  background: #fff;
+}
+
+.role-super_admin .sa-appointments-requests-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 18px;
+  margin-bottom: 16px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--appt-border);
+}
+
+.role-super_admin .sa-appointments-request-count {
+  min-width: 42px;
+  height: 42px;
+  display: inline-grid;
+  place-items: center;
+  border-radius: 11px;
+  background: var(--appt-blue-soft);
+  color: var(--appt-blue-strong);
+  font-size: 1rem;
+  font-weight: 800;
+}
+
+.role-super_admin .sa-appointments-request-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.role-super_admin .sa-appointments-request-card {
+  margin: 0;
+  border: 1px solid var(--appt-border);
+  border-radius: 13px;
+  box-shadow: none;
+}
+
+.role-super_admin .sa-appointments-request-card:hover {
+  border-color: #cbdcfb;
+  box-shadow: 0 10px 26px rgba(37, 99, 235, 0.07);
+}
+
+.role-super_admin .sa-appointments-empty-state {
+  border: 1px dashed #cdd7e6;
+  border-radius: 13px;
+  background: #fbfcfe;
+}
+
+.role-super_admin .sa-appointments-empty-inline {
+  padding: 16px 0;
+  color: var(--appt-muted);
+  font-size: 0.8rem;
+}
+
+.role-super_admin .sa-appointments-page-v8 :is(button, a, input, select, textarea):focus-visible {
+  outline: 3px solid rgba(37, 99, 235, 0.2);
+  outline-offset: 2px;
+}
+
+@media (max-width: 1500px) {
+  .role-super_admin .sa-appointments-kpi-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .role-super_admin .sa-appointments-filter-bar .calendar-filter-grid {
+    grid-template-columns: repeat(3, minmax(160px, 1fr));
+  }
+}
+
+@media (max-width: 1180px) {
+  .role-super_admin .sa-appointments-insights-grid,
+  .role-super_admin .sa-appointments-overview-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .role-super_admin .sa-appointments-request-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .role-super_admin .sa-appointments-donut-layout {
+    grid-template-columns: 150px minmax(0, 360px);
+  }
+}
+
+@media (max-width: 900px) {
+  .role-super_admin .sa-appointments-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .role-super_admin .sa-appointments-header-actions {
+    justify-content: space-between;
+  }
+
+  .role-super_admin .sa-appointments-kpi-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .role-super_admin .sa-appointments-week-strip {
+    overflow-x: auto;
+    grid-template-columns: repeat(7, minmax(92px, 1fr));
+    padding-bottom: 4px;
+  }
+
+  .role-super_admin .sa-appointments-flow-board .operations-columns {
+    overflow-x: auto;
+  }
+
+  .role-super_admin .sa-appointments-filter-bar .calendar-filter-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 600px) {
+  .role-super_admin .sa-appointments-page-v8 {
+    gap: 16px;
+  }
+
+  .role-super_admin .sa-appointments-header h2 {
+    font-size: 1.75rem;
+  }
+
+  .role-super_admin .sa-appointments-header-actions,
+  .role-super_admin .sa-appointments-header-actions > * {
+    width: 100%;
+  }
+
+  .role-super_admin .sa-appointments-date-chip,
+  .role-super_admin .sa-appointments-header-actions .button {
+    justify-content: center;
+  }
+
+  .role-super_admin .sa-appointments-kpi-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .role-super_admin .sa-appointments-kpi {
+    min-height: 92px;
+  }
+
+  .role-super_admin .sa-appointments-chart-card,
+  .role-super_admin .sa-appointments-week-card,
+  .role-super_admin .sa-appointments-branch-card,
+  .role-super_admin .sa-appointments-calendar-workspace,
+  .role-super_admin .sa-appointments-requests-panel {
+    padding: 14px;
+    border-radius: 13px;
+  }
+
+  .role-super_admin .sa-appointments-donut-layout {
+    grid-template-columns: 1fr;
+    justify-items: center;
+  }
+
+  .role-super_admin .sa-appointments-status-legend {
+    width: 100%;
+  }
+
+  .role-super_admin .sa-appointments-filter-bar .calendar-filter-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .role-super_admin .sa-appointments-branch-list button {
+    grid-template-columns: minmax(0, 1fr) 34px;
+  }
+
+  .role-super_admin .sa-appointments-branch-bar {
+    display: none;
+  }
+
+  .role-super_admin .sa-appointments-view-switcher {
+    width: 100%;
+  }
+
+  .role-super_admin .sa-appointments-view-switcher button {
+    flex: 1 0 auto;
+  }
+
+  .role-super_admin .sa-appointments-requests-heading {
+    align-items: center;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .role-super_admin .sa-appointments-page-v8 *,
+  .role-super_admin .sa-appointments-page-v8 *::before,
+  .role-super_admin .sa-appointments-page-v8 *::after {
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}
