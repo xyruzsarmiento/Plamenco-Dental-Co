@@ -26,7 +26,7 @@ export function AppLayout() {
   })).filter((group) => group.items.length > 0)
 
   return (
-    <div className="app-shell">
+    <div className={`app-shell role-${user?.role ?? 'guest'}`}>
       <aside className={`sidebar ${isMobileNavOpen ? 'is-open' : ''}`}>
         <div className="sidebar-header">
           <div className="brand-lockup">
@@ -110,7 +110,7 @@ export function AppLayout() {
             <Menu size={20} />
           </button>
           <div className="topbar-copy">
-            <p className="eyebrow">Clinic management</p>
+            <p className="eyebrow">{user?.role === 'staff' ? 'Front desk operations' : 'Clinic management'}</p>
             <h1>{currentPage}</h1>
           </div>
           <div className="topbar-actions">
