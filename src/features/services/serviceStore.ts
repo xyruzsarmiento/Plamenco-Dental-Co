@@ -179,7 +179,7 @@ export function paginateServices(services: Service[], page: number, pageSize: nu
   return services.slice(start, end)
 }
 
-export async function loadServicesFromSupabase(): Promise<Service[]> {
+export async function loadServicesFromSupabase(options: { strict?: boolean } = {}): Promise<Service[]> {
   if (!supabase) {
     return getStoredServices()
   }
@@ -193,10 +193,15 @@ export async function loadServicesFromSupabase(): Promise<Service[]> {
 
     if (error) {
       console.error('[service load error]', error)
+      if (options.strict) throw new Error(`Unable to load clinic services: ${error.message}`)
       return getStoredServices()
     }
 
     if (!data || data.length === 0) {
+      if (options.strict) {
+        saveStoredServices([])
+        return []
+      }
       return getStoredServices()
     }
 
@@ -205,18 +210,19 @@ export async function loadServicesFromSupabase(): Promise<Service[]> {
       name: row.name ?? '',
       description: row.description ?? '',
       duration: row.duration ?? 30,
-      price: row.price ?? 0,
+      price: Number(row.price ?? 0),
       category: row.category ?? 'General',
       status: row.status ?? 'active',
       createdAt: row.created_at ?? new Date().toISOString(),
       updatedAt: row.updated_at ?? row.created_at ?? new Date().toISOString(),
     }))
 
-    // Cache Supabase services in localStorage
+    // Cache Supabase services in localStorage. Service price is stored in Philippine pesos.
     saveStoredServices(supabaseServices)
     return supabaseServices
   } catch (error) {
     console.error('[service load exception]', error)
+    if (options.strict) throw error
     return getStoredServices()
   }
 }
