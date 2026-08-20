@@ -13,47 +13,74 @@ function hasReminderRecord(appointmentId: string, offsetHours: number) {
   return getCommunicationDeliveryLogs().some((log) => log.idempotencyKey.includes(needle))
 }
 
-export function queueAppointmentReminders(now = new Date(), actor = 'communication-scheduler') {
-  const settings = getCommunicationSettings()
-  const appointments = getStoredAppointments().filter((appointment) => appointment.status === 'confirmed')
-  const queued: ReturnType<typeof sendAppointmentCommunication> = []
-
-  for (const appointment of appointments) {
-    const appointmentDate = getManilaAppointmentDate(appointment)
-    if (!appointmentDate) continue
-
-    for (const offsetHours of settings.reminderOffsetsHours) {
-      const reminderDue = new Date(appointmentDate.getTime() - offsetHours * 60 * 60 * 1000)
-      const windowStart = new Date(reminderDue.getTime() - 15 * 60 * 1000)
-      const windowEnd = new Date(reminderDue.getTime() + 15 * 60 * 1000)
-
-      if (now < windowStart || now > windowEnd || hasReminderRecord(appointment.id, offsetHours)) continue
-
-      queued.push(...sendAppointmentCommunication({
-        appointment,
-        templateKey: 'appointment_reminder',
-        actor,
-        reminderOffsetHours: offsetHours,
-      }))
-    }
-  }
-
-  return queued
+export type AppointmentReminderPreview = {
+  appointment: Appointment
+  offsetHours: number
+  dueAt: string
+  appointmentAt: string
+  alreadyQueued: boolean
+  isDue: boolean
+  isExpired: boolean
 }
 
-export function previewEligibleAppointmentReminders(now = new Date()) {
+export function previewEligibleAppointmentReminders(now = new Date()): AppointmentReminderPreview[] {
   const settings = getCommunicationSettings()
+
   return getStoredAppointments()
     .filter((appointment) => appointment.status === 'confirmed')
     .flatMap((appointment) => {
       const appointmentDate = getManilaAppointmentDate(appointment)
       if (!appointmentDate) return []
-      return settings.reminderOffsetsHours.map((offsetHours) => ({
-        appointment,
-        offsetHours,
-        dueAt: new Date(appointmentDate.getTime() - offsetHours * 60 * 60 * 1000).toISOString(),
-        alreadyQueued: hasReminderRecord(appointment.id, offsetHours),
-        isDue: now >= new Date(appointmentDate.getTime() - offsetHours * 60 * 60 * 1000),
-      }))
+
+      return settings.reminderOffsetsHours.map((offsetHours) => {
+        const dueAt = new Date(appointmentDate.getTime() - offsetHours * 60 * 60 * 1000)
+        const alreadyQueued = hasReminderRecord(appointment.id, offsetHours)
+        const isExpired = now >= appointmentDate
+        return {
+          appointment,
+          offsetHours,
+          dueAt: dueAt.toISOString(),
+          appointmentAt: appointmentDate.toISOString(),
+          alreadyQueued,
+          isDue: !isExpired && !alreadyQueued && now >= dueAt,
+          isExpired,
+        }
+      })
     })
+}
+
+/**
+ * Queues at most one reminder offset per appointment per scan.
+ *
+ * A browser/manual scan can run later than the exact reminder minute, so due reminders
+ * remain eligible until the appointment starts. When multiple configured offsets were
+ * missed, only the most recent due offset is queued to avoid sending several stale
+ * reminders at once. Idempotency remains enforced by the communication delivery log.
+ */
+export function queueAppointmentReminders(now = new Date(), actor = 'communication-scheduler') {
+  const dueByAppointment = new Map<string, AppointmentReminderPreview[]>()
+
+  for (const preview of previewEligibleAppointmentReminders(now)) {
+    if (!preview.isDue) continue
+    const current = dueByAppointment.get(preview.appointment.id) ?? []
+    current.push(preview)
+    dueByAppointment.set(preview.appointment.id, current)
+  }
+
+  const queued: ReturnType<typeof sendAppointmentCommunication> = []
+
+  for (const candidates of dueByAppointment.values()) {
+    // The most recent configured reminder is the smallest offset that is already due.
+    const reminder = [...candidates].sort((a, b) => a.offsetHours - b.offsetHours)[0]
+    if (!reminder) continue
+
+    queued.push(...sendAppointmentCommunication({
+      appointment: reminder.appointment,
+      templateKey: 'appointment_reminder',
+      actor,
+      reminderOffsetHours: reminder.offsetHours,
+    }))
+  }
+
+  return queued
 }
