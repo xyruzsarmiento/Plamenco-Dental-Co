@@ -119,6 +119,41 @@ Do not guess these values. Record the clinic owner's decision, date, and approve
 | Should Messenger preference appear only when Meta integration is configured? | Pending communications/provider confirmation |
 | Should the PWA install option be actively promoted in the portal? | Pending clinic owner/product confirmation |
 
+## Part 43 — Management Automation & Scheduled Report Decisions
+
+| Decision Needed | Current Status |
+|---|---|
+| Which scheduled report types are enabled? | Pending clinic owner/management confirmation; Part 43 creates schedules disabled by default |
+| Is a Daily Operations Summary required? | Pending clinic operations confirmation |
+| Is a Weekly Management Summary required? | Pending clinic owner/management confirmation |
+| Is a Monthly Management Operations Report required? | Pending clinic owner/accountant confirmation |
+| What time should daily reports run? | Pending clinic owner/operations confirmation; no default time is assumed |
+| What weekday/time should weekly reports run? | Pending clinic owner/operations confirmation |
+| What day/time should monthly reports run? | Pending clinic owner/accountant confirmation |
+| Who receives each report? | Pending clinic owner/security confirmation |
+| Can approved external email addresses receive reports? | Pending clinic owner/privacy/security confirmation |
+| Which reports may branch managers receive? | Pending clinic owner/security confirmation |
+| Which reports may dentists receive? | Pending clinic owner/clinical/security confirmation |
+| Which report types include financial metrics? | Pending clinic owner/accountant confirmation |
+| Which report types include provider operations? | Pending clinic owner/clinical confirmation |
+| Which report types include inventory exceptions? | Pending clinic owner/inventory confirmation |
+| Which report types include task/exception summaries? | Pending clinic owner/operations confirmation |
+| Should delivery use PDF, Excel, secure link, HTML summary, or a combination? | Pending clinic owner/security confirmation |
+| Should files be attached directly or delivered through private signed links? | Pending clinic owner/security/provider confirmation |
+| How long should signed report links remain valid? | Pending clinic owner/security confirmation |
+| How long should generated report files be retained? | Pending clinic owner/privacy/security confirmation |
+| Should failed deliveries retry automatically? | Pending clinic owner/technical confirmation |
+| What is the maximum delivery retry count? | Pending clinic owner/technical confirmation |
+| Who receives generation/delivery failure alerts? | Pending clinic owner/operations confirmation |
+| Should failed report generation create an operational task? | Pending clinic owner/operations confirmation |
+| Should failed delivery create an operational task? | Pending clinic owner/operations confirmation |
+| Can admins manually regenerate report runs? | Pending clinic owner/security confirmation |
+| Can admins manually resend reports? | Pending clinic owner/security confirmation |
+| Should monthly reports include a separate Unknown/Unmapped branch bucket? | Pending clinic owner/accountant confirmation |
+| Should provider-specific operational metrics be included? | Pending clinic owner/clinical confirmation |
+| Which management reports are classified as sensitive? | Pending clinic owner/privacy/security confirmation |
+| Who approves the final scheduled-report configuration? | Pending clinic owner confirmation |
+
 ## Existing decisions from Parts 1–32
 
 The previously tracked decisions remain in project history and implementation documentation, including branch identity/hours, appointment policies, deposits, payment gateway and manual payment methods, service catalog/pricing, provider schedules/roles, staff permissions, compensation rules, inventory opening stock/reorder/cost rules, expense approvals, SMS/email/Messenger providers and consent, historical Excel migration/linking, retention/privacy, clinical visibility, patient exports, procurement/stock transfer/count workflows, backup/recovery ownership, deployment domains/projects, daily clinic workflow, queue/check-in/no-show permissions, patient booking/rescheduling, reminders, online payments, and patient-facing price presentation.
