@@ -1,0 +1,1071 @@
+/* Internal pages redesign v5
+   PAGE CONTENT ONLY. Navigation/sidebar/topbar intentionally untouched.
+   Frontend-only: preserves existing data, permissions, actions and business logic. */
+
+:root {
+  --ip-blue: #2563eb;
+  --ip-blue-deep: #1d4ed8;
+  --ip-blue-soft: #eaf2ff;
+  --ip-bg: #f6f8fc;
+  --ip-surface: #ffffff;
+  --ip-surface-soft: #f9fbff;
+  --ip-text: #172033;
+  --ip-muted: #667085;
+  --ip-border: #e6eaf0;
+  --ip-border-strong: #d9e1eb;
+  --ip-success: #16a34a;
+  --ip-warning: #d97706;
+  --ip-danger: #dc2626;
+  --ip-shadow: 0 10px 28px rgba(15, 23, 42, .06);
+  --ip-shadow-lg: 0 20px 50px rgba(15, 23, 42, .08);
+}
+
+/* --------------------------------------------------
+   SHARED INTERNAL PAGE CANVAS — never touches nav
+   -------------------------------------------------- */
+.app-shell .content-area {
+  max-width: 1840px;
+  padding: clamp(22px, 2.5vw, 40px);
+  background: var(--ip-bg);
+}
+
+.app-shell .content-area > * {
+  min-width: 0;
+}
+
+.app-shell .content-area .page-stack {
+  gap: 20px;
+}
+
+.app-shell .content-area .section-header,
+.app-shell .content-area .premium-page-header,
+.app-shell .content-area .premium-section-header,
+.app-shell .content-area .executive-header,
+.app-shell .content-area .staff-today-header,
+.app-shell .content-area .dentist-today-header,
+.app-shell .content-area .super-admin-hero {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+  margin: 0 0 4px;
+  padding: 0 0 18px;
+  border-bottom: 1px solid var(--ip-border);
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.app-shell .content-area .section-header h2,
+.app-shell .content-area .premium-page-header h2,
+.app-shell .content-area .premium-section-header h2,
+.app-shell .content-area .executive-header h2,
+.app-shell .content-area .staff-today-header h1,
+.app-shell .content-area .dentist-today-header h1,
+.app-shell .content-area .super-admin-hero h2 {
+  margin: 0;
+  color: var(--ip-text);
+  font-size: clamp(1.55rem, 2.25vw, 2.25rem);
+  line-height: 1.1;
+  letter-spacing: -.045em;
+  text-transform: none !important;
+}
+
+.app-shell .content-area .section-header p,
+.app-shell .content-area .premium-page-header p,
+.app-shell .content-area .premium-section-header p,
+.app-shell .content-area .executive-header p,
+.app-shell .content-area .staff-today-header p,
+.app-shell .content-area .dentist-today-header p,
+.app-shell .content-area .super-admin-hero p {
+  max-width: 760px;
+  margin: 7px 0 0;
+  color: var(--ip-muted);
+  font-size: .95rem;
+  line-height: 1.6;
+}
+
+.app-shell .content-area .panel,
+.app-shell .content-area .card,
+.app-shell .content-area .workspace-panel,
+.app-shell .content-area .table-panel,
+.app-shell .content-area .filter-panel,
+.app-shell .content-area .reports-filter-panel,
+.app-shell .content-area .nested-panel {
+  background: var(--ip-surface) !important;
+  border: 1px solid var(--ip-border) !important;
+  border-radius: 18px !important;
+  box-shadow: 0 4px 16px rgba(15, 23, 42, .035) !important;
+}
+
+.app-shell .content-area .panel:hover,
+.app-shell .content-area .card:hover {
+  border-color: #d9e3f0 !important;
+}
+
+.app-shell .content-area .stats-grid,
+.app-shell .content-area .report-summary-grid,
+.app-shell .content-area .executive-summary-grid,
+.app-shell .content-area .staff-metric-grid,
+.app-shell .content-area .super-admin-kpis {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.app-shell .content-area .stat-card,
+.app-shell .content-area .summary-kpi,
+.app-shell .content-area .executive-metric,
+.app-shell .content-area .metric-card,
+.app-shell .content-area .staff-metric-grid > article,
+.app-shell .content-area .super-admin-kpis > article {
+  position: relative;
+  min-height: 128px;
+  padding: 18px 18px 16px !important;
+  overflow: hidden;
+  background: #fff !important;
+  border: 1px solid var(--ip-border) !important;
+  border-radius: 16px !important;
+  box-shadow: 0 3px 12px rgba(15, 23, 42, .035) !important;
+}
+
+.app-shell .content-area .stat-card::after,
+.app-shell .content-area .summary-kpi::after,
+.app-shell .content-area .executive-metric::after,
+.app-shell .content-area .metric-card::after,
+.app-shell .content-area .staff-metric-grid > article::after,
+.app-shell .content-area .super-admin-kpis > article::after {
+  content: '';
+  position: absolute;
+  left: 18px;
+  right: 18px;
+  bottom: 0;
+  height: 3px;
+  border-radius: 3px 3px 0 0;
+  background: var(--ip-blue);
+  opacity: .88;
+}
+
+.app-shell .content-area .stat-card > span,
+.app-shell .content-area .summary-kpi > span,
+.app-shell .content-area .executive-metric > span,
+.app-shell .content-area .metric-card > span {
+  color: var(--ip-muted);
+  font-size: .76rem;
+  font-weight: 750;
+  letter-spacing: .025em;
+}
+
+.app-shell .content-area .stat-card strong,
+.app-shell .content-area .summary-kpi strong,
+.app-shell .content-area .executive-metric strong,
+.app-shell .content-area .metric-card strong {
+  display: block;
+  margin-top: 12px;
+  color: var(--ip-text) !important;
+  font-size: clamp(1.55rem, 2vw, 2rem) !important;
+  letter-spacing: -.045em;
+}
+
+/* Shared tables and filters */
+.app-shell .content-area .table-scroll,
+.app-shell .content-area .daily-flow-table-wrap {
+  overflow: auto;
+  background: #fff;
+  border: 1px solid var(--ip-border);
+  border-radius: 14px;
+}
+
+.app-shell .content-area .table {
+  width: 100%;
+  min-width: 760px;
+  border-collapse: separate;
+  border-spacing: 0;
+  background: #fff;
+}
+
+.app-shell .content-area .table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  padding: 12px 14px;
+  background: #f8fafc !important;
+  color: #667085 !important;
+  border-bottom: 1px solid var(--ip-border) !important;
+  font-size: .71rem;
+  font-weight: 800;
+  letter-spacing: .045em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.app-shell .content-area .table tbody td {
+  padding: 14px;
+  border-bottom: 1px solid #f0f2f5 !important;
+  color: #344054;
+}
+
+.app-shell .content-area .table tbody tr:hover td {
+  background: #fafdff !important;
+}
+
+.app-shell .content-area input,
+.app-shell .content-area select,
+.app-shell .content-area textarea {
+  min-height: 42px;
+  border: 1px solid var(--ip-border-strong) !important;
+  border-radius: 11px !important;
+  background: #fff !important;
+  color: var(--ip-text) !important;
+  box-shadow: none !important;
+}
+
+.app-shell .content-area input:focus,
+.app-shell .content-area select:focus,
+.app-shell .content-area textarea:focus {
+  border-color: #8fb1ff !important;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, .10) !important;
+  outline: none;
+}
+
+/* --------------------------------------------------
+   DASHBOARD — premium operational command center
+   -------------------------------------------------- */
+.page-dashboard .content-area .executive-header,
+.page-dashboard .content-area .staff-today-header,
+.page-dashboard .content-area .dentist-today-header,
+.page-dashboard .content-area .super-admin-hero {
+  padding: 22px 24px;
+  border: 1px solid #dbe6f6;
+  border-radius: 20px;
+  background: #fff !important;
+  box-shadow: var(--ip-shadow) !important;
+}
+
+.page-dashboard .content-area .executive-header::before,
+.page-dashboard .content-area .staff-today-header::before,
+.page-dashboard .content-area .dentist-today-header::before,
+.page-dashboard .content-area .super-admin-hero::before {
+  content: '';
+  width: 4px;
+  align-self: stretch;
+  flex: 0 0 4px;
+  border-radius: 999px;
+  background: var(--ip-blue);
+}
+
+.page-dashboard .content-area .modern-data-chart,
+.page-dashboard .content-area .dashboard-chart-card,
+.page-dashboard .content-area .chart-shell {
+  min-height: 300px;
+  padding: 20px;
+  background: #fff !important;
+  border: 1px solid var(--ip-border) !important;
+  border-radius: 18px !important;
+  box-shadow: var(--ip-shadow) !important;
+}
+
+.page-dashboard .content-area .dashboard-grid,
+.page-dashboard .content-area .analytics-grid,
+.page-dashboard .content-area .dashboard-lower-grid,
+.page-dashboard .content-area .super-admin-grid {
+  gap: 16px !important;
+}
+
+.page-dashboard .content-area .operations-board {
+  padding: 20px;
+  border: 1px solid var(--ip-border) !important;
+  border-radius: 18px !important;
+  background: #fff !important;
+  box-shadow: var(--ip-shadow) !important;
+}
+
+/* --------------------------------------------------
+   APPOINTMENTS — operational kanban + schedule command center
+   -------------------------------------------------- */
+.page-appointments .content-area .premium-appointments-page {
+  gap: 18px;
+}
+
+.page-appointments .content-area .premium-page-header {
+  padding: 20px 22px;
+  border: 1px solid #dbe7f7;
+  border-radius: 18px;
+  background: #fff !important;
+  box-shadow: var(--ip-shadow) !important;
+}
+
+.page-appointments .content-area .view-tabs {
+  display: inline-flex;
+  align-self: flex-start;
+  gap: 6px;
+  padding: 5px;
+  border: 1px solid var(--ip-border);
+  border-radius: 12px;
+  background: #fff;
+}
+
+.page-appointments .content-area .view-tab-button {
+  min-height: 38px;
+  padding: 0 14px;
+  border: 0;
+  border-radius: 9px;
+  background: transparent;
+  color: var(--ip-muted);
+  font-weight: 700;
+}
+
+.page-appointments .content-area .view-tab-button.is-active {
+  background: var(--ip-blue-soft);
+  color: var(--ip-blue-deep);
+}
+
+.page-appointments .content-area .operations-board {
+  padding: 18px;
+  overflow: hidden;
+  border: 1px solid var(--ip-border) !important;
+  border-radius: 20px !important;
+  background: #fff !important;
+  box-shadow: var(--ip-shadow) !important;
+}
+
+.page-appointments .content-area .operations-columns {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(220px, 1fr));
+  gap: 12px;
+  overflow-x: auto;
+  padding-bottom: 6px;
+}
+
+.page-appointments .content-area .operations-column {
+  min-width: 220px;
+  padding: 10px;
+  border: 1px solid #edf0f5;
+  border-radius: 14px;
+  background: #f8fafc;
+}
+
+.page-appointments .content-area .operations-column-header {
+  margin-bottom: 8px;
+  padding: 4px 3px 9px;
+  border-bottom: 1px solid #e7ebf1;
+}
+
+.page-appointments .content-area .operations-card {
+  padding: 13px;
+  border: 1px solid #e4e9f0;
+  border-radius: 13px;
+  background: #fff;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, .035);
+}
+
+.page-appointments .content-area .operations-card:hover {
+  border-color: #cfe0ff;
+  box-shadow: 0 8px 20px rgba(37, 99, 235, .08);
+}
+
+.page-appointments .content-area .calendar-filter-bar {
+  position: sticky;
+  top: 86px;
+  z-index: 7;
+  padding: 16px;
+  background: rgba(255,255,255,.97) !important;
+  backdrop-filter: blur(10px);
+}
+
+/* --------------------------------------------------
+   PATIENTS — CRM directory + patient 360
+   -------------------------------------------------- */
+.page-patients .content-area .patient-toolbar,
+.page-patients .content-area .filters-panel,
+.page-patients .content-area .patient-filter-panel {
+  padding: 16px !important;
+  background: #fff !important;
+  border: 1px solid var(--ip-border) !important;
+  border-radius: 16px !important;
+}
+
+.page-patients .content-area .patient-list,
+.page-patients .content-area .patient-directory,
+.page-patients .content-area .patients-grid {
+  gap: 12px !important;
+}
+
+.page-patients .content-area .patient-card,
+.page-patients .content-area .patient-row,
+.page-patients .content-area .patient-list-item {
+  border: 1px solid var(--ip-border) !important;
+  border-radius: 14px !important;
+  background: #fff !important;
+  box-shadow: none !important;
+}
+
+.page-patients .content-area .patient-card:hover,
+.page-patients .content-area .patient-row:hover,
+.page-patients .content-area .patient-list-item:hover {
+  border-color: #cfe0ff !important;
+  box-shadow: 0 8px 22px rgba(37,99,235,.07) !important;
+}
+
+.page-patients .content-area .patient-detail-layout,
+.page-patients .content-area .patient-360-layout,
+.page-patients .content-area .patient-detail-grid {
+  display: grid;
+  grid-template-columns: minmax(260px, .72fr) minmax(0, 1.7fr);
+  gap: 18px;
+}
+
+.page-patients .content-area .patient-summary-card,
+.page-patients .content-area .patient-profile-card {
+  position: sticky;
+  top: 96px;
+  align-self: start;
+}
+
+/* --------------------------------------------------
+   DENTAL RECORDS — clinical timeline workspace
+   -------------------------------------------------- */
+.page-dental-records .content-area .clinical-workspace,
+.page-dental-records .content-area .records-layout,
+.page-dental-records .content-area .dental-records-layout {
+  display: grid;
+  grid-template-columns: minmax(280px, .78fr) minmax(0, 1.55fr);
+  gap: 18px;
+}
+
+.page-dental-records .content-area .record-card,
+.page-dental-records .content-area .clinical-record-card {
+  position: relative;
+  padding-left: 22px !important;
+  border-left: 3px solid #bfdbfe !important;
+}
+
+.page-dental-records .content-area .record-card::before,
+.page-dental-records .content-area .clinical-record-card::before {
+  content: '';
+  position: absolute;
+  left: -7px;
+  top: 22px;
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  background: var(--ip-blue);
+  box-shadow: 0 0 0 4px #eff6ff;
+}
+
+/* --------------------------------------------------
+   TREATMENTS / TREATMENT PLANS — clinical planning
+   -------------------------------------------------- */
+.page-treatments .content-area .treatment-card,
+.page-treatment-plans .content-area .treatment-plan-card,
+.page-treatment-plans .content-area .plan-card {
+  border: 1px solid var(--ip-border) !important;
+  border-radius: 16px !important;
+  background: #fff !important;
+  box-shadow: 0 4px 14px rgba(15,23,42,.035) !important;
+}
+
+.page-treatments .content-area .treatment-card:hover,
+.page-treatment-plans .content-area .treatment-plan-card:hover,
+.page-treatment-plans .content-area .plan-card:hover {
+  border-color: #cfe0ff !important;
+}
+
+.page-treatment-plans .content-area .plan-summary,
+.page-treatment-plans .content-area .estimate-summary,
+.page-treatment-plans .content-area .treatment-plan-summary {
+  padding: 18px;
+  border: 1px solid #dbe7f7;
+  border-radius: 16px;
+  background: #f8fbff;
+}
+
+.page-treatment-plans .content-area .plan-summary strong,
+.page-treatment-plans .content-area .estimate-summary strong {
+  color: var(--ip-blue-deep);
+}
+
+/* --------------------------------------------------
+   BILLING / PAYMENTS — financial ledger
+   -------------------------------------------------- */
+.page-billing .content-area .billing-dashboard,
+.page-billing .content-area .billing-layout,
+.page-billing .content-area .billing-grid {
+  gap: 16px !important;
+}
+
+.page-billing .content-area .billing-summary-grid,
+.page-billing .content-area .finance-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.page-billing .content-area .invoice-card,
+.page-billing .content-area .payment-card,
+.page-billing .content-area .ledger-card {
+  border: 1px solid var(--ip-border) !important;
+  border-radius: 15px !important;
+  background: #fff !important;
+}
+
+.page-billing .content-area .billing-tabs,
+.page-billing .content-area .tab-strip {
+  display: inline-flex;
+  gap: 5px;
+  padding: 5px;
+  border: 1px solid var(--ip-border);
+  border-radius: 12px;
+  background: #fff;
+}
+
+/* --------------------------------------------------
+   SERVICES — premium catalog
+   -------------------------------------------------- */
+.page-services .content-area .services-grid,
+.page-services .content-area .service-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.page-services .content-area .service-card,
+.page-services .content-area .catalog-card {
+  min-height: 190px;
+  padding: 18px !important;
+  border: 1px solid var(--ip-border) !important;
+  border-radius: 16px !important;
+  background: #fff !important;
+  box-shadow: 0 4px 14px rgba(15,23,42,.035) !important;
+}
+
+.page-services .content-area .service-card:hover,
+.page-services .content-area .catalog-card:hover {
+  transform: translateY(-2px);
+  border-color: #cfe0ff !important;
+  box-shadow: 0 12px 26px rgba(37,99,235,.08) !important;
+}
+
+/* --------------------------------------------------
+   DENTISTS — provider roster
+   -------------------------------------------------- */
+.page-dentists .content-area .dentist-grid,
+.page-dentists .content-area .provider-grid,
+.page-dentists .content-area .providers-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.page-dentists .content-area .dentist-card,
+.page-dentists .content-area .provider-card {
+  padding: 18px !important;
+  border: 1px solid var(--ip-border) !important;
+  border-radius: 16px !important;
+  background: #fff !important;
+  box-shadow: 0 4px 14px rgba(15,23,42,.035) !important;
+}
+
+/* --------------------------------------------------
+   TASKS / WORK QUEUE — operations board
+   -------------------------------------------------- */
+.page-tasks .content-area .task-board,
+.page-tasks .content-area .work-queue-grid,
+.page-tasks .content-area .task-columns {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(260px, 1fr));
+  gap: 14px;
+  align-items: start;
+}
+
+.page-tasks .content-area .task-column,
+.page-tasks .content-area .work-queue-column {
+  padding: 12px;
+  border: 1px solid var(--ip-border);
+  border-radius: 15px;
+  background: #f8fafc;
+}
+
+.page-tasks .content-area .task-card,
+.page-tasks .content-area .work-item {
+  margin-bottom: 10px;
+  border: 1px solid #e5eaf1 !important;
+  border-radius: 13px !important;
+  background: #fff !important;
+  box-shadow: 0 2px 8px rgba(15,23,42,.03) !important;
+}
+
+/* --------------------------------------------------
+   RECALLS — follow-up pipeline
+   -------------------------------------------------- */
+.page-recalls .content-area .recall-grid,
+.page-recalls .content-area .follow-up-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.page-recalls .content-area .recall-card,
+.page-recalls .content-area .follow-up-card {
+  border: 1px solid var(--ip-border) !important;
+  border-radius: 16px !important;
+  background: #fff !important;
+}
+
+/* --------------------------------------------------
+   REPORTS — BI workspace
+   -------------------------------------------------- */
+.page-reports .content-area .reports-filter-panel {
+  position: sticky;
+  top: 88px;
+  z-index: 8;
+  padding: 14px 16px;
+  background: rgba(255,255,255,.97) !important;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 8px 24px rgba(15,23,42,.05) !important;
+}
+
+.page-reports .content-area .analytics-grid,
+.page-reports .content-area .reports-grid {
+  gap: 16px !important;
+}
+
+.page-reports .content-area .chart-shell,
+.page-reports .content-area .report-chart,
+.page-reports .content-area .analytics-card {
+  min-height: 310px;
+  padding: 20px;
+  border: 1px solid var(--ip-border) !important;
+  border-radius: 18px !important;
+  background: #fff !important;
+  box-shadow: var(--ip-shadow) !important;
+}
+
+/* --------------------------------------------------
+   MANAGEMENT AUTOMATION — schedule timeline
+   -------------------------------------------------- */
+.page-report-automation .content-area .automation-grid,
+.page-report-automation .content-area .schedule-grid {
+  display: grid;
+  grid-template-columns: minmax(300px, .8fr) minmax(0, 1.4fr);
+  gap: 18px;
+}
+
+.page-report-automation .content-area .schedule-card,
+.page-report-automation .content-area .automation-card {
+  border: 1px solid var(--ip-border) !important;
+  border-radius: 16px !important;
+  background: #fff !important;
+}
+
+/* --------------------------------------------------
+   DATA IMPORT — controlled onboarding wizard
+   -------------------------------------------------- */
+.page-data-import .content-area .import-layout,
+.page-data-import .content-area .data-import-grid {
+  display: grid;
+  grid-template-columns: minmax(280px, .75fr) minmax(0, 1.5fr);
+  gap: 18px;
+}
+
+.page-data-import .content-area .drop-zone,
+.page-data-import .content-area .upload-zone,
+.page-data-import .content-area .import-dropzone {
+  min-height: 220px;
+  display: grid;
+  place-items: center;
+  padding: 28px;
+  text-align: center;
+  border: 1.5px dashed #b9cdf4 !important;
+  border-radius: 18px !important;
+  background: #f8fbff !important;
+}
+
+/* --------------------------------------------------
+   INVENTORY — stock control center
+   -------------------------------------------------- */
+.page-inventory .content-area .inventory-grid,
+.page-inventory .content-area .inventory-overview-grid {
+  gap: 14px !important;
+}
+
+.page-inventory .content-area .inventory-card,
+.page-inventory .content-area .stock-card,
+.page-inventory .content-area .inventory-panel {
+  border: 1px solid var(--ip-border) !important;
+  border-radius: 16px !important;
+  background: #fff !important;
+}
+
+.page-inventory .content-area .low-stock,
+.page-inventory .content-area .out-of-stock {
+  border-left: 3px solid var(--ip-warning) !important;
+}
+
+/* --------------------------------------------------
+   EXPENSES — finance operations
+   -------------------------------------------------- */
+.page-expenses .content-area .expense-grid,
+.page-expenses .content-area .expense-summary-grid {
+  gap: 14px !important;
+}
+
+.page-expenses .content-area .expense-card,
+.page-expenses .content-area .vendor-card,
+.page-expenses .content-area .petty-cash-card {
+  border: 1px solid var(--ip-border) !important;
+  border-radius: 16px !important;
+  background: #fff !important;
+}
+
+/* --------------------------------------------------
+   COMMUNICATIONS — inbox-style workspace
+   -------------------------------------------------- */
+.page-communications .content-area .communications-layout,
+.page-communications .content-area .communication-grid,
+.page-communications .content-area .communications-grid {
+  display: grid;
+  grid-template-columns: minmax(280px, .8fr) minmax(0, 1.5fr);
+  gap: 18px;
+}
+
+.page-communications .content-area .message-list,
+.page-communications .content-area .communication-list {
+  border-right: 1px solid var(--ip-border);
+}
+
+.page-communications .content-area .message-card,
+.page-communications .content-area .communication-card {
+  border: 1px solid var(--ip-border) !important;
+  border-radius: 14px !important;
+  background: #fff !important;
+}
+
+/* --------------------------------------------------
+   NOTIFICATIONS — announcement workspace
+   -------------------------------------------------- */
+.page-notifications .content-area .notifications-grid,
+.page-notifications .content-area .announcement-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.page-notifications .content-area .notification-card,
+.page-notifications .content-area .announcement-card {
+  border: 1px solid var(--ip-border) !important;
+  border-radius: 16px !important;
+  background: #fff !important;
+}
+
+/* --------------------------------------------------
+   TEAM & ACCESS — people directory
+   -------------------------------------------------- */
+.page-staff .content-area .staff-grid,
+.page-staff .content-area .team-grid,
+.page-staff .content-area .access-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.page-staff .content-area .staff-card,
+.page-staff .content-area .team-card,
+.page-staff .content-area .access-card {
+  border: 1px solid var(--ip-border) !important;
+  border-radius: 16px !important;
+  background: #fff !important;
+}
+
+/* --------------------------------------------------
+   BRANCHES — multi-location workspace
+   -------------------------------------------------- */
+.page-branches .content-area .branches-grid,
+.page-branches .content-area .branch-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.page-branches .content-area .branch-card {
+  min-height: 220px;
+  border: 1px solid var(--ip-border) !important;
+  border-radius: 18px !important;
+  background: #fff !important;
+  box-shadow: var(--ip-shadow) !important;
+}
+
+/* --------------------------------------------------
+   FORMS & CONSENT — document library
+   -------------------------------------------------- */
+.page-forms-consent .content-area .forms-grid,
+.page-forms-consent .content-area .template-grid,
+.page-forms-consent .content-area .forms-library-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.page-forms-consent .content-area .form-card,
+.page-forms-consent .content-area .template-card {
+  border: 1px solid var(--ip-border) !important;
+  border-radius: 16px !important;
+  background: #fff !important;
+}
+
+/* --------------------------------------------------
+   SYSTEM ADMINISTRATION — governance console
+   -------------------------------------------------- */
+.page-system-admin .content-area .reports-filter-panel {
+  padding: 10px;
+  background: #fff !important;
+  border: 1px solid var(--ip-border) !important;
+  border-radius: 16px !important;
+}
+
+.page-system-admin .content-area .reports-filter-grid {
+  display: grid;
+  grid-template-columns: repeat(13, minmax(42px, 1fr));
+  gap: 7px;
+}
+
+.page-system-admin .content-area .reports-filter-panel .icon-button {
+  min-height: 42px;
+  border: 1px solid #e4e9f0;
+  background: #fff;
+  border-radius: 10px;
+}
+
+.page-system-admin .content-area .reports-filter-panel .icon-button:hover {
+  background: var(--ip-blue-soft);
+  color: var(--ip-blue-deep);
+}
+
+.page-system-admin .content-area .analytics-grid {
+  gap: 16px !important;
+}
+
+/* --------------------------------------------------
+   SETTINGS — clear preference architecture
+   -------------------------------------------------- */
+.page-settings .content-area .settings-layout,
+.page-settings .content-area .settings-grid {
+  display: grid;
+  grid-template-columns: minmax(240px, .65fr) minmax(0, 1.6fr);
+  gap: 18px;
+}
+
+.page-settings .content-area .settings-section,
+.page-settings .content-area .settings-card {
+  border: 1px solid var(--ip-border) !important;
+  border-radius: 16px !important;
+  background: #fff !important;
+}
+
+/* --------------------------------------------------
+   ROLE VARIANTS — page content only
+   -------------------------------------------------- */
+.role-staff .content-area .section-header::after,
+.role-dentist .content-area .section-header::after,
+.role-associate_dentist .content-area .section-header::after,
+.role-admin .content-area .section-header::after,
+.role-super_admin .content-area .section-header::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  bottom: -1px;
+  width: 74px;
+  height: 2px;
+  background: var(--ip-blue);
+}
+
+/* --------------------------------------------------
+   RESPONSIVE
+   -------------------------------------------------- */
+@media (max-width: 1280px) {
+  .app-shell .content-area .stats-grid,
+  .app-shell .content-area .report-summary-grid,
+  .app-shell .content-area .executive-summary-grid,
+  .app-shell .content-area .staff-metric-grid,
+  .app-shell .content-area .super-admin-kpis {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .page-services .content-area .services-grid,
+  .page-services .content-area .service-grid,
+  .page-dentists .content-area .dentist-grid,
+  .page-dentists .content-area .provider-grid,
+  .page-dentists .content-area .providers-grid,
+  .page-staff .content-area .staff-grid,
+  .page-staff .content-area .team-grid,
+  .page-staff .content-area .access-grid,
+  .page-forms-consent .content-area .forms-grid,
+  .page-forms-consent .content-area .template-grid,
+  .page-forms-consent .content-area .forms-library-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .page-system-admin .content-area .reports-filter-grid {
+    grid-template-columns: repeat(7, minmax(42px, 1fr));
+  }
+}
+
+@media (max-width: 980px) {
+  .app-shell .content-area {
+    padding: 20px;
+  }
+
+  .app-shell .content-area .section-header,
+  .app-shell .content-area .premium-page-header,
+  .app-shell .content-area .premium-section-header,
+  .app-shell .content-area .executive-header,
+  .app-shell .content-area .staff-today-header,
+  .app-shell .content-area .dentist-today-header,
+  .app-shell .content-area .super-admin-hero {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .page-patients .content-area .patient-detail-layout,
+  .page-patients .content-area .patient-360-layout,
+  .page-patients .content-area .patient-detail-grid,
+  .page-dental-records .content-area .clinical-workspace,
+  .page-dental-records .content-area .records-layout,
+  .page-dental-records .content-area .dental-records-layout,
+  .page-report-automation .content-area .automation-grid,
+  .page-report-automation .content-area .schedule-grid,
+  .page-data-import .content-area .import-layout,
+  .page-data-import .content-area .data-import-grid,
+  .page-communications .content-area .communications-layout,
+  .page-communications .content-area .communication-grid,
+  .page-communications .content-area .communications-grid,
+  .page-settings .content-area .settings-layout,
+  .page-settings .content-area .settings-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .page-patients .content-area .patient-summary-card,
+  .page-patients .content-area .patient-profile-card,
+  .page-reports .content-area .reports-filter-panel,
+  .page-appointments .content-area .calendar-filter-bar {
+    position: static;
+  }
+
+  .page-billing .content-area .billing-summary-grid,
+  .page-billing .content-area .finance-summary-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .page-system-admin .content-area .reports-filter-grid {
+    grid-template-columns: repeat(5, minmax(42px, 1fr));
+  }
+}
+
+@media (max-width: 680px) {
+  .app-shell .content-area {
+    padding: 14px;
+  }
+
+  .app-shell .content-area .page-stack {
+    gap: 14px;
+  }
+
+  .app-shell .content-area .section-header,
+  .app-shell .content-area .premium-page-header,
+  .app-shell .content-area .premium-section-header,
+  .app-shell .content-area .executive-header,
+  .app-shell .content-area .staff-today-header,
+  .app-shell .content-area .dentist-today-header,
+  .app-shell .content-area .super-admin-hero {
+    padding-bottom: 14px;
+  }
+
+  .app-shell .content-area .stats-grid,
+  .app-shell .content-area .report-summary-grid,
+  .app-shell .content-area .executive-summary-grid,
+  .app-shell .content-area .staff-metric-grid,
+  .app-shell .content-area .super-admin-kpis,
+  .page-services .content-area .services-grid,
+  .page-services .content-area .service-grid,
+  .page-dentists .content-area .dentist-grid,
+  .page-dentists .content-area .provider-grid,
+  .page-dentists .content-area .providers-grid,
+  .page-tasks .content-area .task-board,
+  .page-tasks .content-area .work-queue-grid,
+  .page-tasks .content-area .task-columns,
+  .page-recalls .content-area .recall-grid,
+  .page-recalls .content-area .follow-up-grid,
+  .page-notifications .content-area .notifications-grid,
+  .page-notifications .content-area .announcement-grid,
+  .page-staff .content-area .staff-grid,
+  .page-staff .content-area .team-grid,
+  .page-staff .content-area .access-grid,
+  .page-branches .content-area .branches-grid,
+  .page-branches .content-area .branch-grid,
+  .page-forms-consent .content-area .forms-grid,
+  .page-forms-consent .content-area .template-grid,
+  .page-forms-consent .content-area .forms-library-grid,
+  .page-billing .content-area .billing-summary-grid,
+  .page-billing .content-area .finance-summary-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .page-appointments .content-area .view-tabs {
+    width: 100%;
+    overflow-x: auto;
+  }
+
+  .page-appointments .content-area .view-tab-button {
+    flex: 0 0 auto;
+    white-space: nowrap;
+  }
+
+  .page-appointments .content-area .operations-columns {
+    grid-template-columns: repeat(6, minmax(82vw, 1fr));
+    scroll-snap-type: x mandatory;
+  }
+
+  .page-appointments .content-area .operations-column {
+    scroll-snap-align: start;
+  }
+
+  .page-system-admin .content-area .reports-filter-grid {
+    grid-template-columns: repeat(3, minmax(42px, 1fr));
+  }
+
+  .app-shell .content-area .table-scroll,
+  .app-shell .content-area .daily-flow-table-wrap {
+    border-radius: 12px;
+  }
+}
+
+@media (max-width: 430px) {
+  .app-shell .content-area {
+    padding: 12px;
+  }
+
+  .app-shell .content-area .stat-card,
+  .app-shell .content-area .summary-kpi,
+  .app-shell .content-area .executive-metric,
+  .app-shell .content-area .metric-card,
+  .app-shell .content-area .staff-metric-grid > article,
+  .app-shell .content-area .super-admin-kpis > article {
+    min-height: 112px;
+    padding: 15px !important;
+  }
+
+  .page-system-admin .content-area .reports-filter-grid {
+    grid-template-columns: repeat(2, minmax(42px, 1fr));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .app-shell .content-area *,
+  .app-shell .content-area *::before,
+  .app-shell .content-area *::after {
+    scroll-behavior: auto !important;
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important;
+  }
+}
