@@ -3,7 +3,7 @@ import type { Provider } from '../dentists/dentistTypes'
 
 export type FrontDeskQueueEntry = {
   appointment: Appointment
-  queueStatus: 'scheduled' | 'checked_in' | 'waiting' | 'in_treatment' | 'completed' | 'no_show'
+  queueStatus: 'pending' | 'scheduled' | 'checked_in' | 'waiting' | 'in_treatment' | 'completed' | 'no_show'
   waitingMinutes: number | null
   isLate: boolean
 }
@@ -59,6 +59,7 @@ function minutesSinceTimestamp(value?: string, now = new Date()) {
 }
 
 export function getFrontDeskQueueStatus(status: AppointmentStatus): FrontDeskQueueEntry['queueStatus'] | null {
+  if (status === 'pending') return 'pending'
   if (status === 'confirmed') return 'scheduled'
   if (status === 'checked_in') return 'checked_in'
   if (status === 'waiting') return 'waiting'
