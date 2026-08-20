@@ -28,7 +28,7 @@ import { NotificationsPage } from '../pages/NotificationsPage'
 import { OperationalTasksPageV17 } from '../pages/OperationalTasksPageV17'
 import { PatientIntakePage } from '../pages/PatientIntakePage'
 import { PatientsPageV10 } from '../pages/PatientsPageV10'
-import { RecallFollowUpPage } from '../pages/RecallFollowUpPage'
+import { RecallFollowUpPageV18 } from '../pages/RecallFollowUpPageV18'
 import { ReportsPage } from '../pages/ReportsPage'
 import { RoleHomePage } from '../pages/RoleHomePage'
 import { ServicesPageV15 } from '../pages/ServicesPageV15'
@@ -100,7 +100,7 @@ export function AppRouter() {
           <Route path="data-import" element={<RequirePermission permission="patients.import"><DataImportPage /></RequirePermission>} />
           <Route path="notifications" element={<RequirePermission permission="notifications.view"><NotificationsPage /></RequirePermission>} />
           <Route path="communications" element={<RequirePermission anyOf={['communications.manage', 'notifications.send', 'notifications.view']}><CommunicationsPage /></RequirePermission>} />
-          <Route path="recalls" element={<RequirePermission anyOf={['appointments.view', 'clinical_records.view', 'communications.manage']}><RecallFollowUpPage /></RequirePermission>} />
+          <Route path="recalls" element={<RequirePermission anyOf={['appointments.view', 'clinical_records.view', 'communications.manage']}><RecallFollowUpPageV18 /></RequirePermission>} />
           <Route path="tasks" element={<RequirePermission anyOf={['appointments.view', 'clinical_records.view', 'system_admin.view']}><OperationalTasksPageV17 /></RequirePermission>} />
           <Route path="forms-consent" element={<RequirePermission permission="settings.manage"><FormsConsentAdminPage /></RequirePermission>} />
           <Route path="settings" element={<RequirePermission permission="settings.manage"><SettingsPage /></RequirePermission>} />
