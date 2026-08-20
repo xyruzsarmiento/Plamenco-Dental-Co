@@ -18,6 +18,7 @@ import {
   type MedicalHistoryRevision,
   type PatientIntake,
 } from '../features/intake/intakeStore'
+import { SignaturePad } from '../features/intake/SignaturePad'
 import { getCurrentPatientForAuthenticatedUser } from '../features/patients/patientStore'
 import type { Patient } from '../features/patients/patientTypes'
 
@@ -50,6 +51,7 @@ export function PatientIntakePage() {
   const [submitState, setSubmitState] = useState<'idle' | 'submitting' | 'done' | 'error'>('idle')
   const [selectedForm, setSelectedForm] = useState<AssignedPatientForm | null>(null)
   const [signerName, setSignerName] = useState('')
+  const [signatureBlob, setSignatureBlob] = useState<Blob | null>(null)
   const [formSubmitting, setFormSubmitting] = useState(false)
   const [formError, setFormError] = useState<string | null>(null)
   const [medicalForm, setMedicalForm] = useState({
@@ -114,11 +116,7 @@ export function PatientIntakePage() {
     setSaveState('saving')
     setError(null)
     try {
-      const confirmedAt = await savePatientMedicalHistory({
-        patientId: patient.patientId,
-        intakeId: intake.id,
-        ...medicalForm,
-      })
+      const confirmedAt = await savePatientMedicalHistory({ patientId: patient.patientId, intakeId: intake.id, ...medicalForm })
       setIntake({ ...intake, medicalHistoryConfirmedAt: confirmedAt, status: 'in_progress', updatedAt: confirmedAt })
       setHistory(await getMedicalHistoryRevisions(patient.patientId))
       setSaveState('saved')
@@ -132,12 +130,13 @@ export function PatientIntakePage() {
     setFormError(null)
     setSelectedForm(form)
     setSignerName(patient ? `${patient.firstName} ${patient.lastName}`.trim() : '')
+    setSignatureBlob(null)
     if (form.status === 'assigned') {
       try {
         await markAssignedFormViewed(form.assignmentId)
         setForms((current) => current.map((entry) => entry.assignmentId === form.assignmentId ? { ...entry, status: 'viewed' } : entry))
       } catch {
-        // Opening remains useful if the status update fails; submission still remains trusted.
+        // Opening remains useful if the non-critical viewed marker fails.
       }
     }
   }
@@ -147,11 +146,17 @@ export function PatientIntakePage() {
     setFormSubmitting(true)
     setFormError(null)
     try {
-      await submitAssignedForm({ form: selectedForm, signedByName: signerName, decline })
+      await submitAssignedForm({
+        form: selectedForm,
+        signedByName: signerName,
+        decline,
+        signatureBlob: decline ? undefined : signatureBlob ?? undefined,
+      })
       const nextStatus = decline ? 'declined' : 'signed'
       setForms((current) => current.map((entry) => entry.assignmentId === selectedForm.assignmentId ? { ...entry, status: nextStatus } : entry))
       setSelectedForm(null)
       setSignerName('')
+      setSignatureBlob(null)
     } catch (submitError) {
       setFormError(submitError instanceof Error ? submitError.message : 'Consent could not be submitted.')
     } finally {
@@ -173,19 +178,22 @@ export function PatientIntakePage() {
     }
   }
 
-  if (loading) {
-    return <main className="page-stack portal-intake-page"><div className="panel"><p>Loading your intake information...</p></div></main>
-  }
+  if (loading) return <main className="page-stack portal-intake-page"><div className="panel"><p>Loading your intake information...</p></div></main>
 
   if (error && !patient) {
-    return (
-      <main className="page-stack portal-intake-page">
-        <div className="panel empty-state-panel"><AlertCircle size={24} /><h2>Could not load your intake</h2><p>{error}</p><Button onClick={() => void load()}>Retry</Button></div>
-      </main>
-    )
+    return <main className="page-stack portal-intake-page"><div className="panel empty-state-panel"><AlertCircle size={24} /><h2>Could not load your intake</h2><p>{error}</p><Button onClick={() => void load()}>Retry</Button></div></main>
   }
 
   if (!patient || !intake) return null
+
+  const signatureNeedsTypedName = selectedForm?.requiresSignature && selectedForm.signatureMethod === 'typed_acknowledgement'
+  const signatureNeedsDrawing = selectedForm?.requiresSignature && selectedForm.signatureMethod === 'drawn'
+  const canSubmitSelectedForm = Boolean(
+    selectedForm
+      && !formSubmitting
+      && (!signatureNeedsTypedName || signerName.trim())
+      && (!signatureNeedsDrawing || signatureBlob),
+  )
 
   return (
     <main className="page-stack portal-intake-page">
@@ -221,18 +229,8 @@ export function PatientIntakePage() {
           <Textarea label="Previous surgeries / hospitalizations" value={medicalForm.previousSurgeries} onChange={(event) => setMedicalForm({ ...medicalForm, previousSurgeries: event.target.value })} />
         </div>
         <Textarea label="Other medical information your dentist should know" value={medicalForm.medicalNotes} onChange={(event) => setMedicalForm({ ...medicalForm, medicalNotes: event.target.value })} />
-        <label className="intake-confirmation-row">
-          <input
-            type="checkbox"
-            checked={medicalForm.confirmedNoAllergies}
-            onChange={(event) => setMedicalForm({ ...medicalForm, confirmedNoAllergies: event.target.checked, allergies: event.target.checked ? '' : medicalForm.allergies })}
-          />
-          <span>I confirm that I currently have no allergies to record.</span>
-        </label>
-        <div className="action-buttons">
-          <Button onClick={() => void saveMedicalHistory()} disabled={saveState === 'saving'}><Save size={15} /> {saveState === 'saving' ? 'Saving...' : 'Save & Confirm Medical History'}</Button>
-          {saveState === 'saved' && <span className="success-text"><CheckCircle2 size={15} /> Saved successfully</span>}
-        </div>
+        <label className="intake-confirmation-row"><input type="checkbox" checked={medicalForm.confirmedNoAllergies} onChange={(event) => setMedicalForm({ ...medicalForm, confirmedNoAllergies: event.target.checked, allergies: event.target.checked ? '' : medicalForm.allergies })} /><span>I confirm that I currently have no allergies to record.</span></label>
+        <div className="action-buttons"><Button onClick={() => void saveMedicalHistory()} disabled={saveState === 'saving'}><Save size={15} /> {saveState === 'saving' ? 'Saving...' : 'Save & Confirm Medical History'}</Button>{saveState === 'saved' && <span className="success-text"><CheckCircle2 size={15} /> Saved successfully</span>}</div>
         {history.length > 1 && <p className="muted-label">Previous medical-history revisions are retained for traceability. Latest update: {formatDateTime(history[0]?.changedAt)}.</p>}
       </section>
 
@@ -245,7 +243,7 @@ export function PatientIntakePage() {
             {forms.map((form) => (
               <button type="button" className="intake-form-row" key={form.assignmentId} onClick={() => void openForm(form)} disabled={['signed', 'declined', 'superseded'].includes(form.status)}>
                 <div><strong>{form.title}</strong><span>{form.description || statusLabel(form.category)} · Version {form.versionNumber}</span></div>
-                <Badge tone={form.status === 'signed' ? 'success' : form.status === 'declined' ? 'danger' : 'warning'}>{statusLabel(form.status)}</Badge>
+                <Badge tone={form.status === 'signed' ? 'success' : form.status === 'declined' ? 'danger' : form.status === 'superseded' ? 'neutral' : 'warning'}>{statusLabel(form.status)}</Badge>
               </button>
             ))}
           </div>
@@ -260,14 +258,33 @@ export function PatientIntakePage() {
       {selectedForm && (
         <div className="modal-backdrop" role="presentation">
           <section className="modal intake-consent-modal" role="dialog" aria-modal="true" aria-labelledby="intake-form-title">
-            <div className="modal-header"><div><p className="eyebrow">Version {selectedForm.versionNumber}</p><h2 id="intake-form-title">{selectedForm.title}</h2></div><Button variant="secondary" onClick={() => setSelectedForm(null)}>Close</Button></div>
-            <div className="intake-form-content"><p>{selectedForm.content}</p></div>
-            {selectedForm.requiresSignature && <Input label="Signer name" value={signerName} onChange={(event) => setSignerName(event.target.value)} />}
-            <p className="muted-label">Your submission is stored against this exact form version. The clinic cannot change the historical content of this signed submission.</p>
+            <div className="modal-header"><div><p className="eyebrow">Version {selectedForm.versionNumber}</p><h2 id="intake-form-title">{selectedForm.title}</h2></div><Button variant="secondary" onClick={() => { setSelectedForm(null); setSignatureBlob(null) }}>Close</Button></div>
+            <div className="intake-form-content" style={{ whiteSpace: 'pre-wrap' }}>{selectedForm.content}</div>
+
+            {selectedForm.requiresSignature && selectedForm.signatureMethod === 'typed_acknowledgement' && (
+              <>
+                <Input label="Signer name" value={signerName} onChange={(event) => setSignerName(event.target.value)} />
+                <p className="muted-label">This form is configured for typed-name acknowledgement. It is not displayed as a handwritten signature.</p>
+              </>
+            )}
+
+            {selectedForm.requiresSignature && selectedForm.signatureMethod === 'drawn' && (
+              <div className="page-stack">
+                <Input label="Signer name" value={signerName} onChange={(event) => setSignerName(event.target.value)} />
+                <div><strong>Draw your signature</strong><p className="muted-label">The drawing is stored privately for this submission only.</p></div>
+                <SignaturePad onChange={setSignatureBlob} />
+              </div>
+            )}
+
+            {(!selectedForm.requiresSignature || selectedForm.signatureMethod === 'none') && (
+              <p className="muted-label">This version does not require a drawn signature. Submitting records your acknowledgement against this exact form version.</p>
+            )}
+
+            <p className="muted-label">Your submission is stored against this exact form version. Historical signed content cannot be rewritten by later template changes.</p>
             {formError && <div className="error-alert"><AlertCircle size={16} /> {formError}</div>}
             <div className="action-buttons">
               <Button variant="secondary" disabled={formSubmitting} onClick={() => void submitForm(true)}>Decline</Button>
-              <Button disabled={formSubmitting || (selectedForm.requiresSignature && !signerName.trim())} onClick={() => void submitForm(false)}>{formSubmitting ? 'Submitting...' : selectedForm.requiresSignature ? 'Sign & Submit' : 'Submit'}</Button>
+              <Button disabled={!canSubmitSelectedForm} onClick={() => void submitForm(false)}>{formSubmitting ? 'Submitting...' : selectedForm.signatureMethod === 'drawn' ? 'Sign & Submit' : selectedForm.signatureMethod === 'typed_acknowledgement' ? 'Acknowledge & Submit' : 'Submit'}</Button>
             </div>
           </section>
         </div>
