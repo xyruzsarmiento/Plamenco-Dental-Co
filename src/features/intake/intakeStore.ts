@@ -2,6 +2,7 @@ import { supabase } from '../../lib/supabase'
 
 export type IntakeStatus = 'not_started' | 'in_progress' | 'submitted' | 'needs_review' | 'complete' | 'needs_update'
 export type ConsentStatus = 'assigned' | 'viewed' | 'in_progress' | 'signed' | 'declined' | 'superseded'
+export type SignatureMethod = 'none' | 'typed_acknowledgement' | 'drawn'
 
 export type PatientIntake = {
   id: string
@@ -39,6 +40,8 @@ export type AssignedPatientForm = {
   appointmentId?: string
   clinicalVisitId?: string
   branchId?: string
+  treatmentPlanId?: string
+  treatmentId?: string
   assignedAt: string
   title: string
   description: string
@@ -46,6 +49,7 @@ export type AssignedPatientForm = {
   versionNumber: number
   content: string
   requiresSignature: boolean
+  signatureMethod: SignatureMethod
 }
 
 function requireSupabase() {
@@ -93,13 +97,7 @@ export async function ensurePatientIntake(patientId: string, appointmentId?: str
 
   const { data, error } = await client
     .from('patient_intakes')
-    .insert({
-      patient_id: patientId,
-      appointment_id: appointmentId ?? null,
-      branch_id: branchId ?? null,
-      status: 'in_progress',
-      source: 'patient',
-    })
+    .insert({ patient_id: patientId, appointment_id: appointmentId ?? null, branch_id: branchId ?? null, status: 'in_progress', source: 'patient' })
     .select('*')
     .single()
 
@@ -118,13 +116,7 @@ export async function ensurePatientIntake(patientId: string, appointmentId?: str
 
 export async function getMedicalHistoryRevisions(patientId: string, limit = 20): Promise<MedicalHistoryRevision[]> {
   const client = requireSupabase()
-  const { data, error } = await client
-    .from('medical_history_revisions')
-    .select('*')
-    .eq('patient_id', patientId)
-    .order('changed_at', { ascending: false })
-    .limit(limit)
-
+  const { data, error } = await client.from('medical_history_revisions').select('*').eq('patient_id', patientId).order('changed_at', { ascending: false }).limit(limit)
   if (error) throw error
   return (data ?? []).map((row) => ({
     id: row.id,
@@ -185,13 +177,9 @@ export async function savePatientMedicalHistory(input: {
   if (patientError) throw patientError
 
   if (input.intakeId) {
-    const { error: intakeError } = await client
-      .from('patient_intakes')
-      .update({ medical_history_confirmed_at: now, status: 'in_progress', updated_at: now })
-      .eq('id', input.intakeId)
+    const { error: intakeError } = await client.from('patient_intakes').update({ medical_history_confirmed_at: now, status: 'in_progress', updated_at: now }).eq('id', input.intakeId)
     if (intakeError) throw intakeError
   }
-
   return now
 }
 
@@ -199,17 +187,16 @@ export async function getAssignedPatientForms(patientId: string): Promise<Assign
   const client = requireSupabase()
   const { data: assignments, error } = await client
     .from('patient_form_assignments')
-    .select('id,patient_id,template_version_id,status,appointment_id,clinical_visit_id,branch_id,assigned_at')
+    .select('id,patient_id,template_version_id,status,appointment_id,clinical_visit_id,branch_id,treatment_plan_id,treatment_id,assigned_at')
     .eq('patient_id', patientId)
     .order('assigned_at', { ascending: false })
-
   if (error) throw error
   if (!assignments?.length) return []
 
   const versionIds = [...new Set(assignments.map((assignment) => assignment.template_version_id))]
   const { data: versions, error: versionError } = await client
     .from('form_template_versions')
-    .select('id,template_id,version_number,content,requires_signature')
+    .select('id,template_id,version_number,content,requires_signature,signature_method,version_status')
     .in('id', versionIds)
   if (versionError) throw versionError
 
@@ -233,6 +220,8 @@ export async function getAssignedPatientForms(patientId: string): Promise<Assign
       appointmentId: assignment.appointment_id ?? undefined,
       clinicalVisitId: assignment.clinical_visit_id ?? undefined,
       branchId: assignment.branch_id ?? undefined,
+      treatmentPlanId: assignment.treatment_plan_id ?? undefined,
+      treatmentId: assignment.treatment_id ?? undefined,
       assignedAt: assignment.assigned_at,
       title: template?.title ?? 'Clinic form',
       description: template?.description ?? '',
@@ -240,74 +229,79 @@ export async function getAssignedPatientForms(patientId: string): Promise<Assign
       versionNumber: version?.version_number ?? 0,
       content: version?.content ?? '',
       requiresSignature: Boolean(version?.requires_signature),
+      signatureMethod: (version?.signature_method ?? 'none') as SignatureMethod,
     }
   })
 }
 
 export async function markAssignedFormViewed(assignmentId: string) {
   const client = requireSupabase()
-  const { error } = await client
-    .from('patient_form_assignments')
-    .update({ status: 'viewed', viewed_at: new Date().toISOString() })
-    .eq('id', assignmentId)
-    .eq('status', 'assigned')
+  const { error } = await client.from('patient_form_assignments').update({ status: 'viewed', viewed_at: new Date().toISOString() }).eq('id', assignmentId).eq('status', 'assigned')
   if (error) throw error
+}
+
+export async function uploadDrawnSignature(patientId: string, submissionId: string, signatureBlob: Blob) {
+  const client = requireSupabase()
+  if (signatureBlob.type !== 'image/png') throw new Error('Signature must be stored as PNG.')
+  if (signatureBlob.size > 1024 * 1024) throw new Error('Signature file is too large.')
+  const path = `${patientId}/${submissionId}/signature.png`
+  const { error } = await client.storage.from('consent-signatures').upload(path, signatureBlob, { contentType: 'image/png', upsert: false })
+  if (error) throw error
+  return path
+}
+
+export async function getPrivateSignatureUrl(path: string, expiresInSeconds = 120) {
+  const client = requireSupabase()
+  const { data, error } = await client.storage.from('consent-signatures').createSignedUrl(path, expiresInSeconds)
+  if (error) throw error
+  return data.signedUrl
 }
 
 export async function submitAssignedForm(input: {
   form: AssignedPatientForm
   signedByName: string
   decline?: boolean
+  signatureBlob?: Blob
+  source?: 'patient_portal' | 'clinic_device_patient'
 }) {
   const client = requireSupabase()
-  const { data: authData, error: authError } = await client.auth.getUser()
-  if (authError) throw authError
-  if (!authData.user) throw new Error('Your session has expired. Please sign in again.')
+  const submissionId = crypto.randomUUID()
+  const source = input.source ?? 'patient_portal'
+  let signaturePath: string | null = null
 
-  const status = input.decline ? 'declined' : 'signed'
-  if (!input.decline && input.form.requiresSignature && !input.signedByName.trim()) {
-    throw new Error('Enter the signer name before submitting this form.')
+  if (!input.decline && input.form.requiresSignature) {
+    if (input.form.signatureMethod === 'typed_acknowledgement' && !input.signedByName.trim()) {
+      throw new Error('Enter the signer name before submitting this form.')
+    }
+    if (input.form.signatureMethod === 'drawn') {
+      if (!input.signatureBlob) throw new Error('Draw your signature before submitting this form.')
+      signaturePath = await uploadDrawnSignature(input.form.patientId, submissionId, input.signatureBlob)
+    }
   }
 
-  const submittedAt = new Date().toISOString()
-  const { error } = await client.from('patient_form_submissions').insert({
-    assignment_id: input.form.assignmentId,
-    patient_id: input.form.patientId,
-    template_version_id: input.form.templateVersionId,
-    form_content_snapshot: input.form.content,
-    response_data: {},
-    status,
-    signed_by_name: input.decline ? null : input.signedByName.trim(),
-    signed_at: input.decline ? null : submittedAt,
-    submitted_by: authData.user.id,
-    submitted_at: submittedAt,
-    appointment_id: input.form.appointmentId ?? null,
-    clinical_visit_id: input.form.clinicalVisitId ?? null,
-    branch_id: input.form.branchId ?? null,
+  const { data, error } = await client.rpc('submit_patient_form_v2', {
+    p_assignment_id: input.form.assignmentId,
+    p_submission_id: submissionId,
+    p_signed_by_name: input.decline ? null : input.signedByName.trim() || null,
+    p_signature_method: input.decline ? 'none' : input.form.signatureMethod,
+    p_signature_storage_path: signaturePath,
+    p_decline: Boolean(input.decline),
+    p_source: source,
+    p_decline_reason: null,
   })
+
   if (error) {
-    if (error.code === '23505') throw new Error('This form has already been submitted.')
+    if (signaturePath) await client.storage.from('consent-signatures').remove([signaturePath]).catch(() => undefined)
+    if (error.message?.toLowerCase().includes('superseded')) throw new Error('This form has been updated. Please review the current version.')
     throw error
   }
-
-  const { error: assignmentError } = await client
-    .from('patient_form_assignments')
-    .update({ status, completed_at: submittedAt })
-    .eq('id', input.form.assignmentId)
-  if (assignmentError) throw assignmentError
-
-  return submittedAt
+  return data as string
 }
 
 export async function submitPatientIntake(intakeId: string) {
   const client = requireSupabase()
   const submittedAt = new Date().toISOString()
-  const { data, error } = await client
-    .from('patient_intakes')
-    .update({ status: 'submitted', submitted_at: submittedAt, updated_at: submittedAt })
-    .eq('id', intakeId)
-    .select('*')
-    .single()
+  const { data, error } = await client.from('patient_intakes').update({ status: 'submitted', submitted_at: submittedAt, updated_at: submittedAt }).eq('id', intakeId).select('*').single()
   if (error) throw error
   return mapIntake(data)
 }
