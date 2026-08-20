@@ -1,0 +1,224 @@
+/* Corrective redesign pass — blue system enforcement + shared dashboard analytics.
+   Loaded last so legacy gold presentation cannot win the cascade. */
+
+:root {
+  --primary: #2563eb;
+  --primary-strong: #1d4ed8;
+  --primary-soft: #eaf2ff;
+  --secondary: #2563eb;
+  --secondary-soft: #eaf2ff;
+  --bg: #f7f9fc;
+  --surface: #ffffff;
+  --text: #172033;
+  --text-muted: #6b7280;
+  --border: #e5e7eb;
+}
+
+.app-shell,
+.patient-portal-shell,
+.auth-page {
+  --primary: #2563eb;
+  --primary-strong: #1d4ed8;
+  --primary-soft: #eaf2ff;
+  --secondary: #2563eb;
+  --secondary-soft: #eaf2ff;
+  --accent: #2563eb;
+  --accent-soft: #eef5ff;
+  background: #f7f9fc;
+  color: #172033;
+}
+
+/* Remove legacy gold visual language from application portals. */
+.app-shell .brand-symbol,
+.patient-portal-shell .brand-symbol,
+.patient-portal-shell .summary-badge,
+.patient-portal-shell .portal-dashboard-chip,
+.patient-portal-shell .plan-highlight-badge {
+  background: #2563eb !important;
+  color: #fff !important;
+  border-color: #2563eb !important;
+}
+
+.app-shell .eyebrow,
+.patient-portal-shell .eyebrow,
+.patient-portal-shell .text-link-button,
+.patient-portal-shell .text-link,
+.patient-portal-shell .section-title-row svg,
+.app-shell .chart-kicker {
+  color: #2563eb !important;
+}
+
+.patient-portal-shell .portal-dashboard-hero,
+.patient-portal-shell .booking-summary-hero,
+.role-staff .staff-today-header,
+.role-dentist .page-header,
+.role-associate_dentist .page-header,
+.role-admin .page-header,
+.role-super_admin .super-admin-hero {
+  background: #ffffff !important;
+  border: 1px solid #e5e7eb !important;
+  box-shadow: 0 12px 32px rgba(15, 23, 42, .06) !important;
+}
+
+.patient-portal-shell .dashboard-metric-primary,
+.patient-portal-shell .dashboard-metric-warning,
+.patient-portal-shell .dashboard-metric-success,
+.patient-portal-shell .dashboard-metric-soft,
+.patient-portal-shell .portal-dashboard-panel,
+.patient-portal-shell .summary-card,
+.patient-portal-shell .confirmation-card {
+  background: #fff !important;
+  border-color: #e5e7eb !important;
+}
+
+.patient-portal-shell .care-chart-wrap path[stroke],
+.patient-portal-shell .care-chart-wrap circle {
+  stroke: #2563eb !important;
+}
+.patient-portal-shell .care-chart-wrap circle { fill: #fff !important; }
+.patient-portal-shell .care-chart-wrap path[fill]:not([fill="none"]) { fill: rgba(37, 99, 235, .08) !important; }
+
+/* Shared graph system */
+.dashboard-chart-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.55fr) minmax(300px, .8fr);
+  gap: 18px;
+  align-items: stretch;
+}
+
+.dashboard-chart-card {
+  min-width: 0;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 18px;
+  padding: 20px;
+  box-shadow: 0 8px 28px rgba(15, 23, 42, .045);
+}
+
+.dashboard-chart-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+.dashboard-chart-header h3 {
+  margin: 2px 0 0;
+  color: #172033;
+  font-size: 1.03rem;
+  letter-spacing: -.02em;
+}
+.dashboard-chart-header p:not(.eyebrow) {
+  margin: 5px 0 0;
+  color: #6b7280;
+  font-size: .82rem;
+}
+
+.dashboard-chart-canvas { width: 100%; min-height: 220px; }
+.dashboard-chart-canvas svg { display: block; width: 100%; height: auto; overflow: visible; }
+.dashboard-chart-gridline { stroke: #edf1f6; stroke-width: 1; }
+.dashboard-chart-area { fill: rgba(37, 99, 235, .08); }
+.dashboard-chart-line {
+  fill: none;
+  stroke: #2563eb;
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.dashboard-chart-point {
+  fill: #fff;
+  stroke: #2563eb;
+  stroke-width: 3;
+}
+.dashboard-chart-label {
+  fill: #7b8494;
+  font-size: 11px;
+  font-weight: 650;
+}
+.dashboard-chart-empty {
+  min-height: 180px;
+  display: grid;
+  place-items: center;
+  border: 1px dashed #dce3ec;
+  border-radius: 12px;
+  color: #6b7280;
+  background: #fbfcfe;
+}
+.dashboard-bar-list { display: grid; gap: 16px; padding-top: 4px; }
+.dashboard-bar-row { display: grid; gap: 7px; }
+.dashboard-bar-meta { display: flex; align-items: center; justify-content: space-between; gap: 12px; font-size: .82rem; color: #586174; }
+.dashboard-bar-meta strong { color: #172033; }
+.dashboard-bar-track { height: 8px; overflow: hidden; border-radius: 999px; background: #edf2f8; }
+.dashboard-bar-track > span { display: block; height: 100%; border-radius: inherit; background: #2563eb; transition: width .25s ease; }
+
+/* Make legacy admin chart surfaces visually consistent with the new graphs. */
+.role-admin .analytics-grid,
+.role-super_admin .analytics-grid { gap: 18px; }
+.role-admin .analytics-grid > .panel,
+.role-admin .chart-card,
+.role-admin .report-chart-card,
+.role-super_admin .analytics-grid > .panel {
+  border-radius: 18px !important;
+  border: 1px solid #e5e7eb !important;
+  box-shadow: 0 8px 28px rgba(15, 23, 42, .045) !important;
+  background: #fff !important;
+}
+.role-admin svg path[stroke="#bf8f46"],
+.role-admin svg path[stroke="#BF8F46"],
+.role-admin svg circle[stroke="#bf8f46"],
+.role-admin svg circle[stroke="#BF8F46"] {
+  stroke: #2563eb !important;
+}
+
+/* Enterprise navigation separation per role. */
+.role-staff .sidebar-nav a.active,
+.role-dentist .sidebar-nav a.active,
+.role-associate_dentist .sidebar-nav a.active,
+.role-admin .sidebar-nav a.active,
+.role-super_admin .sidebar-nav a.active {
+  background: #eaf2ff !important;
+  color: #1d4ed8 !important;
+  box-shadow: inset 3px 0 0 #2563eb !important;
+}
+
+.role-staff .content-area,
+.role-dentist .content-area,
+.role-associate_dentist .content-area,
+.role-admin .content-area,
+.role-super_admin .content-area { max-width: 1760px; }
+
+/* Consistent status and actionable controls across old pages. */
+.app-shell .btn-primary,
+.patient-portal-shell .btn-primary {
+  background: #2563eb !important;
+  border-color: #2563eb !important;
+  color: #fff !important;
+}
+.app-shell .btn-primary:hover:not(:disabled),
+.patient-portal-shell .btn-primary:hover:not(:disabled) {
+  background: #1d4ed8 !important;
+  border-color: #1d4ed8 !important;
+}
+.app-shell input:focus,
+.app-shell select:focus,
+.app-shell textarea:focus,
+.patient-portal-shell input:focus,
+.patient-portal-shell select:focus,
+.patient-portal-shell textarea:focus {
+  border-color: #8fb0ff !important;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, .12) !important;
+}
+
+@media (max-width: 1100px) {
+  .dashboard-chart-grid { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 600px) {
+  .dashboard-chart-card { padding: 16px; border-radius: 15px; }
+  .dashboard-chart-canvas { min-height: 180px; overflow-x: auto; }
+  .dashboard-chart-canvas svg { min-width: 560px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dashboard-bar-track > span { transition: none !important; }
+}
