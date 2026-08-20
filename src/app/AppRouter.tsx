@@ -22,6 +22,7 @@ import { InventoryPage } from '../pages/InventoryPage'
 import { LandingPage } from '../pages/LandingPage'
 import { NotFoundPage } from '../pages/NotFoundPage'
 import { NotificationsPage } from '../pages/NotificationsPage'
+import { PatientIntakePage } from '../pages/PatientIntakePage'
 import { PatientPortalPage } from '../pages/PatientPortalPage'
 import { PatientsPage } from '../pages/PatientsPage'
 import { PublicBookingPage } from '../pages/PublicBookingPage'
@@ -78,6 +79,14 @@ export function AppRouter() {
           element={
             <RequirePatientAuth>
               <PatientPortalPage />
+            </RequirePatientAuth>
+          }
+        />
+        <Route
+          path="/portal/:patientId/intake"
+          element={
+            <RequirePatientAuth>
+              <PatientIntakePage />
             </RequirePatientAuth>
           }
         />
