@@ -17,6 +17,7 @@ import './styles/staff-portal-47e.css'
 import './styles/dentist-portal-47f.css'
 import './styles/admin-portal-47g.css'
 import './styles/super-admin-portal-47h.css'
+import './styles/final-polish-47i.css'
 import App from './App.tsx'
 import { registerPatientPortalPwa } from './features/patientPortal/pwaRegistration'
 
