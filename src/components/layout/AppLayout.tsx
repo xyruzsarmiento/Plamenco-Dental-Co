@@ -25,6 +25,13 @@ export function AppLayout() {
     items: group.items.filter((item) => !item.anyOf || canAny(item.anyOf)),
   })).filter((group) => group.items.length > 0)
 
+  const workspaceEyebrow =
+    user?.role === 'staff'
+      ? 'Front desk operations'
+      : user?.role === 'dentist' || user?.role === 'associate_dentist'
+        ? 'Clinical workspace'
+        : 'Clinic management'
+
   return (
     <div className={`app-shell role-${user?.role ?? 'guest'}`}>
       <aside className={`sidebar ${isMobileNavOpen ? 'is-open' : ''}`}>
@@ -110,7 +117,7 @@ export function AppLayout() {
             <Menu size={20} />
           </button>
           <div className="topbar-copy">
-            <p className="eyebrow">{user?.role === 'staff' ? 'Front desk operations' : 'Clinic management'}</p>
+            <p className="eyebrow">{workspaceEyebrow}</p>
             <h1>{currentPage}</h1>
           </div>
           <div className="topbar-actions">
