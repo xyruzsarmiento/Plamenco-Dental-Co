@@ -1,0 +1,55 @@
+/* Governance refinements: make system administration and settings readable, not icon-only. */
+
+.page-system-admin .reports-filter-grid {
+  grid-template-columns:repeat(4,minmax(150px,1fr));
+}
+.page-system-admin .reports-filter-grid .icon-button {
+  width:100% !important;
+  min-height:44px;
+  justify-content:flex-start !important;
+  gap:8px;
+  padding:0 11px;
+  font-size:.74rem;
+  font-weight:700;
+  text-align:left;
+}
+.page-system-admin .reports-filter-grid .icon-button::after {
+  content:attr(aria-label);
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+.page-system-admin .reports-filter-grid .icon-button[style*="primary-soft"] {
+  border-color:#d7e6ff !important;
+  color:#1d4ed8 !important;
+}
+
+.page-system-admin .analytics-grid .panel .chart-header h3,
+.page-system-admin .panel .panel-header h2,
+.page-system-admin .panel .panel-header h3 { color:#172033;letter-spacing:-.025em; }
+.page-system-admin .summary-kpi span { color:#6b7280;font-size:.7rem;font-weight:720; }
+.page-system-admin .summary-kpi strong { display:block;margin:12px 0 3px;color:#172033 !important;font-size:1.45rem !important;letter-spacing:-.04em; }
+.page-system-admin .summary-kpi small { color:#8a93a3; }
+
+.page-settings .content-area > .page-stack > div:nth-child(2) > div:first-child button svg {
+  width:16px;
+  height:16px;
+  margin-right:8px !important;
+  vertical-align:-3px;
+}
+.page-settings .content-area > .page-stack > div:nth-child(2) > div:not(:first-child) {
+  border-color:#edf1f6 !important;
+  background:#fff !important;
+  box-shadow:0 4px 16px rgba(15,23,42,.035);
+}
+.page-settings .content-area table thead tr { background:#f8fafc !important; }
+.page-settings .content-area table th { color:#667085 !important;font-size:.7rem !important;letter-spacing:.04em;text-transform:uppercase; }
+.page-settings .content-area table td { border-color:#f0f2f5 !important; }
+
+@media(max-width:1050px){
+  .page-system-admin .reports-filter-grid{grid-template-columns:repeat(3,minmax(150px,1fr));}
+}
+@media(max-width:720px){
+  .page-system-admin .reports-filter-grid{display:flex;overflow:auto;}
+  .page-system-admin .reports-filter-grid .icon-button{flex:0 0 auto;width:auto !important;min-width:150px;}
+}
