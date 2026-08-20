@@ -1,0 +1,732 @@
+/* Page Redesign v4
+   Deep page-surface redesign only. Navigation stays clean white + blue.
+   Frontend-only: no persistence, auth, booking, billing, or API behavior changes. */
+
+:root {
+  --v4-blue: #2563eb;
+  --v4-blue-deep: #1d4ed8;
+  --v4-blue-soft: #eaf2ff;
+  --v4-bg: #f7f9fc;
+  --v4-surface: #ffffff;
+  --v4-text: #172033;
+  --v4-muted: #6b7280;
+  --v4-border: #e5e7eb;
+  --v4-border-soft: #edf1f6;
+  --v4-success: #16a34a;
+  --v4-warning: #d97706;
+  --v4-danger: #dc2626;
+  --v4-shadow: 0 10px 28px rgba(15, 23, 42, .06);
+  --v4-shadow-lg: 0 18px 48px rgba(15, 23, 42, .09);
+}
+
+/* --------------------------------------------------
+   NAVIGATION RESET — intentionally clean white + blue
+   -------------------------------------------------- */
+.app-shell .sidebar,
+.patient-portal-shell .sidebar {
+  background: #fff !important;
+  color: var(--v4-text) !important;
+  border-right: 1px solid var(--v4-border-soft) !important;
+  box-shadow: 6px 0 24px rgba(15, 23, 42, .025) !important;
+}
+
+.app-shell .sidebar-header,
+.patient-portal-shell .sidebar-header {
+  background: #fff !important;
+  border-bottom: 1px solid var(--v4-border-soft) !important;
+}
+
+.app-shell .brand-symbol,
+.patient-portal-shell .brand-symbol {
+  background: var(--v4-blue) !important;
+  color: #fff !important;
+  box-shadow: none !important;
+}
+
+.app-shell .sidebar-nav a,
+.patient-portal-shell .sidebar-nav button {
+  color: #526077 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.app-shell .sidebar-nav a:hover,
+.patient-portal-shell .sidebar-nav button:hover {
+  color: var(--v4-blue-deep) !important;
+  background: #f5f8ff !important;
+  transform: none !important;
+}
+
+.app-shell .sidebar-nav a.active,
+.patient-portal-shell .sidebar-nav button.active {
+  color: var(--v4-blue-deep) !important;
+  background: var(--v4-blue-soft) !important;
+  box-shadow: inset 3px 0 0 var(--v4-blue) !important;
+}
+
+.app-shell .sidebar-footer,
+.patient-portal-shell .sidebar-footer {
+  background: #fff !important;
+  border-top: 1px solid var(--v4-border-soft) !important;
+}
+
+.app-shell .user-card,
+.patient-portal-shell .user-card {
+  background: #fbfcfe !important;
+  border: 1px solid var(--v4-border-soft) !important;
+}
+
+.app-shell .topbar,
+.patient-portal-shell .portal-topbar {
+  background: rgba(255, 255, 255, .97) !important;
+  border-bottom: 1px solid var(--v4-border-soft) !important;
+  box-shadow: 0 1px 0 rgba(15, 23, 42, .02) !important;
+}
+
+.topbar-account-pill {
+  display: inline-flex;
+  align-items: center;
+  min-height: 34px;
+  padding: 0 12px;
+  border-radius: 999px;
+  background: var(--v4-blue-soft);
+  border: 1px solid #d7e6ff;
+  color: var(--v4-blue-deep);
+  font-size: .75rem;
+  font-weight: 750;
+}
+
+/* --------------------------------------------------
+   INTERNAL PAGE CANVAS
+   -------------------------------------------------- */
+.app-shell .main-shell { background: var(--v4-bg) !important; }
+.app-shell .content-area {
+  width: 100%;
+  max-width: 1780px;
+  margin-inline: auto;
+  padding: clamp(20px, 2.4vw, 38px);
+  background: var(--v4-bg);
+}
+
+.app-shell .content-area > .page-stack,
+.app-shell .content-area > section,
+.app-shell .content-area > div {
+  animation: v4PageIn 180ms ease-out both;
+}
+
+@keyframes v4PageIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.app-shell .content-area .section-header,
+.app-shell .content-area .premium-section-header,
+.app-shell .content-area .executive-header,
+.app-shell .content-area .staff-today-header,
+.app-shell .content-area .dentist-today-header {
+  padding: 0 0 4px;
+  margin-bottom: 4px;
+  align-items: flex-start;
+}
+
+.app-shell .content-area .section-header h2,
+.app-shell .content-area .premium-section-header h2,
+.app-shell .content-area .executive-header h2,
+.app-shell .content-area h1,
+.app-shell .content-area h2 {
+  color: var(--v4-text);
+  letter-spacing: -.035em;
+}
+
+.app-shell .content-area .section-header p,
+.app-shell .content-area .premium-section-header p,
+.app-shell .content-area .muted {
+  color: var(--v4-muted);
+  line-height: 1.65;
+}
+
+/* Fresh surface system */
+.app-shell .content-area .panel,
+.app-shell .content-area .card,
+.app-shell .content-area .workspace-panel,
+.app-shell .content-area .table-panel,
+.app-shell .content-area .filter-panel,
+.app-shell .content-area .reports-filter-panel,
+.app-shell .content-area .operations-board,
+.app-shell .content-area .staff-panel,
+.app-shell .content-area .dentist-panel,
+.app-shell .content-area .super-admin-panel {
+  background: #fff !important;
+  border: 1px solid var(--v4-border-soft) !important;
+  border-radius: 18px !important;
+  box-shadow: 0 4px 16px rgba(15, 23, 42, .035) !important;
+}
+
+.app-shell .content-area .panel:hover,
+.app-shell .content-area .card:hover {
+  border-color: #dbe5f2 !important;
+}
+
+/* KPI redesign */
+.app-shell .content-area .stats-grid,
+.app-shell .content-area .report-summary-grid,
+.app-shell .content-area .executive-summary-grid,
+.app-shell .content-area .staff-metric-grid,
+.app-shell .content-area .super-admin-kpis {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.app-shell .content-area .stat-card,
+.app-shell .content-area .summary-kpi,
+.app-shell .content-area .executive-metric,
+.app-shell .content-area .metric-card,
+.app-shell .content-area .staff-metric-grid > article,
+.app-shell .content-area .super-admin-kpis > article {
+  position: relative;
+  overflow: hidden;
+  min-height: 128px;
+  padding: 18px !important;
+  background: #fff !important;
+  border: 1px solid var(--v4-border-soft) !important;
+  border-radius: 16px !important;
+  box-shadow: 0 3px 12px rgba(15, 23, 42, .035) !important;
+}
+
+.app-shell .content-area .stat-card::before,
+.app-shell .content-area .summary-kpi::before,
+.app-shell .content-area .executive-metric::before,
+.app-shell .content-area .staff-metric-grid > article::before,
+.app-shell .content-area .super-admin-kpis > article::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: var(--v4-blue);
+  opacity: .85;
+}
+
+.app-shell .content-area .stat-card strong,
+.app-shell .content-area .summary-kpi strong,
+.app-shell .content-area .executive-metric strong,
+.app-shell .content-area .staff-metric-grid strong,
+.app-shell .content-area .super-admin-kpis strong {
+  color: var(--v4-text) !important;
+  font-size: clamp(1.45rem, 2.2vw, 2rem) !important;
+  letter-spacing: -.04em;
+}
+
+/* Table UX */
+.app-shell .content-area .table-scroll,
+.app-shell .content-area .daily-flow-table-wrap {
+  overflow: auto;
+  border: 1px solid var(--v4-border-soft);
+  border-radius: 14px;
+  background: #fff;
+}
+
+.app-shell .content-area .table {
+  width: 100%;
+  min-width: 760px;
+  border-collapse: separate;
+  border-spacing: 0;
+  background: #fff;
+}
+
+.app-shell .content-area .table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  padding: 12px 14px;
+  background: #f8fafc !important;
+  color: #667085 !important;
+  border-bottom: 1px solid var(--v4-border) !important;
+  font-size: .72rem;
+  font-weight: 800;
+  letter-spacing: .045em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.app-shell .content-area .table tbody td {
+  padding: 13px 14px;
+  border-bottom: 1px solid #f0f2f5 !important;
+  color: #344054;
+  vertical-align: middle;
+}
+
+.app-shell .content-area .table tbody tr:hover td { background: #fafdff !important; }
+
+/* Controls */
+.app-shell .content-area input,
+.app-shell .content-area select,
+.app-shell .content-area textarea,
+.patient-portal-shell .portal-content input,
+.patient-portal-shell .portal-content select,
+.patient-portal-shell .portal-content textarea {
+  min-height: 42px;
+  border: 1px solid #d9e1eb !important;
+  border-radius: 11px !important;
+  background: #fff !important;
+  color: var(--v4-text) !important;
+  box-shadow: none !important;
+}
+
+.app-shell .content-area input:focus,
+.app-shell .content-area select:focus,
+.app-shell .content-area textarea:focus,
+.patient-portal-shell .portal-content input:focus,
+.patient-portal-shell .portal-content select:focus,
+.patient-portal-shell .portal-content textarea:focus {
+  border-color: #8fb1ff !important;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, .10) !important;
+  outline: none;
+}
+
+/* Route-specific layout upgrades */
+.page-appointments .content-area .page-stack,
+.page-patients .content-area .page-stack,
+.page-dental-records .content-area .page-stack,
+.page-treatments .content-area .page-stack,
+.page-treatment-plans .content-area .page-stack,
+.page-billing .content-area .page-stack,
+.page-services .content-area .page-stack,
+.page-dentists .content-area .page-stack,
+.page-inventory .content-area .page-stack,
+.page-expenses .content-area .page-stack,
+.page-communications .content-area .page-stack,
+.page-notifications .content-area .page-stack,
+.page-staff .content-area .page-stack,
+.page-branches .content-area .page-stack,
+.page-forms-consent .content-area .page-stack,
+.page-system-admin .content-area .page-stack,
+.page-settings .content-area .page-stack,
+.page-reports .content-area .page-stack,
+.page-report-automation .content-area .page-stack,
+.page-data-import .content-area .page-stack,
+.page-tasks .content-area .page-stack,
+.page-recalls .content-area .page-stack {
+  gap: 18px !important;
+}
+
+.page-dashboard .content-area .analytics-grid,
+.page-dashboard .content-area .dashboard-grid,
+.page-dashboard .content-area .dashboard-main-grid,
+.page-dashboard .content-area .dashboard-lower-grid,
+.page-reports .content-area .analytics-grid,
+.page-system-admin .content-area .analytics-grid {
+  gap: 16px !important;
+}
+
+.page-dashboard .content-area .operations-board {
+  padding: 20px;
+  box-shadow: var(--v4-shadow) !important;
+}
+
+.page-dashboard .content-area .workflow-strip {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 8px;
+  padding: 10px;
+  background: #fff;
+  border: 1px solid var(--v4-border-soft);
+  border-radius: 14px;
+}
+
+.page-dashboard .content-area .workflow-step {
+  border-radius: 11px;
+  background: #f8fafc;
+  border: 1px solid #edf1f6;
+}
+
+.page-dashboard .content-area .workflow-step span {
+  background: var(--v4-blue-soft);
+  color: var(--v4-blue-deep);
+}
+
+/* Reports: premium analytical canvas */
+.page-reports .content-area .reports-filter-panel,
+.page-dashboard .content-area .executive-filter-panel {
+  position: sticky;
+  top: 88px;
+  z-index: 8;
+  background: rgba(255,255,255,.97) !important;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 8px 22px rgba(15,23,42,.05) !important;
+}
+
+.page-reports .content-area .chart-shell,
+.page-dashboard .content-area .chart-shell,
+.page-dashboard .content-area .dashboard-chart-card,
+.page-dashboard .content-area .modern-data-chart {
+  border-radius: 16px !important;
+  background: #fff !important;
+  border: 1px solid var(--v4-border-soft) !important;
+  overflow: hidden;
+}
+
+/* System admin: tab rail / governance area */
+.page-system-admin .content-area .reports-filter-grid {
+  gap: 10px;
+}
+
+.page-system-admin .content-area .reports-filter-panel .icon-button {
+  min-height: 42px;
+  border: 1px solid #e3e9f2;
+  background: #fff;
+}
+
+.page-system-admin .content-area .reports-filter-panel .icon-button:hover {
+  background: var(--v4-blue-soft);
+  color: var(--v4-blue-deep);
+}
+
+/* --------------------------------------------------
+   PATIENT PAGES — page surfaces redesigned, nav untouched
+   -------------------------------------------------- */
+.patient-portal-shell {
+  background: var(--v4-bg) !important;
+}
+
+.patient-portal-shell .portal-main {
+  background: var(--v4-bg) !important;
+}
+
+.patient-portal-shell .portal-content {
+  width: min(100%, 1480px) !important;
+  margin-inline: auto;
+  padding: clamp(20px, 3vw, 38px) !important;
+}
+
+.patient-portal-shell .portal-content > * {
+  animation: v4PageIn 180ms ease-out both;
+}
+
+.patient-portal-shell .panel,
+.patient-portal-shell .portal-dashboard-panel,
+.patient-portal-shell .dashboard-metric,
+.patient-portal-shell .portal-booking-panel,
+.patient-portal-shell .portal-booking-summary,
+.patient-portal-shell .profile-card,
+.patient-portal-shell .record-card,
+.patient-portal-shell .document-card,
+.patient-portal-shell .appointment-card,
+.patient-portal-shell .treatment-card,
+.patient-portal-shell .prescription-card,
+.patient-portal-shell .payment-card {
+  background: #fff !important;
+  border: 1px solid var(--v4-border-soft) !important;
+  border-radius: 18px !important;
+  box-shadow: 0 4px 16px rgba(15, 23, 42, .035) !important;
+}
+
+/* Dashboard */
+.patient-portal-shell .portal-dashboard-shell { gap: 18px !important; }
+.patient-portal-shell .portal-dashboard-hero {
+  position: relative;
+  overflow: hidden;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 24px;
+  align-items: center;
+  padding: clamp(24px, 3vw, 38px) !important;
+  border: 1px solid #d9e6ff !important;
+  border-radius: 22px !important;
+  background: #fff !important;
+  box-shadow: var(--v4-shadow) !important;
+}
+
+.patient-portal-shell .portal-dashboard-hero::after {
+  content: '';
+  position: absolute;
+  right: -70px;
+  top: -90px;
+  width: 230px;
+  height: 230px;
+  border-radius: 50%;
+  background: #eff5ff;
+  pointer-events: none;
+}
+
+.patient-portal-shell .portal-dashboard-hero > * { position: relative; z-index: 1; }
+.patient-portal-shell .portal-dashboard-hero h2 { font-size: clamp(1.8rem, 3.4vw, 2.7rem) !important; }
+.patient-portal-shell .portal-dashboard-hero p { max-width: 700px; color: var(--v4-muted) !important; }
+
+.patient-portal-shell .portal-dashboard-metrics {
+  grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+  gap: 14px !important;
+}
+
+.patient-portal-shell .dashboard-metric {
+  min-height: 132px !important;
+  padding: 18px !important;
+}
+
+.patient-portal-shell .dashboard-metric-icon {
+  width: 38px;
+  height: 38px;
+  border-radius: 11px !important;
+  background: var(--v4-blue-soft) !important;
+  color: var(--v4-blue) !important;
+}
+
+/* Booking */
+.patient-portal-shell .portal-booking-shell { display: grid; gap: 18px; }
+.patient-portal-shell .portal-booking-progress {
+  display: grid !important;
+  grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+  gap: 8px !important;
+  padding: 10px !important;
+  background: #fff !important;
+  border: 1px solid var(--v4-border-soft) !important;
+  border-radius: 15px !important;
+}
+
+.patient-portal-shell .portal-booking-step {
+  min-height: 54px;
+  border-radius: 11px !important;
+  background: #f8fafc !important;
+  border: 1px solid transparent !important;
+}
+.patient-portal-shell .portal-booking-step.is-active {
+  background: var(--v4-blue-soft) !important;
+  border-color: #d5e4ff !important;
+}
+
+.patient-portal-shell .portal-booking-grid {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1.45fr) minmax(300px, .55fr) !important;
+  gap: 18px !important;
+  align-items: start;
+}
+
+.patient-portal-shell .portal-booking-panel { padding: clamp(20px, 2.4vw, 30px) !important; }
+.patient-portal-shell .portal-booking-summary { position: sticky; top: 98px; padding: 20px !important; }
+
+.patient-portal-shell .service-option,
+.patient-portal-shell .branch-choice,
+.patient-portal-shell .time-slot {
+  border: 1px solid #dfe5ed !important;
+  border-radius: 13px !important;
+  background: #fff !important;
+  box-shadow: none !important;
+}
+.patient-portal-shell .service-option:hover,
+.patient-portal-shell .branch-choice:hover,
+.patient-portal-shell .time-slot:hover {
+  border-color: #b7ccff !important;
+  background: #fbfdff !important;
+}
+.patient-portal-shell .service-option.is-selected,
+.patient-portal-shell .branch-choice.is-selected,
+.patient-portal-shell .time-slot.is-selected {
+  border-color: #9dbaff !important;
+  background: var(--v4-blue-soft) !important;
+  box-shadow: 0 0 0 2px rgba(37,99,235,.07) !important;
+}
+
+.patient-portal-shell .booking-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding-top: 18px;
+  border-top: 1px solid var(--v4-border-soft);
+}
+
+/* Appointments / records / treatments / prescriptions / payments / documents */
+.patient-portal-shell .portal-table-wrap,
+.patient-portal-shell .table-scroll {
+  border: 1px solid var(--v4-border-soft) !important;
+  border-radius: 15px !important;
+  overflow: auto;
+  background: #fff;
+}
+
+.patient-portal-shell table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+.patient-portal-shell table thead th {
+  background: #f8fafc !important;
+  color: #667085 !important;
+  font-size: .72rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+  border-bottom: 1px solid var(--v4-border) !important;
+}
+.patient-portal-shell table tbody td { border-bottom: 1px solid #f0f2f5 !important; }
+.patient-portal-shell table tbody tr:hover td { background: #fbfdff !important; }
+
+.patient-portal-shell .empty-state,
+.patient-portal-shell .empty-inline,
+.patient-portal-shell .portal-empty {
+  border-radius: 16px !important;
+  background: #fbfcfe !important;
+  border: 1px dashed #d6dee9 !important;
+  color: var(--v4-muted) !important;
+}
+
+/* Profile */
+.patient-portal-shell .profile-grid,
+.patient-portal-shell .portal-profile-grid {
+  display: grid !important;
+  grid-template-columns: minmax(260px, .72fr) minmax(0, 1.28fr) !important;
+  gap: 18px !important;
+  align-items: start;
+}
+
+.patient-portal-shell .profile-card,
+.patient-portal-shell .profile-panel {
+  padding: clamp(20px, 2.5vw, 28px) !important;
+}
+
+.patient-portal-shell .profile-avatar,
+.patient-portal-shell .profile-photo {
+  border: 4px solid #fff !important;
+  box-shadow: 0 0 0 1px #dfe6ef, 0 10px 24px rgba(15,23,42,.08) !important;
+}
+
+/* Button hierarchy */
+.patient-portal-shell .btn-primary,
+.app-shell .content-area .btn-primary {
+  background: var(--v4-blue) !important;
+  border-color: var(--v4-blue) !important;
+  color: #fff !important;
+  box-shadow: 0 6px 16px rgba(37,99,235,.16) !important;
+}
+.patient-portal-shell .btn-primary:hover:not(:disabled),
+.app-shell .content-area .btn-primary:hover:not(:disabled) {
+  background: var(--v4-blue-deep) !important;
+  border-color: var(--v4-blue-deep) !important;
+}
+
+.patient-portal-shell .btn-secondary,
+.app-shell .content-area .btn-secondary {
+  background: #fff !important;
+  color: #344054 !important;
+  border-color: #dbe2eb !important;
+}
+
+/* --------------------------------------------------
+   RESPONSIVE
+   -------------------------------------------------- */
+@media (max-width: 1280px) {
+  .app-shell .content-area .stats-grid,
+  .app-shell .content-area .report-summary-grid,
+  .app-shell .content-area .executive-summary-grid,
+  .app-shell .content-area .super-admin-kpis,
+  .patient-portal-shell .portal-dashboard-metrics {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+
+  .patient-portal-shell .portal-booking-grid {
+    grid-template-columns: minmax(0, 1fr) 300px !important;
+  }
+}
+
+@media (max-width: 980px) {
+  .app-shell .content-area,
+  .patient-portal-shell .portal-content { padding: 18px !important; }
+
+  .page-dashboard .content-area .workflow-strip {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .patient-portal-shell .portal-booking-grid,
+  .patient-portal-shell .portal-profile-grid,
+  .patient-portal-shell .profile-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .patient-portal-shell .portal-booking-summary { position: static; }
+}
+
+@media (max-width: 760px) {
+  .topbar-account-pill { display: none; }
+
+  .app-shell .content-area .stats-grid,
+  .app-shell .content-area .report-summary-grid,
+  .app-shell .content-area .executive-summary-grid,
+  .app-shell .content-area .staff-metric-grid,
+  .app-shell .content-area .super-admin-kpis,
+  .patient-portal-shell .portal-dashboard-metrics {
+    grid-template-columns: 1fr 1fr !important;
+  }
+
+  .patient-portal-shell .portal-dashboard-hero {
+    grid-template-columns: 1fr !important;
+    padding: 22px !important;
+  }
+
+  .patient-portal-shell .portal-booking-progress {
+    grid-template-columns: repeat(5, minmax(74px, 1fr)) !important;
+    overflow-x: auto;
+  }
+
+  .patient-portal-shell .booking-actions {
+    position: sticky;
+    bottom: 0;
+    z-index: 10;
+    margin: 18px -20px -20px;
+    padding: 12px 20px calc(12px + env(safe-area-inset-bottom));
+    background: rgba(255,255,255,.98);
+    box-shadow: 0 -8px 22px rgba(15,23,42,.06);
+  }
+
+  .app-shell .content-area .table,
+  .patient-portal-shell table { min-width: 680px; }
+}
+
+@media (max-width: 430px) {
+  .app-shell .content-area,
+  .patient-portal-shell .portal-content { padding: 14px !important; }
+
+  .app-shell .content-area .stats-grid,
+  .app-shell .content-area .report-summary-grid,
+  .app-shell .content-area .executive-summary-grid,
+  .app-shell .content-area .staff-metric-grid,
+  .app-shell .content-area .super-admin-kpis,
+  .patient-portal-shell .portal-dashboard-metrics {
+    grid-template-columns: 1fr !important;
+  }
+
+  .page-dashboard .content-area .workflow-strip {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .patient-portal-shell .portal-dashboard-hero { padding: 18px !important; border-radius: 18px !important; }
+  .patient-portal-shell .portal-dashboard-hero h2 { font-size: 1.65rem !important; }
+  .patient-portal-shell .portal-booking-panel { padding: 18px !important; }
+
+  .patient-portal-shell .booking-actions {
+    margin-inline: -18px;
+    margin-bottom: -18px;
+    padding-inline: 18px;
+  }
+
+  .patient-portal-shell .booking-actions .btn,
+  .patient-portal-shell .booking-actions button { flex: 1; }
+}
+
+@media (min-width: 1440px) {
+  .app-shell .content-area { padding-inline: 34px; }
+  .patient-portal-shell .portal-content { padding-inline: 36px !important; }
+}
+
+@media (min-width: 1920px) {
+  .app-shell .content-area { max-width: 1820px; }
+  .patient-portal-shell .portal-content { max-width: 1580px !important; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .app-shell .content-area > *,
+  .patient-portal-shell .portal-content > * {
+    animation: none !important;
+    transition: none !important;
+  }
+}
