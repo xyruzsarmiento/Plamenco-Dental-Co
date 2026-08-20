@@ -50,6 +50,22 @@ Do not guess these values. Record the clinic owner's decision, date, and approve
 | Should accepted but unscheduled or undecided treatment plans create follow-up tasks? | Pending clinical/operations confirmation |
 | Should management see provider-specific recall metrics? | Pending clinic owner/provider confirmation |
 
+## Part 40 — Production Launch Decisions
+
+| Decision Needed | Current Status |
+|---|---|
+| What is the approved production domain and go-live date? | Pending clinic owner/deployment confirmation |
+| Who is authorized to approve a production release after the Part 40 blocker review? | Pending clinic owner confirmation |
+| Who owns database backup verification and restore rehearsal before launch? | Pending clinic owner/technical owner confirmation |
+| What is the acceptable maintenance window for applying production migrations? | Pending clinic operations confirmation |
+| Which real payment methods/providers are enabled at launch? | Pending clinic owner/accountant/provider confirmation |
+| Which communication providers/channels are enabled at launch? | Pending clinic owner/privacy/provider confirmation |
+| Which staff accounts/roles/branch assignments are approved for the initial pilot? | Pending clinic operations/security confirmation |
+| Will launch begin with one branch or both branches simultaneously? | Pending clinic owner/operations confirmation |
+| What historical data set is approved for production import, and who signs off reconciliation? | Pending clinic owner/data owner confirmation |
+| What is the incident escalation owner for suspected patient-data exposure or incorrect financial posting? | Pending clinic owner/security confirmation |
+| Which Critical/High issues, if any, are explicitly accepted as launch blockers versus deferred non-blocking work? | Pending launch review; Critical integrity/privacy issues may not be silently waived |
+
 ## Existing decisions from Parts 1–32
 
 The previously tracked decisions remain in project history and implementation documentation, including branch identity/hours, appointment policies, deposits, payment gateway and manual payment methods, service catalog/pricing, provider schedules/roles, staff permissions, compensation rules, inventory opening stock/reorder/cost rules, expense approvals, SMS/email/Messenger providers and consent, historical Excel migration/linking, retention/privacy, clinical visibility, patient exports, procurement/stock transfer/count workflows, backup/recovery ownership, deployment domains/projects, daily clinic workflow, queue/check-in/no-show permissions, patient booking/rescheduling, reminders, online payments, and patient-facing price presentation.
