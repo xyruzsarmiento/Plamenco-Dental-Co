@@ -4,41 +4,25 @@ import { loadProviderFoundationFromSupabase } from '../dentists/dentistStore'
 import { loadServicesFromSupabase } from '../services/serviceStore'
 import { PatientPortalPage } from '../../pages/PatientPortalPage'
 
-type BootstrapState = 'loading' | 'ready' | 'error'
+type BootstrapState = 'loading' | 'ready'
 
 export function PatientPortalRoute() {
   const [state, setState] = useState<BootstrapState>('loading')
-  const [errorMessage, setErrorMessage] = useState('')
 
   useEffect(() => {
     let isMounted = true
 
     const loadBookingFoundation = async () => {
-      try {
-        const [branches, services, providerFoundation] = await Promise.all([
-          loadBranchesFromSupabase({ strict: true }),
-          loadServicesFromSupabase({ strict: true }),
-          loadProviderFoundationFromSupabase({ strict: true }),
-        ])
+      // Booking data is supplemental to the patient portal. A missing provider,
+      // schedule, service, or branch must never prevent an authenticated patient
+      // from opening records, billing, documents, profile, or appointment history.
+      await Promise.allSettled([
+        loadBranchesFromSupabase({ strict: false }),
+        loadServicesFromSupabase({ strict: false }),
+        loadProviderFoundationFromSupabase({ strict: false }),
+      ])
 
-        if (!branches.length) {
-          throw new Error('No active clinic branches are configured for online booking.')
-        }
-        if (!services.length) {
-          throw new Error('No active clinic services are configured for online booking.')
-        }
-        if (!providerFoundation.providers.length) {
-          throw new Error('No active dentist records are available for online booking.')
-        }
-
-        if (isMounted) {
-          setState('ready')
-        }
-      } catch (error) {
-        if (!isMounted) return
-        setErrorMessage(error instanceof Error ? error.message : 'Unable to prepare appointment availability.')
-        setState('error')
-      }
+      if (isMounted) setState('ready')
     }
 
     void loadBookingFoundation()
@@ -49,15 +33,7 @@ export function PatientPortalRoute() {
   }, [])
 
   if (state === 'loading') {
-    return <div className="portal-empty">Preparing your appointment availability...</div>
-  }
-
-  if (state === 'error') {
-    return (
-      <div className="portal-empty">
-        {errorMessage || 'Appointment availability could not be loaded. Please refresh and try again.'}
-      </div>
-    )
+    return <div className="portal-empty">Preparing your patient portal...</div>
   }
 
   return <PatientPortalPage />
