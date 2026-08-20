@@ -45,6 +45,7 @@ export const navigationGroups: NavigationGroup[] = [
     items: [
       { label: 'Dental Records', path: '/app/dental-records', icon: FileText, anyOf: ['clinical_records.view'] },
       { label: 'Treatments', path: '/app/treatments', icon: FileText, anyOf: ['treatments.view'] },
+      { label: 'Treatment Plans', path: '/app/treatment-plans', icon: ClipboardList, anyOf: ['treatments.view'] },
       { label: 'Billing / Payments', path: '/app/billing', icon: CreditCard, anyOf: ['billing.view', 'payments.view'] },
       { label: 'Services', path: '/app/services', icon: ClipboardList, anyOf: ['services.view', 'services.manage'] },
       { label: 'Dentists', path: '/app/dentists', icon: UserRoundCog, anyOf: ['dentists.manage'] },
