@@ -1,0 +1,9 @@
+{
+  "name": "Plamenco Dental Co.",
+  "short_name": "Plamenco",
+  "start_url": "/login",
+  "display": "standalone",
+  "background_color": "#FAF8F3",
+  "theme_color": "#C6A15B",
+  "icons": [{"src":"/favicon.svg","sizes":"any","type":"image/svg+xml"}]
+}
