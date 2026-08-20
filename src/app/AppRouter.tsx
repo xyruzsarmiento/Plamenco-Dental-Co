@@ -10,6 +10,7 @@ import { RequirePatientAuth } from '../features/auth/RequirePatientAuth'
 import { RequirePermission } from '../features/auth/RequirePermission'
 import { RequireRole } from '../features/auth/RequireRole'
 import { ResetPasswordPage } from '../features/auth/ResetPasswordPage'
+import { PatientPortalRoute } from '../features/patientPortal/PatientPortalRoute'
 import { AppointmentsPage } from '../pages/AppointmentsPage'
 import { BillingPage } from '../pages/BillingPage'
 import { BranchesPage } from '../pages/BranchesPage'
@@ -26,9 +27,7 @@ import { NotFoundPage } from '../pages/NotFoundPage'
 import { NotificationsPage } from '../pages/NotificationsPage'
 import { OperationalTasksPage } from '../pages/OperationalTasksPage'
 import { PatientIntakePage } from '../pages/PatientIntakePage'
-import { PatientPortalPage } from '../pages/PatientPortalPage'
 import { PatientsPage } from '../pages/PatientsPage'
-import { PublicBookingPage } from '../pages/PublicBookingPage'
 import { RecallFollowUpPage } from '../pages/RecallFollowUpPage'
 import { ReportsPage } from '../pages/ReportsPage'
 import { RoleHomePage } from '../pages/RoleHomePage'
@@ -47,7 +46,7 @@ function BookRoute() {
     return <Navigate to={`/portal/${user.patientId}`} replace />
   }
 
-  return <PublicBookingPage />
+  return <Navigate to="/login" replace state={{ from: { pathname: '/book' } }} />
 }
 
 function RouteRobotsMeta() {
@@ -79,7 +78,7 @@ export function AppRouter() {
         <Route path="/book" element={<BookRoute />} />
         <Route path="/settings" element={<Navigate to="/app/settings" replace />} />
         <Route path="/unauthorized" element={<UnauthorizedPage />} />
-        <Route path="/portal/:patientId" element={<RequirePatientAuth><PatientPortalPage /></RequirePatientAuth>} />
+        <Route path="/portal/:patientId" element={<RequirePatientAuth><PatientPortalRoute /></RequirePatientAuth>} />
         <Route path="/portal/:patientId/intake" element={<RequirePatientAuth><PatientIntakePage /></RequirePatientAuth>} />
         <Route path="/app" element={<RequireAuth><AppLayout /></RequireAuth>}>
           <Route index element={<RoleHomePage />} />
