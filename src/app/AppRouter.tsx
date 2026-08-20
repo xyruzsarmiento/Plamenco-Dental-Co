@@ -32,7 +32,7 @@ import { RecallFollowUpPageV18 } from '../pages/RecallFollowUpPageV18'
 import { ReportsPageV19 } from '../pages/ReportsPageV19'
 import { RoleHomePage } from '../pages/RoleHomePage'
 import { ServicesPageV15 } from '../pages/ServicesPageV15'
-import { SettingsPage } from '../pages/SettingsPage'
+import { SettingsPageV30 } from '../pages/SettingsPageV30'
 import { SystemAdministrationPageV29 } from '../pages/SystemAdministrationPageV29'
 import { TeamAccessPageV26 } from '../pages/TeamAccessPageV26'
 import { TreatmentPlansPageV13 } from '../pages/TreatmentPlansPageV13'
@@ -103,7 +103,7 @@ export function AppRouter() {
           <Route path="recalls" element={<RequirePermission anyOf={['appointments.view', 'clinical_records.view', 'communications.manage']}><RecallFollowUpPageV18 /></RequirePermission>} />
           <Route path="tasks" element={<RequirePermission anyOf={['appointments.view', 'clinical_records.view', 'system_admin.view']}><OperationalTasksPageV17 /></RequirePermission>} />
           <Route path="forms-consent" element={<RequirePermission permission="settings.manage"><FormsConsentAdminPageV28 /></RequirePermission>} />
-          <Route path="settings" element={<RequirePermission permission="settings.manage"><SettingsPage /></RequirePermission>} />
+          <Route path="settings" element={<RequirePermission permission="settings.manage"><SettingsPageV30 /></RequirePermission>} />
           <Route path="system-admin" element={<RequireRole allowedRoles={['super_admin']}><SystemAdministrationPageV29 /></RequireRole>} />
           <Route path="unauthorized" element={<UnauthorizedPage />} />
         </Route>
