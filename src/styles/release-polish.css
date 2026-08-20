@@ -1,0 +1,152 @@
+:root {
+  --bg: #FAF8F3;
+  --bg-subtle: #FAF8F3;
+  --bg-strong: #E8E3D9;
+  --surface: #FFFFFF;
+  --surface-alt: #FAF8F3;
+  --surface-muted: #F6F1E8;
+  --text: #25231F;
+  --text-strong: #25231F;
+  --text-muted: #6F6A61;
+  --text-soft: #8A847A;
+  --border: #E8E3D9;
+  --border-strong: #E5D2A5;
+  --border-subtle: #F0EBE2;
+  --gold-900: #9A783B;
+  --gold-800: #9A783B;
+  --gold-700: #C6A15B;
+  --gold-600: #C6A15B;
+  --gold-500: #C6A15B;
+  --gold-400: #E5D2A5;
+  --gold-100: #F3E8CD;
+  --gold-50: #FBF7EC;
+  --ivory: #FAF8F3;
+  --primary: #25231F;
+  --primary-strong: #25231F;
+  --primary-soft: #FBF7EC;
+  --secondary: #C6A15B;
+  --secondary-soft: #F3E8CD;
+  --accent: #C6A15B;
+  --accent-soft: #FBF7EC;
+  --shadow-xs: 0 1px 2px rgba(37, 35, 31, 0.04);
+  --shadow-sm: 0 6px 18px rgba(37, 35, 31, 0.06);
+  --shadow-md: 0 12px 32px rgba(37, 35, 31, 0.08);
+  --shadow-lg: 0 20px 48px rgba(37, 35, 31, 0.1);
+}
+
+html {
+  background: var(--bg);
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+}
+
+:where(button, a, input, select, textarea, [tabindex]):focus-visible {
+  outline: 3px solid rgba(198, 161, 91, 0.42);
+  outline-offset: 2px;
+}
+
+.btn {
+  min-height: 40px;
+  border-radius: 10px;
+  font-weight: 650;
+  letter-spacing: -0.01em;
+  transition: transform var(--transition-fast), box-shadow var(--transition-fast), border-color var(--transition-fast), background var(--transition-fast);
+}
+
+.btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.58;
+  transform: none;
+}
+
+.btn:not(:disabled):active {
+  transform: translateY(1px);
+}
+
+.btn-primary {
+  background: #25231F;
+  color: #FFFFFF;
+  border-color: #25231F;
+}
+
+.btn-primary:not(:disabled):hover {
+  background: #353129;
+  box-shadow: var(--shadow-sm);
+}
+
+.btn-secondary {
+  background: #FFFFFF;
+  color: #25231F;
+  border-color: #E5D2A5;
+}
+
+.btn-secondary:not(:disabled):hover {
+  background: #FBF7EC;
+  border-color: #C6A15B;
+}
+
+.btn-ghost {
+  color: #25231F;
+}
+
+.card,
+.panel,
+.surface,
+.auth-panel,
+.access-panel {
+  border-color: var(--border);
+  box-shadow: var(--shadow-xs);
+}
+
+input,
+select,
+textarea {
+  min-height: 42px;
+  border-color: var(--border);
+  color: var(--text);
+  background: #FFFFFF;
+}
+
+input:hover,
+select:hover,
+textarea:hover {
+  border-color: var(--border-strong);
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  border-color: #C6A15B;
+}
+
+.muted {
+  color: var(--text-muted);
+}
+
+.eyebrow {
+  color: #9A783B;
+  letter-spacing: 0.08em;
+}
+
+@media (min-width: 1280px) {
+  .page-stack,
+  .app-page,
+  .workspace-page {
+    max-width: none;
+  }
+}
+
+@media (max-width: 430px) {
+  .btn {
+    min-height: 44px;
+  }
+
+  input,
+  select,
+  textarea {
+    min-height: 44px;
+  }
+}
