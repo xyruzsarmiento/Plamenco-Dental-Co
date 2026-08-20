@@ -23,6 +23,7 @@ import { InventoryPage } from '../pages/InventoryPage'
 import { LandingPage } from '../pages/LandingPage'
 import { NotFoundPage } from '../pages/NotFoundPage'
 import { NotificationsPage } from '../pages/NotificationsPage'
+import { OperationalTasksPage } from '../pages/OperationalTasksPage'
 import { PatientIntakePage } from '../pages/PatientIntakePage'
 import { PatientPortalPage } from '../pages/PatientPortalPage'
 import { PatientsPage } from '../pages/PatientsPage'
@@ -77,30 +78,9 @@ export function AppRouter() {
         <Route path="/book" element={<BookRoute />} />
         <Route path="/settings" element={<Navigate to="/app/settings" replace />} />
         <Route path="/unauthorized" element={<UnauthorizedPage />} />
-        <Route
-          path="/portal/:patientId"
-          element={
-            <RequirePatientAuth>
-              <PatientPortalPage />
-            </RequirePatientAuth>
-          }
-        />
-        <Route
-          path="/portal/:patientId/intake"
-          element={
-            <RequirePatientAuth>
-              <PatientIntakePage />
-            </RequirePatientAuth>
-          }
-        />
-        <Route
-          path="/app"
-          element={
-            <RequireAuth>
-              <AppLayout />
-            </RequireAuth>
-          }
-        >
+        <Route path="/portal/:patientId" element={<RequirePatientAuth><PatientPortalPage /></RequirePatientAuth>} />
+        <Route path="/portal/:patientId/intake" element={<RequirePatientAuth><PatientIntakePage /></RequirePatientAuth>} />
+        <Route path="/app" element={<RequireAuth><AppLayout /></RequireAuth>}>
           <Route index element={<RoleHomePage />} />
           <Route path="appointments" element={<RequirePermission permission="appointments.view"><AppointmentsPage /></RequirePermission>} />
           <Route path="patients" element={<RequirePermission permission="patients.view"><PatientsPage /></RequirePermission>} />
@@ -120,6 +100,7 @@ export function AppRouter() {
           <Route path="notifications" element={<RequirePermission permission="notifications.view"><NotificationsPage /></RequirePermission>} />
           <Route path="communications" element={<RequirePermission anyOf={['communications.manage', 'notifications.send', 'notifications.view']}><CommunicationsPage /></RequirePermission>} />
           <Route path="recalls" element={<RequirePermission anyOf={['appointments.view', 'clinical_records.view', 'communications.manage']}><RecallFollowUpPage /></RequirePermission>} />
+          <Route path="tasks" element={<RequirePermission anyOf={['appointments.view', 'clinical_records.view', 'system_admin.view']}><OperationalTasksPage /></RequirePermission>} />
           <Route path="forms-consent" element={<RequirePermission permission="settings.manage"><FormsConsentAdminPage /></RequirePermission>} />
           <Route path="settings" element={<RequirePermission permission="settings.manage"><SettingsPage /></RequirePermission>} />
           <Route path="system-admin" element={<RequireRole allowedRoles={['super_admin']}><SystemAdministrationPage /></RequireRole>} />
