@@ -1,6 +1,7 @@
-import { CalendarClock, ClipboardList, MapPin, Send, Stethoscope, UserRound, X } from 'lucide-react'
+import { CalendarClock, ClipboardList, MapPin, Send, Stethoscope, UserRound, Wallet, X } from 'lucide-react'
 import { Badge } from '../../components/ui/Badge'
 import { Button } from '../../components/ui/Button'
+import { formatCurrency, getInvoicesByPatient } from '../billing/billingStore'
 import { CommunicationHistoryPanel } from '../communications/CommunicationHistoryPanel'
 import { getCommunicationLogsByAppointment } from '../communications/communicationStore'
 import type { CommunicationTemplateKey } from '../communications/communicationTypes'
@@ -108,6 +109,19 @@ function formatHistoryEvent(eventType: string, status?: AppointmentStatus) {
   return map[eventType] ?? 'Appointment activity recorded'
 }
 
+function communicationStatusLabel(status?: string) {
+  if (!status) return 'No communication recorded'
+  const labels: Record<string, string> = {
+    queued: 'Queued',
+    sending: 'Sending',
+    sent: 'Sent to provider',
+    delivered: 'Delivered',
+    failed: 'Failed',
+    skipped: 'Skipped',
+  }
+  return labels[status] ?? status.replaceAll('_', ' ')
+}
+
 export function AppointmentDetails({
   appointment,
   onClose,
@@ -124,6 +138,13 @@ export function AppointmentDetails({
   onOpenClinicalRecord,
   canManage,
 }: AppointmentDetailsProps) {
+  const communicationLogs = getCommunicationLogsByAppointment(appointment.id)
+  const latestCommunication = [...communicationLogs].sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())[0]
+  const patientInvoices = patient
+    ? getInvoicesByPatient(patient.patientId).filter((invoice) => invoice.status !== 'void')
+    : []
+  const outstandingBalanceCents = patientInvoices.reduce((sum, invoice) => sum + Math.max(invoice.balanceCents, 0), 0)
+
   const visibleActions: Array<{ status: AppointmentStatus; label: string; reason?: boolean }> =
     !canManage
       ? []
@@ -178,6 +199,7 @@ export function AppointmentDetails({
               <div><CalendarClock size={16} /><span>{formatDate(appointment.date)}</span></div>
               <div><MapPin size={16} /><span>{branch?.name ?? 'No branch assigned'}</span></div>
               <div><Stethoscope size={16} /><span>{provider?.displayName ?? 'No dentist assigned'}</span></div>
+              <div><Wallet size={16} /><span>{outstandingBalanceCents > 0 ? `${formatCurrency(outstandingBalanceCents)} outstanding` : 'No outstanding balance'}</span></div>
             </div>
           </div>
 
@@ -194,12 +216,20 @@ export function AppointmentDetails({
                   <span className="value">{patient.patientId}</span>
                 </div>
                 <div className="detail-item">
-                <span className="label">Phone</span>
+                  <span className="label">Phone</span>
                   <span className="value">{patient.phone || 'No phone recorded'}</span>
                 </div>
                 <div className="detail-item">
                   <span className="label">Email</span>
                   <span className="value">{patient.email || 'No email recorded'}</span>
+                </div>
+                <div className="detail-item">
+                  <span className="label">Outstanding Balance</span>
+                  <span className="value">{outstandingBalanceCents > 0 ? formatCurrency(outstandingBalanceCents) : 'Paid / no outstanding balance'}</span>
+                </div>
+                <div className="detail-item">
+                  <span className="label">Latest Appointment Communication</span>
+                  <span className="value">{communicationStatusLabel(latestCommunication?.status)}</span>
                 </div>
               </div>
             )}
@@ -330,7 +360,10 @@ export function AppointmentDetails({
 
           <div className="details-section">
             <div className="details-header">
-              <h3>Communications</h3>
+              <div>
+                <h3>Communications</h3>
+                <p className="muted-text">Latest status: {communicationStatusLabel(latestCommunication?.status)}</p>
+              </div>
               {canManage && onManualResend && (
                 <div className="action-buttons">
                   {appointment.status === 'confirmed' && (
@@ -355,7 +388,7 @@ export function AppointmentDetails({
               )}
             </div>
             <CommunicationHistoryPanel
-              logs={getCommunicationLogsByAppointment(appointment.id)}
+              logs={communicationLogs}
               emptyMessage="No appointment communications recorded."
             />
           </div>
