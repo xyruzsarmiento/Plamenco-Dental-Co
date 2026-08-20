@@ -1,0 +1,563 @@
+/* PLAMENCO DENTAL CO. — 47I FINAL POLISH
+   Frontend-only cross-portal refinement. Loaded last on purpose. */
+
+:root {
+  --focus-ring: 0 0 0 3px rgba(37, 99, 235, 0.22);
+  --focus-ring-strong: 0 0 0 4px rgba(37, 99, 235, 0.18);
+  --surface-shadow-hover: 0 12px 28px rgba(23, 32, 51, 0.09);
+  --motion-fast: 140ms;
+  --motion-base: 200ms;
+}
+
+html {
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  scroll-behavior: smooth;
+}
+
+body {
+  min-width: 320px;
+  overflow-x: hidden;
+}
+
+button,
+a,
+input,
+select,
+textarea,
+[role='button'],
+[tabindex]:not([tabindex='-1']) {
+  -webkit-tap-highlight-color: transparent;
+}
+
+button,
+a,
+.btn,
+.icon-button,
+.sidebar-nav a,
+.sidebar-nav button,
+.nav-link,
+.text-button,
+.text-link,
+.time-slot,
+.service-option,
+.branch-choice,
+.tab,
+.tabs button {
+  transition:
+    background-color var(--motion-fast) ease,
+    border-color var(--motion-fast) ease,
+    color var(--motion-fast) ease,
+    box-shadow var(--motion-fast) ease,
+    transform var(--motion-fast) ease;
+}
+
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+[role='button']:focus-visible,
+[tabindex]:not([tabindex='-1']):focus-visible {
+  outline: 2px solid #2563eb;
+  outline-offset: 2px;
+  box-shadow: var(--focus-ring);
+}
+
+input,
+select,
+textarea {
+  min-height: 42px;
+}
+
+textarea {
+  resize: vertical;
+}
+
+button:disabled,
+.btn:disabled,
+[aria-disabled='true'] {
+  cursor: not-allowed;
+  opacity: 0.58;
+  transform: none !important;
+  box-shadow: none !important;
+}
+
+.btn-primary:not(:disabled):hover,
+button.btn-primary:not(:disabled):hover {
+  transform: translateY(-1px);
+}
+
+.btn-secondary:not(:disabled):hover,
+.icon-button:not(:disabled):hover {
+  border-color: #cbd5e1;
+}
+
+/* Consistent headings and vertical rhythm across internal portals */
+.page-stack,
+.portal-content,
+.staff-today-workspace,
+.dentist-today-workspace,
+.super-admin-overview {
+  gap: clamp(16px, 1.5vw, 24px);
+}
+
+.page-header,
+.section-header,
+.premium-section-header {
+  gap: 16px;
+  align-items: flex-start;
+}
+
+.page-header h1,
+.page-header h2,
+.section-header h1,
+.section-header h2,
+.portal-topbar h1,
+.topbar h1 {
+  letter-spacing: -0.025em;
+  text-wrap: balance;
+}
+
+.page-header p,
+.section-header p,
+.panel p,
+.portal-topbar p {
+  text-wrap: pretty;
+}
+
+/* Stable surface behavior: no layout jump on hover */
+.panel,
+.card,
+.stat-card,
+.summary-kpi,
+.executive-metric,
+.dashboard-metric,
+.portal-dashboard-panel,
+.staff-workspace-card,
+.super-admin-card {
+  border-width: 1px;
+  transform: translateZ(0);
+}
+
+.panel:hover,
+.card:hover,
+.stat-card:hover,
+.summary-kpi:hover,
+.executive-metric:hover {
+  border-color: #dbe3ef;
+}
+
+/* Loading + empty + error states */
+.skeleton,
+.skeleton-line,
+.skeleton-block,
+[aria-busy='true'] .loading-placeholder {
+  position: relative;
+  overflow: hidden;
+  background: #eef2f7;
+}
+
+.skeleton::after,
+.skeleton-line::after,
+.skeleton-block::after,
+[aria-busy='true'] .loading-placeholder::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,.62), transparent);
+  animation: plamenco-skeleton 1.4s ease-in-out infinite;
+}
+
+@keyframes plamenco-skeleton {
+  to { transform: translateX(100%); }
+}
+
+.empty-state,
+.portal-empty,
+.empty-inline,
+.no-data,
+.loading-state,
+.error-state {
+  border-radius: 14px;
+}
+
+.portal-empty,
+.loading-state,
+.error-state {
+  min-height: 180px;
+  display: grid;
+  place-items: center;
+  padding: 28px;
+  text-align: center;
+}
+
+.error-state,
+.alert.danger,
+.alert-error,
+.inline-alert {
+  overflow-wrap: anywhere;
+}
+
+/* Tables: high density on desktop, horizontal safety everywhere */
+.table-scroll,
+.table-responsive,
+.data-table-wrap {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: auto;
+  overscroll-behavior-inline: contain;
+  scrollbar-gutter: stable;
+  -webkit-overflow-scrolling: touch;
+}
+
+.table,
+table {
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.table th,
+.table td {
+  vertical-align: middle;
+}
+
+.table th {
+  white-space: nowrap;
+}
+
+.table td {
+  overflow-wrap: anywhere;
+}
+
+.table tbody tr {
+  transition: background-color var(--motion-fast) ease;
+}
+
+.table tbody tr:hover {
+  background: rgba(37, 99, 235, 0.025);
+}
+
+/* Filter bars and actions stay useful at intermediate widths */
+.filters-row,
+.filter-row,
+.toolbar,
+.page-actions,
+.action-buttons,
+.reports-filter-grid {
+  min-width: 0;
+}
+
+.filters-row > *,
+.filter-row > *,
+.toolbar > *,
+.action-buttons > * {
+  min-width: 0;
+}
+
+/* Modal + drawer consistency */
+.modal-backdrop,
+[class*='modal-backdrop'],
+[class*='drawer-backdrop'] {
+  overscroll-behavior: contain;
+}
+
+.modal,
+[role='dialog'],
+.drawer,
+[class*='drawer-panel'] {
+  max-height: min(88dvh, 900px);
+}
+
+[role='dialog'] {
+  outline: none;
+}
+
+.modal-body,
+.drawer-body,
+[class*='modal-body'],
+[class*='drawer-body'] {
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+}
+
+.modal-footer,
+.drawer-footer,
+[class*='modal-actions'],
+[class*='drawer-actions'] {
+  gap: 10px;
+}
+
+/* PUBLIC / AUTH */
+.landing-page section[id] {
+  scroll-margin-top: 86px;
+}
+
+.landing-header,
+.auth-page {
+  contain: layout style;
+}
+
+.landing-page img,
+.auth-visual img {
+  max-width: 100%;
+  height: auto;
+}
+
+.auth-panel,
+.auth-visual-inner {
+  min-width: 0;
+}
+
+.auth-form .btn,
+.auth-form button[type='submit'] {
+  min-height: 46px;
+}
+
+.password-toggle {
+  min-width: 42px;
+  min-height: 42px;
+}
+
+/* PATIENT: mobile tap targets and safe bottom navigation */
+.patient-portal-shell button,
+.patient-portal-shell a {
+  touch-action: manipulation;
+}
+
+.patient-portal-shell .portal-main {
+  min-width: 0;
+}
+
+.patient-portal-shell .portal-content {
+  min-width: 0;
+}
+
+.patient-portal-shell .time-slot,
+.patient-portal-shell .branch-choice,
+.patient-portal-shell .service-option {
+  min-height: 48px;
+}
+
+.patient-portal-shell .portal-bottom-nav {
+  padding-bottom: max(8px, env(safe-area-inset-bottom));
+}
+
+/* INTERNAL: dense enterprise desktop without clipping */
+.app-shell .main-shell,
+.app-shell .content-area {
+  min-width: 0;
+}
+
+.app-shell .content-area {
+  width: 100%;
+}
+
+.app-shell .topbar {
+  min-width: 0;
+}
+
+.app-shell .topbar-copy,
+.app-shell .topbar-actions {
+  min-width: 0;
+}
+
+.app-shell .search-field input {
+  min-width: 0;
+}
+
+/* 360 / 390 / 430 */
+@media (max-width: 430px) {
+  :root { --mobile-gutter: 14px; }
+
+  .landing-page .container,
+  .auth-shell,
+  .portal-content,
+  .patient-portal-shell .portal-topbar,
+  .content-area {
+    padding-left: var(--mobile-gutter);
+    padding-right: var(--mobile-gutter);
+  }
+
+  .page-header,
+  .section-header,
+  .premium-section-header,
+  .portal-topbar,
+  .topbar {
+    gap: 10px;
+  }
+
+  .page-header h1,
+  .page-header h2,
+  .section-header h1,
+  .section-header h2 {
+    font-size: clamp(1.35rem, 7vw, 1.65rem);
+  }
+
+  .action-buttons,
+  .page-actions,
+  .modal-footer,
+  .drawer-footer,
+  [class*='modal-actions'],
+  [class*='drawer-actions'] {
+    width: 100%;
+    flex-wrap: wrap;
+  }
+
+  .action-buttons .btn,
+  .page-actions .btn,
+  .modal-footer .btn,
+  .drawer-footer .btn {
+    min-height: 44px;
+  }
+
+  .table-scroll {
+    margin-inline: 0;
+  }
+
+  .modal,
+  [role='dialog'] {
+    width: min(calc(100vw - 20px), 100%);
+    max-height: calc(100dvh - 20px);
+  }
+
+  .drawer,
+  [class*='drawer-panel'] {
+    width: min(94vw, 420px);
+    max-width: 94vw;
+  }
+
+  .auth-page {
+    min-height: 100dvh;
+  }
+
+  .auth-panel {
+    padding-bottom: max(22px, env(safe-area-inset-bottom));
+  }
+
+  .patient-portal-shell {
+    padding-bottom: calc(70px + env(safe-area-inset-bottom));
+  }
+
+  .patient-portal-shell .portal-booking-progress {
+    overflow-x: auto;
+    scrollbar-width: none;
+    scroll-snap-type: x proximity;
+  }
+
+  .patient-portal-shell .portal-booking-progress::-webkit-scrollbar { display: none; }
+  .patient-portal-shell .portal-booking-step { min-width: 88px; scroll-snap-align: start; }
+
+  .patient-portal-shell .booking-actions {
+    position: sticky;
+    bottom: calc(64px + env(safe-area-inset-bottom));
+    z-index: 8;
+    padding: 10px;
+    margin-inline: -4px;
+    border: 1px solid #e5e7eb;
+    border-radius: 14px;
+    background: rgba(255,255,255,.96);
+    box-shadow: 0 10px 26px rgba(23,32,51,.08);
+  }
+}
+
+@media (min-width: 431px) and (max-width: 900px) {
+  .content-area,
+  .portal-content {
+    padding-inline: clamp(16px, 3vw, 24px);
+  }
+
+  .reports-filter-grid,
+  .filters-row,
+  .filter-row {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .modal,
+  [role='dialog'] {
+    max-width: min(92vw, 760px);
+  }
+}
+
+/* 1280 desktop */
+@media (min-width: 1200px) {
+  .app-shell .content-area {
+    padding-inline: 28px;
+  }
+
+  .page-stack {
+    max-width: 1600px;
+    margin-inline: auto;
+    width: 100%;
+  }
+
+  .table th,
+  .table td {
+    padding-top: 11px;
+    padding-bottom: 11px;
+  }
+}
+
+/* 1440 */
+@media (min-width: 1440px) {
+  .app-shell .content-area {
+    padding-inline: 34px;
+  }
+
+  .page-stack,
+  .super-admin-overview,
+  .staff-today-workspace,
+  .dentist-today-workspace {
+    max-width: 1680px;
+  }
+}
+
+/* 1920 */
+@media (min-width: 1800px) {
+  .app-shell .content-area {
+    padding-inline: 42px;
+  }
+
+  .page-stack,
+  .super-admin-overview,
+  .staff-today-workspace,
+  .dentist-today-workspace {
+    max-width: 1760px;
+  }
+
+  .landing-page .container {
+    max-width: 1500px;
+  }
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .panel.actionable:hover,
+  .card.actionable:hover,
+  .service-option:hover,
+  .branch-choice:hover,
+  .time-slot:hover {
+    box-shadow: var(--surface-shadow-hover);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
+
+  .skeleton::after,
+  .skeleton-line::after,
+  .skeleton-block::after,
+  [aria-busy='true'] .loading-placeholder::after {
+    animation: none;
+    display: none;
+  }
+}
