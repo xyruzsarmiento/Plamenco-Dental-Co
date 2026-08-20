@@ -26,6 +26,8 @@ import './styles/internal-finance-workspaces-v6.css'
 import './styles/internal-operations-workspaces-v6.css'
 import './styles/internal-admin-workspaces-v6.css'
 import './styles/internal-admin-workspaces-v6-refinements.css'
+import './styles/internal-governance-workspaces-v6-refinements.css'
+import './styles/settings-workspace-v6.css'
 import App from './App.tsx'
 import { registerPatientPortalPwa } from './features/patientPortal/pwaRegistration'
 
