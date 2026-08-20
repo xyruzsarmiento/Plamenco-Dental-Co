@@ -79,11 +79,20 @@ export function saveStoredBranches(branches: Branch[]) {
   window.localStorage.setItem(BRANCH_STORAGE_KEY, JSON.stringify(branches))
 }
 
-export async function loadBranchesFromSupabase() {
+export async function loadBranchesFromSupabase(options: { strict?: boolean } = {}) {
   if (!supabase) return getStoredBranches()
 
   const { data, error } = await supabase.from('branches').select('*').order('name', { ascending: true })
-  if (error || !Array.isArray(data) || data.length === 0) {
+  if (error) {
+    if (options.strict) throw new Error(`Unable to load clinic branches: ${error.message}`)
+    return getStoredBranches()
+  }
+
+  if (!Array.isArray(data) || data.length === 0) {
+    if (options.strict) {
+      saveStoredBranches([])
+      return []
+    }
     return getStoredBranches()
   }
 
