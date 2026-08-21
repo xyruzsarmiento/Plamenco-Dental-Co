@@ -62,6 +62,7 @@ import './styles/super-admin-appointments-v38.css'
 import './styles/appointments-premium-v39.css'
 import './styles/appointments-premium-v40.css'
 import './styles/appointments-responsive-v41.css'
+import './styles/appointments-calendar-responsive-v42.css'
 import App from './App.tsx'
 import { registerPatientPortalPwa } from './features/patientPortal/pwaRegistration'
 
