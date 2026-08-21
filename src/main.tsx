@@ -68,6 +68,7 @@ import './styles/super-admin-treatment-plans-v44.css'
 import './styles/super-admin-treatments-analytics-v45.css'
 import './styles/super-admin-billing-v46.css'
 import './styles/super-admin-billing-detail-v47.css'
+import './styles/super-admin-billing-detail-v48.css'
 import App from './App.tsx'
 import { registerPatientPortalPwa } from './features/patientPortal/pwaRegistration'
 
