@@ -104,3 +104,7 @@ export async function removeInventoryItemRecord(itemId: string) {
   writeItems(items.filter((item) => item.id !== itemId))
   return current
 }
+
+// Compatibility name used by the current modal. This performs a guarded permanent removal only
+// when the item has no stock/history references; otherwise it throws and preserves the record.
+export const archiveInventoryItemRecord = removeInventoryItemRecord
