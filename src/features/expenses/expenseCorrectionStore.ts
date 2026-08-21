@@ -86,7 +86,7 @@ export async function reviseExpense(expenseId: string, patch: ExpenseCorrectionP
   }
   recordAuditEntry({
     user: getCurrentSessionUserName(),
-    action: 'expense_corrected',
+    action: 'expense_updated',
     entity: 'expense',
     entityId: updated.id,
     metadata: { expenseNumber: updated.expenseNumber, total: formatExpenseCurrency(updated.totalCents) },
