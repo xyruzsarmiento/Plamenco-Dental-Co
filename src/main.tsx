@@ -59,6 +59,7 @@ import './styles/premium-analytics-refinement-v35.css'
 import './styles/super-admin-patients-v36.css'
 import './styles/appointment-modal-v37.css'
 import './styles/super-admin-appointments-v38.css'
+import './styles/appointments-premium-v39.css'
 import App from './App.tsx'
 import { registerPatientPortalPwa } from './features/patientPortal/pwaRegistration'
 
