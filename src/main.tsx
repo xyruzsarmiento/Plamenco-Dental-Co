@@ -78,6 +78,7 @@ import './styles/super-admin-reports-analytics-v54.css'
 import './styles/super-admin-inventory-v55.css'
 import './styles/super-admin-inventory-v56.css'
 import './styles/super-admin-expenses-v56.css'
+import './styles/super-admin-patients-actions-v57.css'
 import App from './App.tsx'
 import { registerPatientPortalPwa } from './features/patientPortal/pwaRegistration'
 
