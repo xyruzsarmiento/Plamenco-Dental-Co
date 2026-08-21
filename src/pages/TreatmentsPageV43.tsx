@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
 import { Activity, CalendarDays, ChevronRight, CircleDollarSign, Filter, Plus, Search, Sparkles, Stethoscope, UserRound } from 'lucide-react'
 import { Button } from '../components/ui/Button'
-import { PremiumBarChartV35 } from '../components/ui/PremiumInteractiveChartV35'
+import { MostPerformedTreatmentsV45, PlannedVsPerformedV45 } from '../components/ui/TreatmentAnalyticsV45'
 import { TreatmentFormDrawerV12 } from '../features/treatments/TreatmentFormDrawerV12'
 import { getStoredPatients } from '../features/patients/patientStore'
 import { getStoredServices } from '../features/services/serviceStore'
@@ -103,6 +103,12 @@ export function TreatmentsPageV43() {
 
   const snapshot = useMemo(() => buildEnterpriseReportSnapshot({ filters: { preset: 'this_month' } }), [treatments])
   const treatmentRows = useMemo(() => [...snapshot.treatments].sort((a, b) => b.performedCount - a.performedCount).slice(0, 7), [snapshot])
+  const analyticsRows = useMemo(() => treatmentRows.map((row) => ({
+    label: row.serviceName,
+    performed: row.performedCount,
+    planned: row.plannedCount,
+    billedLabel: formatReportCurrency(row.billedRevenueCents),
+  })), [treatmentRows])
   const plannedTotal = treatmentRows.reduce((sum, row) => sum + row.plannedCount, 0)
   const performedTotal = treatmentRows.reduce((sum, row) => sum + row.performedCount, 0)
 
@@ -154,22 +160,17 @@ export function TreatmentsPageV43() {
       <section className="tx43-analytics">
         <article className="tx43-insight tx43-insight-primary">
           <div className="tx43-insight-head">
-            <div><span>Clinical demand</span><h3>Most performed treatments</h3><p>Current-month procedures ranked by completed clinical activity.</p></div>
+            <div><span>Clinical demand</span><h3>Most performed treatments</h3><p>Current-month procedures ranked by completed clinical activity. Hover or focus a row for exact values.</p></div>
             <div className="tx43-insight-stat"><strong>{performedTotal}</strong><span>performed</span></div>
           </div>
-          <PremiumBarChartV35 rows={treatmentRows.map((row) => ({ label: row.serviceName, value: row.performedCount, meta: `${formatReportCurrency(row.billedRevenueCents)} billed` }))} valueLabel="Performed" ariaLabel="Most performed treatments" />
+          <MostPerformedTreatmentsV45 rows={analyticsRows} />
         </article>
 
         <article className="tx43-insight tx43-pipeline-card">
           <div className="tx43-insight-head">
-            <div><span>Care pipeline</span><h3>Planned vs performed</h3><p>Current-month planned procedures compared with treatments already performed.</p></div>
+            <div><span>Care pipeline</span><h3>Planned vs performed</h3><p>Compare planned procedure demand against recorded clinical completion by service.</p></div>
           </div>
-          <div className="tx43-pipeline-summary">
-            <div><span>Planned</span><strong>{plannedTotal}</strong></div>
-            <div><span>Performed</span><strong>{performedTotal}</strong></div>
-            <div><span>Completion</span><strong>{plannedTotal > 0 ? `${Math.min(100, Math.round((performedTotal / plannedTotal) * 100))}%` : '—'}</strong></div>
-          </div>
-          <PremiumBarChartV35 rows={treatmentRows.map((row) => ({ label: row.serviceName, value: row.plannedCount, meta: `${row.performedCount} performed` }))} valueLabel="Planned" ariaLabel="Planned treatments by service" />
+          <PlannedVsPerformedV45 rows={analyticsRows} />
         </article>
       </section>
 
