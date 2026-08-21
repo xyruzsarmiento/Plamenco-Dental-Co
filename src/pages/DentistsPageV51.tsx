@@ -95,7 +95,6 @@ export function DentistsPageV51() {
       return
     }
     setScheduleError(null)
-    setScheduleFeedback(null)
     setScheduleBlocks((current) => [...current, { dayOfWeek, branchId: defaultBranchId, startTime: '09:00', endTime: '17:00', status: 'active' }])
   }
 
@@ -187,7 +186,7 @@ export function DentistsPageV51() {
               </div>
               <div className="dv53-header-actions">
                 <Button variant="secondary" size="sm" onClick={resetSchedule} disabled={saving}>Reset</Button>
-                <Button icon={<Save size={15}/>} onClick={saveWeeklySchedule} disabled={!canManageSchedules||saving}>{saving?'Saving…':'Save schedule'}</Button>
+                <Button className="dv61-save-schedule" icon={<Save size={15}/>} onClick={saveWeeklySchedule} disabled={!canManageSchedules||saving}>{saving?'Saving…':'Save schedule'}</Button>
               </div>
             </header>
 
@@ -234,7 +233,7 @@ export function DentistsPageV51() {
 
             <footer className="dv53-savebar">
               <div><strong>{workingDays ? `${workingDays} working day${workingDays===1?'':'s'} configured` : 'No working days configured'}</strong><span>Use Availability Exceptions below only for one-time changes such as leave or special hours.</span></div>
-              <Button icon={<Save size={15}/>} onClick={saveWeeklySchedule} disabled={!canManageSchedules||saving||!assignedBranches.length}>{saving?'Saving…':'Save schedule'}</Button>
+              <Button className="dv61-save-schedule" icon={<Save size={15}/>} onClick={saveWeeklySchedule} disabled={!canManageSchedules||saving||!assignedBranches.length}>{saving?'Saving…':'Save schedule'}</Button>
             </footer>
           </section>
 
