@@ -1,5 +1,5 @@
+import { Archive, Boxes, ClipboardCheck, ClipboardList, PackagePlus, PencilLine, Truck, X } from 'lucide-react'
 import { useMemo, useState } from 'react'
-import { X } from 'lucide-react'
 import { Button } from '../../components/ui/Button'
 import { Input } from '../../components/ui/Input'
 import { Select } from '../../components/ui/Select'
@@ -7,6 +7,7 @@ import { Textarea } from '../../components/ui/Textarea'
 import { getCurrentSessionUserName } from '../security/security'
 import { isSupabaseConfigured, supabase } from '../../lib/supabase'
 import type { Branch } from '../branches/branchTypes'
+import { archiveInventoryItemRecord, updateInventoryItemRecord } from './inventoryItemActions'
 import {
   adjustStock,
   createInventoryItem,
@@ -29,6 +30,8 @@ import {
 
 export type InventoryDialog =
   | { type: 'add_item' }
+  | { type: 'edit_item'; item: InventoryItem }
+  | { type: 'archive_item'; item: InventoryItem }
   | { type: 'add_supplier' }
   | { type: 'purchase_order' }
   | { type: 'stock_count' }
@@ -75,6 +78,10 @@ function todayManila() {
   }).format(new Date())
 }
 
+function ModalLead({ icon, eyebrow, title, copy }: { icon: React.ReactNode; eyebrow: string; title: string; copy: string }) {
+  return <div className="inv56-modal-lead"><span className="inv56-modal-icon">{icon}</span><div><span>{eyebrow}</span><h2 id="inventory-action-title">{title}</h2><p>{copy}</p></div></div>
+}
+
 export function InventoryActionModal({ dialog, branches, preferredBranchId, onClose, onSuccess }: Props) {
   const items = useMemo(() => getInventoryItems().filter((item) => item.status === 'active'), [])
   const suppliers = useMemo(() => getSuppliers().filter((supplier) => supplier.status === 'active'), [])
@@ -82,22 +89,25 @@ export function InventoryActionModal({ dialog, branches, preferredBranchId, onCl
   const units = useMemo(() => getInventoryUnits().filter((unit) => unit.status === 'active'), [])
   const actor = getCurrentSessionUserName() || 'Clinic user'
   const defaultBranch = preferredBranchId && preferredBranchId !== 'all' ? preferredBranchId : branches[0]?.id ?? ''
+  const editingItem = dialog.type === 'edit_item' || dialog.type === 'archive_item' ? dialog.item : undefined
 
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
-  const [name, setName] = useState('')
-  const [sku, setSku] = useState('')
-  const [itemCode, setItemCode] = useState('')
-  const [description, setDescription] = useState('')
-  const [categoryId, setCategoryId] = useState(categories[0]?.id ?? 'other')
-  const [unitId, setUnitId] = useState(units[0]?.id ?? 'piece')
-  const [brand, setBrand] = useState('')
-  const [defaultSupplierId, setDefaultSupplierId] = useState('')
-  const [reorderLevel, setReorderLevel] = useState('0')
-  const [trackBatches, setTrackBatches] = useState(false)
-  const [trackExpiry, setTrackExpiry] = useState(false)
-  const [expiryWarningDays, setExpiryWarningDays] = useState('60')
+  const [name, setName] = useState(editingItem?.name ?? '')
+  const [sku, setSku] = useState(editingItem?.sku ?? '')
+  const [itemCode, setItemCode] = useState(editingItem?.itemCode ?? '')
+  const [description, setDescription] = useState(editingItem?.description ?? '')
+  const [categoryId, setCategoryId] = useState(editingItem?.categoryId ?? categories[0]?.id ?? 'other')
+  const [unitId, setUnitId] = useState(editingItem?.unitId ?? units[0]?.id ?? 'piece')
+  const [brand, setBrand] = useState(editingItem?.brand ?? '')
+  const [defaultSupplierId, setDefaultSupplierId] = useState(editingItem?.defaultSupplierId ?? '')
+  const [reorderLevel, setReorderLevel] = useState(String(editingItem?.defaultReorderLevel ?? 0))
+  const [trackBatches, setTrackBatches] = useState(editingItem?.trackBatches ?? false)
+  const [trackExpiry, setTrackExpiry] = useState(editingItem?.trackExpiry ?? false)
+  const [expiryWarningDays, setExpiryWarningDays] = useState(String(editingItem?.expiryWarningDays ?? 60))
+  const [openingBranchId, setOpeningBranchId] = useState(defaultBranch)
+  const [openingQuantity, setOpeningQuantity] = useState('0')
   const [contactPerson, setContactPerson] = useState('')
   const [phone, setPhone] = useState('')
   const [email, setEmail] = useState('')
@@ -122,10 +132,14 @@ export function InventoryActionModal({ dialog, branches, preferredBranchId, onCl
   const receiveOrder = dialog.type === 'receive_po' ? getPurchaseOrders().find((order) => order.id === dialog.poId) : undefined
   const receiveItem = receiveOrder?.items.find((item) => item.quantityReceived < item.quantityOrdered)
   const remainingToReceive = receiveItem ? receiveItem.quantityOrdered - receiveItem.quantityReceived : 0
+  const selectedUnit = units.find((unit) => unit.id === unitId)
+  const branchOptions = [{ value: '', label: 'Select branch' }, ...branches.map((branch) => ({ value: branch.id, label: branch.name }))]
 
   function title() {
     switch (dialog.type) {
       case 'add_item': return 'Add inventory item'
+      case 'edit_item': return 'Edit inventory item'
+      case 'archive_item': return 'Remove inventory item'
       case 'add_supplier': return 'Add supplier'
       case 'purchase_order': return 'Create purchase order'
       case 'stock_count': return 'Create stock count'
@@ -136,6 +150,18 @@ export function InventoryActionModal({ dialog, branches, preferredBranchId, onCl
       case 'quick_transfer': return `Quick transfer · ${dialog.item.name}`
       case 'receive_po': return `Receive ${receiveOrder?.poNumber ?? 'purchase order'}`
       case 'count_item': return 'Record physical count'
+    }
+  }
+
+  function modalMeta() {
+    switch (dialog.type) {
+      case 'add_item': return { eyebrow: 'Catalog setup', copy: 'Create the item, choose its counting unit, and optionally record the starting quantity at a branch.', icon: <PackagePlus size={19} /> }
+      case 'edit_item': return { eyebrow: 'Catalog maintenance', copy: 'Correct the item information without changing its stock movement history.', icon: <PencilLine size={19} /> }
+      case 'archive_item': return { eyebrow: 'Safe removal', copy: 'Archive this item so it leaves the active catalog while historical stock records remain intact.', icon: <Archive size={19} /> }
+      case 'add_supplier': return { eyebrow: 'Supplier network', copy: 'Add the supplier contact used by purchasing and replenishment workflows.', icon: <Truck size={19} /> }
+      case 'purchase_order': return { eyebrow: 'Procurement', copy: 'Create an order request. Stock changes only after the order is received.', icon: <ClipboardList size={19} /> }
+      case 'stock_count': return { eyebrow: 'Stock verification', copy: 'Start a physical count snapshot for one branch before review and reconciliation.', icon: <ClipboardCheck size={19} /> }
+      default: return { eyebrow: 'Inventory action', copy: 'Update the branch inventory ledger using the existing controlled workflow.', icon: <Boxes size={19} /> }
     }
   }
 
@@ -160,6 +186,10 @@ export function InventoryActionModal({ dialog, branches, preferredBranchId, onCl
         if (!Number.isFinite(reorder) || reorder < 0) throw new Error('Reorder level must be zero or greater.')
         const warningDays = Number(expiryWarningDays)
         if (trackExpiry && (!Number.isInteger(warningDays) || warningDays <= 0)) throw new Error('Expiry warning days must be a positive whole number.')
+        const startingQty = Number(openingQuantity)
+        if (!Number.isFinite(startingQty) || startingQty < 0) throw new Error('Starting quantity must be zero or greater.')
+        if (startingQty > 0 && !openingBranchId) throw new Error('Select the branch that currently holds the starting quantity.')
+
         const created = createInventoryItem({
           itemCode: itemCode.trim() || undefined,
           sku: sku.trim(), name: name.trim(), description: description.trim(), categoryId, unitId,
@@ -167,7 +197,43 @@ export function InventoryActionModal({ dialog, branches, preferredBranchId, onCl
           defaultReorderLevel: reorder, trackBatches, trackExpiry,
           expiryWarningDays: trackExpiry ? warningDays : 60, status: 'active',
         })
-        persistedTable = 'inventory_items'; persistedId = created.id; message = `${created.name} was added to the inventory catalog.`
+        await confirmRemote('inventory_items', created.id)
+
+        if (startingQty > 0) {
+          const movement = stockIn({
+            branchId: openingBranchId,
+            itemId: created.id,
+            quantity: startingQty,
+            unitCostCents: 0,
+            reason: 'Starting quantity recorded during item setup',
+            receivedDate: todayManila(),
+            performedBy: actor,
+          })
+          await confirmRemote('stock_movements', movement.id)
+        }
+
+        setSuccess(startingQty > 0 ? `${created.name} was added with ${startingQty.toLocaleString('en-PH')} ${selectedUnit?.abbreviation ?? unitId} starting stock.` : `${created.name} was added to the inventory catalog.`)
+        onSuccess()
+        return
+      } else if (dialog.type === 'edit_item') {
+        const reorder = Number(reorderLevel)
+        const warningDays = Number(expiryWarningDays)
+        await updateInventoryItemRecord(dialog.item.id, {
+          name, sku, itemCode, description, categoryId, unitId, brand,
+          defaultSupplierId: defaultSupplierId || undefined,
+          defaultReorderLevel: reorder,
+          trackBatches,
+          trackExpiry,
+          expiryWarningDays: trackExpiry ? warningDays : 60,
+        })
+        setSuccess(`${name.trim()} was updated.`)
+        onSuccess()
+        return
+      } else if (dialog.type === 'archive_item') {
+        await archiveInventoryItemRecord(dialog.item.id)
+        setSuccess(`${dialog.item.name} was removed from the active inventory catalog. Its history was preserved.`)
+        onSuccess()
+        return
       } else if (dialog.type === 'add_supplier') {
         if (!name.trim()) throw new Error('Supplier name is required.')
         if (email.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) throw new Error('Enter a valid supplier email address.')
@@ -240,61 +306,94 @@ export function InventoryActionModal({ dialog, branches, preferredBranchId, onCl
     }
   }
 
-  const branchOptions = [{ value: '', label: 'Select branch' }, ...branches.map((branch) => ({ value: branch.id, label: branch.name }))]
+  const meta = modalMeta()
 
   return (
-    <div className="modal-backdrop inventory-action-backdrop" onClick={busy ? undefined : onClose}>
-      <section className="modal inventory-action-modal" role="dialog" aria-modal="true" aria-labelledby="inventory-action-title" onClick={(event) => event.stopPropagation()}>
-        <div className="modal-header">
-          <div><h2 id="inventory-action-title">{title()}</h2><p className="muted-label">Inventory records follow the existing branch ledger and receiving workflow.</p></div>
-          <button type="button" className="icon-button" aria-label="Close dialog" onClick={onClose} disabled={busy}><X size={18} /></button>
+    <div className="modal-backdrop inventory-action-backdrop inv56-backdrop" onClick={busy ? undefined : onClose}>
+      <section className={`modal inventory-action-modal inv56-modal inv56-${dialog.type}`} role="dialog" aria-modal="true" aria-labelledby="inventory-action-title" onClick={(event) => event.stopPropagation()}>
+        <div className="modal-header inv56-modal-header">
+          <ModalLead icon={meta.icon} eyebrow={meta.eyebrow} title={title()} copy={meta.copy} />
+          <button type="button" className="icon-button inv56-close" aria-label="Close dialog" onClick={onClose} disabled={busy}><X size={18} /></button>
         </div>
-        <div className="modal-body inventory-action-body">
-          {success ? <div className="inline-alert success" role="status">{success}</div> : (
+        <div className="modal-body inventory-action-body inv56-modal-body">
+          {success ? <div className="inline-alert success inv56-success" role="status">{success}</div> : (
             <>
-              {dialog.type === 'add_item' && <div className="inventory-form-grid">
-                <Input label="Item name" value={name} onChange={(e) => setName(e.target.value)} autoFocus />
-                <Input label="SKU" value={sku} onChange={(e) => setSku(e.target.value)} placeholder="Optional" />
-                <Input label="Item code" value={itemCode} onChange={(e) => setItemCode(e.target.value)} placeholder="Auto-generated if blank" />
-                <Select label="Category" value={categoryId} onChange={(e) => setCategoryId(e.target.value)} options={categories.map((c) => ({ value: c.id, label: c.name }))} />
-                <Select label="Unit" value={unitId} onChange={(e) => setUnitId(e.target.value)} options={units.map((u) => ({ value: u.id, label: `${u.label} (${u.abbreviation})` }))} />
-                <Input label="Brand" value={brand} onChange={(e) => setBrand(e.target.value)} />
-                <Select label="Default supplier" value={defaultSupplierId} onChange={(e) => setDefaultSupplierId(e.target.value)} options={[{ value: '', label: 'None' }, ...suppliers.map((s) => ({ value: s.id, label: s.name }))]} />
-                <Input label="Default reorder level" type="number" min="0" step="0.001" value={reorderLevel} onChange={(e) => setReorderLevel(e.target.value)} />
-                <div className="inventory-form-wide"><Textarea label="Description" value={description} onChange={(e) => setDescription(e.target.value)} /></div>
-                <label className="inventory-checkbox"><input type="checkbox" checked={trackBatches} onChange={(e) => setTrackBatches(e.target.checked)} /> Track batches/lots</label>
-                <label className="inventory-checkbox"><input type="checkbox" checked={trackExpiry} onChange={(e) => setTrackExpiry(e.target.checked)} /> Track expiry dates</label>
-                {trackExpiry && <Input label="Expiry warning days" type="number" min="1" step="1" value={expiryWarningDays} onChange={(e) => setExpiryWarningDays(e.target.value)} />}
-                <div className="inventory-form-wide inventory-info-note">Items are catalog records. Branch quantity is created only by stock movements, receiving, transfers, or posted count reconciliation.</div>
+              {dialog.type === 'add_item' && <div className="inv56-form-stack">
+                <section className="inv56-form-section"><header><span>1</span><div><strong>Item identity</strong><small>Basic catalog information used by staff when searching inventory.</small></div></header><div className="inventory-form-grid">
+                  <Input label="Item name" value={name} onChange={(e) => setName(e.target.value)} autoFocus />
+                  <Input label="Stock code (SKU, optional)" value={sku} onChange={(e) => setSku(e.target.value)} placeholder="e.g. GLOVE-M-100" />
+                  <Input label="Item code" value={itemCode} onChange={(e) => setItemCode(e.target.value)} placeholder="Auto-generated if blank" />
+                  <Input label="Brand" value={brand} onChange={(e) => setBrand(e.target.value)} placeholder="Optional" />
+                  <Select label="Category" value={categoryId} onChange={(e) => setCategoryId(e.target.value)} options={categories.map((c) => ({ value: c.id, label: c.name }))} />
+                  <Select label="Counting unit" value={unitId} onChange={(e) => setUnitId(e.target.value)} options={units.map((u) => ({ value: u.id, label: `${u.label} (${u.abbreviation})` }))} />
+                  <Select label="Default supplier" value={defaultSupplierId} onChange={(e) => setDefaultSupplierId(e.target.value)} options={[{ value: '', label: 'None' }, ...suppliers.map((s) => ({ value: s.id, label: s.name }))]} />
+                  <Input label={`Reorder level (${selectedUnit?.abbreviation ?? unitId})`} type="number" min="0" step="0.001" value={reorderLevel} onChange={(e) => setReorderLevel(e.target.value)} />
+                  <div className="inventory-form-wide"><Textarea label="Description" value={description} onChange={(e) => setDescription(e.target.value)} /></div>
+                  <div className="inventory-form-wide inventory-info-note inv56-explainer"><strong>What is SKU?</strong><span>SKU means “stock keeping unit.” It is only an optional internal code that helps staff identify an item quickly. Leave it blank if the clinic does not use stock codes.</span></div>
+                </div></section>
+
+                <section className="inv56-form-section is-stock"><header><span>2</span><div><strong>Starting stock</strong><small>Record how many units are physically available right now. You can leave this at zero and stock in later.</small></div></header><div className="inventory-form-grid">
+                  <Select label="Starting branch" value={openingBranchId} onChange={(e) => setOpeningBranchId(e.target.value)} options={branchOptions} />
+                  <Input label={`Starting quantity (${selectedUnit?.label ?? unitId})`} type="number" min="0" step="0.001" value={openingQuantity} onChange={(e) => setOpeningQuantity(e.target.value)} placeholder="0" />
+                  <div className="inventory-form-wide inventory-info-note">Example: if the unit is <strong>Piece</strong> and the clinic currently has 25 pieces, enter <strong>25</strong>. A quantity of 0 creates only the catalog item.</div>
+                </div></section>
+
+                <section className="inv56-form-section"><header><span>3</span><div><strong>Tracking preferences</strong><small>Enable only the controls needed for this item.</small></div></header><div className="inv56-toggle-grid">
+                  <label className="inventory-checkbox"><input type="checkbox" checked={trackBatches} onChange={(e) => setTrackBatches(e.target.checked)} /><span><strong>Track batches / lots</strong><small>Useful for materials received in identifiable batches.</small></span></label>
+                  <label className="inventory-checkbox"><input type="checkbox" checked={trackExpiry} onChange={(e) => setTrackExpiry(e.target.checked)} /><span><strong>Track expiry dates</strong><small>Show expiry risk and warning windows.</small></span></label>
+                  {trackExpiry && <Input label="Expiry warning days" type="number" min="1" step="1" value={expiryWarningDays} onChange={(e) => setExpiryWarningDays(e.target.value)} />}
+                </div></section>
               </div>}
 
-              {dialog.type === 'add_supplier' && <div className="inventory-form-grid">
+              {dialog.type === 'edit_item' && <div className="inv56-form-stack">
+                <section className="inv56-form-section"><header><span>1</span><div><strong>Catalog details</strong><small>Correct naming and classification without rewriting historical stock transactions.</small></div></header><div className="inventory-form-grid">
+                  <Input label="Item name" value={name} onChange={(e) => setName(e.target.value)} autoFocus />
+                  <Input label="Stock code (SKU, optional)" value={sku} onChange={(e) => setSku(e.target.value)} placeholder="Optional internal code" />
+                  <Input label="Item code" value={itemCode} onChange={(e) => setItemCode(e.target.value)} />
+                  <Input label="Brand" value={brand} onChange={(e) => setBrand(e.target.value)} />
+                  <Select label="Category" value={categoryId} onChange={(e) => setCategoryId(e.target.value)} options={categories.map((c) => ({ value: c.id, label: c.name }))} />
+                  <Select label="Counting unit" value={unitId} onChange={(e) => setUnitId(e.target.value)} options={units.map((u) => ({ value: u.id, label: `${u.label} (${u.abbreviation})` }))} />
+                  <Select label="Default supplier" value={defaultSupplierId} onChange={(e) => setDefaultSupplierId(e.target.value)} options={[{ value: '', label: 'None' }, ...suppliers.map((s) => ({ value: s.id, label: s.name }))]} />
+                  <Input label="Default reorder level" type="number" min="0" step="0.001" value={reorderLevel} onChange={(e) => setReorderLevel(e.target.value)} />
+                  <div className="inventory-form-wide"><Textarea label="Description" value={description} onChange={(e) => setDescription(e.target.value)} /></div>
+                </div></section>
+                <section className="inv56-form-section"><header><span>2</span><div><strong>Tracking</strong><small>Stock quantity is not edited here; use Stock In, Stock Out, or Adjust so the ledger stays auditable.</small></div></header><div className="inv56-toggle-grid">
+                  <label className="inventory-checkbox"><input type="checkbox" checked={trackBatches} onChange={(e) => setTrackBatches(e.target.checked)} /><span><strong>Track batches / lots</strong><small>Keep batch-level receiving information.</small></span></label>
+                  <label className="inventory-checkbox"><input type="checkbox" checked={trackExpiry} onChange={(e) => setTrackExpiry(e.target.checked)} /><span><strong>Track expiry dates</strong><small>Monitor expiry windows for this item.</small></span></label>
+                  {trackExpiry && <Input label="Expiry warning days" type="number" min="1" step="1" value={expiryWarningDays} onChange={(e) => setExpiryWarningDays(e.target.value)} />}
+                </div></section>
+              </div>}
+
+              {dialog.type === 'archive_item' && <div className="inv56-archive-card"><span><Archive size={22} /></span><div><strong>Remove {dialog.item.name} from active inventory?</strong><p>This uses a safe archive instead of deleting the database row. Existing movements, purchase history, stock counts, and reports can still reference the item correctly.</p><small>You can keep historical accountability without showing the item in normal active-item workflows.</small></div></div>}
+
+              {dialog.type === 'add_supplier' && <div className="inv56-form-stack"><section className="inv56-form-section"><header><span>1</span><div><strong>Supplier profile</strong><small>Contact details used by purchasing and receiving staff.</small></div></header><div className="inventory-form-grid">
                 <Input label="Supplier name" value={name} onChange={(e) => setName(e.target.value)} autoFocus />
                 <Input label="Contact person" value={contactPerson} onChange={(e) => setContactPerson(e.target.value)} />
                 <Input label="Phone" value={phone} onChange={(e) => setPhone(e.target.value)} />
                 <Input label="Email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
                 <div className="inventory-form-wide"><Textarea label="Address" value={address} onChange={(e) => setAddress(e.target.value)} /></div>
                 <div className="inventory-form-wide"><Textarea label="Notes" value={notes} onChange={(e) => setNotes(e.target.value)} /></div>
-              </div>}
+              </div></section></div>}
 
-              {dialog.type === 'purchase_order' && <div className="inventory-form-grid">
+              {dialog.type === 'purchase_order' && <div className="inv56-form-stack"><section className="inv56-form-section"><header><span>1</span><div><strong>Order destination</strong><small>Choose who supplies the order and which clinic receives it.</small></div></header><div className="inventory-form-grid">
                 <Select label="Supplier" value={supplierId} onChange={(e) => setSupplierId(e.target.value)} options={[{ value: '', label: suppliers.length ? 'Select supplier' : 'No suppliers available' }, ...suppliers.map((s) => ({ value: s.id, label: s.name }))]} />
                 <Select label="Destination branch" value={branchId} onChange={(e) => setBranchId(e.target.value)} options={branchOptions} />
                 <Input label="Order date" type="date" value={orderDate} onChange={(e) => setOrderDate(e.target.value)} />
                 <Input label="Expected delivery" type="date" value={expectedDate} onChange={(e) => setExpectedDate(e.target.value)} />
+              </div></section><section className="inv56-form-section"><header><span>2</span><div><strong>Order line</strong><small>Specify the item, requested quantity, and expected unit cost.</small></div></header><div className="inventory-form-grid">
                 <Select label="Inventory item" value={poItemId} onChange={(e) => setPoItemId(e.target.value)} options={[{ value: '', label: items.length ? 'Select item' : 'No inventory items available' }, ...items.map((i) => ({ value: i.id, label: `${i.name} · ${i.itemCode}` }))]} />
                 <Input label="Quantity ordered" type="number" min="0.001" step="0.001" value={quantity} onChange={(e) => setQuantity(e.target.value)} />
                 <Input label="Unit cost (PHP)" type="number" min="0" step="0.01" value={unitCost} onChange={(e) => setUnitCost(e.target.value)} />
                 <div className="inventory-form-wide"><Textarea label="PO notes" value={notes} onChange={(e) => setNotes(e.target.value)} /></div>
-                <div className="inventory-form-wide inventory-info-note">Creating a PO does not increase stock. Inventory changes only when a purchase receipt is posted.</div>
-              </div>}
+                <div className="inventory-form-wide inventory-info-note">Creating a purchase order does <strong>not</strong> increase stock. Inventory changes only when receiving is posted.</div>
+              </div></section></div>}
 
-              {dialog.type === 'stock_count' && <div className="inventory-form-grid">
+              {dialog.type === 'stock_count' && <div className="inv56-form-stack"><section className="inv56-form-section"><header><span>1</span><div><strong>Count session</strong><small>Select the branch and date for the physical inventory check.</small></div></header><div className="inventory-form-grid">
                 <Select label="Branch" value={branchId} onChange={(e) => setBranchId(e.target.value)} options={branchOptions} />
                 <Input label="Count date" type="date" value={orderDate} onChange={(e) => setOrderDate(e.target.value)} />
                 <div className="inventory-form-wide"><Textarea label="Count notes" value={notes} onChange={(e) => setNotes(e.target.value)} /></div>
                 <div className="inventory-form-wide inventory-info-note">This creates a draft snapshot of active items. Enter physical quantities, review the count, then reconcile. Creating the count does not change stock.</div>
-              </div>}
+              </div></section></div>}
 
               {(dialog.type === 'stock_in' || dialog.type === 'stock_out' || dialog.type === 'adjust') && currentItem && <div className="inventory-form-grid">
                 <Select label="Branch" value={branchId} onChange={(e) => setBranchId(e.target.value)} options={branchOptions} />
@@ -323,10 +422,10 @@ export function InventoryActionModal({ dialog, branches, preferredBranchId, onCl
               </div>}
             </>
           )}
-          {error && <div className="inline-alert danger" role="alert">{error}</div>}
+          {error && <div className="inline-alert danger inv56-error" role="alert">{error}</div>}
         </div>
-        <div className="modal-actions">
-          {success ? <Button onClick={onClose}>Done</Button> : <><Button variant="secondary" onClick={onClose} disabled={busy}>Cancel</Button><Button onClick={() => void submit()} disabled={busy}>{busy ? 'Saving…' : 'Save'}</Button></>}
+        <div className="modal-actions inv56-modal-actions">
+          {success ? <Button onClick={onClose}>Done</Button> : <><Button variant="secondary" onClick={onClose} disabled={busy}>Cancel</Button><Button onClick={() => void submit()} disabled={busy} variant={dialog.type === 'archive_item' ? 'danger' : undefined}>{busy ? 'Saving…' : dialog.type === 'archive_item' ? 'Archive item' : dialog.type === 'edit_item' ? 'Save changes' : 'Save'}</Button></>}
         </div>
       </section>
     </div>
