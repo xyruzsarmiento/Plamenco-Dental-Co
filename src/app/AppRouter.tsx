@@ -31,12 +31,12 @@ import { PatientsPageV10 } from '../pages/PatientsPageV10'
 import { RecallFollowUpPageV18 } from '../pages/RecallFollowUpPageV18'
 import { ReportsPageV35 } from '../pages/ReportsPageV35'
 import { RoleHomePage } from '../pages/RoleHomePage'
-import { ServicesPageV15 } from '../pages/ServicesPageV15'
+import { ServicesPageV35 } from '../pages/ServicesPageV35'
 import { SettingsPageV30 } from '../pages/SettingsPageV30'
 import { SystemAdministrationPageV29 } from '../pages/SystemAdministrationPageV29'
 import { TeamAccessPageV26 } from '../pages/TeamAccessPageV26'
 import { TreatmentPlansPageV13 } from '../pages/TreatmentPlansPageV13'
-import { TreatmentsPageV12 } from '../pages/TreatmentsPageV12'
+import { TreatmentsPageV35 } from '../pages/TreatmentsPageV35'
 import { UnauthorizedPage } from '../pages/UnauthorizedPage'
 
 function BookRoute() {
@@ -86,10 +86,10 @@ export function AppRouter() {
           <Route path="patients" element={<RequirePermission permission="patients.view"><PatientsPageV10 /></RequirePermission>} />
           <Route path="patients/:patientId" element={<RequirePermission permission="patients.view"><PatientsPageV10 /></RequirePermission>} />
           <Route path="dental-records" element={<RequirePermission permission="clinical_records.view"><DentalRecordsPageV11 /></RequirePermission>} />
-          <Route path="treatments" element={<RequirePermission permission="treatments.view"><TreatmentsPageV12 /></RequirePermission>} />
+          <Route path="treatments" element={<RequirePermission permission="treatments.view"><TreatmentsPageV35 /></RequirePermission>} />
           <Route path="treatment-plans" element={<RequirePermission permission="treatments.view"><TreatmentPlansPageV13 /></RequirePermission>} />
           <Route path="billing" element={<RequirePermission anyOf={['billing.view', 'payments.view']}><BillingPageV32 /></RequirePermission>} />
-          <Route path="services" element={<RequirePermission anyOf={['services.view', 'services.manage']}><ServicesPageV15 /></RequirePermission>} />
+          <Route path="services" element={<RequirePermission anyOf={['services.view', 'services.manage']}><ServicesPageV35 /></RequirePermission>} />
           <Route path="inventory" element={<RequirePermission permission="inventory.view"><InventoryPageV35 /></RequirePermission>} />
           <Route path="expenses" element={<RequirePermission permission="expenses.view"><ExpensesPageV35 /></RequirePermission>} />
           <Route path="staff" element={<RequirePermission anyOf={['staff.manage', 'dentists.manage']}><TeamAccessPageV26 /></RequirePermission>} />
