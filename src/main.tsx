@@ -74,6 +74,7 @@ import './styles/super-admin-services-analytics-v50.css'
 import './styles/super-admin-dentists-v51.css'
 import './styles/super-admin-services-analytics-v52.css'
 import './styles/super-admin-dentists-schedule-v53.css'
+import './styles/super-admin-reports-analytics-v54.css'
 import App from './App.tsx'
 import { registerPatientPortalPwa } from './features/patientPortal/pwaRegistration'
 
