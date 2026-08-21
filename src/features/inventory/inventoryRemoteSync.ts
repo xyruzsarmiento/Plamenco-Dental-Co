@@ -1,0 +1,32 @@
+import { isSupabaseConfigured, supabase } from '../../lib/supabase'
+
+const inventoryTables = [
+  ['inventory_categories', 'plamenco.inventory.categories', (row: any) => ({ id: row.id, name: row.name, status: row.status ?? 'active' })],
+  ['inventory_units', 'plamenco.inventory.units', (row: any) => ({ id: row.id, label: row.label, abbreviation: row.abbreviation, status: row.status ?? 'active' })],
+  ['suppliers', 'plamenco.inventory.suppliers', (row: any) => ({ id: row.id, supplierNumber: row.supplier_number, name: row.name, contactPerson: row.contact_person ?? '', phone: row.phone ?? '', email: row.email ?? '', address: row.address ?? '', notes: row.notes ?? '', status: row.status ?? 'active', createdAt: row.created_at ?? new Date().toISOString(), updatedAt: row.updated_at ?? row.created_at ?? new Date().toISOString() })],
+  ['inventory_items', 'plamenco.inventory.items', (row: any) => ({ id: row.id, itemCode: row.item_code, sku: row.sku ?? '', name: row.name, description: row.description ?? '', categoryId: row.category_id, unitId: row.unit_id, brand: row.brand ?? '', defaultSupplierId: row.default_supplier_id ?? undefined, defaultReorderLevel: Number(row.default_reorder_level ?? 0), trackBatches: Boolean(row.track_batches), trackExpiry: Boolean(row.track_expiry), expiryWarningDays: Number(row.expiry_warning_days ?? 60), status: row.status ?? 'active', createdAt: row.created_at ?? new Date().toISOString(), updatedAt: row.updated_at ?? row.created_at ?? new Date().toISOString() })],
+  ['branch_inventory', 'plamenco.inventory.branchStock', (row: any) => ({ id: row.id, branchId: row.branch_id, itemId: row.inventory_item_id, quantityOnHand: Number(row.quantity_on_hand ?? 0), reorderLevel: Number(row.reorder_level ?? 0), location: row.location ?? '', averageUnitCostCents: Number(row.average_unit_cost_cents ?? 0), updatedAt: row.updated_at ?? new Date().toISOString() })],
+  ['inventory_batches', 'plamenco.inventory.batches', (row: any) => ({ id: row.id, branchId: row.branch_id, itemId: row.inventory_item_id, batchNumber: row.batch_number, quantityOnHand: Number(row.quantity_on_hand ?? 0), receivedDate: row.received_date ?? '', expiryDate: row.expiry_date ?? undefined, supplierId: row.supplier_id ?? undefined, unitCostCents: Number(row.unit_cost_cents ?? 0), sourceType: row.source_type ?? '', sourceId: row.source_id ?? undefined, createdAt: row.created_at ?? new Date().toISOString(), updatedAt: row.updated_at ?? row.created_at ?? new Date().toISOString() })],
+  ['stock_movements', 'plamenco.inventory.movements', (row: any) => ({ id: row.id, branchId: row.branch_id, itemId: row.inventory_item_id, batchId: row.batch_id ?? undefined, movementType: row.movement_type, quantity: Number(row.quantity ?? 0), quantityBefore: Number(row.quantity_before ?? 0), quantityAfter: Number(row.quantity_after ?? 0), referenceType: row.reference_type ?? undefined, referenceId: row.reference_id ?? undefined, reason: row.reason ?? '', performedBy: row.performed_by ?? '', patientId: row.patient_id ?? undefined, clinicalVisitId: row.clinical_visit_id ?? undefined, treatmentId: row.treatment_id ?? undefined, appointmentId: row.appointment_id ?? undefined, providerId: row.provider_id ?? undefined, unitCostCents: Number(row.unit_cost_cents ?? 0), totalCostCents: Number(row.total_cost_cents ?? 0), createdAt: row.created_at ?? new Date().toISOString() })],
+  ['purchase_orders', 'plamenco.inventory.purchaseOrders', (row: any) => ({ id: row.id, poNumber: row.po_number, supplierId: row.supplier_id, branchId: row.branch_id, orderDate: row.order_date ?? '', expectedDeliveryDate: row.expected_delivery_date ?? undefined, status: row.status ?? 'ordered', items: Array.isArray(row.items) ? row.items : [], subtotalCents: Number(row.subtotal_cents ?? 0), totalCents: Number(row.total_cents ?? 0), notes: row.notes ?? '', createdBy: row.created_by ?? '', approvedBy: row.approved_by ?? undefined, createdAt: row.created_at ?? new Date().toISOString(), updatedAt: row.updated_at ?? row.created_at ?? new Date().toISOString() })],
+  ['purchase_receipts', 'plamenco.inventory.purchaseReceipts', (row: any) => ({ id: row.id, receiptNumber: row.receipt_number, poId: row.purchase_order_id, supplierId: row.supplier_id, branchId: row.branch_id, receivedDate: row.received_date ?? '', receivedBy: row.received_by ?? '', supplierInvoiceNumber: row.supplier_invoice_number ?? undefined, supplierInvoiceDate: row.supplier_invoice_date ?? undefined, supplierInvoiceDueDate: row.supplier_invoice_due_date ?? undefined, supplierInvoiceAmountCents: Number(row.supplier_invoice_amount_cents ?? 0), notes: row.notes ?? '', totalCostCents: Number(row.total_cost_cents ?? 0), createdAt: row.created_at ?? new Date().toISOString() })],
+  ['stock_transfers', 'plamenco.inventory.transfers', (row: any) => ({ id: row.id, transferNumber: row.transfer_number, fromBranchId: row.from_branch_id, toBranchId: row.to_branch_id, status: row.status ?? 'draft', items: Array.isArray(row.items) ? row.items : [], requestedBy: row.requested_by ?? '', sentBy: row.sent_by ?? undefined, sentAt: row.sent_at ?? undefined, receivedBy: row.received_by ?? undefined, notes: row.notes ?? '', createdAt: row.created_at ?? new Date().toISOString(), receivedAt: row.received_at ?? undefined })],
+  ['stock_counts', 'plamenco.inventory.stockCounts', (row: any) => ({ id: row.id, countNumber: row.count_number ?? row.id, branchId: row.branch_id, status: row.status ?? 'draft', countedBy: row.counted_by ?? '', reviewedBy: row.reviewed_by ?? undefined, countDate: row.count_date ?? '', items: Array.isArray(row.items) ? row.items : [], notes: row.notes ?? '', createdAt: row.created_at ?? new Date().toISOString(), postedAt: row.posted_at ?? undefined })],
+] as const
+
+export async function syncInventoryFromSupabase() {
+  if (!isSupabaseConfigured || !supabase || typeof window === 'undefined') return { synced: false, configured: false }
+
+  const loaded: Array<{ key: string; rows: unknown[] }> = []
+  for (const [table, key, map] of inventoryTables) {
+    const { data, error } = await supabase.from(table).select('*')
+    if (error) throw new Error(`Inventory database sync failed for ${table}: ${error.message}`)
+    loaded.push({ key, rows: (data ?? []).map(map) })
+  }
+
+  for (const entry of loaded) {
+    window.localStorage.setItem(entry.key, JSON.stringify(entry.rows))
+  }
+
+  return { synced: true, configured: true }
+}
