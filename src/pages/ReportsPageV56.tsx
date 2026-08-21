@@ -10,7 +10,7 @@ import { getExpenseCategories, getExpenseVendors } from '../features/expenses/ex
 import { getInventoryCategories, getSuppliers } from '../features/inventory/inventoryStore'
 import { buildExecutiveWorkbookV56, exportEnterpriseReportCsvV56 } from '../features/reports/reportExportsV56'
 import { buildEnterpriseReportSnapshot, formatReportCurrency, getReportingDatePresetRange, type DateRangePreset, type EnterpriseReportSnapshot } from '../features/reports/reportStore'
-import { calculateReportTax, defaultReportTaxConfiguration, getStoredReportTaxConfiguration, loadReportTaxConfiguration, saveReportTaxConfiguration, type ReportTaxConfiguration } from '../features/reports/reportTaxStore'
+import { calculateReportTax, getStoredReportTaxConfiguration, loadReportTaxConfiguration, saveReportTaxConfiguration, type ReportTaxConfiguration } from '../features/reports/reportTaxStore'
 import { getStoredServices } from '../features/services/serviceStore'
 
 const presets:Array<{value:DateRangePreset;label:string}>=[{value:'today',label:'Today'},{value:'yesterday',label:'Yesterday'},{value:'this_week',label:'This week'},{value:'last_7_days',label:'Last 7 days'},{value:'this_month',label:'This month'},{value:'last_month',label:'Last month'},{value:'last_30_days',label:'Last 30 days'},{value:'this_quarter',label:'This quarter'},{value:'this_year',label:'This year'},{value:'custom',label:'Custom range'}]
