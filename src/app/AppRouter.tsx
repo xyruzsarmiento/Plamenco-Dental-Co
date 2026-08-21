@@ -33,7 +33,7 @@ import { ReportsPageV56 } from '../pages/ReportsPageV56'
 import { RoleHomePage } from '../pages/RoleHomePage'
 import { ServicesPageV49 } from '../pages/ServicesPageV49'
 import { SettingsPageV30 } from '../pages/SettingsPageV30'
-import { SystemAdministrationPageV29 } from '../pages/SystemAdministrationPageV29'
+import { SystemAdministrationPageV58 } from '../pages/SystemAdministrationPageV58'
 import { TeamAccessPageV26 } from '../pages/TeamAccessPageV26'
 import { TreatmentPlansPageV44 } from '../pages/TreatmentPlansPageV44'
 import { TreatmentsPageV43 } from '../pages/TreatmentsPageV43'
@@ -104,7 +104,7 @@ export function AppRouter() {
           <Route path="tasks" element={<RequirePermission anyOf={['appointments.view', 'clinical_records.view', 'system_admin.view']}><OperationalTasksPageV17 /></RequirePermission>} />
           <Route path="forms-consent" element={<RequirePermission permission="settings.manage"><FormsConsentAdminPageV28 /></RequirePermission>} />
           <Route path="settings" element={<RequirePermission permission="settings.manage"><SettingsPageV30 /></RequirePermission>} />
-          <Route path="system-admin" element={<RequireRole allowedRoles={['super_admin']}><SystemAdministrationPageV29 /></RequireRole>} />
+          <Route path="system-admin" element={<RequireRole allowedRoles={['super_admin']}><SystemAdministrationPageV58 /></RequireRole>} />
           <Route path="unauthorized" element={<UnauthorizedPage />} />
         </Route>
         <Route path="/super-admin/*" element={<RequireAuth><RequireRole allowedRoles={['super_admin']}><Navigate to="/app/system-admin" replace /></RequireRole></RequireAuth>} />
