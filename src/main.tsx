@@ -53,6 +53,7 @@ import './styles/super-admin-forms-consent-v28.css'
 import './styles/super-admin-system-admin-v29.css'
 import './styles/super-admin-settings-v30.css'
 import './styles/super-admin-appointments-v31.css'
+import './styles/super-admin-billing-v32.css'
 import App from './App.tsx'
 import { registerPatientPortalPwa } from './features/patientPortal/pwaRegistration'
 
