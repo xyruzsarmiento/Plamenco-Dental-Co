@@ -1,5 +1,5 @@
-import { Archive, Boxes, ClipboardCheck, ClipboardList, PackagePlus, PencilLine, Truck, X } from 'lucide-react'
-import { useMemo, useState } from 'react'
+import { Boxes, ClipboardCheck, ClipboardList, PackagePlus, PencilLine, Trash2, Truck, X } from 'lucide-react'
+import { useMemo, useState, type ReactNode } from 'react'
 import { Button } from '../../components/ui/Button'
 import { Input } from '../../components/ui/Input'
 import { Select } from '../../components/ui/Select'
@@ -7,7 +7,7 @@ import { Textarea } from '../../components/ui/Textarea'
 import { getCurrentSessionUserName } from '../security/security'
 import { isSupabaseConfigured, supabase } from '../../lib/supabase'
 import type { Branch } from '../branches/branchTypes'
-import { archiveInventoryItemRecord, updateInventoryItemRecord } from './inventoryItemActions'
+import { removeInventoryItemRecord, updateInventoryItemRecord } from './inventoryItemActions'
 import {
   adjustStock,
   createInventoryItem,
@@ -31,7 +31,7 @@ import {
 export type InventoryDialog =
   | { type: 'add_item' }
   | { type: 'edit_item'; item: InventoryItem }
-  | { type: 'archive_item'; item: InventoryItem }
+  | { type: 'remove_item'; item: InventoryItem }
   | { type: 'add_supplier' }
   | { type: 'purchase_order' }
   | { type: 'stock_count' }
@@ -78,7 +78,7 @@ function todayManila() {
   }).format(new Date())
 }
 
-function ModalLead({ icon, eyebrow, title, copy }: { icon: React.ReactNode; eyebrow: string; title: string; copy: string }) {
+function ModalLead({ icon, eyebrow, title, copy }: { icon: ReactNode; eyebrow: string; title: string; copy: string }) {
   return <div className="inv56-modal-lead"><span className="inv56-modal-icon">{icon}</span><div><span>{eyebrow}</span><h2 id="inventory-action-title">{title}</h2><p>{copy}</p></div></div>
 }
 
@@ -89,7 +89,7 @@ export function InventoryActionModal({ dialog, branches, preferredBranchId, onCl
   const units = useMemo(() => getInventoryUnits().filter((unit) => unit.status === 'active'), [])
   const actor = getCurrentSessionUserName() || 'Clinic user'
   const defaultBranch = preferredBranchId && preferredBranchId !== 'all' ? preferredBranchId : branches[0]?.id ?? ''
-  const editingItem = dialog.type === 'edit_item' || dialog.type === 'archive_item' ? dialog.item : undefined
+  const editingItem = dialog.type === 'edit_item' || dialog.type === 'remove_item' ? dialog.item : undefined
 
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -139,7 +139,7 @@ export function InventoryActionModal({ dialog, branches, preferredBranchId, onCl
     switch (dialog.type) {
       case 'add_item': return 'Add inventory item'
       case 'edit_item': return 'Edit inventory item'
-      case 'archive_item': return 'Remove inventory item'
+      case 'remove_item': return 'Remove inventory item'
       case 'add_supplier': return 'Add supplier'
       case 'purchase_order': return 'Create purchase order'
       case 'stock_count': return 'Create stock count'
@@ -157,7 +157,7 @@ export function InventoryActionModal({ dialog, branches, preferredBranchId, onCl
     switch (dialog.type) {
       case 'add_item': return { eyebrow: 'Catalog setup', copy: 'Create the item, choose its counting unit, and optionally record the starting quantity at a branch.', icon: <PackagePlus size={19} /> }
       case 'edit_item': return { eyebrow: 'Catalog maintenance', copy: 'Correct the item information without changing its stock movement history.', icon: <PencilLine size={19} /> }
-      case 'archive_item': return { eyebrow: 'Safe removal', copy: 'Archive this item so it leaves the active catalog while historical stock records remain intact.', icon: <Archive size={19} /> }
+      case 'remove_item': return { eyebrow: 'Safe removal', copy: 'Permanently remove an item only when it has no stock, movement, batch, purchase, transfer, or stock-count history.', icon: <Trash2 size={19} /> }
       case 'add_supplier': return { eyebrow: 'Supplier network', copy: 'Add the supplier contact used by purchasing and replenishment workflows.', icon: <Truck size={19} /> }
       case 'purchase_order': return { eyebrow: 'Procurement', copy: 'Create an order request. Stock changes only after the order is received.', icon: <ClipboardList size={19} /> }
       case 'stock_count': return { eyebrow: 'Stock verification', copy: 'Start a physical count snapshot for one branch before review and reconciliation.', icon: <ClipboardCheck size={19} /> }
@@ -229,9 +229,9 @@ export function InventoryActionModal({ dialog, branches, preferredBranchId, onCl
         setSuccess(`${name.trim()} was updated.`)
         onSuccess()
         return
-      } else if (dialog.type === 'archive_item') {
-        await archiveInventoryItemRecord(dialog.item.id)
-        setSuccess(`${dialog.item.name} was removed from the active inventory catalog. Its history was preserved.`)
+      } else if (dialog.type === 'remove_item') {
+        await removeInventoryItemRecord(dialog.item.id)
+        setSuccess(`${dialog.item.name} was permanently removed because it had no inventory history.`)
         onSuccess()
         return
       } else if (dialog.type === 'add_supplier') {
@@ -364,7 +364,7 @@ export function InventoryActionModal({ dialog, branches, preferredBranchId, onCl
                 </div></section>
               </div>}
 
-              {dialog.type === 'archive_item' && <div className="inv56-archive-card"><span><Archive size={22} /></span><div><strong>Remove {dialog.item.name} from active inventory?</strong><p>This uses a safe archive instead of deleting the database row. Existing movements, purchase history, stock counts, and reports can still reference the item correctly.</p><small>You can keep historical accountability without showing the item in normal active-item workflows.</small></div></div>}
+              {dialog.type === 'remove_item' && <div className="inv56-archive-card"><span><Trash2 size={22} /></span><div><strong>Permanently remove {dialog.item.name}?</strong><p>This is allowed only when the item has no branch stock, movements, batches, purchase-order history, transfers, or stock-count history.</p><small>If the item already has history, removal is blocked and you should edit the item instead.</small></div></div>}
 
               {dialog.type === 'add_supplier' && <div className="inv56-form-stack"><section className="inv56-form-section"><header><span>1</span><div><strong>Supplier profile</strong><small>Contact details used by purchasing and receiving staff.</small></div></header><div className="inventory-form-grid">
                 <Input label="Supplier name" value={name} onChange={(e) => setName(e.target.value)} autoFocus />
@@ -425,7 +425,7 @@ export function InventoryActionModal({ dialog, branches, preferredBranchId, onCl
           {error && <div className="inline-alert danger inv56-error" role="alert">{error}</div>}
         </div>
         <div className="modal-actions inv56-modal-actions">
-          {success ? <Button onClick={onClose}>Done</Button> : <><Button variant="secondary" onClick={onClose} disabled={busy}>Cancel</Button><Button onClick={() => void submit()} disabled={busy} variant={dialog.type === 'archive_item' ? 'danger' : undefined}>{busy ? 'Saving…' : dialog.type === 'archive_item' ? 'Archive item' : dialog.type === 'edit_item' ? 'Save changes' : 'Save'}</Button></>}
+          {success ? <Button onClick={onClose}>Done</Button> : <><Button variant="secondary" onClick={onClose} disabled={busy}>Cancel</Button><Button onClick={() => void submit()} disabled={busy} variant={dialog.type === 'remove_item' ? 'danger' : undefined}>{busy ? 'Saving…' : dialog.type === 'remove_item' ? 'Remove item' : dialog.type === 'edit_item' ? 'Save changes' : 'Save'}</Button></>}
         </div>
       </section>
     </div>
