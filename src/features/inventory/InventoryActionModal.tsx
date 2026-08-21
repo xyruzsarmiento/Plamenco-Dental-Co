@@ -48,11 +48,25 @@ type Props = {
   onSuccess: () => void
 }
 
+function sleep(ms: number) {
+  return new Promise((resolve) => window.setTimeout(resolve, ms))
+}
+
 async function confirmRemote(table: string, id: string) {
   if (!isSupabaseConfigured || !supabase) return
-  const { data, error } = await supabase.from(table).select('id').eq('id', id).maybeSingle()
-  if (error) throw new Error(`Database persistence failed: ${error.message}`)
-  if (!data) throw new Error(`Database persistence could not be confirmed for ${table}.`)
+
+  let waitMs = 120
+  for (let attempt = 0; attempt < 8; attempt += 1) {
+    const { data, error } = await supabase.from(table).select('id').eq('id', id).maybeSingle()
+    if (error) throw new Error(`Database persistence failed: ${error.message}`)
+    if (data) return
+    if (attempt < 7) {
+      await sleep(waitMs)
+      waitMs = Math.min(Math.round(waitMs * 1.6), 700)
+    }
+  }
+
+  throw new Error(`Database persistence could not be confirmed for ${table}. The save did not reach Supabase.`)
 }
 
 function todayManila() {
