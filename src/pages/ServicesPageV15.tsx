@@ -1,15 +1,10 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Activity, CheckCircle2, Clock3, Eye, Filter, Layers3, PencilLine, Plus, Search, ShieldCheck, Stethoscope, XCircle } from 'lucide-react'
 import { PageScaffold } from '../components/ui/PageScaffold'
 import { Button } from '../components/ui/Button'
 import { ServiceFormModalV15 } from '../features/services/ServiceFormModalV15'
 import type { Service, ServiceFormValues, ServiceStatus } from '../features/services/serviceTypes'
-import { createService, getStoredServices, toggleServiceStatus, updateService } from '../features/services/serviceStore'
-
-function money(value: number) {
-  if (!Number.isFinite(value) || value <= 0) return 'Price to confirm'
-  return new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP', maximumFractionDigits: 0 }).format(value)
-}
+import { createService, formatServicePrice, getStoredServices, loadServicesFromSupabase, toggleServiceStatus, updateService } from '../features/services/serviceStore'
 
 function keyFor(service: Service) {
   const name = service.name.trim().toLowerCase().replace(/\s+/g, ' ')
@@ -38,6 +33,19 @@ export function ServicesPageV15() {
   const [viewing, setViewing] = useState<Service | null>(null)
   const [feedback, setFeedback] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
+
+  useEffect(() => {
+    let mounted = true
+    void loadServicesFromSupabase().then((loaded) => {
+      if (mounted) setServices(loaded)
+    })
+    const sync = () => setServices(getStoredServices())
+    window.addEventListener('plamenco:services-updated', sync)
+    return () => {
+      mounted = false
+      window.removeEventListener('plamenco:services-updated', sync)
+    }
+  }, [])
 
   const uniqueServices = useMemo(() => dedupeServices(services), [services])
   const duplicateCount = services.length - uniqueServices.length
@@ -102,7 +110,7 @@ export function ServicesPageV15() {
       <section className="svc15-page">
         <header className="svc15-command">
           <div><span>Clinic catalogue</span><h2>Service operations</h2><p>Maintain one clean source of truth for procedures used by booking, treatment planning and billing.</p></div>
-          <Button onClick={add} icon={<Plus size={17} />}>Add service</Button>
+          <Button className="svc15-add-service-btn" onClick={add} icon={<Plus size={17} />}>Add service</Button>
         </header>
 
         <section className="svc15-metrics">
@@ -131,13 +139,13 @@ export function ServicesPageV15() {
                 <div className="svc15-card-icon"><Stethoscope size={21} /></div>
                 <h3>{service.name}</h3>
                 <p>{service.description || 'No description provided.'}</p>
-                <div className="svc15-card-metrics"><div><span>Catalogue price</span><strong>{money(service.price)}</strong></div><div><span>Duration</span><strong>{service.duration} min</strong></div></div>
+                <div className="svc15-card-metrics"><div><span>Catalogue price</span><strong>{formatServicePrice(service.price)}</strong></div><div><span>Duration</span><strong>{service.duration} min</strong></div></div>
                 <div className="svc15-card-actions"><Button variant="secondary" size="sm" icon={<Eye size={14} />} onClick={() => setViewing(service)}>Details</Button><Button variant="secondary" size="sm" icon={<PencilLine size={14} />} onClick={() => edit(service)}>Edit</Button><button type="button" className="svc15-toggle" onClick={() => toggle(service)}>{service.status === 'active' ? 'Deactivate' : 'Activate'}</button></div>
               </article>
             ))}
           </div>
         ) : (
-          <div className="svc15-empty"><Search size={24} /><h3>No services match this view</h3><p>Adjust your filters or create a new service.</p><Button onClick={add} icon={<Plus size={15} />}>Add service</Button></div>
+          <div className="svc15-empty"><Search size={24} /><h3>No services match this view</h3><p>Adjust your filters or create a new service.</p><Button className="svc15-add-service-btn" onClick={add} icon={<Plus size={15} />}>Add service</Button></div>
         )}
 
         {showForm && <ServiceFormModalV15 mode={mode} service={editing} existingServices={uniqueServices} onSubmit={save} onClose={() => { setShowForm(false); setEditing(undefined) }} isSubmitting={saving} />}
@@ -146,7 +154,7 @@ export function ServicesPageV15() {
           <div className="svc15-modal-backdrop" onClick={() => setViewing(null)}>
             <aside className="svc15-detail" role="dialog" aria-modal="true" aria-labelledby="svc15-detail-title" onClick={(event) => event.stopPropagation()}>
               <div className="svc15-detail-head"><div><span>Service detail</span><h2 id="svc15-detail-title">{viewing.name}</h2><p>{viewing.category} · {viewing.status}</p></div><button type="button" onClick={() => setViewing(null)} aria-label="Close service details">×</button></div>
-              <div className="svc15-detail-body"><div className="svc15-detail-icon"><Activity size={24} /></div><p>{viewing.description || 'No description provided.'}</p><div className="svc15-detail-metrics"><div><span>Catalogue price</span><strong>{money(viewing.price)}</strong></div><div><span>Duration</span><strong>{viewing.duration} minutes</strong></div><div><span>Status</span><strong>{viewing.status}</strong></div><div><span>Category</span><strong>{viewing.category}</strong></div></div></div>
+              <div className="svc15-detail-body"><div className="svc15-detail-icon"><Activity size={24} /></div><p>{viewing.description || 'No description provided.'}</p><div className="svc15-detail-metrics"><div><span>Catalogue price</span><strong>{formatServicePrice(viewing.price)}</strong></div><div><span>Duration</span><strong>{viewing.duration} minutes</strong></div><div><span>Status</span><strong>{viewing.status}</strong></div><div><span>Category</span><strong>{viewing.category}</strong></div></div></div>
               <div className="svc15-detail-actions"><Button variant="secondary" onClick={() => setViewing(null)}>Close</Button><Button onClick={() => edit(viewing)}>Edit service</Button></div>
             </aside>
           </div>
