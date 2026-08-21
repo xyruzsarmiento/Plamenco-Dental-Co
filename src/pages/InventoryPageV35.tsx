@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { AlertTriangle, Boxes, PackageCheck, PackageX } from 'lucide-react'
+import { AlertTriangle, Boxes, LoaderCircle, PackageCheck, PackageX } from 'lucide-react'
 import { PremiumBarChartV35 } from '../components/ui/PremiumInteractiveChartV35'
 import { InventoryValueAnalyticsV56 } from '../components/ui/InventoryValueAnalyticsV56'
 import { syncInventoryFromSupabase } from '../features/inventory/inventoryRemoteSync'
@@ -8,19 +8,22 @@ import { InventoryPageV22 } from './InventoryPageV22'
 
 export function InventoryPageV35() {
   const [syncVersion, setSyncVersion] = useState(0)
+  const [syncReady, setSyncReady] = useState(false)
   const [syncError, setSyncError] = useState<string | null>(null)
 
   useEffect(() => {
     let mounted = true
     void syncInventoryFromSupabase()
       .then((result) => {
-        if (!mounted || !result.synced) return
+        if (!mounted) return
         setSyncError(null)
-        setSyncVersion((version) => version + 1)
+        if (result.synced) setSyncVersion((version) => version + 1)
+        setSyncReady(true)
       })
       .catch((cause) => {
         if (!mounted) return
         setSyncError(cause instanceof Error ? cause.message : 'Inventory could not be synchronized from the clinic database.')
+        setSyncReady(true)
       })
     return () => { mounted = false }
   }, [])
@@ -37,6 +40,10 @@ export function InventoryPageV35() {
     { label: 'Out of stock', value: snapshot.inventory.outOfStockItems, detail: 'Require replenishment', icon: PackageX, tone: 'danger' },
     { label: 'Expiring soon', value: snapshot.inventory.expiringSoon, detail: 'Inside the expiry warning window', icon: PackageCheck, tone: 'info' },
   ]
+
+  if (!syncReady) {
+    return <section className="inventory35-shell"><div className="analytics35-card" role="status"><header><span>Inventory database</span><h3>Loading current inventory</h3><p>Synchronizing items, suppliers, purchase orders and stock counts before inventory actions are enabled.</p></header><div className="inventory-v22-empty"><LoaderCircle size={28} className="spin" /><p>Please wait while the current clinic inventory is loaded.</p></div></div></section>
+  }
 
   return <section className="inventory35-shell">
     {syncError && <div className="inventory-v22-alert" role="alert">{syncError}</div>}
