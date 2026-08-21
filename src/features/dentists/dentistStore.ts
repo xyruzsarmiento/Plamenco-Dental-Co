@@ -256,10 +256,15 @@ export function saveProviderAssignments(providerId: string, branchIds: string[])
   })
 }
 
-export function saveScheduleBlocks(providerId: string, blocks: Omit<ProviderScheduleBlock, 'id' | 'providerId' | 'createdAt' | 'updatedAt'>[]) {
-  const existing = getProviderScheduleBlocks().filter((block) => block.providerId !== providerId)
+export async function saveScheduleBlocks(providerId: string, blocks: Omit<ProviderScheduleBlock, 'id' | 'providerId' | 'createdAt' | 'updatedAt'>[]) {
+  const normalized = blocks
+    .filter((block) => block.branchId && block.startTime && block.endTime && block.startTime < block.endTime)
+    .map((block) => ({ ...block, status: block.status ?? 'active' as const }))
   const timestamp = nowIso()
-  const nextBlocks = blocks.map((block): ProviderScheduleBlock => ({
+  const previousAll = getProviderScheduleBlocks()
+  const previousProviderBlocks = previousAll.filter((block) => block.providerId === providerId)
+  const otherProviderBlocks = previousAll.filter((block) => block.providerId !== providerId)
+  const nextBlocks = normalized.map((block): ProviderScheduleBlock => ({
     id: generateUUID(),
     providerId,
     ...block,
@@ -267,9 +272,16 @@ export function saveScheduleBlocks(providerId: string, blocks: Omit<ProviderSche
     updatedAt: timestamp,
   }))
 
-  saveProviderScheduleBlocks([...existing, ...nextBlocks])
-  nextBlocks.forEach((block) => {
-    void insertRemoteTableRow('provider_schedule_blocks', {
+  if (!supabase) {
+    saveProviderScheduleBlocks([...otherProviderBlocks, ...nextBlocks])
+    return { blocks: nextBlocks, persisted: false }
+  }
+
+  const deleteResult = await supabase.from('provider_schedule_blocks').delete().eq('provider_id', providerId)
+  if (deleteResult.error) throw new Error(`Unable to replace provider schedule: ${deleteResult.error.message}`)
+
+  if (nextBlocks.length) {
+    const insertResult = await supabase.from('provider_schedule_blocks').insert(nextBlocks.map((block) => ({
       id: block.id,
       provider_id: block.providerId,
       branch_id: block.branchId,
@@ -277,8 +289,25 @@ export function saveScheduleBlocks(providerId: string, blocks: Omit<ProviderSche
       start_time: block.startTime,
       end_time: block.endTime,
       status: block.status,
-    })
-  })
+    })))
+    if (insertResult.error) {
+      if (previousProviderBlocks.length) {
+        await supabase.from('provider_schedule_blocks').insert(previousProviderBlocks.map((block) => ({
+          id: block.id,
+          provider_id: block.providerId,
+          branch_id: block.branchId,
+          day_of_week: block.dayOfWeek,
+          start_time: block.startTime,
+          end_time: block.endTime,
+          status: block.status,
+        })))
+      }
+      throw new Error(`Unable to save provider schedule: ${insertResult.error.message}`)
+    }
+  }
+
+  saveProviderScheduleBlocks([...otherProviderBlocks, ...nextBlocks])
+  return { blocks: nextBlocks, persisted: true }
 }
 
 export function createAvailabilityOverride(input: Omit<ProviderAvailabilityOverride, 'id' | 'createdAt' | 'updatedAt'>) {
