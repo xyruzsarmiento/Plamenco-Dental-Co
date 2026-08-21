@@ -70,6 +70,7 @@ import './styles/super-admin-billing-v46.css'
 import './styles/super-admin-billing-detail-v47.css'
 import './styles/super-admin-billing-detail-v48.css'
 import './styles/super-admin-services-v49.css'
+import './styles/super-admin-services-analytics-v50.css'
 import App from './App.tsx'
 import { registerPatientPortalPwa } from './features/patientPortal/pwaRegistration'
 
