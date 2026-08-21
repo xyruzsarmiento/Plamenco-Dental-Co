@@ -1,4 +1,5 @@
 import { supabase } from '../../lib/supabase'
+import { getServiceById, servicePriceToCents } from '../services/serviceStore'
 
 export type TreatmentPlanStatus = 'draft' | 'presented' | 'accepted' | 'partially_accepted' | 'declined' | 'superseded' | 'cancelled'
 export type TreatmentPlanItemStatus = 'pending' | 'accepted' | 'declined' | 'scheduled' | 'completed' | 'cancelled'
@@ -174,10 +175,24 @@ export async function createTreatmentPlan(input: CreateTreatmentPlanInput): Prom
   if (!input.items.length) throw new Error('Add at least one recommended procedure.')
   const client = requireSupabase()
   const patientDbId = await resolvePatientDbId(input.patientId)
-  const invalidPrice = input.items.some((item) => item.quotedPriceCents == null || item.quotedPriceCents < 0)
+
+  const pricedItems = input.items.map((item) => {
+    const catalogueService = getServiceById(item.serviceId)
+    const catalogueCents = catalogueService ? servicePriceToCents(catalogueService.price) : item.catalogPriceSnapshotCents
+    const quotedCents = catalogueService ? servicePriceToCents(catalogueService.price) : item.quotedPriceCents
+    return {
+      ...item,
+      serviceNameSnapshot: catalogueService?.name ?? item.serviceNameSnapshot,
+      description: item.description ?? catalogueService?.description ?? '',
+      catalogPriceSnapshotCents: catalogueCents,
+      quotedPriceCents: quotedCents,
+    }
+  })
+
+  const invalidPrice = pricedItems.some((item) => item.quotedPriceCents == null || item.quotedPriceCents < 0)
   if (invalidPrice) throw new Error('Every quoted item must have a configured price before the plan can be saved.')
 
-  const subtotal = input.items.reduce((sum, item) => sum + Number(item.quotedPriceCents ?? 0) * Math.max(1, Number(item.quantity ?? 1)), 0)
+  const subtotal = pricedItems.reduce((sum, item) => sum + Number(item.quotedPriceCents ?? 0) * Math.max(1, Number(item.quantity ?? 1)), 0)
   const { data: plan, error } = await client
     .from('treatment_plans')
     .insert({
@@ -212,7 +227,7 @@ export async function createTreatmentPlan(input: CreateTreatmentPlanInput): Prom
     .single()
   if (numberError) throw numberError
 
-  const itemRows = input.items.map((item, index) => ({
+  const itemRows = pricedItems.map((item, index) => ({
     plan_id: plan.id,
     service_id: item.serviceId,
     service_name_snapshot: item.serviceNameSnapshot,
