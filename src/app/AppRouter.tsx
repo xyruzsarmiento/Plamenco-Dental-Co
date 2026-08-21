@@ -35,7 +35,7 @@ import { ServicesPageV35 } from '../pages/ServicesPageV35'
 import { SettingsPageV30 } from '../pages/SettingsPageV30'
 import { SystemAdministrationPageV29 } from '../pages/SystemAdministrationPageV29'
 import { TeamAccessPageV26 } from '../pages/TeamAccessPageV26'
-import { TreatmentPlansPageV13 } from '../pages/TreatmentPlansPageV13'
+import { TreatmentPlansPageV44 } from '../pages/TreatmentPlansPageV44'
 import { TreatmentsPageV43 } from '../pages/TreatmentsPageV43'
 import { UnauthorizedPage } from '../pages/UnauthorizedPage'
 
@@ -87,7 +87,7 @@ export function AppRouter() {
           <Route path="patients/:patientId" element={<RequirePermission permission="patients.view"><PatientsPageV36 /></RequirePermission>} />
           <Route path="dental-records" element={<RequirePermission permission="clinical_records.view"><DentalRecordsPageV11 /></RequirePermission>} />
           <Route path="treatments" element={<RequirePermission permission="treatments.view"><TreatmentsPageV43 /></RequirePermission>} />
-          <Route path="treatment-plans" element={<RequirePermission permission="treatments.view"><TreatmentPlansPageV13 /></RequirePermission>} />
+          <Route path="treatment-plans" element={<RequirePermission permission="treatments.view"><TreatmentPlansPageV44 /></RequirePermission>} />
           <Route path="billing" element={<RequirePermission anyOf={['billing.view', 'payments.view']}><BillingPageV32 /></RequirePermission>} />
           <Route path="services" element={<RequirePermission anyOf={['services.view', 'services.manage']}><ServicesPageV35 /></RequirePermission>} />
           <Route path="inventory" element={<RequirePermission permission="inventory.view"><InventoryPageV35 /></RequirePermission>} />
