@@ -11,7 +11,7 @@ import { RequirePermission } from '../features/auth/RequirePermission'
 import { RequireRole } from '../features/auth/RequireRole'
 import { ResetPasswordPage } from '../features/auth/ResetPasswordPage'
 import { PatientPortalRoute } from '../features/patientPortal/PatientPortalRoute'
-import { AppointmentsPage } from '../pages/AppointmentsPage'
+import { AppointmentsPageV31 } from '../pages/AppointmentsPageV31'
 import { BillingPageV14 } from '../pages/BillingPageV14'
 import { BranchesPageV27 } from '../pages/BranchesPageV27'
 import { CommunicationsPageV24 } from '../pages/CommunicationsPageV24'
@@ -82,7 +82,7 @@ export function AppRouter() {
         <Route path="/portal/:patientId/intake" element={<RequirePatientAuth><PatientIntakePage /></RequirePatientAuth>} />
         <Route path="/app" element={<RequireAuth><AppLayout /></RequireAuth>}>
           <Route index element={<RoleHomePage />} />
-          <Route path="appointments" element={<RequirePermission permission="appointments.view"><AppointmentsPage /></RequirePermission>} />
+          <Route path="appointments" element={<RequirePermission permission="appointments.view"><AppointmentsPageV31 /></RequirePermission>} />
           <Route path="patients" element={<RequirePermission permission="patients.view"><PatientsPageV10 /></RequirePermission>} />
           <Route path="patients/:patientId" element={<RequirePermission permission="patients.view"><PatientsPageV10 /></RequirePermission>} />
           <Route path="dental-records" element={<RequirePermission permission="clinical_records.view"><DentalRecordsPageV11 /></RequirePermission>} />
