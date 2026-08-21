@@ -1,6 +1,7 @@
 import { useMemo } from 'react'
 import { AlertTriangle, Boxes, PackageCheck, PackageX } from 'lucide-react'
 import { PremiumBarChartV35 } from '../components/ui/PremiumInteractiveChartV35'
+import { InventoryValueAnalyticsV56 } from '../components/ui/InventoryValueAnalyticsV56'
 import { buildEnterpriseReportSnapshot, formatReportCurrency } from '../features/reports/reportStore'
 import { InventoryPageV22 } from './InventoryPageV22'
 
@@ -34,7 +35,7 @@ export function InventoryPageV35() {
           })}
         </div>
       </section>
-      <section className="analytics35-card"><header><span>Inventory valuation</span><h3>Highest-value stock positions</h3><p>{formatReportCurrency(snapshot.inventory.inventoryValuationCents)} total recorded valuation.</p></header><PremiumBarChartV35 rows={valuationRows.map((row) => ({ label: row.itemName, value: row.valuationCents, meta: `${row.quantityOnHand} on hand · ${row.branchName}` }))} valueLabel="Value" formatter={formatReportCurrency} ariaLabel="Highest value inventory positions" /></section>
+      <section className="analytics35-card inventory56-value-card"><header><span>Inventory valuation</span><h3>Highest-value stock positions</h3><p>{formatReportCurrency(snapshot.inventory.inventoryValuationCents)} total recorded valuation. Hover or focus a position for exact details.</p></header><InventoryValueAnalyticsV56 rows={valuationRows.map((row) => ({ label: row.itemName, valuationCents: row.valuationCents, quantityOnHand: row.quantityOnHand, branchName: row.branchName, valueLabel: formatReportCurrency(row.valuationCents) }))} /></section>
       <section className="analytics35-card"><header><span>Usage intelligence</span><h3>Most consumed items</h3><p>Actual stock-out consumption from recorded inventory movements.</p></header><PremiumBarChartV35 rows={consumptionRows.map((row) => ({ label: row.itemName, value: row.quantity, meta: row.branchName }))} valueLabel="Quantity consumed" ariaLabel="Most consumed inventory items" /></section>
       <section className="analytics35-card"><header><span>Purchasing</span><h3>Supplier purchasing</h3><p>{formatReportCurrency(snapshot.inventory.purchaseTotalCents)} recorded purchases this month.</p></header><PremiumBarChartV35 rows={snapshot.inventory.supplierTotals.slice(0, 8).map((row) => ({ label: row.supplierName, value: row.totalCents, meta: `${row.receipts} receipt${row.receipts === 1 ? '' : 's'}` }))} valueLabel="Purchases" formatter={formatReportCurrency} ariaLabel="Purchases by supplier" /></section>
     </div>
