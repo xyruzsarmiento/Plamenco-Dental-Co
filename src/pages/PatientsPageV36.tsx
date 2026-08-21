@@ -33,31 +33,9 @@ function manilaToday() {
 function emptyPatientValues(): PatientFormValues {
   return {
     authUserId: undefined,
-    fullName: '',
-    firstName: '',
-    middleName: '',
-    lastName: '',
-    dateOfBirth: '',
-    sex: 'female',
-    phone: '',
-    email: '',
-    address: '',
-    city: '',
-    province: '',
-    emergencyContact: '',
-    emergencyContactPhone: '',
-    emergencyContactRelationship: '',
-    preferredBranchId: '',
-    origin: 'walk_in',
-    registrationDate: manilaToday(),
-    status: 'active',
-    allergies: '',
-    medicalConditions: '',
-    currentMedications: '',
-    previousSurgeries: '',
-    medicalNotes: '',
-    administrativeNotes: '',
-    profileImage: '',
+    fullName: '', firstName: '', middleName: '', lastName: '', dateOfBirth: '', sex: 'female', phone: '', email: '', address: '', city: '', province: '',
+    emergencyContact: '', emergencyContactPhone: '', emergencyContactRelationship: '', preferredBranchId: '', origin: 'walk_in', registrationDate: manilaToday(), status: 'active',
+    allergies: '', medicalConditions: '', currentMedications: '', previousSurgeries: '', medicalNotes: '', administrativeNotes: '', profileImage: '',
   }
 }
 
@@ -125,17 +103,7 @@ function PatientGrowthChartV36({ data }: { data: Array<{ label: string; value: n
         <path d={path} className="patients36-growth-line" />
         {points.map((point, index) => (
           <g key={`${point.label}-${index}`}>
-            <circle
-              cx={point.x}
-              cy={point.y}
-              r={hovered === index ? 7 : 5}
-              tabIndex={0}
-              onMouseEnter={() => setHovered(index)}
-              onMouseLeave={() => setHovered(null)}
-              onFocus={() => setHovered(index)}
-              onBlur={() => setHovered(null)}
-              aria-label={`${point.label}: ${point.value} registrations`}
-            />
+            <circle cx={point.x} cy={point.y} r={hovered === index ? 7 : 5} tabIndex={0} onMouseEnter={() => setHovered(index)} onMouseLeave={() => setHovered(null)} onFocus={() => setHovered(index)} onBlur={() => setHovered(null)} aria-label={`${point.label}: ${point.value} registrations`} />
             <text x={point.x} y={height - 12} textAnchor="middle">{point.label}</text>
             {hovered === index && (
               <g className="patients36-tooltip" transform={`translate(${Math.min(Math.max(point.x - 56, 6), width - 120)}, ${Math.max(point.y - 58, 4)})`}>
@@ -167,8 +135,6 @@ export function PatientsPageV36() {
   const [duplicateMatches, setDuplicateMatches] = useState<ReturnType<typeof findPotentialPatientDuplicates>>([])
   const [allowDuplicate, setAllowDuplicate] = useState(false)
 
-  if (routePatientId) return <PatientsPageV10 />
-
   const branches = useMemo(() => getStoredBranches(), [])
   const appointments = useMemo(() => getStoredAppointments(), [patients])
   const today = manilaToday()
@@ -199,6 +165,8 @@ export function PatientsPageV36() {
   }, [branchFilter, originFilter, patients, query, statusFilter])
 
   const growth = useMemo(() => registrationSeries(patients), [patients])
+
+  if (routePatientId) return <PatientsPageV10 />
 
   function nextAppointment(patient: Patient) {
     return appointments
@@ -240,15 +208,8 @@ export function PatientsPageV36() {
   return (
     <section className="patients36-page">
       <header className="patients36-hero">
-        <div className="patients36-hero-copy">
-          <span>PATIENT INTELLIGENCE</span>
-          <h1>Patient Records</h1>
-          <p>Search, review and manage the clinic's patient population from one workspace.</p>
-        </div>
-        <div className="patients36-hero-actions">
-          {canImport && <Button variant="secondary" onClick={() => setShowImport(true)}><Import size={16} />Import</Button>}
-          {canCreate && <Button onClick={openAdd}><Plus size={16} />Add patient</Button>}
-        </div>
+        <div className="patients36-hero-copy"><span>PATIENT INTELLIGENCE</span><h1>Patient Records</h1><p>Search, review and manage the clinic's patient population from one workspace.</p></div>
+        <div className="patients36-hero-actions">{canImport && <Button variant="secondary" onClick={() => setShowImport(true)}><Import size={16} />Import</Button>}{canCreate && <Button onClick={openAdd}><Plus size={16} />Add patient</Button>}</div>
       </header>
 
       <div className="patients36-insight-grid">
@@ -258,11 +219,7 @@ export function PatientsPageV36() {
           <article><span className="patients36-kpi-icon"><Plus size={18} /></span><div><small>New in 30 days</small><strong>{metrics.newPatients}</strong><p>Recent registrations</p></div></article>
           <article><span className="patients36-kpi-icon"><CalendarDays size={18} /></span><div><small>Upcoming visits</small><strong>{metrics.upcoming}</strong><p>Open future appointments</p></div></article>
         </div>
-
-        <article className="patients36-growth-card">
-          <header><div><span>PATIENT GROWTH</span><h2>Registrations</h2><p>Actual registrations across the last six calendar months.</p></div><div className="patients36-chart-badge">6 months</div></header>
-          <PatientGrowthChartV36 data={growth} />
-        </article>
+        <article className="patients36-growth-card"><header><div><span>PATIENT GROWTH</span><h2>Registrations</h2><p>Actual registrations across the last six calendar months.</p></div><div className="patients36-chart-badge">6 months</div></header><PatientGrowthChartV36 data={growth} /></article>
       </div>
 
       <section className="patients36-directory">
@@ -282,10 +239,7 @@ export function PatientsPageV36() {
             const origin = originLabels[patient.origin ?? 'staff_created']
             return (
               <button key={patient.id} type="button" className="patients36-row" onClick={() => navigate(`/app/patients/${encodeURIComponent(patient.patientId)}`)}>
-                <span className="patients36-person">
-                  <span className="patients36-avatar">{patient.profileImage ? <img src={patient.profileImage} alt="" /> : initials(patient)}</span>
-                  <span className="patients36-person-copy"><strong>{getPatientDisplayName(patient)}</strong><span>{patient.patientId}</span><em className={`patients36-status is-${patient.status}`}>{patient.status}</em></span>
-                </span>
+                <span className="patients36-person"><span className="patients36-avatar">{patient.profileImage ? <img src={patient.profileImage} alt="" /> : initials(patient)}</span><span className="patients36-person-copy"><strong>{getPatientDisplayName(patient)}</strong><span>{patient.patientId}</span><em className={`patients36-status is-${patient.status}`}>{patient.status}</em></span></span>
                 <span className="patients36-contact"><span><Mail size={14} />{patient.email || 'No email recorded'}</span><span><Phone size={14} />{patient.phone || 'No phone recorded'}</span></span>
                 <span className="patients36-context"><strong>{branchName}</strong><span>{origin} · {treatmentCount} treatment{treatmentCount === 1 ? '' : 's'}</span></span>
                 <span className="patients36-next"><strong>{visit ? formatDate(visit.date) : 'No upcoming visit'}</strong><span>{visit ? `${formatTime(visit.startTime)} · ${visit.status.replaceAll('_', ' ')}` : 'No appointment scheduled'}</span></span>
@@ -293,9 +247,7 @@ export function PatientsPageV36() {
               </button>
             )
           })}
-          {!filteredPatients.length && (
-            <div className="patients36-empty"><span><UsersRound size={22} /></span><h3>{noFilters ? 'No patient records yet' : 'No matching patients'}</h3><p>{noFilters ? 'Patient records will appear here after they are created or imported.' : 'Try clearing one or more filters or searching with a different name, patient ID, phone or email.'}</p>{!noFilters && <Button variant="secondary" onClick={() => { setQuery(''); setStatusFilter('all'); setBranchFilter('all'); setOriginFilter('all') }}>Clear filters</Button>}</div>
-          )}
+          {!filteredPatients.length && <div className="patients36-empty"><span><UsersRound size={22} /></span><h3>{noFilters ? 'No patient records yet' : 'No matching patients'}</h3><p>{noFilters ? 'Patient records will appear here after they are created or imported.' : 'Try clearing one or more filters or searching with a different name, patient ID, phone or email.'}</p>{!noFilters && <Button variant="secondary" onClick={() => { setQuery(''); setStatusFilter('all'); setBranchFilter('all'); setOriginFilter('all') }}>Clear filters</Button>}</div>}
         </div>
       </section>
 
