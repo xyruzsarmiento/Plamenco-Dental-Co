@@ -1,12 +1,34 @@
-import { useMemo } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { AlertTriangle, Boxes, PackageCheck, PackageX } from 'lucide-react'
 import { PremiumBarChartV35 } from '../components/ui/PremiumInteractiveChartV35'
 import { InventoryValueAnalyticsV56 } from '../components/ui/InventoryValueAnalyticsV56'
+import { syncInventoryFromSupabase } from '../features/inventory/inventoryRemoteSync'
 import { buildEnterpriseReportSnapshot, formatReportCurrency } from '../features/reports/reportStore'
 import { InventoryPageV22 } from './InventoryPageV22'
 
 export function InventoryPageV35() {
-  const snapshot = useMemo(() => buildEnterpriseReportSnapshot({ filters: { preset: 'this_month' } }), [])
+  const [syncVersion, setSyncVersion] = useState(0)
+  const [syncError, setSyncError] = useState<string | null>(null)
+
+  useEffect(() => {
+    let mounted = true
+    void syncInventoryFromSupabase()
+      .then((result) => {
+        if (!mounted || !result.synced) return
+        setSyncError(null)
+        setSyncVersion((version) => version + 1)
+      })
+      .catch((cause) => {
+        if (!mounted) return
+        setSyncError(cause instanceof Error ? cause.message : 'Inventory could not be synchronized from the clinic database.')
+      })
+    return () => { mounted = false }
+  }, [])
+
+  const snapshot = useMemo(() => {
+    void syncVersion
+    return buildEnterpriseReportSnapshot({ filters: { preset: 'this_month' } })
+  }, [syncVersion])
   const valuationRows = useMemo(() => [...snapshot.inventory.stockRows].sort((a, b) => b.valuationCents - a.valuationCents).slice(0, 8), [snapshot])
   const consumptionRows = snapshot.inventory.consumption.slice(0, 8)
   const stockHealth = [
@@ -17,7 +39,8 @@ export function InventoryPageV35() {
   ]
 
   return <section className="inventory35-shell">
-    <InventoryPageV22 />
+    {syncError && <div className="inventory-v22-alert" role="alert">{syncError}</div>}
+    <InventoryPageV22 key={syncVersion} />
 
     <section className="analytics35-section-head inventory35-insights-head">
       <div><span>Inventory intelligence</span><h2>Inventory insights</h2><p>Supporting analytics are kept below the operational workspace so stock actions and day-to-day controls remain the primary focus.</p></div>
