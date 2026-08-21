@@ -1,7 +1,6 @@
 import { useMemo, useState } from 'react'
 import {
   Banknote,
-  Building2,
   CalendarClock,
   ChevronRight,
   CircleDollarSign,
