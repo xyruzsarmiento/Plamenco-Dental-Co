@@ -2,7 +2,7 @@ import type { Appointment, AppointmentFormValues, AppointmentStatus, Appointment
 import { insertRemoteTableRow, updateRemoteTableRow } from '../../lib/supabaseSync'
 import { notifyAppointmentTransition, sendAppointmentCommunication } from '../communications/communicationService'
 import { getCommunicationLogsByAppointment } from '../communications/communicationStore'
-import { getStoredServices } from '../services/serviceStore'
+import { getStoredServices, servicePriceToCents } from '../services/serviceStore'
 import { recordAuditEntry } from '../security/auditLogStore'
 
 const APPOINTMENT_STORAGE_KEY = 'plamenco.appointments'
@@ -369,7 +369,6 @@ export function checkScheduleConflict(
     const existingStart = appt.startTime
     const existingEnd = appt.endTime
 
-    // Check if times overlap
     if (startTime < existingEnd && endTime > existingStart) {
       return true
     }
@@ -431,7 +430,7 @@ export function createAppointment(
     appointmentNumber: generateDisplayAppointmentNumber(appointments),
     ...values,
     durationMinutes: values.durationMinutes ?? service?.duration ?? undefined,
-    estimatedAmountCents: values.estimatedAmountCents ?? service?.price ?? undefined,
+    estimatedAmountCents: service ? servicePriceToCents(service.price) : values.estimatedAmountCents,
     paymentStatus: values.paymentStatus ?? 'not_billed',
     depositStatus: values.depositStatus ?? 'not_required',
     depositRequiredCents: values.depositRequiredCents ?? 0,
@@ -460,10 +459,9 @@ export function createAppointment(
       bookingSource: appointment.bookingSource,
     },
   })
-  
-  // Persist to Supabase asynchronously
+
   void insertRemoteTableRow('appointments', mapAppointmentToRemoteRow(appointment))
-  
+
   return appointment
 }
 
@@ -573,7 +571,6 @@ export function updateAppointment(
 
   const appointment = appointments[index]
 
-  // Check for conflicts if date/time changed
   if (values.date || values.startTime || values.endTime) {
     const date = values.date ?? appointment.date
     const startTime = values.startTime ?? appointment.startTime
@@ -593,10 +590,9 @@ export function updateAppointment(
 
   appointments[index] = updated
   saveStoredAppointments(appointments)
-  
-  // Persist to Supabase asynchronously
+
   void updateRemoteTableRow('appointments', id, mapAppointmentToRemoteRow(updated))
-  
+
   return updated
 }
 
