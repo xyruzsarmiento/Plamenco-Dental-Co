@@ -1,4 +1,4 @@
-import { AlertTriangle, Boxes, CircleDollarSign, Package, PackageCheck, PackageX, PencilLine, Trash2, Truck } from 'lucide-react'
+import { AlertTriangle, Boxes, CircleDollarSign, Package, PackageCheck, PackageX, PencilLine, Trash2 } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { Button } from '../components/ui/Button'
 import { ReportRankedBarsV54 } from '../components/ui/ReportsAnalyticsV54'
@@ -66,7 +66,7 @@ export function InventoryPageV56() {
         return <article key={item.id} className="inventory56-maintenance-card">
           <div className="inventory56-maintenance-icon"><Package size={19}/></div>
           <div className="inventory56-maintenance-copy"><span>{item.itemCode}</span><h3>{item.name}</h3><p>{item.sku ? `Stock code ${item.sku}` : 'No optional stock code'} · {item.brand || 'No brand'}</p><div><span><strong>{onHand.toLocaleString('en-PH')}</strong> {unitLabel(item.unitId)} on hand</span><span>{supplier?.name || 'No default supplier'}</span></div></div>
-          <div className="inventory56-maintenance-actions"><Button size="sm" variant="secondary" icon={<PencilLine size={14}/>} onClick={() => setDialog({ type: 'edit_item', item })}>Edit</Button><Button size="sm" variant="ghost" icon={<Trash2 size={14}/>} onClick={() => setDialog({ type: 'archive_item', item })}>Remove</Button></div>
+          <div className="inventory56-maintenance-actions"><Button size="sm" variant="secondary" icon={<PencilLine size={14}/>} onClick={() => setDialog({ type: 'edit_item', item })}>Edit</Button><Button size="sm" variant="ghost" icon={<Trash2 size={14}/>} onClick={() => setDialog({ type: 'remove_item', item })}>Remove</Button></div>
         </article>
       })}</div> : <div className="inventory56-empty"><Package size={24}/><strong>No active inventory items</strong><span>Add an item from the Inventory Control Center to start tracking supplies.</span></div>}
     </section>
