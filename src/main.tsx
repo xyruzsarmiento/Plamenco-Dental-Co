@@ -93,6 +93,7 @@ import './styles/super-admin-reports-actions-v64.css'
 import './styles/super-admin-expenses-v57.css'
 import './styles/super-admin-system-admin-v58.css'
 import './styles/super-admin-expenses-v65.css'
+import './styles/super-admin-settings-audit-v56.css'
 import App from './App.tsx'
 import { registerPatientPortalPwa } from './features/patientPortal/pwaRegistration'
 
