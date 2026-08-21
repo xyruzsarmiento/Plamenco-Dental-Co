@@ -23,6 +23,7 @@ import type { Patient } from '../patients/patientTypes'
 import type { Branch } from '../branches/branchTypes'
 import type { Provider } from '../dentists/dentistTypes'
 import type { Service } from '../services/serviceTypes'
+import { formatServicePrice, servicePriceToCents } from '../services/serviceStore'
 import type { AppointmentFormValues } from './appointmentTypes'
 import { addMinutesToTime, getOperatories } from './appointmentStore'
 import { formatAppointmentTime, getAvailableAppointmentSlots } from './availabilityEngine'
@@ -39,8 +40,6 @@ type AppointmentFormModalProps = {
   error: string | null
   conflictError: string | null
 }
-
-const peso = new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP' })
 
 export function AppointmentFormModal({
   conflictError,
@@ -113,7 +112,7 @@ export function AppointmentFormModal({
       ...values,
       serviceId,
       durationMinutes: service.duration,
-      estimatedAmountCents: service.price,
+      estimatedAmountCents: servicePriceToCents(service.price),
       endTime: addMinutesToTime(startTime, service.duration),
     })
   }
@@ -127,7 +126,7 @@ export function AppointmentFormModal({
       startTime,
       endTime: addMinutesToTime(startTime, selectedService.duration),
       durationMinutes: selectedService.duration,
-      estimatedAmountCents: selectedService.price,
+      estimatedAmountCents: servicePriceToCents(selectedService.price),
     })
   }
 
@@ -231,7 +230,7 @@ export function AppointmentFormModal({
                 <div className="appointment37-card-grid">
                   {activeServices.map((service) => <button key={service.id} type="button" className={`appointment37-option-card ${values.serviceId === service.id ? 'is-selected' : ''}`} onClick={() => handleServiceChange(service.id)}>
                     <span className="appointment37-option-icon"><Stethoscope size={18} /></span>
-                    <span><strong>{service.name}</strong><small>{service.category || 'Dental service'}</small><em>{service.duration} min · {service.price > 0 ? peso.format(service.price / 100) : 'Price to be confirmed'}</em></span>
+                    <span><strong>{service.name}</strong><small>{service.category || 'Dental service'}</small><em>{service.duration} min · {formatServicePrice(service.price)}</em></span>
                     <i><Check size={14} /></i>
                   </button>)}
                 </div>
@@ -280,7 +279,7 @@ export function AppointmentFormModal({
                   <div><span>Dentist</span><strong>{selectedProvider?.displayName ?? 'Assigned from availability'}</strong></div>
                   <div><span>Operatory</span><strong>{selectedOperatory?.name ?? 'Any available'}</strong></div>
                   <div><span>Duration</span><strong>{values.durationMinutes ?? selectedService?.duration ?? 0} minutes</strong></div>
-                  <div><span>Estimated price</span><strong>{selectedService?.price ? peso.format(selectedService.price / 100) : 'Price to be confirmed'}</strong></div>
+                  <div><span>Estimated price</span><strong>{selectedService ? formatServicePrice(selectedService.price) : 'Price to be confirmed'}</strong></div>
                   <div><span>Deposit</span><strong>{values.depositStatus?.replaceAll('_', ' ') ?? 'Not required'}</strong></div>
                 </div>
                 <div className="appointment37-note-grid">
