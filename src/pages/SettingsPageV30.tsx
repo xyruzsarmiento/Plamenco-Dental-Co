@@ -1,7 +1,8 @@
-import { Building2, CheckCircle2, Clock3, History, LogOut, RefreshCw, Save, Search, ShieldCheck, SlidersHorizontal, UserRound } from 'lucide-react'
+import { Building2, CheckCircle2, Clock3, History, LogOut, RefreshCw, Save, ShieldCheck, SlidersHorizontal, UserRound } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { Badge } from '../components/ui/Badge'
 import { Button } from '../components/ui/Button'
+import { SettingsAuditActivityV56 } from '../components/settings/SettingsAuditActivityV56'
 import { useAuth } from '../features/auth/AuthContext'
 import { getStoredStaff } from '../features/auth/staffStore'
 import { formatAuditAction, getRecentAuditLogs, recordAuditEntry } from '../features/security/auditLogStore'
@@ -23,13 +24,6 @@ function readClinicSettings(): ClinicSettings {
   }
 }
 
-function formatDateTime(value: string) {
-  const date = new Date(value)
-  return Number.isNaN(date.getTime()) ? value : date.toLocaleString('en-PH', {
-    timeZone: 'Asia/Manila', month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit',
-  })
-}
-
 export function SettingsPageV30() {
   const { user, signOut } = useAuth()
   const [activeTab, setActiveTab] = useState<SettingsTab>('audit')
@@ -43,7 +37,7 @@ export function SettingsPageV30() {
   const staffMap = useMemo(() => new Map(staff.map((member) => [member.id, member.name])), [staff])
   const logs = useMemo(() => getRecentAuditLogs(150), [refreshKey])
   const actionOptions = useMemo(() => [
-    { value: 'all', label: 'All actions' },
+    { value: 'all', label: 'All changes' },
     ...Array.from(new Set(logs.map((log) => log.action))).map((action) => ({ value: action, label: formatAuditAction(action).label })),
   ], [logs])
 
@@ -51,15 +45,18 @@ export function SettingsPageV30() {
     const query = auditSearch.trim().toLowerCase()
     return logs.filter((log) => {
       const matchesAction = auditAction === 'all' || log.action === auditAction
-      const matchesSearch = !query || [staffMap.get(log.user) ?? log.user, log.user, log.entity, log.entityId, formatAuditAction(log.action).label].join(' ').toLowerCase().includes(query)
+      const staffName = staff.find((member) => [member.id, member.email, member.name].some((value) => value?.toLowerCase() === log.user.toLowerCase()))?.name
+      const matchesSearch = !query || [staffName ?? '', log.user, log.entity, log.entityId, formatAuditAction(log.action).label, formatAuditAction(log.action).description]
+        .join(' ')
+        .toLowerCase()
+        .includes(query)
       return matchesAction && matchesSearch
     })
-  }, [auditAction, auditSearch, logs, staffMap])
+  }, [auditAction, auditSearch, logs, staff])
 
   const uniqueActors = useMemo(() => new Set(logs.map((log) => staffMap.get(log.user) ?? log.user)).size, [logs, staffMap])
   const today = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Manila' })
   const todayCount = useMemo(() => logs.filter((log) => new Date(log.timestamp).toLocaleDateString('en-CA', { timeZone: 'Asia/Manila' }) === today).length, [logs, today])
-  const latestLog = logs[0]
 
   function updateClinic<K extends keyof ClinicSettings>(key: K, value: ClinicSettings[K]) {
     setSaveState('idle')
@@ -81,18 +78,18 @@ export function SettingsPageV30() {
   }
 
   const tabs: Array<{ key: SettingsTab; label: string; description: string; icon: typeof Clock3 }> = [
-    { key: 'audit', label: 'Audit activity', description: 'Review recorded administrative and operational changes.', icon: History },
+    { key: 'audit', label: 'Change history', description: 'See who changed what across the clinic.', icon: History },
     { key: 'clinic', label: 'Clinic profile', description: 'Maintain the locally configured clinic identity fields.', icon: Building2 },
     { key: 'security', label: 'Security & session', description: 'Review access context and manage the current session.', icon: ShieldCheck },
   ]
 
   return (
-    <section className="settings-v30">
+    <section className="settings-v30 settings-v56">
       <header className="settings-v30-hero">
         <div>
           <span className="settings-v30-kicker">Administration controls</span>
           <h2>Settings</h2>
-          <p>Govern clinic identity, audit evidence, and session controls from a focused administrative workspace.</p>
+          <p>Govern clinic identity, review important changes, and manage your current session from one workspace.</p>
         </div>
         <div className="settings-v30-hero-actions">
           <Button variant="secondary" icon={<RefreshCw size={16} />} onClick={() => setRefreshKey((value) => value + 1)}>Refresh</Button>
@@ -100,10 +97,10 @@ export function SettingsPageV30() {
       </header>
 
       <section className="settings-v30-metrics" aria-label="Settings summary">
-        <article><span className="settings-v30-metric-icon"><History size={18} /></span><div><small>Audit records</small><strong>{logs.length}</strong><p>Most recent 150 records</p></div></article>
-        <article><span className="settings-v30-metric-icon"><UserRound size={18} /></span><div><small>Recorded actors</small><strong>{uniqueActors}</strong><p>Distinct users in audit history</p></div></article>
+        <article><span className="settings-v30-metric-icon"><History size={18} /></span><div><small>Recent changes</small><strong>{logs.length}</strong><p>Latest recorded clinic activity</p></div></article>
+        <article><span className="settings-v30-metric-icon"><UserRound size={18} /></span><div><small>People involved</small><strong>{uniqueActors}</strong><p>Distinct people in change history</p></div></article>
         <article><span className="settings-v30-metric-icon"><Clock3 size={18} /></span><div><small>Changes today</small><strong>{todayCount}</strong><p>Asia/Manila business date</p></div></article>
-        <article><span className="settings-v30-metric-icon"><Building2 size={18} /></span><div><small>Clinic profile</small><strong>{clinicSettings.name.trim() ? 'Configured' : 'Incomplete'}</strong><p>Local clinic settings record</p></div></article>
+        <article><span className="settings-v30-metric-icon"><Building2 size={18} /></span><div><small>Clinic profile</small><strong>{clinicSettings.name.trim() ? 'Configured' : 'Incomplete'}</strong><p>Clinic identity and contact details</p></div></article>
       </section>
 
       <div className="settings-v30-workspace">
@@ -117,35 +114,22 @@ export function SettingsPageV30() {
           ))}
           <div className="settings-v30-session-card">
             <span>Signed in as</span>
-            <strong>{user?.name || user?.email || 'Current user'}</strong>
+            <strong>{user?.name || 'Clinic administrator'}</strong>
             <small>{user?.role?.replaceAll('_', ' ') || 'Authenticated account'}</small>
           </div>
         </aside>
 
         <main className="settings-v30-content">
           {activeTab === 'audit' && (
-            <section className="settings-v30-panel">
-              <header className="settings-v30-panel-head">
-                <div><span className="settings-v30-kicker">Audit intelligence</span><h3>Recorded system changes</h3><p>Search administrative events by actor, action, entity, or identifier.</p></div>
-                <div className="settings-v30-panel-meta"><Badge tone="info">{filteredLogs.length} records</Badge>{latestLog && <small>Latest {formatDateTime(latestLog.timestamp)}</small>}</div>
-              </header>
-
-              <div className="settings-v30-commandbar">
-                <label className="settings-v30-search"><Search size={16} /><input type="search" placeholder="Search audit activity" value={auditSearch} onChange={(event) => setAuditSearch(event.target.value)} /></label>
-                <label><span>Action</span><select value={auditAction} onChange={(event) => setAuditAction(event.target.value)}>{actionOptions.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}</select></label>
-              </div>
-
-              {filteredLogs.length === 0 ? (
-                <div className="settings-v30-empty"><History size={28} /><h3>No audit records match</h3><p>Change the search or action filter to review other recorded activity.</p></div>
-              ) : (
-                <div className="settings-v30-table-wrap">
-                  <table>
-                    <thead><tr><th>Time</th><th>User</th><th>Action</th><th>Entity</th><th>Identifier</th></tr></thead>
-                    <tbody>{filteredLogs.map((log) => { const action = formatAuditAction(log.action); return <tr key={log.id}><td><span className="settings-v30-time">{formatDateTime(log.timestamp)}</span></td><td><strong>{staffMap.get(log.user) ?? log.user}</strong></td><td><Badge tone={action.tone}>{action.label}</Badge></td><td>{log.entity}</td><td><code>{log.entityId}</code></td></tr> })}</tbody>
-                  </table>
-                </div>
-              )}
-            </section>
+            <SettingsAuditActivityV56
+              logs={filteredLogs}
+              staff={staff}
+              actionValue={auditAction}
+              searchValue={auditSearch}
+              actionOptions={actionOptions}
+              onActionChange={setAuditAction}
+              onSearchChange={setAuditSearch}
+            />
           )}
 
           {activeTab === 'clinic' && (
@@ -162,7 +146,7 @@ export function SettingsPageV30() {
                   <label><span>Clinic name</span><input value={clinicSettings.name} onChange={(event) => updateClinic('name', event.target.value)} placeholder="Clinic name" /></label>
                   <label><span>Phone</span><input type="tel" value={clinicSettings.phone} onChange={(event) => updateClinic('phone', event.target.value)} placeholder="Clinic phone" /></label>
                   <label className="is-wide"><span>Address</span><input value={clinicSettings.address} onChange={(event) => updateClinic('address', event.target.value)} placeholder="Clinic address" /></label>
-                  <div className="settings-v30-save-row"><p>Changes are recorded in the existing local settings store and audit log.</p><Button icon={<Save size={16} />} onClick={saveClinicSettings}>Save clinic profile</Button></div>
+                  <div className="settings-v30-save-row"><p>Changes are recorded in the existing local settings store and change history.</p><Button icon={<Save size={16} />} onClick={saveClinicSettings}>Save clinic profile</Button></div>
                 </div>
               </div>
             </section>
@@ -174,8 +158,8 @@ export function SettingsPageV30() {
 
               <div className="settings-v30-security-grid">
                 <article><span><ShieldCheck size={20} /></span><div><strong>Role & permission enforcement</strong><p>Access remains governed by the application&apos;s existing authentication and permission model.</p></div></article>
-                <article><span><History size={20} /></span><div><strong>Audit evidence</strong><p>Administrative and operational changes are reviewed through the recorded audit activity in this workspace.</p></div></article>
-                <article><span><CheckCircle2 size={20} /></span><div><strong>Current session</strong><p>{user?.email ? `Authenticated as ${user.email}.` : 'An authenticated internal session is active.'}</p></div></article>
+                <article><span><History size={20} /></span><div><strong>Change history</strong><p>Administrative and operational changes are reviewed through the owner-friendly history in this workspace.</p></div></article>
+                <article><span><CheckCircle2 size={20} /></span><div><strong>Current session</strong><p>{user?.name ? `Authenticated as ${user.name}.` : 'An authenticated internal session is active.'}</p></div></article>
               </div>
 
               <div className="settings-v30-danger-zone">
