@@ -84,6 +84,7 @@ import './styles/super-admin-dashboard-v56.css'
 import './styles/super-admin-dental-records-v59.css'
 import './styles/clinical-record-detail-v56.css'
 import './styles/super-admin-services-actions-v56.css'
+import './styles/clinical-record-detail-v60.css'
 import App from './App.tsx'
 import { registerPatientPortalPwa } from './features/patientPortal/pwaRegistration'
 
