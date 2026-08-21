@@ -14,6 +14,7 @@ import {
   getExpenseCategories,
   getExpenseVendors,
   recordPettyCashDisbursement,
+  type Expense,
   type RecurringFrequency,
 } from './expenseStore'
 
@@ -37,6 +38,45 @@ async function confirmRemote(table: string, id: string) {
   const { data, error } = await supabase.from(table).select('id').eq('id', id).maybeSingle()
   if (error) throw new Error(`Database persistence failed: ${error.message}`)
   if (!data) throw new Error('Database persistence could not be confirmed. The form remains open so you can retry safely.')
+}
+
+async function persistExpenseRemote(expense: Expense) {
+  if (!isSupabaseConfigured || !supabase) return
+  const payload = {
+    id: expense.id,
+    expense_number: expense.expenseNumber,
+    scope: expense.scope,
+    branch_id: expense.branchId ?? null,
+    category_id: expense.categoryId,
+    vendor_id: expense.vendorId ?? null,
+    payee_name: expense.payeeName,
+    description: expense.description,
+    expense_date: expense.expenseDate,
+    due_date: expense.dueDate ?? null,
+    billing_period_start: expense.billingPeriodStart ?? null,
+    billing_period_end: expense.billingPeriodEnd ?? null,
+    subtotal_cents: expense.subtotalCents,
+    tax_cents: expense.taxCents,
+    total_cents: expense.totalCents,
+    amount_paid_cents: expense.amountPaidCents,
+    balance_cents: expense.balanceCents,
+    status: expense.status,
+    payment_method: expense.paymentMethod ?? null,
+    reference_number: expense.referenceNumber ?? '',
+    source_type: expense.sourceType,
+    source_id: expense.sourceId ?? null,
+    notes: expense.notes,
+    recurring_template_id: expense.recurringTemplateId ?? null,
+    created_by: expense.createdBy,
+    approved_by: expense.approvedBy ?? '',
+    approved_at: expense.approvedAt ?? null,
+    void_reason: expense.voidReason ?? '',
+    voided_by: expense.voidedBy ?? '',
+    voided_at: expense.voidedAt ?? null,
+  }
+  const { data, error } = await supabase.from('expenses').upsert([payload], { onConflict: 'id' }).select('id').maybeSingle()
+  if (error) throw new Error(`Database persistence failed: ${error.message}`)
+  if (!data?.id) throw new Error('Database persistence could not be confirmed. The form remains open so you can retry safely.')
 }
 
 export function ExpenseActionModal({ type, preferredBranchId, onClose, onSuccess }: Props) {
@@ -128,7 +168,7 @@ export function ExpenseActionModal({ type, preferredBranchId, onClose, onSuccess
           recordedBy: actor,
           notes,
         })
-        await confirmRemote('expenses', expense.id)
+        await persistExpenseRemote(expense)
         setSuccess(`Petty cash ${expense.expenseNumber} recorded.`)
       } else if (type === 'recurring') {
         if (!templateName.trim()) throw new Error('Template name is required.')
@@ -176,7 +216,7 @@ export function ExpenseActionModal({ type, preferredBranchId, onClose, onSuccess
           notes,
           createdBy: actor,
         })
-        await confirmRemote('expenses', expense.id)
+        await persistExpenseRemote(expense)
         setSuccess(`Expense ${expense.expenseNumber} saved.`)
       }
       onSuccess()
