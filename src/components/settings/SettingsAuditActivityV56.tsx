@@ -2,6 +2,8 @@ import {
   Activity,
   CalendarClock,
   ChevronDown,
+  ChevronLeft,
+  ChevronRight,
   CircleDollarSign,
   ClipboardList,
   FileClock,
@@ -13,7 +15,7 @@ import {
   UserRound,
   UsersRound,
 } from 'lucide-react'
-import type { ComponentType, SVGProps } from 'react'
+import { useEffect, useMemo, useState, type ComponentType, type SVGProps } from 'react'
 import type { StaffMember } from '../../features/auth/authTypes'
 import { formatAuditAction, type AuditLogEntry } from '../../features/security/auditLogStore'
 
@@ -33,6 +35,9 @@ type AreaInfo = {
   label: string
   icon: Icon
 }
+
+const DEFAULT_PAGE_SIZE = 10
+const PAGE_SIZE_OPTIONS = [10, 20, 50]
 
 const areaMap: Record<string, AreaInfo> = {
   patient: { label: 'Patient records', icon: UserRound },
@@ -120,6 +125,12 @@ function actorInitials(value: string) {
   return value.split(/\s+/).filter(Boolean).slice(0, 2).map((part) => part[0]?.toUpperCase()).join('') || 'CA'
 }
 
+function pageWindow(currentPage: number, totalPages: number) {
+  if (totalPages <= 5) return Array.from({ length: totalPages }, (_, index) => index + 1)
+  const start = Math.min(Math.max(currentPage - 2, 1), totalPages - 4)
+  return Array.from({ length: 5 }, (_, index) => start + index)
+}
+
 export function SettingsAuditActivityV56({
   logs,
   staff,
@@ -129,8 +140,29 @@ export function SettingsAuditActivityV56({
   onActionChange,
   onSearchChange,
 }: Props) {
+  const [page, setPage] = useState(1)
+  const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE)
+  const totalPages = Math.max(1, Math.ceil(logs.length / pageSize))
+
+  useEffect(() => {
+    setPage(1)
+  }, [actionValue, searchValue, pageSize])
+
+  useEffect(() => {
+    setPage((current) => Math.min(current, totalPages))
+  }, [totalPages])
+
+  const visibleLogs = useMemo(() => {
+    const start = (page - 1) * pageSize
+    return logs.slice(start, start + pageSize)
+  }, [logs, page, pageSize])
+
+  const startItem = logs.length ? (page - 1) * pageSize + 1 : 0
+  const endItem = Math.min(page * pageSize, logs.length)
+  const pages = pageWindow(page, totalPages)
+
   return (
-    <section className="settings56-audit" aria-label="Clinic change history">
+    <section className="settings56-audit settings57-audit" aria-label="Clinic change history">
       <header className="settings56-audit-head">
         <div>
           <span className="settings56-eyebrow"><ShieldCheck size={14} /> Clinic change history</span>
@@ -140,7 +172,7 @@ export function SettingsAuditActivityV56({
         <div className="settings56-audit-count"><strong>{logs.length}</strong><span>matching changes</span></div>
       </header>
 
-      <div className="settings56-filters">
+      <div className="settings56-filters settings57-filters">
         <label className="settings56-search">
           <Search size={17} />
           <input
@@ -165,47 +197,62 @@ export function SettingsAuditActivityV56({
           <p>Try a different search term or change type.</p>
         </div>
       ) : (
-        <div className="settings56-activity-list">
-          {logs.map((log) => {
-            const action = formatAuditAction(log.action)
-            const area = areaFor(log.entity)
-            const AreaIcon = area.icon
-            const actor = friendlyActor(log.user, staff)
-            const metadata = metadataEntries(log)
-            return (
-              <article className="settings56-change-card" key={log.id}>
-                <div className="settings56-change-icon"><AreaIcon size={19} /></div>
-                <div className="settings56-change-main">
-                  <div className="settings56-change-topline">
-                    <span className="settings56-area-pill">{area.label}</span>
-                    <time dateTime={log.timestamp}>{formatDateTime(log.timestamp)}</time>
-                  </div>
-                  <h4>{action.label}</h4>
-                  <p>{action.description}</p>
-                  <div className="settings56-actor">
-                    <span className="settings56-avatar">{actorInitials(actor)}</span>
-                    <span><small>Changed by</small><strong>{actor}</strong></span>
-                  </div>
+        <>
+          <div className="settings57-list-meta">
+            <div><strong>Showing {startItem}–{endItem}</strong><span>of {logs.length} matching changes</span></div>
+            <label><span>Rows per page</span><select value={pageSize} onChange={(event) => setPageSize(Number(event.target.value))}>{PAGE_SIZE_OPTIONS.map((size) => <option key={size} value={size}>{size}</option>)}</select></label>
+          </div>
 
-                  <details className="settings56-technical">
-                    <summary><ChevronDown size={14} /> View record details</summary>
-                    <div className="settings56-technical-grid">
-                      <div><span>Original actor</span><strong>{log.user || 'System'}</strong></div>
-                      <div><span>Record area</span><strong>{log.entity || 'Not recorded'}</strong></div>
-                      <div className="is-wide"><span>Record reference</span><code>{log.entityId || 'Not recorded'}</code></div>
-                      {metadata.length > 0 && (
-                        <div className="is-wide settings56-meta">
-                          <span>Additional details</span>
-                          <div>{metadata.slice(0, 8).map(([key, value]) => <span key={key}><b>{key.replaceAll('_', ' ')}</b>{String(value)}</span>)}</div>
-                        </div>
-                      )}
+          <div className="settings56-activity-list">
+            {visibleLogs.map((log) => {
+              const action = formatAuditAction(log.action)
+              const area = areaFor(log.entity)
+              const AreaIcon = area.icon
+              const actor = friendlyActor(log.user, staff)
+              const metadata = metadataEntries(log)
+              return (
+                <article className="settings56-change-card" key={log.id}>
+                  <div className="settings56-change-icon"><AreaIcon size={19} /></div>
+                  <div className="settings56-change-main">
+                    <div className="settings56-change-topline">
+                      <span className="settings56-area-pill">{area.label}</span>
+                      <time dateTime={log.timestamp}>{formatDateTime(log.timestamp)}</time>
                     </div>
-                  </details>
-                </div>
-              </article>
-            )
-          })}
-        </div>
+                    <h4>{action.label}</h4>
+                    <p>{action.description}</p>
+                    <div className="settings56-actor">
+                      <span className="settings56-avatar">{actorInitials(actor)}</span>
+                      <span><small>Changed by</small><strong>{actor}</strong></span>
+                    </div>
+
+                    <details className="settings56-technical">
+                      <summary><ChevronDown size={14} /> View record details</summary>
+                      <div className="settings56-technical-grid">
+                        <div><span>Original actor</span><strong>{log.user || 'System'}</strong></div>
+                        <div><span>Record area</span><strong>{log.entity || 'Not recorded'}</strong></div>
+                        <div className="is-wide"><span>Record reference</span><code>{log.entityId || 'Not recorded'}</code></div>
+                        {metadata.length > 0 && (
+                          <div className="is-wide settings56-meta">
+                            <span>Additional details</span>
+                            <div>{metadata.slice(0, 8).map(([key, value]) => <span key={key}><b>{key.replaceAll('_', ' ')}</b>{String(value)}</span>)}</div>
+                          </div>
+                        )}
+                      </div>
+                    </details>
+                  </div>
+                </article>
+              )
+            })}
+          </div>
+
+          <nav className="settings57-pagination" aria-label="Change history pages">
+            <button type="button" className="settings57-page-nav" onClick={() => setPage((current) => Math.max(1, current - 1))} disabled={page === 1} aria-label="Previous page"><ChevronLeft size={16} /><span>Previous</span></button>
+            <div className="settings57-page-numbers">
+              {pages.map((pageNumber) => <button key={pageNumber} type="button" className={pageNumber === page ? 'is-active' : ''} onClick={() => setPage(pageNumber)} aria-current={pageNumber === page ? 'page' : undefined}>{pageNumber}</button>)}
+            </div>
+            <button type="button" className="settings57-page-nav" onClick={() => setPage((current) => Math.min(totalPages, current + 1))} disabled={page === totalPages} aria-label="Next page"><span>Next</span><ChevronRight size={16} /></button>
+          </nav>
+        </>
       )}
     </section>
   )
