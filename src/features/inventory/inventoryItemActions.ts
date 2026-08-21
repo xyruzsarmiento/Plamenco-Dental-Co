@@ -1,14 +1,27 @@
 import { isSupabaseConfigured, supabase } from '../../lib/supabase'
-import { ITEM_KEY, type InventoryItem } from './inventoryStore'
+import {
+  BATCH_KEY,
+  BRANCH_STOCK_KEY,
+  ITEM_KEY,
+  MOVEMENT_KEY,
+  PO_KEY,
+  STOCK_COUNT_KEY,
+  TRANSFER_KEY,
+  type InventoryItem,
+} from './inventoryStore'
 
-function readItems(): InventoryItem[] {
+function readList<T>(key: string): T[] {
   if (typeof window === 'undefined') return []
   try {
-    const parsed = JSON.parse(window.localStorage.getItem(ITEM_KEY) ?? '[]')
+    const parsed = JSON.parse(window.localStorage.getItem(key) ?? '[]')
     return Array.isArray(parsed) ? parsed : []
   } catch {
     return []
   }
+}
+
+function readItems(): InventoryItem[] {
+  return readList<InventoryItem>(ITEM_KEY)
 }
 
 function writeItems(items: InventoryItem[]) {
@@ -67,6 +80,27 @@ export async function updateInventoryItemRecord(itemId: string, patch: Partial<O
   return updated
 }
 
-export async function archiveInventoryItemRecord(itemId: string) {
-  return updateInventoryItemRecord(itemId, { status: 'archived' })
+export async function removeInventoryItemRecord(itemId: string) {
+  const items = readItems()
+  const current = items.find((item) => item.id === itemId)
+  if (!current) throw new Error('Inventory item not found.')
+
+  const hasBranchStock = readList<{ itemId: string }>(BRANCH_STOCK_KEY).some((row) => row.itemId === itemId)
+  const hasMovements = readList<{ itemId: string }>(MOVEMENT_KEY).some((row) => row.itemId === itemId)
+  const hasBatches = readList<{ itemId: string }>(BATCH_KEY).some((row) => row.itemId === itemId)
+  const hasPurchaseOrderHistory = readList<{ items?: Array<{ itemId: string }> }>(PO_KEY).some((row) => row.items?.some((item) => item.itemId === itemId))
+  const hasStockCountHistory = readList<{ items?: Array<{ itemId: string }> }>(STOCK_COUNT_KEY).some((row) => row.items?.some((item) => item.itemId === itemId))
+  const hasTransferHistory = readList<{ items?: Array<{ itemId: string }> }>(TRANSFER_KEY).some((row) => row.items?.some((item) => item.itemId === itemId))
+
+  if (hasBranchStock || hasMovements || hasBatches || hasPurchaseOrderHistory || hasStockCountHistory || hasTransferHistory) {
+    throw new Error('This item already has inventory history and cannot be permanently removed. Edit the item instead so historical records remain valid.')
+  }
+
+  if (isSupabaseConfigured && supabase) {
+    const { error } = await supabase.from('inventory_items').delete().eq('id', itemId)
+    if (error) throw new Error(`Database removal failed: ${error.message}`)
+  }
+
+  writeItems(items.filter((item) => item.id !== itemId))
+  return current
 }
