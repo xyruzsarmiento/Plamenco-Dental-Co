@@ -90,6 +90,7 @@ import './styles/super-admin-dentists-controls-v61.css'
 import './styles/super-admin-reports-v62.css'
 import './styles/super-admin-inventory-v63.css'
 import './styles/super-admin-reports-actions-v64.css'
+import './styles/super-admin-expenses-v57.css'
 import App from './App.tsx'
 import { registerPatientPortalPwa } from './features/patientPortal/pwaRegistration'
 
