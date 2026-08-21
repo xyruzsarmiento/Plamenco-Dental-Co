@@ -14,12 +14,12 @@ import {
   UsersRound,
 } from 'lucide-react'
 import type { ComponentType, SVGProps } from 'react'
-import type { StaffAccount } from '../../features/auth/staffStore'
+import type { StaffMember } from '../../features/auth/authTypes'
 import { formatAuditAction, type AuditLogEntry } from '../../features/security/auditLogStore'
 
 type Props = {
   logs: AuditLogEntry[]
-  staff: StaffAccount[]
+  staff: StaffMember[]
   actionValue: string
   searchValue: string
   actionOptions: Array<{ value: string; label: string }>
@@ -99,7 +99,7 @@ function areaFor(entity: string): AreaInfo {
   return { label: 'Clinic operations', icon: Activity }
 }
 
-function friendlyActor(rawActor: string, staff: StaffAccount[]) {
+function friendlyActor(rawActor: string, staff: StaffMember[]) {
   const normalized = rawActor.trim().toLowerCase()
   const match = staff.find((member) =>
     [member.id, member.email, member.name].some((value) => value?.trim().toLowerCase() === normalized),
