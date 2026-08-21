@@ -55,6 +55,7 @@ import './styles/super-admin-settings-v30.css'
 import './styles/super-admin-appointments-v31.css'
 import './styles/super-admin-billing-v32.css'
 import './styles/super-admin-system-admin-v33.css'
+import './styles/premium-analytics-refinement-v35.css'
 import App from './App.tsx'
 import { registerPatientPortalPwa } from './features/patientPortal/pwaRegistration'
 
