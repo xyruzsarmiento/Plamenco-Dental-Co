@@ -4,7 +4,7 @@ import { PageScaffold } from '../components/ui/PageScaffold'
 import { Button } from '../components/ui/Button'
 import { ServiceFormModalV15 } from '../features/services/ServiceFormModalV15'
 import type { Service, ServiceFormValues, ServiceStatus } from '../features/services/serviceTypes'
-import { createService, formatServicePrice, getStoredServices, loadServicesFromSupabase, toggleServiceStatus, updateService } from '../features/services/serviceStore'
+import { createServicePersisted, formatServicePrice, getStoredServices, loadServicesFromSupabase, toggleServiceStatus, updateServicePersisted } from '../features/services/serviceStore'
 
 function keyFor(service: Service) {
   const name = service.name.trim().toLowerCase().replace(/\s+/g, ' ')
@@ -89,12 +89,16 @@ export function ServicesPageV15() {
 
   async function save(values: ServiceFormValues) {
     setSaving(true)
+    setFeedback(null)
     try {
-      if (mode === 'add') createService(values)
-      else if (editing) updateService(editing.id, values)
+      if (mode === 'add') await createServicePersisted(values)
+      else if (editing) await updateServicePersisted(editing.id, values)
       setShowForm(false)
       setEditing(undefined)
-      refresh(mode === 'add' ? 'Service added to the clinic catalogue.' : 'Service changes saved.')
+      refresh(mode === 'add' ? 'Service saved to the clinic catalogue.' : 'Service changes saved to the clinic catalogue.')
+    } catch (cause) {
+      setFeedback(cause instanceof Error ? cause.message : 'The service could not be saved to the clinic catalogue.')
+      throw cause
     } finally {
       setSaving(false)
     }
