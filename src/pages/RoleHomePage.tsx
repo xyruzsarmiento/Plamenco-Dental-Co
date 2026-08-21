@@ -1,5 +1,5 @@
 import { useAuth } from '../features/auth/AuthContext'
-import { SuperAdminOverview } from '../features/admin/SuperAdminOverview'
+import { SuperAdminOverviewV56 } from '../features/admin/SuperAdminOverviewV56'
 import { DentistTodayWorkspace } from '../features/dentalRecords/DentistTodayWorkspace'
 import { StaffTodayWorkspace } from '../features/staff/StaffTodayWorkspace'
 import { DashboardPage } from './DashboardPage'
@@ -8,7 +8,7 @@ export function RoleHomePage() {
   const { user } = useAuth()
 
   if (user?.role === 'super_admin') {
-    return <SuperAdminOverview />
+    return <SuperAdminOverviewV56 />
   }
 
   if (user?.role === 'dentist' || user?.role === 'associate_dentist') {
