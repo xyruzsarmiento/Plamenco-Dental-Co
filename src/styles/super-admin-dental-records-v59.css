@@ -1,0 +1,9 @@
+.premium-page-scaffold:has(> .dr11-page) > .premium-page-header,
+.premium-page-scaffold:has(> .dr11-empty-page) > .premium-page-header {
+  display: none;
+}
+
+.premium-page-scaffold:has(> .dr11-page),
+.premium-page-scaffold:has(> .dr11-empty-page) {
+  gap: 0;
+}
