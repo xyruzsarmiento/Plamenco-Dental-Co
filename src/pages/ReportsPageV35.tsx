@@ -1,9 +1,9 @@
-import { useMemo } from 'react'
+import { useMemo, type ReactNode } from 'react'
 import { PremiumBarChartV35, PremiumLineChartV35 } from '../components/ui/PremiumInteractiveChartV35'
 import { buildEnterpriseReportSnapshot, formatReportCurrency } from '../features/reports/reportStore'
 import { ReportsPageV19 } from './ReportsPageV19'
 
-function AnalyticsCard({ eyebrow, title, description, children }: { eyebrow: string; title: string; description: string; children: React.ReactNode }) {
+function AnalyticsCard({ eyebrow, title, description, children }: { eyebrow: string; title: string; description: string; children: ReactNode }) {
   return <section className="analytics35-card"><header><span>{eyebrow}</span><h3>{title}</h3><p>{description}</p></header>{children}</section>
 }
 
