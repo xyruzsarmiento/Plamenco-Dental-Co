@@ -37,11 +37,7 @@ export function getCategories(): string[] {
   return Array.from(new Set(getStoredServices().map((service) => service.category))).sort()
 }
 
-/**
- * Service.price is stored as Philippine pesos in the catalogue/editor.
- * Financial workflows use integer centavos, so all downstream conversion
- * should go through this helper instead of treating catalogue pesos as cents.
- */
+/** Service.price is stored as Philippine pesos in the catalogue/editor. */
 export function servicePriceToCents(pricePhp: number): number {
   if (!Number.isFinite(pricePhp) || pricePhp <= 0) return 0
   return Math.round(pricePhp * 100)
@@ -73,6 +69,31 @@ export function createService(values: ServiceFormValues): Service {
   return service
 }
 
+export async function createServicePersisted(values: ServiceFormValues): Promise<Service> {
+  const services = getStoredServices()
+  const now = new Date().toISOString()
+  const service: Service = { id: createUuid(), ...values, createdAt: now, updatedAt: now }
+  if (supabase) {
+    const { data, error } = await supabase.from('services').insert(remoteRow(service)).select('*').single()
+    if (error) throw new Error(`Unable to save service to the clinic database: ${error.message}`)
+    const confirmed: Service = {
+      id: data.id,
+      name: data.name ?? service.name,
+      description: data.description ?? service.description,
+      duration: Number(data.duration ?? service.duration),
+      price: Number(data.price ?? service.price),
+      category: data.category ?? service.category,
+      status: data.status ?? service.status,
+      createdAt: data.created_at ?? now,
+      updatedAt: data.updated_at ?? data.created_at ?? now,
+    }
+    saveStoredServices([...services.filter((entry) => entry.id !== confirmed.id), confirmed])
+    return confirmed
+  }
+  saveStoredServices([...services, service])
+  return service
+}
+
 export function updateService(id: string, values: ServiceFormValues): Service | null {
   const services = getStoredServices()
   const index = services.findIndex((service) => service.id === id)
@@ -82,6 +103,33 @@ export function updateService(id: string, values: ServiceFormValues): Service | 
   services[index] = updated
   saveStoredServices(services)
   void updateRemoteTableRow('services', id, remoteRow(updated))
+  return updated
+}
+
+export async function updateServicePersisted(id: string, values: ServiceFormValues): Promise<Service | null> {
+  const services = getStoredServices()
+  const current = services.find((service) => service.id === id)
+  if (!current) return null
+  const now = new Date().toISOString()
+  const updated: Service = { ...current, ...values, updatedAt: now }
+  if (supabase) {
+    const { data, error } = await supabase.from('services').update(remoteRow(updated)).eq('id', id).select('*').single()
+    if (error) throw new Error(`Unable to update service in the clinic database: ${error.message}`)
+    const confirmed: Service = {
+      id: data.id,
+      name: data.name ?? updated.name,
+      description: data.description ?? updated.description,
+      duration: Number(data.duration ?? updated.duration),
+      price: Number(data.price ?? updated.price),
+      category: data.category ?? updated.category,
+      status: data.status ?? updated.status,
+      createdAt: data.created_at ?? current.createdAt,
+      updatedAt: data.updated_at ?? now,
+    }
+    saveStoredServices(services.map((entry) => entry.id === id ? confirmed : entry))
+    return confirmed
+  }
+  saveStoredServices(services.map((entry) => entry.id === id ? updated : entry))
   return updated
 }
 
@@ -148,7 +196,7 @@ export async function loadServicesFromSupabase(options: { strict?: boolean } = {
       id: row.id,
       name: row.name ?? '',
       description: row.description ?? '',
-      duration: row.duration ?? 30,
+      duration: Number(row.duration ?? 30),
       price: Number(row.price ?? 0),
       category: row.category ?? 'General',
       status: row.status ?? 'active',
