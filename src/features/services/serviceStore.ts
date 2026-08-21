@@ -26,6 +26,7 @@ export function getStoredServices(): Service[] {
 
 export function saveStoredServices(services: Service[]) {
   window.localStorage.setItem(SERVICE_STORAGE_KEY, JSON.stringify(services))
+  window.dispatchEvent(new CustomEvent('plamenco:services-updated'))
 }
 
 export function getServiceById(id: string): Service | undefined {
@@ -34,6 +35,21 @@ export function getServiceById(id: string): Service | undefined {
 
 export function getCategories(): string[] {
   return Array.from(new Set(getStoredServices().map((service) => service.category))).sort()
+}
+
+/**
+ * Service.price is stored as Philippine pesos in the catalogue/editor.
+ * Financial workflows use integer centavos, so all downstream conversion
+ * should go through this helper instead of treating catalogue pesos as cents.
+ */
+export function servicePriceToCents(pricePhp: number): number {
+  if (!Number.isFinite(pricePhp) || pricePhp <= 0) return 0
+  return Math.round(pricePhp * 100)
+}
+
+export function formatServicePrice(pricePhp: number): string {
+  if (!Number.isFinite(pricePhp) || pricePhp <= 0) return 'Price to confirm'
+  return new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP', maximumFractionDigits: 0 }).format(pricePhp)
 }
 
 function remoteRow(service: Service) {
