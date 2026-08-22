@@ -5,8 +5,6 @@ import { Badge } from '../components/ui/Badge'
 import { Button } from '../components/ui/Button'
 import { PaymentRecorderButtonV14 } from '../features/billing/PaymentRecorderV14'
 import {
-  approvePayment,
-  createRefund,
   formatCurrency,
   getActivePaymentMethods,
   getLedgerByPatient,
@@ -20,13 +18,17 @@ import {
   getStoredReceipts,
   getStoredRefunds,
   getTodayRevenue,
-  rejectPayment,
-  voidInvoice,
   type Invoice,
   type InvoiceStatus,
   type Payment,
   type PaymentMethod,
 } from '../features/billing/billingStore'
+import {
+  rejectSubmittedPaymentPersisted,
+  refundPaymentPersisted,
+  verifySubmittedPaymentPersisted,
+  voidInvoicePersisted,
+} from '../features/billing/billingPersistence'
 import { getStoredBranches } from '../features/branches/branchStore'
 import { getStoredPatients } from '../features/patients/patientStore'
 import { usePermissions } from '../features/auth/permissions'
@@ -90,6 +92,8 @@ export function BillingPageV14() {
   const [refundTarget, setRefundTarget] = useState<Payment | null>(null)
   const [refundAmount, setRefundAmount] = useState('')
   const [refundReason, setRefundReason] = useState('')
+  const [actionPending, setActionPending] = useState<string | null>(null)
+  const [actionError, setActionError] = useState<string | null>(null)
 
   const data = useMemo(() => {
     void refreshKey
@@ -110,45 +114,63 @@ export function BillingPageV14() {
   }, [branchId, method, refreshKey, search, status])
 
   const selectedInvoice = selectedInvoiceId ? data.invoices.find((invoice) => invoice.id === selectedInvoiceId) : data.filteredInvoices[0]
-  const pendingVerification = data.payments.filter((payment) => payment.status === 'pending_verification')
+  const pendingVerification = data.payments.filter((payment) => ['pending', 'pending_verification', 'processing'].includes(payment.status))
   const outstanding = data.invoices.filter((invoice) => invoice.balanceCents > 0 && invoice.status !== 'void')
   const billedAmount = data.invoices.filter((invoice) => invoice.status !== 'void').reduce((sum, invoice) => sum + invoice.totalCents, 0)
-  const collections = data.payments.filter((payment) => payment.status === 'completed').reduce((sum, payment) => sum + payment.amountCents, 0)
+  const collections = data.payments.filter((payment) => ['completed', 'partially_refunded', 'refunded'].includes(payment.status)).reduce((sum, payment) => sum + payment.allocatedCents, 0)
   const refundsTotal = data.refunds.reduce((sum, refund) => sum + refund.amountCents, 0)
-  const collectionRate = billedAmount > 0 ? Math.min(100, Math.round((collections / billedAmount) * 100)) : 0
+  const collectionRate = billedAmount > 0 ? Math.min(100, Math.round(((collections - refundsTotal) / billedAmount) * 100)) : 0
 
-  const trend = useMemo(() => {
-    return lastSevenDays().map((day) => ({
-      ...day,
-      amount: data.payments.filter((payment) => payment.status === 'completed' && payment.date === day.key).reduce((sum, payment) => sum + payment.amountCents, 0),
-    }))
-  }, [data.payments])
+  const trend = useMemo(() => lastSevenDays().map((day) => ({ ...day, amount: data.payments.filter((payment) => ['completed','partially_refunded','refunded'].includes(payment.status) && payment.date === day.key).reduce((sum, payment) => sum + payment.allocatedCents, 0) })), [data.payments])
   const trendMax = Math.max(1, ...trend.map((entry) => entry.amount))
 
   function refresh() { setRefreshKey((key) => key + 1) }
 
-  function confirmVoid() {
-    if (!voidTarget || !voidReason.trim()) return
-    voidInvoice(voidTarget.id, voidReason.trim(), 'clinic-user')
-    setVoidTarget(null)
-    setVoidReason('')
-    refresh()
+  async function confirmVoid() {
+    if (!voidTarget || !voidReason.trim() || actionPending) return
+    setActionError(null); setActionPending(`void:${voidTarget.id}`)
+    try {
+      await voidInvoicePersisted(voidTarget.id, voidReason.trim())
+      setVoidTarget(null); setVoidReason(''); refresh()
+    } catch (error) { setActionError(error instanceof Error ? error.message : 'Unable to void this invoice.') }
+    finally { setActionPending(null) }
   }
 
-  function confirmRefund() {
-    if (!refundTarget || !refundReason.trim()) return
+  async function confirmRefund() {
+    if (!refundTarget || !refundReason.trim() || actionPending) return
     const cents = Math.round(Number(refundAmount) * 100)
     if (!Number.isFinite(cents) || cents <= 0 || cents > refundTarget.refundableCents) return
-    createRefund({ paymentId: refundTarget.id, amountCents: cents, reason: refundReason.trim(), processedBy: 'clinic-user' })
-    setRefundTarget(null)
-    setRefundAmount('')
-    setRefundReason('')
-    refresh()
+    setActionError(null); setActionPending(`refund:${refundTarget.id}`)
+    try {
+      await refundPaymentPersisted({ paymentId: refundTarget.id, amountCents: cents, reason: refundReason.trim() })
+      setRefundTarget(null); setRefundAmount(''); setRefundReason(''); refresh()
+    } catch (error) { setActionError(error instanceof Error ? error.message : 'Unable to create this refund.') }
+    finally { setActionPending(null) }
+  }
+
+  async function verifyPayment(payment: Payment) {
+    if (actionPending) return
+    setActionError(null); setActionPending(`verify:${payment.id}`)
+    try { await verifySubmittedPaymentPersisted(payment.id); refresh() }
+    catch (error) { setActionError(error instanceof Error ? error.message : 'Unable to verify this payment.') }
+    finally { setActionPending(null) }
+  }
+
+  async function rejectPayment(payment: Payment) {
+    if (actionPending) return
+    const internalReason = window.prompt('Internal reason for rejecting this payment proof:')?.trim()
+    if (!internalReason) return
+    const patientReason = window.prompt('Patient-visible reason (optional):', 'Payment proof could not be verified.')?.trim() ?? ''
+    setActionError(null); setActionPending(`reject:${payment.id}`)
+    try { await rejectSubmittedPaymentPersisted(payment.id, internalReason, patientReason); refresh() }
+    catch (error) { setActionError(error instanceof Error ? error.message : 'Unable to reject this payment.') }
+    finally { setActionPending(null) }
   }
 
   return (
     <PageScaffold title="Billing & Payments" description="Invoices, collections, receivables, refunds and payment verification.">
       <section className="bill14-page" key={refreshKey}>
+        {actionError && <div className="inline-alert" role="alert">{actionError}</div>}
         <header className="bill14-command-header">
           <div><span className="bill14-kicker">Financial operations</span><h2>Revenue & patient accounts</h2><p>Monitor billing activity, outstanding balances and verified collections from one finance workspace.</p></div>
           {permissions.can('payments.record_manual') && <PaymentRecorderButtonV14 onSuccess={refresh} />}
@@ -156,72 +178,34 @@ export function BillingPageV14() {
 
         <section className="bill14-metrics">
           <article><span><FileText size={16}/> Billed amount</span><strong>{formatCurrency(billedAmount)}</strong><small>Non-void invoices</small></article>
-          <article><span><CircleDollarSign size={16}/> Collections</span><strong>{formatCurrency(collections)}</strong><small>{collectionRate}% of billed amount</small></article>
+          <article><span><CircleDollarSign size={16}/> Collections</span><strong>{formatCurrency(Math.max(0, collections - refundsTotal))}</strong><small>{collectionRate}% of billed amount</small></article>
           <article><span><Landmark size={16}/> Receivables</span><strong>{formatCurrency(getOutstandingBalanceTotal())}</strong><small>{outstanding.length} open invoice{outstanding.length === 1 ? '' : 's'}</small></article>
           <article><span><RotateCcw size={16}/> Refunds</span><strong>{formatCurrency(refundsTotal)}</strong><small>{data.refunds.length} refund record{data.refunds.length === 1 ? '' : 's'}</small></article>
         </section>
 
         <div className="bill14-insights-grid">
-          <section className="bill14-chart-card">
-            <div className="bill14-card-head"><div><span className="bill14-kicker">7-day activity</span><h3>Collections trend</h3></div><TrendingUp size={18}/></div>
-            <div className="bill14-bars" aria-label="Collections over the last seven days">
-              {trend.map((entry) => <div className="bill14-bar-col" key={entry.key}><div className="bill14-bar-track"><span style={{ height: `${Math.max(4, (entry.amount / trendMax) * 100)}%` }} /></div><strong>{entry.amount > 0 ? formatCurrency(entry.amount) : '₱0'}</strong><small>{entry.label}</small></div>)}
-            </div>
-          </section>
-          <section className="bill14-flow-card">
-            <div className="bill14-card-head"><div><span className="bill14-kicker">Account health</span><h3>Collection pipeline</h3></div><ShieldCheck size={18}/></div>
-            <div className="bill14-flow-list">
-              <div><span>Today’s collections</span><strong>{formatCurrency(getTodayRevenue())}</strong></div>
-              <div><span>Partially paid invoices</span><strong>{getPartiallyPaidInvoiceCount()}</strong></div>
-              <div><span>Pending verification</span><strong>{getPendingPaymentsCount()}</strong></div>
-              <div><span>Collection rate</span><strong>{collectionRate}%</strong></div>
-            </div>
-            <div className="bill14-progress"><span style={{ width: `${collectionRate}%` }} /></div>
-          </section>
+          <section className="bill14-chart-card"><div className="bill14-card-head"><div><span className="bill14-kicker">7-day activity</span><h3>Collections trend</h3></div><TrendingUp size={18}/></div><div className="bill14-bars" aria-label="Collections over the last seven days">{trend.map((entry) => <div className="bill14-bar-col" key={entry.key}><div className="bill14-bar-track"><span style={{ height: `${Math.max(4, (entry.amount / trendMax) * 100)}%` }} /></div><strong>{entry.amount > 0 ? formatCurrency(entry.amount) : '₱0'}</strong><small>{entry.label}</small></div>)}</div></section>
+          <section className="bill14-flow-card"><div className="bill14-card-head"><div><span className="bill14-kicker">Account health</span><h3>Collection pipeline</h3></div><ShieldCheck size={18}/></div><div className="bill14-flow-list"><div><span>Today’s collections</span><strong>{formatCurrency(getTodayRevenue())}</strong></div><div><span>Partially paid invoices</span><strong>{getPartiallyPaidInvoiceCount()}</strong></div><div><span>Pending verification</span><strong>{getPendingPaymentsCount()}</strong></div><div><span>Collection rate</span><strong>{collectionRate}%</strong></div></div><div className="bill14-progress"><span style={{ width: `${collectionRate}%` }} /></div></section>
         </div>
 
-        <nav className="bill14-tabs" aria-label="Billing sections">
-          {(['invoices','payments','outstanding','verification','refunds'] as BillingTab[]).map((tab) => <button key={tab} type="button" className={activeTab === tab ? 'is-active' : ''} onClick={() => setActiveTab(tab)}>{tab === 'outstanding' ? 'Receivables' : tab.replace('_',' ')}</button>)}
-        </nav>
+        <nav className="bill14-tabs" aria-label="Billing sections">{(['invoices','payments','outstanding','verification','refunds'] as BillingTab[]).map((tab) => <button key={tab} type="button" className={activeTab === tab ? 'is-active' : ''} onClick={() => setActiveTab(tab)}>{tab === 'outstanding' ? 'Receivables' : tab.replace('_',' ')}</button>)}</nav>
+        <section className="bill14-filter-card"><label className="bill14-search"><Search size={16}/><input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search patient, invoice or payment number..." /></label><select value={status} onChange={(event) => setStatus(event.target.value as typeof status)}>{invoiceStatuses.map((entry) => <option key={entry} value={entry}>{entry === 'all' ? 'All invoice statuses' : entry.replaceAll('_',' ')}</option>)}</select><select value={branchId} onChange={(event) => setBranchId(event.target.value)}><option value="all">All branches</option>{getStoredBranches().map((branch) => <option key={branch.id} value={branch.id}>{branch.name}</option>)}</select><select value={method} onChange={(event) => setMethod(event.target.value as typeof method)}><option value="all">All payment methods</option>{getActivePaymentMethods().map((entry) => <option key={entry.id} value={entry.id}>{entry.label}</option>)}</select></section>
 
-        <section className="bill14-filter-card">
-          <label className="bill14-search"><Search size={16}/><input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search patient, invoice or payment number..." /></label>
-          <select value={status} onChange={(event) => setStatus(event.target.value as typeof status)}>{invoiceStatuses.map((entry) => <option key={entry} value={entry}>{entry === 'all' ? 'All invoice statuses' : entry.replaceAll('_',' ')}</option>)}</select>
-          <select value={branchId} onChange={(event) => setBranchId(event.target.value)}><option value="all">All branches</option>{getStoredBranches().map((branch) => <option key={branch.id} value={branch.id}>{branch.name}</option>)}</select>
-          <select value={method} onChange={(event) => setMethod(event.target.value as typeof method)}><option value="all">All payment methods</option>{getActivePaymentMethods().map((entry) => <option key={entry.id} value={entry.id}>{entry.label}</option>)}</select>
-        </section>
+        {activeTab === 'invoices' && <div className="bill14-invoice-layout"><section className="bill14-registry-card"><div className="bill14-card-head"><div><span className="bill14-kicker">Invoice registry</span><h3>{data.filteredInvoices.length} invoice{data.filteredInvoices.length === 1 ? '' : 's'}</h3></div><ReceiptText size={18}/></div><div className="bill14-invoice-list">{data.filteredInvoices.map((invoice) => <button key={invoice.id} type="button" className={selectedInvoice?.id === invoice.id ? 'is-active' : ''} onClick={() => setSelectedInvoiceId(invoice.id)}><div><strong>{invoice.invoiceNumber}</strong><span>{patientName(invoice.patientId)}</span><small>{formatDate(invoice.invoiceDate)} · {branchName(invoice.branchId)}</small></div><div><Badge tone={statusTone(invoice.status)}>{invoice.status.replaceAll('_',' ')}</Badge><strong>{formatCurrency(invoice.balanceCents)}</strong><small>of {formatCurrency(invoice.totalCents)}</small></div></button>)}{!data.filteredInvoices.length && <div className="bill14-empty">No invoices match the current filters.</div>}</div></section><aside className="bill14-detail-card">{selectedInvoice ? <><div className="bill14-detail-head"><div><span className="bill14-kicker">Invoice detail</span><h3>{selectedInvoice.invoiceNumber}</h3><p>{patientName(selectedInvoice.patientId)}</p></div><Badge tone={statusTone(selectedInvoice.status)}>{selectedInvoice.status.replaceAll('_',' ')}</Badge></div><div className="bill14-detail-metrics"><div><span>Total</span><strong>{formatCurrency(selectedInvoice.totalCents)}</strong></div><div><span>Paid</span><strong>{formatCurrency(selectedInvoice.amountPaidCents)}</strong></div><div className="is-balance"><span>Balance</span><strong>{formatCurrency(selectedInvoice.balanceCents)}</strong></div></div><div className="bill14-detail-meta"><div><span>Branch</span><strong>{branchName(selectedInvoice.branchId)}</strong></div><div><span>Subtotal</span><strong>{formatCurrency(selectedInvoice.subtotalCents)}</strong></div><div><span>Discounts</span><strong>{formatCurrency(selectedInvoice.discountCents)}</strong></div></div><div className="bill14-subsection"><div className="bill14-subhead"><span>Invoice items</span><strong>{selectedInvoice.items.length}</strong></div>{selectedInvoice.items.map((item) => <div key={item.id} className="bill14-line-item"><div><strong>{item.description}</strong><small>{item.providerNameSnapshot || 'Provider attribution pending'} · Qty {item.quantity}</small></div><strong>{formatCurrency(item.amountCents ?? item.quantity * item.unitPriceCents)}</strong></div>)}</div><div className="bill14-subsection"><div className="bill14-subhead"><span>Payments</span><strong>{getPaymentsByInvoice(selectedInvoice.id).length}</strong></div>{getPaymentsByInvoice(selectedInvoice.id).map((payment) => <div key={payment.id} className="bill14-line-item"><div><strong>{payment.paymentNumber}</strong><small>{getPaymentMethodLabel(payment.paymentMethod)} · {formatDate(payment.date)}</small></div><strong>{formatCurrency(payment.amountCents)}</strong></div>)}</div>{permissions.can('billing.void_invoice') && selectedInvoice.amountPaidCents === 0 && selectedInvoice.status !== 'void' && <Button variant="danger" size="sm" icon={<Ban size={14}/>} onClick={() => { setActionError(null); setVoidTarget(selectedInvoice) }}>Void invoice</Button>}</> : <div className="bill14-empty">Select an invoice to view details.</div>}</aside></div>}
 
-        {activeTab === 'invoices' && <div className="bill14-invoice-layout">
-          <section className="bill14-registry-card">
-            <div className="bill14-card-head"><div><span className="bill14-kicker">Invoice registry</span><h3>{data.filteredInvoices.length} invoice{data.filteredInvoices.length === 1 ? '' : 's'}</h3></div><ReceiptText size={18}/></div>
-            <div className="bill14-invoice-list">{data.filteredInvoices.map((invoice) => <button key={invoice.id} type="button" className={selectedInvoice?.id === invoice.id ? 'is-active' : ''} onClick={() => setSelectedInvoiceId(invoice.id)}><div><strong>{invoice.invoiceNumber}</strong><span>{patientName(invoice.patientId)}</span><small>{formatDate(invoice.invoiceDate)} · {branchName(invoice.branchId)}</small></div><div><Badge tone={statusTone(invoice.status)}>{invoice.status.replaceAll('_',' ')}</Badge><strong>{formatCurrency(invoice.balanceCents)}</strong><small>of {formatCurrency(invoice.totalCents)}</small></div></button>)}{!data.filteredInvoices.length && <div className="bill14-empty">No invoices match the current filters.</div>}</div>
-          </section>
-
-          <aside className="bill14-detail-card">
-            {selectedInvoice ? <>
-              <div className="bill14-detail-head"><div><span className="bill14-kicker">Invoice detail</span><h3>{selectedInvoice.invoiceNumber}</h3><p>{patientName(selectedInvoice.patientId)}</p></div><Badge tone={statusTone(selectedInvoice.status)}>{selectedInvoice.status.replaceAll('_',' ')}</Badge></div>
-              <div className="bill14-detail-metrics"><div><span>Total</span><strong>{formatCurrency(selectedInvoice.totalCents)}</strong></div><div><span>Paid</span><strong>{formatCurrency(selectedInvoice.amountPaidCents)}</strong></div><div className="is-balance"><span>Balance</span><strong>{formatCurrency(selectedInvoice.balanceCents)}</strong></div></div>
-              <div className="bill14-detail-meta"><div><span>Branch</span><strong>{branchName(selectedInvoice.branchId)}</strong></div><div><span>Subtotal</span><strong>{formatCurrency(selectedInvoice.subtotalCents)}</strong></div><div><span>Discounts</span><strong>{formatCurrency(selectedInvoice.discountCents)}</strong></div></div>
-              <div className="bill14-subsection"><div className="bill14-subhead"><span>Invoice items</span><strong>{selectedInvoice.items.length}</strong></div>{selectedInvoice.items.map((item) => <div key={item.id} className="bill14-line-item"><div><strong>{item.description}</strong><small>{item.providerNameSnapshot || 'Provider attribution pending'} · Qty {item.quantity}</small></div><strong>{formatCurrency(item.amountCents ?? item.quantity * item.unitPriceCents)}</strong></div>)}</div>
-              <div className="bill14-subsection"><div className="bill14-subhead"><span>Payments</span><strong>{getPaymentsByInvoice(selectedInvoice.id).length}</strong></div>{getPaymentsByInvoice(selectedInvoice.id).map((payment) => <div key={payment.id} className="bill14-line-item"><div><strong>{payment.paymentNumber}</strong><small>{getPaymentMethodLabel(payment.paymentMethod)} · {formatDate(payment.date)}</small></div><strong>{formatCurrency(payment.amountCents)}</strong></div>)}</div>
-              {permissions.can('billing.void_invoice') && selectedInvoice.amountPaidCents === 0 && selectedInvoice.status !== 'void' && <Button variant="danger" size="sm" icon={<Ban size={14}/>} onClick={() => setVoidTarget(selectedInvoice)}>Void invoice</Button>}
-            </> : <div className="bill14-empty">Select an invoice to view details.</div>}
-          </aside>
-        </div>}
-
-        {activeTab === 'payments' && <section className="bill14-registry-card"><div className="bill14-card-head"><div><span className="bill14-kicker">Payment ledger</span><h3>{data.filteredPayments.length} payments</h3></div><CreditCard size={18}/></div><div className="bill14-payment-list">{data.filteredPayments.map((payment) => <article key={payment.id}><div><strong>{payment.paymentNumber}</strong><span>{patientName(payment.patientId)}</span><small>{getPaymentMethodLabel(payment.paymentMethod)} · {branchName(payment.branchId)} · {formatDate(payment.date)}</small></div><div><Badge tone={statusTone(payment.status)}>{payment.status.replaceAll('_',' ')}</Badge><strong>{formatCurrency(payment.amountCents)}</strong><div className="bill14-row-actions">{data.receipts.some((receipt) => receipt.paymentId === payment.id) && <Button variant="ghost" size="sm" icon={<Printer size={14}/>} onClick={() => printReceipt(payment)}>Receipt</Button>}{permissions.can('payments.refund') && payment.refundableCents > 0 && <Button variant="secondary" size="sm" icon={<RotateCcw size={14}/>} onClick={() => { setRefundTarget(payment); setRefundAmount(String(payment.refundableCents / 100)) }}>Refund</Button>}</div></div></article>)}{!data.filteredPayments.length && <div className="bill14-empty">No payments match the current filters.</div>}</div></section>}
+        {activeTab === 'payments' && <section className="bill14-registry-card"><div className="bill14-card-head"><div><span className="bill14-kicker">Payment ledger</span><h3>{data.filteredPayments.length} payments</h3></div><CreditCard size={18}/></div><div className="bill14-payment-list">{data.filteredPayments.map((payment) => <article key={payment.id}><div><strong>{payment.paymentNumber}</strong><span>{patientName(payment.patientId)}</span><small>{getPaymentMethodLabel(payment.paymentMethod)} · {branchName(payment.branchId)} · {formatDate(payment.date)}</small></div><div><Badge tone={statusTone(payment.status)}>{payment.status.replaceAll('_',' ')}</Badge><strong>{formatCurrency(payment.amountCents)}</strong><div className="bill14-row-actions">{data.receipts.some((receipt) => receipt.paymentId === payment.id) && <Button variant="ghost" size="sm" icon={<Printer size={14}/>} onClick={() => printReceipt(payment)}>Receipt</Button>}{permissions.can('payments.refund') && payment.refundableCents > 0 && <Button variant="secondary" size="sm" icon={<RotateCcw size={14}/>} onClick={() => { setActionError(null); setRefundTarget(payment); setRefundAmount(String(payment.refundableCents / 100)) }}>Refund</Button>}</div></div></article>)}{!data.filteredPayments.length && <div className="bill14-empty">No payments match the current filters.</div>}</div></section>}
 
         {activeTab === 'outstanding' && <section className="bill14-registry-card"><div className="bill14-card-head"><div><span className="bill14-kicker">Receivables</span><h3>Outstanding balances</h3></div><Landmark size={18}/></div><div className="bill14-receivable-grid">{outstanding.map((invoice) => <article key={invoice.id}><span className="bill14-receivable-patient">{patientName(invoice.patientId)}</span><strong>{formatCurrency(invoice.balanceCents)}</strong><small>{invoice.invoiceNumber} · {branchName(invoice.branchId)}</small><p>{getLedgerByPatient(invoice.patientId).slice(0,2).map((entry) => entry.label).join(' · ') || 'No recent ledger entries'}</p></article>)}{!outstanding.length && <div className="bill14-empty">No outstanding balances.</div>}</div></section>}
 
-        {activeTab === 'verification' && <section className="bill14-registry-card"><div className="bill14-card-head"><div><span className="bill14-kicker">Verification queue</span><h3>{pendingVerification.length} pending proofs</h3></div><ShieldCheck size={18}/></div><div className="bill14-payment-list">{pendingVerification.map((payment) => <article key={payment.id}><div><strong>{payment.paymentNumber}</strong><span>{patientName(payment.patientId)}</span><small>{payment.referenceNumber || 'No reference'} · {payment.proofFilePath || 'No proof file path recorded'}</small></div><div><strong>{formatCurrency(payment.amountCents)}</strong><div className="bill14-row-actions">{permissions.canAny(['payments.verify','payments.confirm']) && <Button size="sm" icon={<CheckCircle2 size={14}/>} onClick={() => { approvePayment(payment.id,'clinic-user'); refresh() }}>Approve</Button>}{permissions.can('payments.reject') && <Button variant="danger" size="sm" icon={<XCircle size={14}/>} onClick={() => { rejectPayment(payment.id,'clinic-user','Rejected by reviewer','Payment proof could not be verified.'); refresh() }}>Reject</Button>}</div></div></article>)}{!pendingVerification.length && <div className="bill14-empty">No payment proofs are awaiting review.</div>}</div></section>}
+        {activeTab === 'verification' && <section className="bill14-registry-card"><div className="bill14-card-head"><div><span className="bill14-kicker">Verification queue</span><h3>{pendingVerification.length} pending proofs</h3></div><ShieldCheck size={18}/></div><div className="bill14-payment-list">{pendingVerification.map((payment) => <article key={payment.id}><div><strong>{payment.paymentNumber}</strong><span>{patientName(payment.patientId)}</span><small>{payment.referenceNumber || 'No reference'} · {payment.proofFilePath || 'No proof file path recorded'}</small></div><div><strong>{formatCurrency(payment.amountCents)}</strong><div className="bill14-row-actions">{permissions.canAny(['payments.verify','payments.confirm']) && <Button size="sm" icon={<CheckCircle2 size={14}/>} disabled={Boolean(actionPending)} onClick={() => void verifyPayment(payment)}>{actionPending === `verify:${payment.id}` ? 'Verifying…' : 'Approve'}</Button>}{permissions.can('payments.reject') && <Button variant="danger" size="sm" icon={<XCircle size={14}/>} disabled={Boolean(actionPending)} onClick={() => void rejectPayment(payment)}>{actionPending === `reject:${payment.id}` ? 'Rejecting…' : 'Reject'}</Button>}</div></div></article>)}{!pendingVerification.length && <div className="bill14-empty">No payment proofs are awaiting review.</div>}</div></section>}
 
         {activeTab === 'refunds' && <section className="bill14-registry-card"><div className="bill14-card-head"><div><span className="bill14-kicker">Refund history</span><h3>{data.refunds.length} refunds</h3></div><RotateCcw size={18}/></div><div className="bill14-payment-list">{data.refunds.map((refund) => <article key={refund.id}><div><strong>{refund.refundNumber}</strong><span>{patientName(refund.patientId)}</span><small>{branchName(refund.branchId)} · {formatDate(refund.processedAt)} · {refund.reason}</small></div><div><Badge tone={statusTone(refund.status)}>{refund.status}</Badge><strong>{formatCurrency(refund.amountCents)}</strong></div></article>)}{!data.refunds.length && <div className="bill14-empty">No refunds recorded.</div>}</div></section>}
 
         <div className="bill14-provider-note"><CreditCard size={17}/><div><strong>Online collections remain provider-backed.</strong><p>Gateway secret keys and webhook signing secrets must stay server-side. This workspace does not infer successful external delivery or settlement.</p></div></div>
 
-        {voidTarget && <div className="modal-backdrop bill14-action-backdrop" role="presentation" onClick={() => setVoidTarget(null)}><section className="bill14-action-modal" role="dialog" aria-modal="true" onClick={(event) => event.stopPropagation()}><span className="bill14-kicker">Invoice control</span><h3>Void {voidTarget.invoiceNumber}?</h3><p>This invoice has no recorded payments. Enter a reason to preserve the audit trail.</p><textarea value={voidReason} onChange={(event) => setVoidReason(event.target.value)} placeholder="Reason for voiding this invoice" rows={4}/><div><Button variant="secondary" onClick={() => setVoidTarget(null)}>Cancel</Button><Button variant="danger" disabled={!voidReason.trim()} onClick={confirmVoid}>Void invoice</Button></div></section></div>}
+        {voidTarget && <div className="modal-backdrop bill14-action-backdrop" role="presentation" onClick={() => { if (!actionPending) setVoidTarget(null) }}><section className="bill14-action-modal" role="dialog" aria-modal="true" onClick={(event) => event.stopPropagation()}><span className="bill14-kicker">Invoice control</span><h3>Void {voidTarget.invoiceNumber}?</h3><p>This invoice has no recorded payments. Enter a reason to preserve the audit trail.</p><textarea value={voidReason} onChange={(event) => setVoidReason(event.target.value)} placeholder="Reason for voiding this invoice" rows={4} disabled={Boolean(actionPending)}/>{actionError && <div className="inline-alert" role="alert">{actionError}</div>}<div><Button variant="secondary" onClick={() => setVoidTarget(null)} disabled={Boolean(actionPending)}>Cancel</Button><Button variant="danger" disabled={!voidReason.trim() || Boolean(actionPending)} onClick={() => void confirmVoid()}>{actionPending?.startsWith('void:') ? 'Voiding…' : 'Void invoice'}</Button></div></section></div>}
 
-        {refundTarget && <div className="modal-backdrop bill14-action-backdrop" role="presentation" onClick={() => setRefundTarget(null)}><section className="bill14-action-modal" role="dialog" aria-modal="true" onClick={(event) => event.stopPropagation()}><span className="bill14-kicker">Refund payment</span><h3>{refundTarget.paymentNumber}</h3><p>Refundable amount: {formatCurrency(refundTarget.refundableCents)}</p><label><span>Refund amount (PHP)</span><input type="number" step="0.01" min="0.01" max={refundTarget.refundableCents / 100} value={refundAmount} onChange={(event) => setRefundAmount(event.target.value)}/></label><label><span>Reason</span><textarea value={refundReason} onChange={(event) => setRefundReason(event.target.value)} rows={4} placeholder="Reason for refund"/></label><div><Button variant="secondary" onClick={() => setRefundTarget(null)}>Cancel</Button><Button variant="danger" disabled={!refundReason.trim() || Number(refundAmount) <= 0 || Math.round(Number(refundAmount)*100) > refundTarget.refundableCents} onClick={confirmRefund}>Create refund</Button></div></section></div>}
+        {refundTarget && <div className="modal-backdrop bill14-action-backdrop" role="presentation" onClick={() => { if (!actionPending) setRefundTarget(null) }}><section className="bill14-action-modal" role="dialog" aria-modal="true" onClick={(event) => event.stopPropagation()}><span className="bill14-kicker">Refund payment</span><h3>{refundTarget.paymentNumber}</h3><p>Refundable amount: {formatCurrency(refundTarget.refundableCents)}</p><label><span>Refund amount (PHP)</span><input type="number" step="0.01" min="0.01" max={refundTarget.refundableCents / 100} value={refundAmount} onChange={(event) => setRefundAmount(event.target.value)} disabled={Boolean(actionPending)}/></label><label><span>Reason</span><textarea value={refundReason} onChange={(event) => setRefundReason(event.target.value)} rows={4} placeholder="Reason for refund" disabled={Boolean(actionPending)}/></label>{actionError && <div className="inline-alert" role="alert">{actionError}</div>}<div><Button variant="secondary" onClick={() => setRefundTarget(null)} disabled={Boolean(actionPending)}>Cancel</Button><Button variant="danger" disabled={!refundReason.trim() || Number(refundAmount) <= 0 || Math.round(Number(refundAmount)*100) > refundTarget.refundableCents || Boolean(actionPending)} onClick={() => void confirmRefund()}>{actionPending?.startsWith('refund:') ? 'Refunding…' : 'Create refund'}</Button></div></section></div>}
       </section>
     </PageScaffold>
   )
