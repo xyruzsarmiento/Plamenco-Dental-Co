@@ -29,28 +29,124 @@
   min-height: 350px;
 }
 
-/* Keep the x-axis readable when the report returns long month/date labels. */
-.ex57-axis:nth-of-type(even) {
+/*
+ * The enterprise report may return up to 60 sampled dates for a year.
+ * Painting every date on the x-axis makes the strings overlap and look
+ * duplicated. Keep the data points interactive, but render only a small,
+ * evenly spaced set of labels plus the final label.
+ */
+.ex57-axis {
   display: none;
+  fill: #64748b;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: .01em;
 }
 
-.ex57-actions .btn {
-  min-height: 36px !important;
-  padding: 0 11px !important;
-  border-radius: 10px !important;
-  font-size: 11px !important;
-  line-height: 1 !important;
+.ex57-axis:nth-of-type(10n + 1),
+.ex57-axis:last-of-type {
+  display: block;
 }
 
-.ex57-actions .btn > span {
-  gap: 6px !important;
-  line-height: 1 !important;
-}
-
-.ex57-actions .btn svg {
-  width: 14px !important;
-  height: 14px !important;
+/* Compact premium hero actions. These rules intentionally apply only to
+ * Add expense, Small cash purchase, and Add vendor. */
+.ex57-actions {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-end !important;
+  gap: 7px !important;
+  width: auto !important;
+  min-width: 0 !important;
   flex: 0 0 auto !important;
+}
+
+.ex57-actions > .btn {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: auto !important;
+  min-width: 0 !important;
+  max-width: none !important;
+  min-height: 34px !important;
+  height: 34px !important;
+  flex: 0 0 auto !important;
+  padding: 0 10px !important;
+  gap: 0 !important;
+  border-radius: 9px !important;
+  font-size: 10px !important;
+  font-weight: 800 !important;
+  line-height: 1 !important;
+  letter-spacing: .015em !important;
+  white-space: nowrap !important;
+  box-shadow: none !important;
+}
+
+.ex57-actions > .btn > span {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: auto !important;
+  min-width: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  gap: 6px !important;
+  font-size: inherit !important;
+  font-weight: inherit !important;
+  line-height: 1 !important;
+  white-space: nowrap !important;
+}
+
+.ex57-actions > .btn svg {
+  display: block !important;
+  width: 12px !important;
+  height: 12px !important;
+  min-width: 12px !important;
+  min-height: 12px !important;
+  flex: 0 0 12px !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.ex57-actions > .btn-primary {
+  border: 1px solid #2563eb !important;
+  background: linear-gradient(135deg, #3478f6 0%, #2563eb 58%, #1f56d8 100%) !important;
+  color: #ffffff !important;
+  box-shadow: 0 5px 13px rgba(37, 99, 235, .16) !important;
+}
+
+.ex57-actions > .btn-primary:hover {
+  background: linear-gradient(135deg, #2f70ea 0%, #1f5fdf 100%) !important;
+  box-shadow: 0 7px 16px rgba(37, 99, 235, .2) !important;
+  transform: translateY(-1px);
+}
+
+.ex57-actions > .btn-secondary {
+  border: 1px solid #d7e2f2 !important;
+  background: rgba(255, 255, 255, .92) !important;
+  color: #172033 !important;
+  box-shadow: 0 3px 10px rgba(15, 23, 42, .035) !important;
+}
+
+.ex57-actions > .btn-secondary svg {
+  color: #2563eb !important;
+  stroke: #2563eb !important;
+}
+
+.ex57-actions > .btn-secondary:hover {
+  border-color: #bfd3ef !important;
+  background: #f8fbff !important;
+  color: #0f172a !important;
+  box-shadow: 0 5px 13px rgba(15, 23, 42, .055) !important;
+  transform: translateY(-1px);
+}
+
+.ex57-actions > .btn:focus-visible {
+  outline: none !important;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, .12) !important;
 }
 
 .ex57-section > header .btn {
@@ -116,6 +212,22 @@
   }
 }
 
+@media (max-width: 1100px) {
+  .ex57-actions {
+    justify-content: flex-start !important;
+    flex-wrap: wrap !important;
+  }
+
+  .ex57-axis {
+    display: none;
+  }
+
+  .ex57-axis:nth-of-type(12n + 1),
+  .ex57-axis:last-of-type {
+    display: block;
+  }
+}
+
 @media (max-width: 900px) {
   .ex57-trend-card {
     padding: 18px !important;
@@ -131,7 +243,8 @@
     display: none;
   }
 
-  .ex57-axis:nth-of-type(3n + 1) {
+  .ex57-axis:nth-of-type(15n + 1),
+  .ex57-axis:last-of-type {
     display: block;
   }
 }
@@ -145,9 +258,18 @@
     flex: 0 0 auto !important;
   }
 
-  .ex57-actions .btn {
-    min-height: 38px !important;
-    padding: 0 12px !important;
+  .ex57-actions {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    width: 100% !important;
+    gap: 7px !important;
+  }
+
+  .ex57-actions > .btn {
+    width: 100% !important;
+    min-height: 36px !important;
+    height: 36px !important;
+    padding: 0 11px !important;
   }
 }
 
@@ -170,12 +292,14 @@
     display: none;
   }
 
-  .ex57-axis:nth-of-type(4n + 1) {
+  .ex57-axis:nth-of-type(20n + 1),
+  .ex57-axis:last-of-type {
     display: block;
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .ex57-actions > .btn:hover,
   .ex57-section > header .btn:hover {
     transform: none;
   }
