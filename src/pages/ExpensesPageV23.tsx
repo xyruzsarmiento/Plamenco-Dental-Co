@@ -147,10 +147,10 @@ export function ExpensesPageV23() {
             <p>Manage operating costs and payable workflows from actual clinic records, with branch-aware visibility and truthful payment states.</p>
           </div>
           <div className="expenses-v23-actions">
-            {permissions.can('expenses.create') && <Button icon={<Plus size={16} />} onClick={() => openDialog('add_expense')}>Add Expense</Button>}
-            {permissions.can('expenses.record_payment') && <Button variant="secondary" icon={<Banknote size={16} />} onClick={() => openDialog('petty_cash')}>Small Cash Purchase</Button>}
-            {permissions.can('expenses.create') && <Button variant="secondary" icon={<Store size={16} />} onClick={() => openDialog('add_vendor')}>Add Vendor</Button>}
-            {permissions.can('expenses.manage_recurring') && <Button variant="secondary" icon={<WalletCards size={16} />} onClick={() => openDialog('recurring')}>Recurring</Button>}
+            {permissions.can('expenses.create') && <Button className="expense-action-premium expense-action-primary" icon={<Plus size={17} />} onClick={() => openDialog('add_expense')}>Add Expense</Button>}
+            {permissions.can('expenses.record_payment') && <Button className="expense-action-premium expense-action-cash" variant="secondary" icon={<Banknote size={17} />} onClick={() => openDialog('petty_cash')}>Small Cash Purchase</Button>}
+            {permissions.can('expenses.create') && <Button className="expense-action-premium expense-action-vendor" variant="secondary" icon={<Store size={17} />} onClick={() => openDialog('add_vendor')}>Add Vendor</Button>}
+            {permissions.can('expenses.manage_recurring') && <Button className="expense-action-recurring" variant="secondary" icon={<WalletCards size={16} />} onClick={() => openDialog('recurring')}>Recurring</Button>}
           </div>
         </section>
 
