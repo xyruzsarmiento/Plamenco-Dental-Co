@@ -79,6 +79,11 @@ function paginateInternalTables() {
   })
 }
 
+function mutationOnlyTouchesPaginator(mutation: MutationRecord) {
+  const changed = [...Array.from(mutation.addedNodes), ...Array.from(mutation.removedNodes)]
+  return changed.length > 0 && changed.every((node) => node instanceof HTMLElement && node.classList.contains('app-auto-pagination'))
+}
+
 export function AdaptivePaginationEnhancer() {
   useEffect(() => {
     let frame = 0
@@ -90,7 +95,10 @@ export function AdaptivePaginationEnhancer() {
       })
     }
     apply()
-    const observer = new MutationObserver(apply)
+    const observer = new MutationObserver((mutations) => {
+      if (mutations.every(mutationOnlyTouchesPaginator)) return
+      apply()
+    })
     observer.observe(document.body, { childList: true, subtree: true })
     window.addEventListener('hashchange', apply)
     window.addEventListener('popstate', apply)
