@@ -1,34 +1,50 @@
 import type { Service } from '../services/serviceTypes'
-import { getStoredServices } from '../services/serviceStore'
+import { getStoredServices, servicePriceToCents } from '../services/serviceStore'
+import { getStoredPatients } from '../patients/patientStore'
 import { recordAuditEntry } from '../security/auditLogStore'
 import { getCurrentSessionUserName } from '../security/security'
 import { insertRemoteTableRow, updateRemoteTableRow } from '../../lib/supabaseSync'
+import { createUuid } from '../../lib/id'
 import type { Treatment, TreatmentPlan, TreatmentFormValues, TreatmentPlanFormValues } from './treatmentTypes'
 
 const TREATMENT_STORAGE_KEY = 'plamenco.treatments'
 const TREATMENT_PLAN_STORAGE_KEY = 'plamenco.treatmentPlans'
 
 const seedTreatments: Treatment[] = []
-
 const seedTreatmentPlans: TreatmentPlan[] = []
 
 function safeParseTreatments<T>(value: string | null): T | null {
   if (!value) return null
-
   try {
-    const parsed = JSON.parse(value) as T
-    return parsed
+    return JSON.parse(value) as T
   } catch {
     return null
   }
 }
 
-export function getStoredTreatments(): Treatment[] {
-  const stored = safeParseTreatments<Treatment[]>(window.localStorage.getItem(TREATMENT_STORAGE_KEY))
-  if (stored?.length) return stored.map(normalizeTreatment)
+function resolvePatient(patientRef: string) {
+  return getStoredPatients().find((patient) => patient.id === patientRef || patient.patientId === patientRef)
+}
 
-  window.localStorage.setItem(TREATMENT_STORAGE_KEY, JSON.stringify(seedTreatments))
-  return seedTreatments
+function patientDatabaseId(patientRef: string) {
+  return resolvePatient(patientRef)?.id ?? patientRef
+}
+
+function patientRefs(patientRef: string) {
+  const patient = resolvePatient(patientRef)
+  return new Set([patientRef, patient?.id, patient?.patientId].filter(Boolean) as string[])
+}
+
+function optionalId(value?: string) {
+  const normalized = value?.trim()
+  return normalized ? normalized : null
+}
+
+function serviceSnapshotCents(treatment: Partial<Treatment>, service?: Service) {
+  if (Number.isFinite(treatment.priceSnapshotCents) && Number(treatment.priceSnapshotCents) > 0) return Number(treatment.priceSnapshotCents)
+  if (service) return servicePriceToCents(service.price)
+  if (Number.isFinite(treatment.cost) && Number(treatment.cost) > 0) return Math.round(Number(treatment.cost) * 100)
+  return 0
 }
 
 function normalizeTreatment(treatment: Treatment): Treatment {
@@ -36,7 +52,7 @@ function normalizeTreatment(treatment: Treatment): Treatment {
   return {
     ...treatment,
     serviceNameSnapshot: treatment.serviceNameSnapshot ?? service?.name ?? '',
-    priceSnapshotCents: treatment.priceSnapshotCents ?? treatment.cost ?? service?.price ?? 0,
+    priceSnapshotCents: serviceSnapshotCents(treatment, service),
     quantity: treatment.quantity ?? 1,
     providerNameSnapshot: treatment.providerNameSnapshot ?? treatment.performedBy ?? '',
     performedBy: treatment.performedBy ?? treatment.providerNameSnapshot ?? treatment.createdBy ?? 'Clinical provider',
@@ -44,10 +60,41 @@ function normalizeTreatment(treatment: Treatment): Treatment {
   }
 }
 
+function remoteTreatmentRow(treatment: Treatment) {
+  return {
+    id: treatment.id,
+    patient_id: patientDatabaseId(treatment.patientId),
+    dental_record_id: optionalId(treatment.dentalRecordId),
+    appointment_id: optionalId(treatment.appointmentId),
+    appointment_number: treatment.appointmentNumber ?? '',
+    branch_id: optionalId(treatment.branchId),
+    provider_id: optionalId(treatment.providerId),
+    provider_name_snapshot: treatment.providerNameSnapshot ?? '',
+    service_id: treatment.serviceId,
+    service_name_snapshot: treatment.serviceNameSnapshot ?? '',
+    tooth_number: treatment.toothNumber ?? null,
+    description: treatment.description,
+    cost: treatment.cost,
+    price_snapshot_cents: treatment.priceSnapshotCents,
+    quantity: treatment.quantity,
+    status: treatment.status,
+    treatment_date: treatment.treatmentDate,
+    notes: treatment.notes,
+    performed_by: treatment.performedBy,
+    created_by: treatment.createdBy,
+  }
+}
+
+export function getStoredTreatments(): Treatment[] {
+  const stored = safeParseTreatments<Treatment[]>(window.localStorage.getItem(TREATMENT_STORAGE_KEY))
+  if (stored?.length) return stored.map(normalizeTreatment)
+  window.localStorage.setItem(TREATMENT_STORAGE_KEY, JSON.stringify(seedTreatments))
+  return seedTreatments
+}
+
 export function getStoredTreatmentPlans(): TreatmentPlan[] {
   const stored = safeParseTreatments<TreatmentPlan[]>(window.localStorage.getItem(TREATMENT_PLAN_STORAGE_KEY))
   if (stored?.length) return stored
-
   window.localStorage.setItem(TREATMENT_PLAN_STORAGE_KEY, JSON.stringify(seedTreatmentPlans))
   return seedTreatmentPlans
 }
@@ -61,8 +108,9 @@ export function saveStoredTreatmentPlans(plans: TreatmentPlan[]) {
 }
 
 export function getTreatmentsByPatient(patientId: string): Treatment[] {
+  const refs = patientRefs(patientId)
   return getStoredTreatments()
-    .filter((treatment) => treatment.patientId === patientId)
+    .filter((treatment) => refs.has(treatment.patientId))
     .sort((a, b) => new Date(b.treatmentDate).getTime() - new Date(a.treatmentDate).getTime())
 }
 
@@ -73,19 +121,28 @@ export function getTreatmentsByClinicalVisit(dentalRecordId: string): Treatment[
 }
 
 export function getTreatmentPlansByPatient(patientId: string): TreatmentPlan[] {
-  return getStoredTreatmentPlans().filter((plan) => plan.patientId === patientId)
+  const refs = patientRefs(patientId)
+  return getStoredTreatmentPlans().filter((plan) => refs.has(plan.patientId))
 }
 
 export function createTreatment(values: TreatmentFormValues): Treatment {
+  if (!values.treatmentDate) throw new Error('Treatment date is required.')
+  if (!values.serviceId) throw new Error('Treatment service is required.')
+  const patient = resolvePatient(values.patientId)
+  if (!patient) throw new Error('Patient record could not be resolved for this treatment.')
+
   const treatments = getStoredTreatments()
   const now = new Date().toISOString()
   const service = getStoredServices().find((entry) => entry.id === values.serviceId)
+  const priceSnapshotCents = values.priceSnapshotCents && values.priceSnapshotCents > 0
+    ? values.priceSnapshotCents
+    : service ? servicePriceToCents(service.price) : Math.max(0, Math.round(Number(values.cost || 0) * 100))
   const treatment: Treatment = {
-    id: `treatment-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`,
+    id: createUuid(),
     ...values,
-    serviceNameSnapshot: values.serviceNameSnapshot ?? service?.name ?? '',
-    priceSnapshotCents: values.priceSnapshotCents ?? values.cost ?? service?.price ?? 0,
-    quantity: values.quantity ?? 1,
+    serviceNameSnapshot: values.serviceNameSnapshot || service?.name || '',
+    priceSnapshotCents,
+    quantity: Math.max(1, values.quantity ?? 1),
     performedBy: values.performedBy || values.providerNameSnapshot || values.createdBy || getCurrentSessionUserName(),
     createdBy: values.createdBy || getCurrentSessionUserName(),
     createdAt: now,
@@ -94,31 +151,8 @@ export function createTreatment(values: TreatmentFormValues): Treatment {
 
   treatments.push(treatment)
   saveStoredTreatments(treatments)
-  
-  // Persist to Supabase asynchronously
-  void insertRemoteTableRow('treatments', {
-    id: treatment.id,
-    patient_id: treatment.patientId,
-    dental_record_id: treatment.dentalRecordId,
-    appointment_id: treatment.appointmentId ?? null,
-    appointment_number: treatment.appointmentNumber ?? '',
-    branch_id: treatment.branchId ?? null,
-    provider_id: treatment.providerId ?? null,
-    provider_name_snapshot: treatment.providerNameSnapshot ?? '',
-    service_id: treatment.serviceId,
-    service_name_snapshot: treatment.serviceNameSnapshot ?? '',
-    tooth_number: treatment.toothNumber,
-    description: treatment.description,
-    cost: treatment.cost,
-    price_snapshot_cents: treatment.priceSnapshotCents,
-    quantity: treatment.quantity,
-    status: treatment.status,
-    treatment_date: treatment.treatmentDate,
-    notes: treatment.notes,
-    performed_by: treatment.performedBy,
-    created_by: treatment.createdBy,
-  })
-  
+  void insertRemoteTableRow('treatments', remoteTreatmentRow(treatment))
+
   recordAuditEntry({
     user: getCurrentSessionUserName(),
     action: 'treatment_created',
@@ -132,46 +166,36 @@ export function createTreatment(values: TreatmentFormValues): Treatment {
 export function updateTreatment(id: string, values: TreatmentFormValues): Treatment | null {
   const treatments = getStoredTreatments()
   const index = treatments.findIndex((treatment) => treatment.id === id)
-
   if (index === -1) return null
   if (treatments[index].status === 'completed') return null
+  if (!values.treatmentDate) throw new Error('Treatment date is required.')
 
+  const service = getStoredServices().find((entry) => entry.id === values.serviceId)
   const updated: Treatment = {
     ...treatments[index],
     ...values,
-    priceSnapshotCents: values.priceSnapshotCents ?? treatments[index].priceSnapshotCents,
-    quantity: values.quantity ?? treatments[index].quantity,
+    serviceNameSnapshot: values.serviceNameSnapshot || service?.name || treatments[index].serviceNameSnapshot,
+    priceSnapshotCents: values.priceSnapshotCents && values.priceSnapshotCents > 0
+      ? values.priceSnapshotCents
+      : service ? servicePriceToCents(service.price) : treatments[index].priceSnapshotCents,
+    quantity: Math.max(1, values.quantity ?? treatments[index].quantity),
     updatedAt: new Date().toISOString(),
   }
 
   treatments[index] = updated
   saveStoredTreatments(treatments)
-  
-  // Persist to Supabase asynchronously
-  void updateRemoteTableRow('treatments', id, {
-    description: updated.description,
-    cost: updated.cost,
-    price_snapshot_cents: updated.priceSnapshotCents,
-    quantity: updated.quantity,
-    status: updated.status,
-    treatment_date: updated.treatmentDate,
-    notes: updated.notes,
-    branch_id: updated.branchId ?? null,
-    provider_id: updated.providerId ?? null,
-    provider_name_snapshot: updated.providerNameSnapshot ?? '',
-    performed_by: updated.performedBy,
-  })
-  
+  const row = remoteTreatmentRow(updated)
+  delete (row as Record<string, unknown>).id
+  delete (row as Record<string, unknown>).patient_id
+  void updateRemoteTableRow('treatments', id, row)
   return updated
 }
 
 export function deleteTreatment(id: string): boolean {
   const treatments = getStoredTreatments()
   const index = treatments.findIndex((treatment) => treatment.id === id)
-
   if (index === -1) return false
   if (treatments[index].status === 'completed') return false
-
   treatments.splice(index, 1)
   saveStoredTreatments(treatments)
   return true
@@ -199,12 +223,11 @@ export function createTreatmentPlan(values: TreatmentPlanFormValues): TreatmentP
   const plans = getStoredTreatmentPlans()
   const now = new Date().toISOString()
   const plan: TreatmentPlan = {
-    id: `plan-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`,
+    id: createUuid(),
     ...values,
     createdAt: now,
     updatedAt: now,
   }
-
   plans.push(plan)
   saveStoredTreatmentPlans(plans)
   return plan
@@ -217,7 +240,6 @@ export function getServiceById(serviceId: string): Service | undefined {
 export function getTreatmentProgress(plan: TreatmentPlan): number {
   const treatments = getStoredTreatments().filter((treatment) => plan.treatments.includes(treatment.id))
   if (!treatments.length) return 0
-
   const completed = treatments.filter((treatment) => treatment.status === 'completed').length
   return Math.round((completed / treatments.length) * 100)
 }
