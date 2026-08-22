@@ -1,3 +1,13 @@
 import '../styles/patient-portal-premium-v94.css'
+import '../styles/patient-portal-premium-v97.css'
+import { PatientPortalInteractionEnhancements } from '../features/patientPortal/PatientPortalInteractionEnhancements'
+import { PatientPortalPage as PatientPortalPageV3 } from './PatientPortalPageV3'
 
-export { PatientPortalPage } from './PatientPortalPageV3'
+export function PatientPortalPage() {
+  return (
+    <>
+      <PatientPortalPageV3 />
+      <PatientPortalInteractionEnhancements />
+    </>
+  )
+}
