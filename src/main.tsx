@@ -118,6 +118,7 @@ import './styles/workspace-cleanup-responsive-v84.css'
 import './styles/frontend-premium-refinement-v85.css'
 import './styles/mobile-modal-workspace-fixes-v86.css'
 import './styles/responsive-dialogs-actions-v87.css'
+import './styles/mobile-ledger-communications-fixes-v88.css'
 import App from './App.tsx'
 import { registerPatientPortalPwa } from './features/patientPortal/pwaRegistration'
 
