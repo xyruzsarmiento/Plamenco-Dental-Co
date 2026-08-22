@@ -2,7 +2,6 @@ import { useAuth } from '../features/auth/AuthContext'
 import { SuperAdminOverviewV56 } from '../features/admin/SuperAdminOverviewV56'
 import { DentistTodayWorkspace } from '../features/dentalRecords/DentistTodayWorkspace'
 import { StaffTodayWorkspace } from '../features/staff/StaffTodayWorkspace'
-import { DashboardPage } from './DashboardPage'
 
 function getGreeting() {
   const hour = Number(new Intl.DateTimeFormat('en-US', {
@@ -52,14 +51,14 @@ export function RoleHomePage() {
 
   let workspace: React.ReactNode
 
-  if (user?.role === 'super_admin') {
+  if (user?.role === 'super_admin' || user?.role === 'admin') {
+    // Admin and Super Admin intentionally share the same premium dashboard presentation.
+    // Role-specific authorization remains enforced by routes, RLS, and RPC permission checks.
     workspace = <SuperAdminOverviewV56 />
   } else if (user?.role === 'dentist' || user?.role === 'associate_dentist') {
     workspace = <DentistTodayWorkspace />
-  } else if (user?.role === 'staff') {
-    workspace = <StaffTodayWorkspace />
   } else {
-    workspace = <DashboardPage />
+    workspace = <StaffTodayWorkspace />
   }
 
   return (
