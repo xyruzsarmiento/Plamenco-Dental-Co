@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { AppRouter } from './app/AppRouter'
 import { AppErrorBoundary } from './components/system/AppErrorBoundary'
+import { AdaptivePaginationEnhancer } from './components/system/AdaptivePaginationEnhancer'
 import { PersistenceStatusNotice } from './components/system/PersistenceStatusNotice'
 import { ModalAccessibilityManager } from './components/ui/ModalAccessibilityManager'
 import { useAuth } from './features/auth/AuthContext'
@@ -101,6 +102,7 @@ function App() {
       <AuthProvider>
         <DataBootstrap>
           <ModalAccessibilityManager />
+          <AdaptivePaginationEnhancer />
           <OfflineStatusBanner />
           <PersistenceStatusNotice />
           <PatientDocumentLinkInterceptor />
