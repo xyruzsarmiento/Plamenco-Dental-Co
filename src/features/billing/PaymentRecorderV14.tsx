@@ -2,51 +2,17 @@ import { useMemo, useState } from 'react'
 import { CheckCircle2, CreditCard, Landmark, Plus, ReceiptText, ShieldCheck, X } from 'lucide-react'
 import { Button } from '../../components/ui/Button'
 import {
-  applyPayment,
   formatCurrency,
   getActivePaymentMethods,
   getStoredInvoices,
-  type Payment,
   type PaymentMethod,
 } from './billingStore'
+import { recordManualPaymentPersisted } from './billingPersistence'
 import { getStoredPatients } from '../patients/patientStore'
-import { isSupabaseConfigured, supabase } from '../../lib/supabase'
 
 type PaymentRecorderProps = {
   onClose: () => void
   onSuccess: () => void
-}
-
-async function confirmRemotePayment(payment: Payment, invoiceNumber: string) {
-  if (!isSupabaseConfigured || !supabase) return
-
-  const { data: remoteInvoice, error: invoiceError } = await supabase
-    .from('invoices')
-    .select('id,invoice_number')
-    .eq('invoice_number', invoiceNumber)
-    .maybeSingle()
-  if (invoiceError || !remoteInvoice) throw new Error(`Could not verify the invoice in Supabase: ${invoiceError?.message ?? 'invoice not found'}`)
-
-  let lastError = ''
-  for (let attempt = 0; attempt < 5; attempt += 1) {
-    const { data, error } = await supabase
-      .from('payments')
-      .select('id,payment_number,status,amount_cents,invoice_id,patient_id')
-      .eq('payment_number', payment.paymentNumber)
-      .maybeSingle()
-
-    if (!error && data) {
-      if (data.status !== 'completed') throw new Error(`Payment was saved with status ${String(data.status).replaceAll('_', ' ')} instead of completed.`)
-      if (Number(data.amount_cents) !== payment.amountCents) throw new Error('The saved payment amount does not match the submitted amount.')
-      if (String(data.invoice_id) !== String(remoteInvoice.id)) throw new Error('The saved payment is linked to the wrong invoice.')
-      return
-    }
-
-    lastError = error?.message ?? 'The payment record was not returned by the database.'
-    if (attempt < 4) await new Promise((resolve) => window.setTimeout(resolve, 180 * (attempt + 1)))
-  }
-
-  throw new Error(`Database confirmation failed: ${lastError}`)
 }
 
 function todayManila() {
@@ -56,7 +22,7 @@ function todayManila() {
 export function PaymentRecorderV14({ onClose, onSuccess }: PaymentRecorderProps) {
   const patients = useMemo(() => getStoredPatients(), [])
   const invoices = useMemo(() => getStoredInvoices(), [])
-  const paymentMethods = useMemo(() => getActivePaymentMethods(), [])
+  const paymentMethods = useMemo(() => getActivePaymentMethods().filter((entry) => !entry.isOnline), [])
 
   const [selectedPatientId, setSelectedPatientId] = useState('')
   const [selectedInvoiceId, setSelectedInvoiceId] = useState('')
@@ -64,7 +30,7 @@ export function PaymentRecorderV14({ onClose, onSuccess }: PaymentRecorderProps)
   const [method, setMethod] = useState<PaymentMethod>('cash')
   const [date, setDate] = useState(todayManila())
   const [reference, setReference] = useState('')
-  const [recordedBy, setRecordedBy] = useState('Front desk')
+  const [notes, setNotes] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const [successMessage, setSuccessMessage] = useState<string | null>(null)
@@ -116,18 +82,15 @@ export function PaymentRecorderV14({ onClose, onSuccess }: PaymentRecorderProps)
     setSuccessMessage(null)
     setLoading(true)
     try {
-      const payment = applyPayment({
-        patientId: selectedPatient.id,
-        invoiceId: selectedInvoiceId,
-        branchId: selectedInvoice.branchId,
+      const result = await recordManualPaymentPersisted({
+        invoiceId: selectedInvoice.id,
         amountCents,
         paymentMethod: method,
         date,
         referenceNumber: reference.trim() || undefined,
-        recordedBy: recordedBy.trim() || 'Front desk',
+        notes: notes.trim(),
       })
-      await confirmRemotePayment(payment, selectedInvoice.invoiceNumber)
-      setSuccessMessage(`${formatCurrency(amountCents)} was recorded against ${selectedInvoice.invoiceNumber}.`)
+      setSuccessMessage(`${formatCurrency(result.payment.amountCents)} was recorded against ${result.invoice.invoiceNumber}. Receipt ${result.receipt.receiptNumber} was created.`)
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : 'Unable to record this payment.')
     } finally {
@@ -184,10 +147,10 @@ export function PaymentRecorderV14({ onClose, onSuccess }: PaymentRecorderProps)
             </section>
 
             <section className="pay14-section">
-              <div className="pay14-section-head"><span>03</span><div><h3>Collection reference</h3><p>Keep the audit trail tied to the actual transaction.</p></div></div>
+              <div className="pay14-section-head"><span>03</span><div><h3>Collection reference</h3><p>The authenticated clinic account is recorded by PostgreSQL as the actor.</p></div></div>
               <div className="pay14-grid pay14-grid-2">
                 <label><span>{requiresReference ? 'Reference number' : 'Reference number (optional)'}</span><input value={reference} onChange={(event) => { setReference(event.target.value); setError(null) }} placeholder="Check no., transaction ID, etc." disabled={loading} /></label>
-                <label><span>Recorded by</span><input value={recordedBy} onChange={(event) => setRecordedBy(event.target.value)} disabled={loading} /></label>
+                <label><span>Internal note (optional)</span><input value={notes} onChange={(event) => setNotes(event.target.value)} placeholder="Collection note" disabled={loading} /></label>
               </div>
             </section>
 
@@ -207,7 +170,7 @@ export function PaymentRecorderV14({ onClose, onSuccess }: PaymentRecorderProps)
                 <div><span>After this payment</span><strong>{selectedInvoice && amountCents > 0 && !exceedsBalance ? formatCurrency(remainingAfterPayment) : '—'}</strong></div>
               </div>
             </div>
-            <div className="pay14-trust-card"><ShieldCheck size={18} /><div><strong>Source-of-truth confirmation</strong><p>The payment is verified in Supabase before this dialog confirms success.</p></div></div>
+            <div className="pay14-trust-card"><ShieldCheck size={18} /><div><strong>Atomic database transaction</strong><p>Payment, allocation, invoice balance, and receipt are committed together before this dialog confirms success.</p></div></div>
             <div className="pay14-trust-card"><Landmark size={18} /><div><strong>Collection only</strong><p>Recording a payment does not create or modify treatment-plan estimates.</p></div></div>
           </aside>
         </div>
