@@ -102,6 +102,7 @@ import './styles/super-admin-expenses-v68.css'
 import './styles/super-admin-expenses-v69.css'
 import './styles/super-admin-expenses-trend-v70.css'
 import './styles/super-admin-expenses-trend-v71.css'
+import './styles/super-admin-expenses-trend-v72.css'
 import App from './App.tsx'
 import { registerPatientPortalPwa } from './features/patientPortal/pwaRegistration'
 
