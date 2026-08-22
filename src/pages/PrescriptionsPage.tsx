@@ -3,6 +3,7 @@ import { useMemo, useState } from 'react'
 import { Badge } from '../components/ui/Badge'
 import { getStoredPatients } from '../features/patients/patientStore'
 import { getStoredPrescriptions } from '../features/prescriptions/prescriptionStore'
+import '../styles/prescriptions-workspace-v96.css'
 
 function formatDate(value: string) {
   if (!value) return '—'
