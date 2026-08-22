@@ -57,6 +57,31 @@ function remoteRow(service: Service) {
     price: service.price,
     category: service.category,
     status: service.status,
+    branch_ids: service.branchIds ?? [],
+    online_bookable: service.onlineBookable ?? true,
+    internal_only: service.internalOnly ?? false,
+    show_on_website: service.showOnWebsite ?? true,
+    image_url: service.imageUrl ?? '',
+  }
+}
+
+function mapServiceRow(row: Record<string, any>, fallback?: Service): Service {
+  const now = new Date().toISOString()
+  return {
+    id: row.id,
+    name: row.name ?? fallback?.name ?? '',
+    description: row.description ?? fallback?.description ?? '',
+    duration: Number(row.duration ?? fallback?.duration ?? 30),
+    price: Number(row.price ?? fallback?.price ?? 0),
+    category: row.category ?? fallback?.category ?? 'General',
+    status: row.status ?? fallback?.status ?? 'active',
+    branchIds: Array.isArray(row.branch_ids) ? row.branch_ids : fallback?.branchIds ?? [],
+    onlineBookable: Boolean(row.online_bookable ?? fallback?.onlineBookable ?? true),
+    internalOnly: Boolean(row.internal_only ?? fallback?.internalOnly ?? false),
+    showOnWebsite: Boolean(row.show_on_website ?? fallback?.showOnWebsite ?? true),
+    imageUrl: row.image_url ?? fallback?.imageUrl ?? '',
+    createdAt: row.created_at ?? fallback?.createdAt ?? now,
+    updatedAt: row.updated_at ?? row.created_at ?? fallback?.updatedAt ?? now,
   }
 }
 
@@ -76,17 +101,7 @@ export async function createServicePersisted(values: ServiceFormValues): Promise
   if (supabase) {
     const { data, error } = await supabase.from('services').insert(remoteRow(service)).select('*').single()
     if (error) throw new Error(`Unable to save service to the clinic database: ${error.message}`)
-    const confirmed: Service = {
-      id: data.id,
-      name: data.name ?? service.name,
-      description: data.description ?? service.description,
-      duration: Number(data.duration ?? service.duration),
-      price: Number(data.price ?? service.price),
-      category: data.category ?? service.category,
-      status: data.status ?? service.status,
-      createdAt: data.created_at ?? now,
-      updatedAt: data.updated_at ?? data.created_at ?? now,
-    }
+    const confirmed = mapServiceRow(data as Record<string, any>, service)
     saveStoredServices([...services.filter((entry) => entry.id !== confirmed.id), confirmed])
     return confirmed
   }
@@ -115,17 +130,7 @@ export async function updateServicePersisted(id: string, values: ServiceFormValu
   if (supabase) {
     const { data, error } = await supabase.from('services').update(remoteRow(updated)).eq('id', id).select('*').single()
     if (error) throw new Error(`Unable to update service in the clinic database: ${error.message}`)
-    const confirmed: Service = {
-      id: data.id,
-      name: data.name ?? updated.name,
-      description: data.description ?? updated.description,
-      duration: Number(data.duration ?? updated.duration),
-      price: Number(data.price ?? updated.price),
-      category: data.category ?? updated.category,
-      status: data.status ?? updated.status,
-      createdAt: data.created_at ?? current.createdAt,
-      updatedAt: data.updated_at ?? now,
-    }
+    const confirmed = mapServiceRow(data as Record<string, any>, updated)
     saveStoredServices(services.map((entry) => entry.id === id ? confirmed : entry))
     return confirmed
   }
@@ -192,17 +197,7 @@ export async function loadServicesFromSupabase(options: { strict?: boolean } = {
       return getStoredServices()
     }
     if (!data) return getStoredServices()
-    const supabaseServices: Service[] = data.map((row: any) => ({
-      id: row.id,
-      name: row.name ?? '',
-      description: row.description ?? '',
-      duration: Number(row.duration ?? 30),
-      price: Number(row.price ?? 0),
-      category: row.category ?? 'General',
-      status: row.status ?? 'active',
-      createdAt: row.created_at ?? new Date().toISOString(),
-      updatedAt: row.updated_at ?? row.created_at ?? new Date().toISOString(),
-    }))
+    const supabaseServices = data.map((row: any) => mapServiceRow(row))
     saveStoredServices(supabaseServices)
     return supabaseServices
   } catch (error) {
