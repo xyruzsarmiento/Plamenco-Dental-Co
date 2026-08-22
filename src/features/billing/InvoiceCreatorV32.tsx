@@ -9,6 +9,7 @@ import {
 } from './billingStore'
 import { getStoredBranches } from '../branches/branchStore'
 import { getStoredPatients } from '../patients/patientStore'
+import { isSupabaseConfigured, supabase } from '../../lib/supabase'
 
 function manilaDate() {
   return new Intl.DateTimeFormat('en-CA', {
@@ -40,6 +41,26 @@ function emptyLine(): DraftLine {
   }
 }
 
+async function confirmRemoteInvoice(invoiceNumber: string, patientDbId: string, totalCents: number) {
+  if (!isSupabaseConfigured || !supabase) return
+  let lastError = ''
+  for (let attempt = 0; attempt < 5; attempt += 1) {
+    const { data, error } = await supabase
+      .from('invoices')
+      .select('id,invoice_number,patient_id,total_cents')
+      .eq('invoice_number', invoiceNumber)
+      .maybeSingle()
+    if (!error && data) {
+      if (String(data.patient_id) !== patientDbId) throw new Error('The saved invoice is linked to the wrong patient record.')
+      if (Number(data.total_cents) !== totalCents) throw new Error('The saved invoice total does not match the submitted invoice.')
+      return
+    }
+    lastError = error?.message ?? 'The invoice was not returned by Supabase.'
+    if (attempt < 4) await new Promise((resolve) => window.setTimeout(resolve, 180 * (attempt + 1)))
+  }
+  throw new Error(`Invoice database confirmation failed: ${lastError}`)
+}
+
 export function InvoiceCreatorButtonV32({ onSuccess }: { onSuccess?: (invoiceId: string) => void }) {
   const [open, setOpen] = useState(false)
   const [patientId, setPatientId] = useState('')
@@ -54,9 +75,14 @@ export function InvoiceCreatorButtonV32({ onSuccess }: { onSuccess?: (invoiceId:
 
   const patients = getStoredPatients()
   const branches = getStoredBranches().filter((branch) => branch.status === 'active')
+  const selectedPatient = patients.find((patient) => patient.id === patientId || patient.patientId === patientId)
   const eligibleCharges = useMemo(
-    () => getStoredCharges().filter((charge) => charge.status === 'unbilled' && (!patientId || charge.patientId === patientId)),
-    [patientId, open],
+    () => getStoredCharges().filter((charge) => {
+      if (charge.status !== 'unbilled') return false
+      if (!patientId) return true
+      return charge.patientId === selectedPatient?.id || charge.patientId === selectedPatient?.patientId
+    }),
+    [patientId, open, selectedPatient?.id, selectedPatient?.patientId],
   )
 
   const previewItems = useMemo<InvoiceItem[]>(() => {
@@ -123,20 +149,12 @@ export function InvoiceCreatorButtonV32({ onSuccess }: { onSuccess?: (invoiceId:
     setSelectedCharges((current) => current.includes(chargeId) ? current.filter((id) => id !== chargeId) : [...current, chargeId])
   }
 
-  function submit() {
+  async function submit() {
     setError(null)
-    if (!patientId) {
-      setError('Select a patient before creating the invoice.')
-      return
-    }
-    if (!invoiceDate) {
-      setError('Invoice date is required.')
-      return
-    }
-    if (!previewItems.length) {
-      setError('Add at least one valid invoice line or unbilled charge.')
-      return
-    }
+    if (!patientId || !selectedPatient) return setError('Select a patient before creating the invoice.')
+    if (!invoiceDate) return setError('Invoice date is required.')
+    if (!previewItems.length) return setError('Add at least one valid invoice line or unbilled charge.')
+
     const invalidManualLine = lines.some((line) => {
       const hasAnyValue = Boolean(line.description.trim() || line.unitPrice.trim())
       if (!hasAnyValue) return false
@@ -144,21 +162,19 @@ export function InvoiceCreatorButtonV32({ onSuccess }: { onSuccess?: (invoiceId:
       const price = Number(line.unitPrice)
       return !line.description.trim() || !Number.isInteger(quantity) || quantity <= 0 || !Number.isFinite(price) || price < 0
     })
-    if (invalidManualLine) {
-      setError('Complete each manual line with a description, positive whole-number quantity, and valid price.')
-      return
-    }
+    if (invalidManualLine) return setError('Complete each manual line with a description, positive whole-number quantity, and valid price.')
 
     try {
       setSubmitting(true)
       const invoice = createInvoice({
-        patientId,
+        patientId: selectedPatient.id,
         branchId: branchId || undefined,
         invoiceDate,
         dueDate: dueDate || undefined,
         items: previewItems.map((item, index) => ({ ...item, id: `item-${Date.now()}-${index}-${Math.random().toString(36).slice(2, 7)}` })),
         notes: notes.trim(),
       })
+      await confirmRemoteInvoice(invoice.invoiceNumber, selectedPatient.id, invoice.totalCents)
       onSuccess?.(invoice.id)
       setOpen(false)
       reset()
@@ -187,7 +203,7 @@ export function InvoiceCreatorButtonV32({ onSuccess }: { onSuccess?: (invoiceId:
                 <section className="inv32-section">
                   <div className="inv32-section-head"><span>1</span><div><h3>Patient & billing context</h3><p>Select who the invoice belongs to and where it was issued.</p></div></div>
                   <div className="inv32-grid inv32-grid-2">
-                    <label><span>Patient</span><select value={patientId} onChange={(event) => { setPatientId(event.target.value); setSelectedCharges([]) }}><option value="">Select patient</option>{patients.map((patient) => <option key={patient.id} value={patient.patientId || patient.id}>{patient.firstName} {patient.lastName} · {patient.patientId}</option>)}</select></label>
+                    <label><span>Patient</span><select value={patientId} onChange={(event) => { setPatientId(event.target.value); setSelectedCharges([]) }}><option value="">Select patient</option>{patients.map((patient) => <option key={patient.id} value={patient.id}>{patient.firstName} {patient.lastName} · {patient.patientId}</option>)}</select></label>
                     <label><span>Branch</span><select value={branchId} onChange={(event) => setBranchId(event.target.value)}><option value="">Unassigned branch</option>{branches.map((branch) => <option key={branch.id} value={branch.id}>{branch.name}</option>)}</select></label>
                     <label><span>Invoice date</span><input type="date" value={invoiceDate} onChange={(event) => setInvoiceDate(event.target.value)} /></label>
                     <label><span>Due date</span><input type="date" min={invoiceDate} value={dueDate} onChange={(event) => setDueDate(event.target.value)} /></label>
@@ -215,12 +231,12 @@ export function InvoiceCreatorButtonV32({ onSuccess }: { onSuccess?: (invoiceId:
               </main>
 
               <aside className="inv32-summary-column">
-                <div className="inv32-summary-card"><span className="inv32-kicker">Invoice preview</span><h3>{patientId ? patients.find((patient) => patient.patientId === patientId || patient.id === patientId)?.firstName + ' ' + patients.find((patient) => patient.patientId === patientId || patient.id === patientId)?.lastName : 'No patient selected'}</h3><div className="inv32-summary-metrics"><div><span>Charge lines</span><strong>{selectedCharges.length}</strong></div><div><span>Manual lines</span><strong>{previewItems.length - selectedCharges.length}</strong></div><div className="is-total"><span>Invoice total</span><strong>{formatCurrency(totalCents)}</strong></div></div></div>
-                <div className="inv32-trust-card"><FilePlus2 size={18} /><div><strong>Billing source of truth</strong><p>Creating this invoice uses the existing billing store, marks selected charges as invoiced, records the audit event, and queues the existing in-app invoice notification.</p></div></div>
+                <div className="inv32-summary-card"><span className="inv32-kicker">Invoice preview</span><h3>{selectedPatient ? `${selectedPatient.firstName} ${selectedPatient.lastName}` : 'No patient selected'}</h3><div className="inv32-summary-metrics"><div><span>Charge lines</span><strong>{selectedCharges.length}</strong></div><div><span>Manual lines</span><strong>{previewItems.length - selectedCharges.length}</strong></div><div className="is-total"><span>Invoice total</span><strong>{formatCurrency(totalCents)}</strong></div></div></div>
+                <div className="inv32-trust-card"><FilePlus2 size={18} /><div><strong>Billing source of truth</strong><p>The invoice is confirmed in Supabase before this dialog reports success.</p></div></div>
               </aside>
             </div>
 
-            <footer className="inv32-footer"><div><span>Total due</span><strong>{formatCurrency(totalCents)}</strong></div><div className="inv32-footer-actions"><Button variant="secondary" onClick={close} disabled={submitting}>Cancel</Button><Button onClick={submit} disabled={submitting || !patientId || previewItems.length === 0}>{submitting ? 'Creating…' : 'Create invoice'}</Button></div></footer>
+            <footer className="inv32-footer"><div><span>Total due</span><strong>{formatCurrency(totalCents)}</strong></div><div className="inv32-footer-actions"><Button variant="secondary" onClick={close} disabled={submitting}>Cancel</Button><Button onClick={() => void submit()} disabled={submitting || !patientId || previewItems.length === 0}>{submitting ? 'Saving to database…' : 'Create invoice'}</Button></div></footer>
           </section>
         </div>
       )}
