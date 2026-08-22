@@ -9,24 +9,26 @@ import { isSupabaseConfigured, supabase } from '../../lib/supabase'
 import type { Branch } from '../branches/branchTypes'
 import { removeInventoryItemRecord, updateInventoryItemRecord } from './inventoryItemActions'
 import {
-  adjustStock,
   createInventoryItem,
   createPurchaseOrder,
   createStockCount,
-  createStockTransfer,
   createSupplier,
   getInventoryCategories,
   getInventoryItems,
   getInventoryUnits,
   getPurchaseOrders,
   getSuppliers,
-  receivePurchaseOrder,
-  stockIn,
-  stockOut,
-  transferStock,
   updateStockCountItem,
   type InventoryItem,
 } from './inventoryStore'
+import {
+  adjustStockPersisted,
+  completeStockTransferPersisted,
+  createStockTransferPersisted,
+  receivePurchaseOrderPersisted,
+  stockInPersisted,
+  stockOutPersisted,
+} from './inventoryPersistence'
 
 export type InventoryDialog =
   | { type: 'add_item' }
@@ -233,16 +235,14 @@ export function InventoryActionModal({ dialog, branches, preferredBranchId, onCl
         await confirmRemote('inventory_items', created.id)
 
         if (startingQty > 0) {
-          const movement = stockIn({
+          await stockInPersisted({
             branchId: openingBranchId,
             itemId: created.id,
             quantity: startingQty,
             unitCostCents: 0,
             reason: 'Starting quantity recorded during item setup',
             receivedDate: todayManila(),
-            performedBy: actor,
           })
-          await confirmRemote('stock_movements', movement.id)
         }
 
         setSuccess(startingQty > 0 ? `${created.name} was added with ${startingQty.toLocaleString('en-PH')} ${selectedUnit?.abbreviation ?? unitId} starting stock.` : `${created.name} was added to the inventory catalog.`)
@@ -291,36 +291,61 @@ export function InventoryActionModal({ dialog, branches, preferredBranchId, onCl
         const costPhp = Number(unitCost)
         if (!Number.isFinite(costPhp) || costPhp < 0) throw new Error('Unit cost must be zero or greater.')
         if (!reason.trim()) throw new Error('Reason is required.')
-        const movement = stockIn({ branchId, itemId: currentItem.id, quantity: qty, unitCostCents: Math.round(costPhp * 100), reference: reference.trim() || undefined, reason: reason.trim(), receivedDate: orderDate, batchNumber: batchNumber.trim() || undefined, expiryDate: currentItem.trackExpiry ? expiryDate || undefined : undefined, performedBy: actor })
-        persistedTable = 'stock_movements'; persistedId = movement.id
+        await stockInPersisted({
+          branchId,
+          itemId: currentItem.id,
+          quantity: qty,
+          unitCostCents: Math.round(costPhp * 100),
+          reference: reference.trim() || undefined,
+          reason: reason.trim(),
+          receivedDate: orderDate,
+          batchNumber: batchNumber.trim() || undefined,
+          expiryDate: currentItem.trackExpiry ? expiryDate || undefined : undefined,
+        })
+        setSuccess('Stock was added and confirmed by the database.')
+        onSuccess()
+        return
       } else if (dialog.type === 'stock_out' && currentItem) {
         if (!branchId) throw new Error('Select a branch.')
         if (!reason.trim()) throw new Error('Reason is required.')
-        const movement = stockOut({ branchId, itemId: currentItem.id, quantity: validatePositive(quantity, 'Quantity'), reason: reason.trim(), performedBy: actor })
-        persistedTable = 'stock_movements'; persistedId = movement.id
+        await stockOutPersisted({ branchId, itemId: currentItem.id, quantity: validatePositive(quantity, 'Quantity'), reason: reason.trim() })
+        setSuccess('Stock was removed and confirmed by the database.')
+        onSuccess()
+        return
       } else if (dialog.type === 'adjust' && currentItem) {
         if (!branchId) throw new Error('Select a branch.')
         const adjustmentQuantity = Number(quantity)
         if (!Number.isFinite(adjustmentQuantity) || adjustmentQuantity === 0) throw new Error('Adjustment quantity cannot be zero.')
         if (!reason.trim()) throw new Error('Adjustment reason is required.')
-        const movement = adjustStock({ branchId, itemId: currentItem.id, adjustmentQuantity, reason: reason.trim(), performedBy: actor })
-        persistedTable = 'stock_movements'; persistedId = movement.id
+        await adjustStockPersisted({ branchId, itemId: currentItem.id, adjustmentQuantity, reason: reason.trim() })
+        setSuccess('Stock adjustment was confirmed by the database.')
+        onSuccess()
+        return
       } else if ((dialog.type === 'create_transfer' || dialog.type === 'quick_transfer') && currentItem) {
         if (!fromBranchId || !toBranchId) throw new Error('Select both source and destination branches.')
         const qty = validatePositive(quantity, 'Quantity')
+        const itemsToTransfer = [{ id: `transfer-item-${Date.now()}`, itemId: currentItem.id, quantity: qty }]
         if (dialog.type === 'create_transfer') {
-          const transfer = createStockTransfer({ fromBranchId, toBranchId, items: [{ id: `transfer-item-${Date.now()}`, itemId: currentItem.id, quantity: qty }], requestedBy: actor, notes: notes.trim() })
-          persistedTable = 'stock_transfers'; persistedId = transfer.id; message = `${transfer.transferNumber} was created as a draft transfer.`
+          const transfer = await createStockTransferPersisted({ fromBranchId, toBranchId, items: itemsToTransfer, notes: notes.trim() })
+          setSuccess(`${transfer.transferNumber} was created as a draft transfer.`)
         } else {
-          const transfer = transferStock({ fromBranchId, toBranchId, items: [{ id: `transfer-item-${Date.now()}`, itemId: currentItem.id, quantity: qty }], requestedBy: actor, receivedBy: actor, notes: notes.trim() })
-          persistedTable = 'stock_transfers'; persistedId = transfer.id; message = `${transfer.transferNumber} completed through the canonical transfer ledger.`
+          const transfer = await completeStockTransferPersisted({ fromBranchId, toBranchId, items: itemsToTransfer, notes: notes.trim() })
+          setSuccess(`${transfer.transferNumber} completed atomically. Source and destination balances were committed together.`)
         }
+        onSuccess()
+        return
       } else if (dialog.type === 'receive_po') {
         if (!receiveOrder || !receiveItem) throw new Error('No receivable purchase-order item was found.')
         const qty = validatePositive(quantity, 'Received quantity')
         if (qty > remainingToReceive) throw new Error(`Received quantity cannot exceed the remaining ${remainingToReceive}.`)
-        const result = receivePurchaseOrder({ poId: receiveOrder.id, receivedBy: actor, receivedDate: orderDate, items: [{ poItemId: receiveItem.id, quantityReceived: qty }] })
-        persistedTable = 'purchase_receipts'; persistedId = result.receipt.id; message = `${result.receipt.receiptNumber} was posted and inventory was updated through purchase receiving.`
+        const result = await receivePurchaseOrderPersisted({
+          poId: receiveOrder.id,
+          receivedDate: orderDate,
+          items: [{ poItemId: receiveItem.id, quantityReceived: qty }],
+        })
+        setSuccess(`${result.receipt.receiptNumber} was posted atomically and inventory was updated by PostgreSQL.`)
+        onSuccess()
+        return
       } else if (dialog.type === 'count_item') {
         const physical = Number(physicalQuantity)
         if (!Number.isFinite(physical) || physical < 0) throw new Error('Physical quantity must be zero or greater.')
@@ -397,7 +422,7 @@ export function InventoryActionModal({ dialog, branches, preferredBranchId, onCl
                 </div></section>
               </div>}
 
-              {dialog.type === 'remove_item' && <div className="inv56-archive-card"><span><Trash2 size={22} /></span><div><strong>Permanently remove {dialog.item.name}?</strong><p>This is allowed only when the item has no branch stock, movements, batches, purchase-order history, transfers, or stock-count history.</p><small>If the item already has history, removal is blocked and you should edit the item instead.</small></div></div>}
+              {dialog.type === 'remove_item' && <div className="inv56-archive-card"><span><Trash2 size={22} /></span><div><strong>Permanently remove {dialog.item.name}?</strong><p>This is allowed only when the item has no branch stock, movements, batches, purchase, transfer, or stock-count history.</p><small>If the item already has history, removal is blocked and you should edit the item instead.</small></div></div>}
 
               {dialog.type === 'add_supplier' && <div className="inv56-form-stack"><section className="inv56-form-section"><header><span>1</span><div><strong>Supplier profile</strong><small>Contact details used by purchasing and receiving staff.</small></div></header><div className="inventory-form-grid">
                 <Input label="Supplier name" value={name} onChange={(e) => setName(e.target.value)} autoFocus />
