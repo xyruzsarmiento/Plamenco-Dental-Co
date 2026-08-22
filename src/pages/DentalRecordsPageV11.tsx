@@ -99,7 +99,7 @@ export function DentalRecordsPageV11() {
     [filteredPatients, patients, selectedPatientId],
   )
 
-  const patientRecords = useMemo(() => selectedPatient ? getDentalRecordsByPatientId(selectedPatient.patientId) : [], [selectedPatient])
+  const patientRecords = useMemo(() => selectedPatient ? getDentalRecordsByPatientId(selectedPatient.patientId) : [], [selectedPatient, successMessage])
   const patientAppointments = useMemo(
     () => selectedPatient ? getAppointmentsByPatient(selectedPatient.patientId).sort((a, b) => `${a.date}T${a.startTime}`.localeCompare(`${b.date}T${b.startTime}`)) : [],
     [selectedPatient],
@@ -163,11 +163,13 @@ export function DentalRecordsPageV11() {
     setRecordDraft(createEmptyRecordValues(selectedPatient.patientId))
     setRecordError(null)
     setSuccessMessage(null)
+    setSelectedRecord(null)
     setShowRecordForm(true)
   }
 
   function openEditRecord(record: DentalRecord) {
     setRecordFormMode('edit')
+    setSelectedRecord(record)
     setRecordDraft({
       patientId: record.patientId,
       recordDate: record.recordDate,
@@ -200,33 +202,46 @@ export function DentalRecordsPageV11() {
     setShowRecordForm(true)
   }
 
-  function handleSubmitRecord() {
-    if (!selectedPatient) return
+  async function handleSubmitRecord() {
+    if (!selectedPatient || isSubmitting) return
     if (!recordDraft.chiefComplaint.trim()) return setRecordError('Chief complaint is required.')
     if (!recordDraft.diagnosis.trim()) return setRecordError('Diagnosis is required.')
     setRecordError(null)
     setIsSubmitting(true)
 
-    setTimeout(() => {
+    try {
       if (recordFormMode === 'edit') {
-        const target = patientRecords.find((entry) => entry.patientId === selectedPatient.patientId && entry.recordDate === recordDraft.recordDate)
-        if (target) updateDentalRecord(target.id, { ...recordDraft, patientId: selectedPatient.patientId })
+        if (!selectedRecord) throw new Error('Clinical record was not found. Refresh and try again.')
+        await updateDentalRecord(selectedRecord.id, { ...recordDraft, patientId: selectedPatient.patientId })
       } else {
-        createDentalRecord({ ...recordDraft, patientId: selectedPatient.patientId })
+        await createDentalRecord({ ...recordDraft, patientId: selectedPatient.patientId })
       }
-      setIsSubmitting(false)
       setSuccessMessage(recordFormMode === 'edit' ? 'Record updated successfully.' : 'Record created successfully.')
       setShowRecordForm(false)
       setSelectedRecord(null)
       setRecordDraft(createEmptyRecordValues(selectedPatient.patientId))
-    }, 200)
+    } catch (cause) {
+      setRecordError(cause instanceof Error ? cause.message : 'Clinical record could not be saved.')
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
-  function handleDeleteRecord(record: DentalRecord) {
-    if (!window.confirm(`Delete this dental record for ${getPatientName(record.patientId)}?`)) return
-    deleteDentalRecord(record.id)
-    setSelectedRecord(null)
-    setSuccessMessage('Dental record deleted.')
+  async function handleDeleteRecord(record: DentalRecord) {
+    if (isSubmitting) return
+    if (!window.confirm(`Delete this draft dental record for ${getPatientName(record.patientId)}? Finalized records cannot be deleted.`)) return
+    setIsSubmitting(true)
+    setSuccessMessage(null)
+    try {
+      const deleted = await deleteDentalRecord(record.id)
+      if (!deleted) throw new Error('Only draft clinical records can be deleted.')
+      setSelectedRecord(null)
+      setSuccessMessage('Draft dental record deleted.')
+    } catch (cause) {
+      setRecordError(cause instanceof Error ? cause.message : 'Dental record could not be deleted.')
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   if (!selectedPatient) {
@@ -347,6 +362,7 @@ export function DentalRecordsPageV11() {
             </div>
 
             {successMessage && <div className="dr11-success" role="status">{successMessage}</div>}
+            {recordError && !showRecordForm && <div className="tp13-error" role="alert">{recordError}</div>}
 
             <section className="dr11-timeline-card">
               <div className="dr11-section-head dr11-timeline-head">
@@ -392,7 +408,7 @@ export function DentalRecordsPageV11() {
             patientName={`${selectedPatient.firstName} ${selectedPatient.lastName}`}
             values={recordDraft}
             onChange={setRecordDraft}
-            onClose={() => { setShowRecordForm(false); setRecordError(null); setSuccessMessage(null); setIsSubmitting(false) }}
+            onClose={() => { if (!isSubmitting) { setShowRecordForm(false); setRecordError(null); setSuccessMessage(null) } }}
             onSubmit={handleSubmitRecord}
             error={recordError}
             isSubmitting={isSubmitting}
@@ -400,7 +416,7 @@ export function DentalRecordsPageV11() {
           />
         )}
 
-        {selectedRecord && (
+        {selectedRecord && !showRecordForm && (
           <div className="dr11-detail-backdrop" onClick={() => setSelectedRecord(null)}>
             <aside className="dr11-detail-panel" role="dialog" aria-modal="true" aria-labelledby="dr11-record-title" onClick={(event) => event.stopPropagation()}>
               <div className="dr11-detail-head">
@@ -417,7 +433,10 @@ export function DentalRecordsPageV11() {
                 <section><span>Recommendations</span><p>{selectedRecord.recommendations || 'Not provided'}</p></section>
                 <section><span>Follow-up</span><p>{selectedRecord.followUpDate ? `${formatDate(selectedRecord.followUpDate)}${selectedRecord.followUpNotes ? ` · ${selectedRecord.followUpNotes}` : ''}` : 'No follow-up scheduled'}</p></section>
               </div>
-              <div className="dr11-detail-actions"><Button variant="secondary" onClick={() => openEditRecord(selectedRecord)}>Edit record</Button><Button variant="ghost" onClick={() => handleDeleteRecord(selectedRecord)}>Delete</Button></div>
+              <div className="dr11-detail-actions">
+                {selectedRecord.status === 'draft' && <Button variant="secondary" onClick={() => openEditRecord(selectedRecord)}>Edit record</Button>}
+                {selectedRecord.status === 'draft' && <Button variant="ghost" onClick={() => void handleDeleteRecord(selectedRecord)}>Delete draft</Button>}
+              </div>
             </aside>
           </div>
         )}
