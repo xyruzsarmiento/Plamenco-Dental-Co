@@ -17,25 +17,33 @@ type PaymentRecorderProps = {
   onSuccess: () => void
 }
 
-async function confirmRemotePayment(payment: Payment) {
+async function confirmRemotePayment(payment: Payment, invoiceNumber: string) {
   if (!isSupabaseConfigured || !supabase) return
 
+  const { data: remoteInvoice, error: invoiceError } = await supabase
+    .from('invoices')
+    .select('id,invoice_number')
+    .eq('invoice_number', invoiceNumber)
+    .maybeSingle()
+  if (invoiceError || !remoteInvoice) throw new Error(`Could not verify the invoice in Supabase: ${invoiceError?.message ?? 'invoice not found'}`)
+
   let lastError = ''
-  for (let attempt = 0; attempt < 4; attempt += 1) {
+  for (let attempt = 0; attempt < 5; attempt += 1) {
     const { data, error } = await supabase
       .from('payments')
-      .select('id,status,amount_cents,invoice_id')
-      .eq('id', payment.id)
+      .select('id,payment_number,status,amount_cents,invoice_id,patient_id')
+      .eq('payment_number', payment.paymentNumber)
       .maybeSingle()
 
     if (!error && data) {
       if (data.status !== 'completed') throw new Error(`Payment was saved with status ${String(data.status).replaceAll('_', ' ')} instead of completed.`)
-      if (Number(data.amount_cents) !== payment.amountCents || data.invoice_id !== payment.invoiceId) throw new Error('The saved payment does not match the submitted invoice or amount.')
+      if (Number(data.amount_cents) !== payment.amountCents) throw new Error('The saved payment amount does not match the submitted amount.')
+      if (String(data.invoice_id) !== String(remoteInvoice.id)) throw new Error('The saved payment is linked to the wrong invoice.')
       return
     }
 
     lastError = error?.message ?? 'The payment record was not returned by the database.'
-    if (attempt < 3) await new Promise((resolve) => window.setTimeout(resolve, 180 * (attempt + 1)))
+    if (attempt < 4) await new Promise((resolve) => window.setTimeout(resolve, 180 * (attempt + 1)))
   }
 
   throw new Error(`Database confirmation failed: ${lastError}`)
@@ -61,19 +69,23 @@ export function PaymentRecorderV14({ onClose, onSuccess }: PaymentRecorderProps)
   const [loading, setLoading] = useState(false)
   const [successMessage, setSuccessMessage] = useState<string | null>(null)
 
+  const selectedPatient = patients.find((patient) => patient.id === selectedPatientId || patient.patientId === selectedPatientId)
   const availableInvoices = useMemo(
-    () => invoices.filter((invoice) => invoice.patientId === selectedPatientId && invoice.balanceCents > 0 && invoice.status !== 'void'),
-    [invoices, selectedPatientId],
+    () => invoices.filter((invoice) => (
+      (invoice.patientId === selectedPatient?.id || invoice.patientId === selectedPatient?.patientId) &&
+      invoice.balanceCents > 0 &&
+      invoice.status !== 'void'
+    )),
+    [invoices, selectedPatient?.id, selectedPatient?.patientId],
   )
   const selectedInvoice = invoices.find((invoice) => invoice.id === selectedInvoiceId)
-  const selectedPatient = patients.find((patient) => patient.patientId === selectedPatientId)
   const selectedMethod = paymentMethods.find((entry) => entry.id === method)
   const amountNumber = Number(amount)
   const amountCents = Number.isFinite(amountNumber) ? Math.round(amountNumber * 100) : 0
   const requiresReference = Boolean(selectedMethod?.requiresReference)
   const exceedsBalance = Boolean(selectedInvoice && amountCents > selectedInvoice.balanceCents)
   const remainingAfterPayment = selectedInvoice ? Math.max(0, selectedInvoice.balanceCents - amountCents) : 0
-  const isValid = Boolean(selectedPatientId && selectedInvoiceId && date && amountCents > 0 && selectedInvoice && !exceedsBalance && (!requiresReference || reference.trim()))
+  const isValid = Boolean(selectedPatient && selectedInvoiceId && date && amountCents > 0 && selectedInvoice && !exceedsBalance && (!requiresReference || reference.trim()))
 
   function handlePatientChange(patientId: string) {
     setSelectedPatientId(patientId)
@@ -93,6 +105,7 @@ export function PaymentRecorderV14({ onClose, onSuccess }: PaymentRecorderProps)
 
   async function handleSubmit() {
     if (loading) return
+    if (!selectedPatient) return setError('Select a patient before recording a payment.')
     if (!selectedInvoice) return setError('Select an outstanding invoice before recording a payment.')
     if (amountCents <= 0) return setError('Payment amount must be greater than zero.')
     if (amountCents > selectedInvoice.balanceCents) return setError(`Payment cannot exceed the outstanding balance of ${formatCurrency(selectedInvoice.balanceCents)}.`)
@@ -104,15 +117,16 @@ export function PaymentRecorderV14({ onClose, onSuccess }: PaymentRecorderProps)
     setLoading(true)
     try {
       const payment = applyPayment({
-        patientId: selectedPatientId,
+        patientId: selectedPatient.id,
         invoiceId: selectedInvoiceId,
+        branchId: selectedInvoice.branchId,
         amountCents,
         paymentMethod: method,
         date,
         referenceNumber: reference.trim() || undefined,
         recordedBy: recordedBy.trim() || 'Front desk',
       })
-      await confirmRemotePayment(payment)
+      await confirmRemotePayment(payment, selectedInvoice.invoiceNumber)
       setSuccessMessage(`${formatCurrency(amountCents)} was recorded against ${selectedInvoice.invoiceNumber}.`)
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : 'Unable to record this payment.')
@@ -153,7 +167,7 @@ export function PaymentRecorderV14({ onClose, onSuccess }: PaymentRecorderProps)
             <section className="pay14-section">
               <div className="pay14-section-head"><span>01</span><div><h3>Patient & invoice</h3><p>Choose the account and outstanding invoice.</p></div></div>
               <div className="pay14-grid pay14-grid-2">
-                <label><span>Patient</span><select value={selectedPatientId} onChange={(event) => handlePatientChange(event.target.value)} disabled={loading}><option value="">Select patient</option>{patients.map((patient) => <option key={patient.patientId} value={patient.patientId}>{patient.firstName} {patient.lastName} · {patient.patientId}</option>)}</select></label>
+                <label><span>Patient</span><select value={selectedPatientId} onChange={(event) => handlePatientChange(event.target.value)} disabled={loading}><option value="">Select patient</option>{patients.map((patient) => <option key={patient.id} value={patient.id}>{patient.firstName} {patient.lastName} · {patient.patientId}</option>)}</select></label>
                 <label><span>Invoice</span><select value={selectedInvoiceId} onChange={(event) => handleInvoiceChange(event.target.value)} disabled={loading || !selectedPatientId || availableInvoices.length === 0}><option value="">{selectedPatientId ? 'Select outstanding invoice' : 'Select patient first'}</option>{availableInvoices.map((invoice) => <option key={invoice.id} value={invoice.id}>{invoice.invoiceNumber} · {formatCurrency(invoice.balanceCents)} due</option>)}</select></label>
               </div>
               {selectedPatientId && availableInvoices.length === 0 && <div className="pay14-note">This patient has no outstanding invoices.</div>}
@@ -193,13 +207,13 @@ export function PaymentRecorderV14({ onClose, onSuccess }: PaymentRecorderProps)
                 <div><span>After this payment</span><strong>{selectedInvoice && amountCents > 0 && !exceedsBalance ? formatCurrency(remainingAfterPayment) : '—'}</strong></div>
               </div>
             </div>
-            <div className="pay14-trust-card"><ShieldCheck size={18} /><div><strong>Source-of-truth confirmation</strong><p>When Supabase is configured, the saved payment is verified against the database before this dialog confirms success.</p></div></div>
+            <div className="pay14-trust-card"><ShieldCheck size={18} /><div><strong>Source-of-truth confirmation</strong><p>The payment is verified in Supabase before this dialog confirms success.</p></div></div>
             <div className="pay14-trust-card"><Landmark size={18} /><div><strong>Collection only</strong><p>Recording a payment does not create or modify treatment-plan estimates.</p></div></div>
           </aside>
         </div>
       )}
 
-      {!successMessage && <footer className="pay14-footer"><div><span>Amount to record</span><strong>{amountCents > 0 ? formatCurrency(amountCents) : formatCurrency(0)}</strong></div><div className="pay14-footer-actions"><Button variant="secondary" onClick={onClose} disabled={loading}>Cancel</Button><Button onClick={() => void handleSubmit()} disabled={!isValid || loading}>{loading ? 'Confirming…' : 'Record payment'}</Button></div></footer>}
+      {!successMessage && <footer className="pay14-footer"><div><span>Amount to record</span><strong>{amountCents > 0 ? formatCurrency(amountCents) : formatCurrency(0)}</strong></div><div className="pay14-footer-actions"><Button variant="secondary" onClick={onClose} disabled={loading}>Cancel</Button><Button onClick={() => void handleSubmit()} disabled={!isValid || loading}>{loading ? 'Confirming in database…' : 'Record payment'}</Button></div></footer>}
     </section>
   )
 }
