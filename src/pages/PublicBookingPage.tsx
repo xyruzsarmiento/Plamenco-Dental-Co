@@ -54,7 +54,7 @@ const emptyForm: BookingForm = {
 
 function formatPrice(value: number) {
   if (value <= 0) return 'Price available upon consultation'
-  return new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP' }).format(value / 100)
+  return new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP' }).format(value)
 }
 
 function formatTime(value: string) {
@@ -94,9 +94,15 @@ export function PublicBookingPage() {
           loadBranchesFromSupabase({ strict: true }),
         ])
         if (!isMounted) return
-        setServices(loadedServices.filter((service) => service.status === 'active' && service.onlineBookable && !service.internalOnly && service.showOnWebsite))
+        const publicServices = loadedServices.filter((service) =>
+          service.status === 'active' &&
+          service.onlineBookable !== false &&
+          !service.internalOnly &&
+          service.showOnWebsite !== false,
+        )
+        setServices(publicServices)
         setBranches(loadedBranches.filter((branch) => branch.status === 'active'))
-        setServiceLoadState(loadedServices.length ? 'loaded' : 'no-services')
+        setServiceLoadState(publicServices.length ? 'loaded' : 'no-services')
       } catch (loadError) {
         if (!isMounted) return
         setServiceLoadError(loadError instanceof Error ? loadError.message : 'Failed to load booking options')
