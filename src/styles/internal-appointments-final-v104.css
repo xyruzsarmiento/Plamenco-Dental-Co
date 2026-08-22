@@ -1,0 +1,254 @@
+/* Final scoped fix for /app/appointments. Loaded last so it wins the appointment CSS cascade. */
+
+.appointments-v40 .sa-appointments-overview-grid{
+  display:grid!important;
+  grid-template-columns:minmax(0,1.65fr) minmax(300px,.75fr)!important;
+  gap:14px!important;
+  align-items:start!important;
+}
+
+.appointments-v40 .sa-appointments-chart-card{
+  min-height:0!important;
+  height:auto!important;
+  max-height:none!important;
+  padding:18px 20px 16px!important;
+  overflow:hidden!important;
+}
+
+.appointments-v40 .sa-appointments-card-heading{
+  display:flex!important;
+  align-items:flex-start!important;
+  justify-content:space-between!important;
+  gap:14px!important;
+  margin-bottom:10px!important;
+}
+
+.appointments-v40 .sa-appointments-card-heading h3{
+  margin:4px 0 3px!important;
+  font-size:1.06rem!important;
+  line-height:1.2!important;
+  color:#172033!important;
+}
+
+.appointments-v40 .sa-appointments-card-heading p{
+  margin:0!important;
+  color:#6b7890!important;
+  font-size:.72rem!important;
+  line-height:1.45!important;
+}
+
+.appointments-v40 .sa-appointments-chart-scroll{
+  width:100%!important;
+  min-width:0!important;
+  height:270px!important;
+  min-height:270px!important;
+  max-height:270px!important;
+  margin:2px 0 0!important;
+  padding:0!important;
+  overflow-x:auto!important;
+  overflow-y:hidden!important;
+  display:block!important;
+}
+
+.appointments-v40 .sa-appointments-chart-scroll>svg,
+.appointments-v40 .sa-appointments-chart-scroll svg{
+  display:block!important;
+  width:100%!important;
+  min-width:680px!important;
+  height:250px!important;
+  min-height:250px!important;
+  max-height:250px!important;
+  aspect-ratio:auto!important;
+  margin:0!important;
+  padding:0!important;
+  overflow:visible!important;
+}
+
+.appointments-v40 .sa-appointments-chart-label{
+  font-size:9px!important;
+  fill:#7b8799!important;
+}
+
+.appointments-v40 .sa-appointments-chart-value{
+  font-size:10px!important;
+  fill:#172033!important;
+  font-weight:800!important;
+}
+
+.appointments-v40 .sa-appointments-chart-point{
+  r:4!important;
+  stroke-width:2.3!important;
+}
+
+.appointments-v40 .sa-appointments-status-card{
+  min-height:0!important;
+  height:auto!important;
+  max-height:none!important;
+}
+
+.appointments-v40 .sa-appointments-donut-layout{
+  min-height:250px!important;
+  height:auto!important;
+  display:grid!important;
+  grid-template-columns:180px minmax(0,1fr)!important;
+  align-items:center!important;
+  gap:20px!important;
+  padding:8px 4px 4px!important;
+}
+
+.appointments-v40 .sa-appointments-donut-wrap{
+  width:170px!important;
+  height:170px!important;
+  min-width:170px!important;
+  min-height:170px!important;
+  max-width:170px!important;
+  max-height:170px!important;
+  margin:auto!important;
+  position:relative!important;
+}
+
+.appointments-v40 .sa-appointments-donut-wrap>svg,
+.appointments-v40 .sa-appointments-donut-wrap svg{
+  width:170px!important;
+  height:170px!important;
+  min-width:170px!important;
+  min-height:170px!important;
+  max-width:170px!important;
+  max-height:170px!important;
+  display:block!important;
+}
+
+.appointments-v40 .sa-appointments-donut-center strong{font-size:1.4rem!important}
+.appointments-v40 .sa-appointments-donut-center span{font-size:.62rem!important}
+
+/* Internal Appointment Details modal */
+.appointment-details-backdrop-v40{
+  position:fixed!important;
+  inset:0!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  padding:24px!important;
+  overflow:auto!important;
+  background:rgba(15,23,42,.48)!important;
+  backdrop-filter:blur(6px)!important;
+  z-index:2000!important;
+}
+
+.appointment-details-modal-v40{
+  width:min(1180px,100%)!important;
+  max-width:1180px!important;
+  max-height:calc(100dvh - 48px)!important;
+  min-width:0!important;
+  margin:auto!important;
+  border-radius:24px!important;
+  overflow:hidden!important;
+  background:#f8fafc!important;
+}
+
+.appointment-details-v40-header{
+  position:sticky!important;
+  top:0!important;
+  z-index:10!important;
+  padding:18px 20px!important;
+  background:#fff!important;
+  border-bottom:1px solid #e6edf5!important;
+}
+
+.appointment-details-v40-title-row{
+  display:flex!important;
+  align-items:flex-start!important;
+  justify-content:space-between!important;
+  gap:16px!important;
+  min-width:0!important;
+}
+
+.appointment-details-v40-title-row>div{min-width:0!important}
+.appointment-details-v40-title-row h2,
+.appointment-details-v40-title-row p{overflow-wrap:anywhere!important}
+
+.appointment-details-v40-body{
+  min-width:0!important;
+  max-height:calc(100dvh - 150px)!important;
+  overflow:auto!important;
+  padding:16px!important;
+}
+
+.appointment-details-v40-overview{
+  display:grid!important;
+  grid-template-columns:repeat(4,minmax(0,1fr))!important;
+  gap:10px!important;
+}
+
+.appointment-details-v40-overview>article{
+  min-width:0!important;
+  padding:13px!important;
+  border:1px solid #e2e8f0!important;
+  border-radius:14px!important;
+  background:#fff!important;
+}
+
+.appointment-details-v40-overview strong,
+.appointment-details-v40-overview small{overflow-wrap:anywhere!important}
+
+.appointment-details-v40-grid{
+  display:grid!important;
+  grid-template-columns:minmax(0,1.7fr) minmax(300px,.8fr)!important;
+  gap:14px!important;
+  align-items:start!important;
+  min-width:0!important;
+  margin-top:14px!important;
+}
+
+.appointment-details-v40-main,
+.appointment-details-v40-side{min-width:0!important}
+
+.appointment-details-v40-info-grid{
+  grid-template-columns:repeat(2,minmax(0,1fr))!important;
+}
+.appointment-details-v40-info-grid.three-col{
+  grid-template-columns:repeat(3,minmax(0,1fr))!important;
+}
+
+.appointment-details-v40-card{min-width:0!important}
+.appointment-details-v40-card strong,
+.appointment-details-v40-card p,
+.appointment-details-v40-card span{overflow-wrap:anywhere!important}
+
+@media(max-width:1180px){
+  .appointments-v40 .sa-appointments-overview-grid{grid-template-columns:1fr!important}
+  .appointments-v40 .sa-appointments-chart-scroll{height:250px!important;min-height:250px!important;max-height:250px!important}
+  .appointments-v40 .sa-appointments-chart-scroll>svg,.appointments-v40 .sa-appointments-chart-scroll svg{height:230px!important;min-height:230px!important;max-height:230px!important}
+  .appointment-details-v40-overview{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+  .appointment-details-v40-grid{grid-template-columns:1fr!important}
+  .appointment-details-v40-side{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:12px!important}
+  .appointment-details-v40-side>section:last-child{grid-column:1/-1!important}
+}
+
+@media(max-width:760px){
+  .appointments-v40 .sa-appointments-chart-card{padding:15px!important}
+  .appointments-v40 .sa-appointments-chart-scroll{height:230px!important;min-height:230px!important;max-height:230px!important}
+  .appointments-v40 .sa-appointments-chart-scroll>svg,.appointments-v40 .sa-appointments-chart-scroll svg{width:680px!important;min-width:680px!important;height:210px!important;min-height:210px!important;max-height:210px!important}
+  .appointments-v40 .sa-appointments-donut-layout{grid-template-columns:1fr!important;min-height:0!important;padding-top:12px!important}
+  .appointments-v40 .sa-appointments-status-legend{width:100%!important}
+  .appointment-details-backdrop-v40{padding:0!important;align-items:flex-end!important;overflow:hidden!important}
+  .appointment-details-modal-v40{width:100%!important;max-width:none!important;max-height:94dvh!important;margin:0!important;border-radius:22px 22px 0 0!important}
+  .appointment-details-v40-header{padding:15px!important}
+  .appointment-details-v40-title-row{flex-direction:column!important;gap:8px!important}
+  .appointment-details-v40-body{max-height:calc(94dvh - 95px)!important;padding:12px!important}
+  .appointment-details-v40-overview{grid-template-columns:1fr 1fr!important;gap:8px!important}
+  .appointment-details-v40-side{grid-template-columns:1fr!important}
+  .appointment-details-v40-side>section:last-child{grid-column:auto!important}
+  .appointment-details-v40-info-grid,
+  .appointment-details-v40-info-grid.three-col{grid-template-columns:1fr 1fr!important}
+}
+
+@media(max-width:480px){
+  .appointments-v40 .sa-appointments-chart-scroll{height:220px!important;min-height:220px!important;max-height:220px!important}
+  .appointments-v40 .sa-appointments-chart-scroll>svg,.appointments-v40 .sa-appointments-chart-scroll svg{height:200px!important;min-height:200px!important;max-height:200px!important}
+  .appointment-details-v40-overview{grid-template-columns:1fr!important}
+  .appointment-details-v40-info-grid,
+  .appointment-details-v40-info-grid.three-col{grid-template-columns:1fr!important}
+  .appointment-details-v40-section-head{flex-direction:column!important;align-items:flex-start!important}
+  .appointment-details-v40-actions .btn,.appointment-details-v40-actions .button{width:100%!important}
+}
