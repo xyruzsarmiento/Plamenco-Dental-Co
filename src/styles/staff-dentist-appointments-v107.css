@@ -1,0 +1,270 @@
+/* V107 — appointment UI parity for Staff and Dentist portals only.
+   Super Admin/Admin are intentionally untouched. */
+
+.role-staff.page-appointments .appointments-v40,
+.role-dentist.page-appointments .appointments-v40,
+.role-associate_dentist.page-appointments .appointments-v40{
+  --ap-role-blue:#2563eb;
+  --ap-role-blue-deep:#1d4ed8;
+  --ap-role-blue-soft:#eef5ff;
+  --ap-role-text:#172033;
+  --ap-role-muted:#667085;
+  --ap-role-border:#e2e8f0;
+  width:100%;
+  min-width:0;
+  overflow-x:clip;
+}
+
+.role-staff.page-appointments .appointments-v40 .sa-appointments-page-v8,
+.role-dentist.page-appointments .appointments-v40 .sa-appointments-page-v8,
+.role-associate_dentist.page-appointments .appointments-v40 .sa-appointments-page-v8{
+  display:grid!important;
+  gap:18px!important;
+  width:100%!important;
+  max-width:none!important;
+  min-width:0!important;
+  margin:0!important;
+  padding:4px 0 30px!important;
+}
+
+/* Hero */
+.role-staff.page-appointments .appointments-v40 .sa-appointments-header,
+.role-dentist.page-appointments .appointments-v40 .sa-appointments-header,
+.role-associate_dentist.page-appointments .appointments-v40 .sa-appointments-header{
+  position:relative!important;
+  overflow:hidden!important;
+  display:flex!important;
+  align-items:flex-start!important;
+  justify-content:space-between!important;
+  gap:24px!important;
+  padding:26px!important;
+  border:1px solid #dbeafe!important;
+  border-radius:22px!important;
+  background:linear-gradient(135deg,#fff 0%,#f8fbff 72%,#eff6ff 100%)!important;
+  box-shadow:0 14px 36px rgba(37,99,235,.07)!important;
+}
+.role-staff.page-appointments .appointments-v40 .sa-appointments-header:after,
+.role-dentist.page-appointments .appointments-v40 .sa-appointments-header:after,
+.role-associate_dentist.page-appointments .appointments-v40 .sa-appointments-header:after{
+  content:"";position:absolute;right:-70px;bottom:-105px;width:250px;height:250px;border-radius:50%;
+  background:radial-gradient(circle,rgba(37,99,235,.1),rgba(37,99,235,0) 70%);pointer-events:none
+}
+.role-staff.page-appointments .appointments-v40 .sa-appointments-header-copy,
+.role-dentist.page-appointments .appointments-v40 .sa-appointments-header-copy,
+.role-associate_dentist.page-appointments .appointments-v40 .sa-appointments-header-copy{position:relative;z-index:1;min-width:0;max-width:850px}
+.role-staff.page-appointments .appointments-v40 .sa-appointments-kicker,
+.role-dentist.page-appointments .appointments-v40 .sa-appointments-kicker,
+.role-associate_dentist.page-appointments .appointments-v40 .sa-appointments-kicker{color:#2563eb!important;font-size:10px!important;font-weight:900!important;letter-spacing:.1em!important;text-transform:uppercase!important}
+.role-staff.page-appointments .appointments-v40 .sa-appointments-header h2,
+.role-dentist.page-appointments .appointments-v40 .sa-appointments-header h2,
+.role-associate_dentist.page-appointments .appointments-v40 .sa-appointments-header h2{margin:8px 0 7px!important;color:#172033!important;font-size:clamp(2rem,3vw,3.05rem)!important;line-height:1!important;letter-spacing:-.045em!important}
+.role-staff.page-appointments .appointments-v40 .sa-appointments-header p,
+.role-dentist.page-appointments .appointments-v40 .sa-appointments-header p,
+.role-associate_dentist.page-appointments .appointments-v40 .sa-appointments-header p{margin:0!important;max-width:760px;color:#667085!important;line-height:1.55!important}
+.role-staff.page-appointments .appointments-v40 .sa-appointments-header-actions,
+.role-dentist.page-appointments .appointments-v40 .sa-appointments-header-actions,
+.role-associate_dentist.page-appointments .appointments-v40 .sa-appointments-header-actions{position:relative;z-index:1;display:flex!important;align-items:center!important;justify-content:flex-end!important;gap:10px!important;flex-wrap:wrap!important}
+.role-staff.page-appointments .appointments-v40 .sa-appointments-date-chip,
+.role-dentist.page-appointments .appointments-v40 .sa-appointments-date-chip,
+.role-associate_dentist.page-appointments .appointments-v40 .sa-appointments-date-chip{min-height:44px!important;padding:0 14px!important;border:1px solid #dbe4f0!important;border-radius:12px!important;background:#fff!important;color:#344054!important;box-shadow:0 5px 16px rgba(15,23,42,.04)!important}
+
+/* KPI cards */
+.role-staff.page-appointments .appointments-v40 .sa-appointments-kpi-grid,
+.role-dentist.page-appointments .appointments-v40 .sa-appointments-kpi-grid,
+.role-associate_dentist.page-appointments .appointments-v40 .sa-appointments-kpi-grid{display:grid!important;grid-template-columns:repeat(5,minmax(0,1fr))!important;gap:12px!important}
+.role-staff.page-appointments .appointments-v40 .sa-appointments-kpi,
+.role-dentist.page-appointments .appointments-v40 .sa-appointments-kpi,
+.role-associate_dentist.page-appointments .appointments-v40 .sa-appointments-kpi{
+  position:relative!important;overflow:hidden!important;display:flex!important;align-items:flex-start!important;gap:12px!important;
+  min-height:108px!important;padding:16px!important;border:1px solid #e2e8f0!important;border-radius:17px!important;background:#fff!important;
+  box-shadow:0 8px 22px rgba(15,23,42,.045)!important
+}
+.role-staff.page-appointments .appointments-v40 .sa-appointments-kpi:before,
+.role-dentist.page-appointments .appointments-v40 .sa-appointments-kpi:before,
+.role-associate_dentist.page-appointments .appointments-v40 .sa-appointments-kpi:before{content:"";position:absolute;inset:0 auto 0 0;width:3px;background:#93c5fd}
+.role-staff.page-appointments .appointments-v40 .sa-appointments-kpi-icon,
+.role-dentist.page-appointments .appointments-v40 .sa-appointments-kpi-icon,
+.role-associate_dentist.page-appointments .appointments-v40 .sa-appointments-kpi-icon{display:grid!important;place-items:center!important;width:40px!important;height:40px!important;flex:0 0 auto!important;border-radius:12px!important;background:#eef5ff!important;color:#2563eb!important}
+.role-staff.page-appointments .appointments-v40 .sa-appointments-kpi>div,
+.role-dentist.page-appointments .appointments-v40 .sa-appointments-kpi>div,
+.role-associate_dentist.page-appointments .appointments-v40 .sa-appointments-kpi>div{display:grid!important;gap:3px!important;min-width:0}
+.role-staff.page-appointments .appointments-v40 .sa-appointments-kpi>div>span,
+.role-dentist.page-appointments .appointments-v40 .sa-appointments-kpi>div>span,
+.role-associate_dentist.page-appointments .appointments-v40 .sa-appointments-kpi>div>span{color:#64748b!important;font-size:10px!important;font-weight:850!important;letter-spacing:.05em!important;text-transform:uppercase!important}
+.role-staff.page-appointments .appointments-v40 .sa-appointments-kpi strong,
+.role-dentist.page-appointments .appointments-v40 .sa-appointments-kpi strong,
+.role-associate_dentist.page-appointments .appointments-v40 .sa-appointments-kpi strong{color:#172033!important;font-size:1.6rem!important;line-height:1!important;letter-spacing:-.03em!important}
+.role-staff.page-appointments .appointments-v40 .sa-appointments-kpi small,
+.role-dentist.page-appointments .appointments-v40 .sa-appointments-kpi small,
+.role-associate_dentist.page-appointments .appointments-v40 .sa-appointments-kpi small{color:#94a3b8!important;font-size:10px!important;line-height:1.35!important}
+
+/* Dashboard/summary cards */
+.role-staff.page-appointments .appointments-v40 .sa-appointments-chart-card,
+.role-staff.page-appointments .appointments-v40 .sa-appointments-week-card,
+.role-staff.page-appointments .appointments-v40 .sa-appointments-branch-card,
+.role-dentist.page-appointments .appointments-v40 .sa-appointments-chart-card,
+.role-dentist.page-appointments .appointments-v40 .sa-appointments-week-card,
+.role-dentist.page-appointments .appointments-v40 .sa-appointments-branch-card,
+.role-associate_dentist.page-appointments .appointments-v40 .sa-appointments-chart-card,
+.role-associate_dentist.page-appointments .appointments-v40 .sa-appointments-week-card,
+.role-associate_dentist.page-appointments .appointments-v40 .sa-appointments-branch-card{min-width:0!important;border:1px solid #e2e8f0!important;border-radius:19px!important;background:#fff!important;box-shadow:0 9px 26px rgba(15,23,42,.045)!important}
+
+/* Workspace switcher */
+.role-staff.page-appointments .appointments-v40 .sa-appointments-view-switcher,
+.role-dentist.page-appointments .appointments-v40 .sa-appointments-view-switcher,
+.role-associate_dentist.page-appointments .appointments-v40 .sa-appointments-view-switcher{display:grid!important;grid-template-columns:repeat(3,minmax(145px,1fr))!important;gap:6px!important;width:min(520px,100%)!important;padding:6px!important;border:1px solid #dfe7f2!important;border-radius:15px!important;background:#fff!important;box-shadow:0 8px 22px rgba(15,23,42,.04)!important}
+.role-staff.page-appointments .appointments-v40 .sa-appointments-view-switcher button,
+.role-dentist.page-appointments .appointments-v40 .sa-appointments-view-switcher button,
+.role-associate_dentist.page-appointments .appointments-v40 .sa-appointments-view-switcher button{min-height:42px!important;border:0!important;border-radius:10px!important;background:transparent!important;color:#64748b!important;font-weight:800!important}
+.role-staff.page-appointments .appointments-v40 .sa-appointments-view-switcher button.is-active,
+.role-dentist.page-appointments .appointments-v40 .sa-appointments-view-switcher button.is-active,
+.role-associate_dentist.page-appointments .appointments-v40 .sa-appointments-view-switcher button.is-active{background:#eef5ff!important;color:#1d4ed8!important;box-shadow:inset 0 0 0 1px #c7dbff!important}
+
+/* Today's flow, calendar and requests get the same surfaced treatment. */
+.role-staff.page-appointments .appointments-v40 .sa-appointments-flow-board,
+.role-staff.page-appointments .appointments-v40 .sa-appointments-calendar-workspace,
+.role-staff.page-appointments .appointments-v40 .sa-appointments-requests-panel,
+.role-dentist.page-appointments .appointments-v40 .sa-appointments-flow-board,
+.role-dentist.page-appointments .appointments-v40 .sa-appointments-calendar-workspace,
+.role-dentist.page-appointments .appointments-v40 .sa-appointments-requests-panel,
+.role-associate_dentist.page-appointments .appointments-v40 .sa-appointments-flow-board,
+.role-associate_dentist.page-appointments .appointments-v40 .sa-appointments-calendar-workspace,
+.role-associate_dentist.page-appointments .appointments-v40 .sa-appointments-requests-panel{min-width:0!important;overflow:hidden!important;border:1px solid #dfe7f2!important;border-radius:21px!important;background:#fff!important;box-shadow:0 13px 34px rgba(15,23,42,.05)!important}
+.role-staff.page-appointments .appointments-v40 .sa-appointments-flow-header,
+.role-staff.page-appointments .appointments-v40 .sa-appointments-requests-heading,
+.role-dentist.page-appointments .appointments-v40 .sa-appointments-flow-header,
+.role-dentist.page-appointments .appointments-v40 .sa-appointments-requests-heading,
+.role-associate_dentist.page-appointments .appointments-v40 .sa-appointments-flow-header,
+.role-associate_dentist.page-appointments .appointments-v40 .sa-appointments-requests-heading{padding:20px 22px!important;border-bottom:1px solid #e9eef5!important;background:linear-gradient(135deg,#fff,#f8fbff)!important}
+.role-staff.page-appointments .appointments-v40 .operations-columns,
+.role-dentist.page-appointments .appointments-v40 .operations-columns,
+.role-associate_dentist.page-appointments .appointments-v40 .operations-columns{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:12px!important;padding:14px!important;background:#f8fbff!important}
+.role-staff.page-appointments .appointments-v40 .sa-appointments-flow-column,
+.role-dentist.page-appointments .appointments-v40 .sa-appointments-flow-column,
+.role-associate_dentist.page-appointments .appointments-v40 .sa-appointments-flow-column{min-width:0!important;min-height:245px!important;border:1px solid #e1e8f0!important;border-radius:16px!important;background:#fff!important;overflow:hidden!important;box-shadow:0 7px 18px rgba(15,23,42,.035)!important}
+.role-staff.page-appointments .appointments-v40 .operations-column-header,
+.role-dentist.page-appointments .appointments-v40 .operations-column-header,
+.role-associate_dentist.page-appointments .appointments-v40 .operations-column-header{padding:13px 14px!important;border-bottom:1px solid #edf1f5!important;background:#fbfdff!important}
+.role-staff.page-appointments .appointments-v40 .operations-card-list,
+.role-dentist.page-appointments .appointments-v40 .operations-card-list,
+.role-associate_dentist.page-appointments .appointments-v40 .operations-card-list{display:grid!important;gap:9px!important;padding:10px!important}
+.role-staff.page-appointments .appointments-v40 .sa-appointments-flow-card,
+.role-dentist.page-appointments .appointments-v40 .sa-appointments-flow-card,
+.role-associate_dentist.page-appointments .appointments-v40 .sa-appointments-flow-card{padding:13px!important;border:1px solid #e6ebf1!important;border-radius:13px!important;background:#fff!important;box-shadow:0 4px 14px rgba(15,23,42,.03)!important}
+.role-staff.page-appointments .appointments-v40 .operations-empty,
+.role-dentist.page-appointments .appointments-v40 .operations-empty,
+.role-associate_dentist.page-appointments .appointments-v40 .operations-empty{min-height:165px!important;border:1px dashed #cdd8e6!important;border-radius:13px!important;background:#fbfdff!important;color:#7c8797!important}
+
+/* Filters/calendar */
+.role-staff.page-appointments .appointments-v40 .sa-appointments-filter-bar,
+.role-dentist.page-appointments .appointments-v40 .sa-appointments-filter-bar,
+.role-associate_dentist.page-appointments .appointments-v40 .sa-appointments-filter-bar{padding:17px!important;border-bottom:1px solid #e6edf5!important;background:#fff!important}
+.role-staff.page-appointments .appointments-v40 .calendar-filter-grid,
+.role-dentist.page-appointments .appointments-v40 .calendar-filter-grid,
+.role-associate_dentist.page-appointments .appointments-v40 .calendar-filter-grid{display:grid!important;grid-template-columns:repeat(5,minmax(130px,1fr)) minmax(240px,1.35fr)!important;gap:10px!important;margin-top:13px!important}
+.role-staff.page-appointments .appointments-v40 .calendar-filter-grid select,
+.role-staff.page-appointments .appointments-v40 .calendar-filter-grid input,
+.role-dentist.page-appointments .appointments-v40 .calendar-filter-grid select,
+.role-dentist.page-appointments .appointments-v40 .calendar-filter-grid input,
+.role-associate_dentist.page-appointments .appointments-v40 .calendar-filter-grid select,
+.role-associate_dentist.page-appointments .appointments-v40 .calendar-filter-grid input{height:43px!important;border:1px solid #d7e0ec!important;border-radius:10px!important;background:#fff!important;color:#172033!important}
+.role-staff.page-appointments .appointments-v40 .sa-appointments-calendar-shell,
+.role-dentist.page-appointments .appointments-v40 .sa-appointments-calendar-shell,
+.role-associate_dentist.page-appointments .appointments-v40 .sa-appointments-calendar-shell{padding:13px!important;background:#f8fbff!important;min-width:0!important;overflow:hidden!important}
+.role-staff.page-appointments .appointments-v40 .advanced-calendar-container,
+.role-dentist.page-appointments .appointments-v40 .advanced-calendar-container,
+.role-associate_dentist.page-appointments .appointments-v40 .advanced-calendar-container{min-width:0!important;border:1px solid #dfe7f2!important;border-radius:17px!important;background:#fff!important;box-shadow:0 8px 22px rgba(15,23,42,.04)!important}
+
+/* Requests */
+.role-staff.page-appointments .appointments-v40 .sa-appointments-request-grid,
+.role-dentist.page-appointments .appointments-v40 .sa-appointments-request-grid,
+.role-associate_dentist.page-appointments .appointments-v40 .sa-appointments-request-grid{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:12px!important;padding:14px!important;background:#f8fbff!important}
+.role-staff.page-appointments .appointments-v40 .sa-appointments-request-card,
+.role-dentist.page-appointments .appointments-v40 .sa-appointments-request-card,
+.role-associate_dentist.page-appointments .appointments-v40 .sa-appointments-request-card{border:1px solid #e2e8f0!important;border-radius:15px!important;background:#fff!important;box-shadow:0 7px 18px rgba(15,23,42,.04)!important}
+.role-staff.page-appointments .appointments-v40 .request-details,
+.role-dentist.page-appointments .appointments-v40 .request-details,
+.role-associate_dentist.page-appointments .appointments-v40 .request-details{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:8px!important}
+.role-staff.page-appointments .appointments-v40 .detail-col,
+.role-dentist.page-appointments .appointments-v40 .detail-col,
+.role-associate_dentist.page-appointments .appointments-v40 .detail-col{padding:10px!important;border-radius:10px!important;background:#f8fafc!important}
+
+/* Appointment details modal safety for these roles. */
+.role-staff .appointment-details-modal,
+.role-dentist .appointment-details-modal,
+.role-associate_dentist .appointment-details-modal{width:min(960px,calc(100vw - 32px))!important;max-width:960px!important;max-height:calc(100dvh - 32px)!important;overflow:auto!important;border-radius:22px!important}
+.role-staff .appointment-details-modal .details-grid,
+.role-dentist .appointment-details-modal .details-grid,
+.role-associate_dentist .appointment-details-modal .details-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+
+@media(max-width:1440px){
+  .role-staff.page-appointments .appointments-v40 .sa-appointments-kpi-grid,
+  .role-dentist.page-appointments .appointments-v40 .sa-appointments-kpi-grid,
+  .role-associate_dentist.page-appointments .appointments-v40 .sa-appointments-kpi-grid{grid-template-columns:repeat(3,minmax(0,1fr))!important}
+  .role-staff.page-appointments .appointments-v40 .calendar-filter-grid,
+  .role-dentist.page-appointments .appointments-v40 .calendar-filter-grid,
+  .role-associate_dentist.page-appointments .appointments-v40 .calendar-filter-grid{grid-template-columns:repeat(3,minmax(0,1fr))!important}
+}
+@media(max-width:1180px){
+  .role-staff.page-appointments .appointments-v40 .operations-columns,
+  .role-dentist.page-appointments .appointments-v40 .operations-columns,
+  .role-associate_dentist.page-appointments .appointments-v40 .operations-columns{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+  .role-staff.page-appointments .appointments-v40 .sa-appointments-request-grid,
+  .role-dentist.page-appointments .appointments-v40 .sa-appointments-request-grid,
+  .role-associate_dentist.page-appointments .appointments-v40 .sa-appointments-request-grid{grid-template-columns:1fr!important}
+}
+@media(max-width:900px){
+  .role-staff.page-appointments .appointments-v40 .sa-appointments-header,
+  .role-dentist.page-appointments .appointments-v40 .sa-appointments-header,
+  .role-associate_dentist.page-appointments .appointments-v40 .sa-appointments-header{flex-direction:column!important;padding:20px!important}
+  .role-staff.page-appointments .appointments-v40 .sa-appointments-header-actions,
+  .role-dentist.page-appointments .appointments-v40 .sa-appointments-header-actions,
+  .role-associate_dentist.page-appointments .appointments-v40 .sa-appointments-header-actions{width:100%!important;justify-content:flex-start!important}
+  .role-staff.page-appointments .appointments-v40 .sa-appointments-kpi-grid,
+  .role-dentist.page-appointments .appointments-v40 .sa-appointments-kpi-grid,
+  .role-associate_dentist.page-appointments .appointments-v40 .sa-appointments-kpi-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+  .role-staff.page-appointments .appointments-v40 .operations-columns,
+  .role-dentist.page-appointments .appointments-v40 .operations-columns,
+  .role-associate_dentist.page-appointments .appointments-v40 .operations-columns{grid-template-columns:1fr!important}
+  .role-staff.page-appointments .appointments-v40 .calendar-filter-grid,
+  .role-dentist.page-appointments .appointments-v40 .calendar-filter-grid,
+  .role-associate_dentist.page-appointments .appointments-v40 .calendar-filter-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+  .role-staff .appointment-details-modal,
+  .role-dentist .appointment-details-modal,
+  .role-associate_dentist .appointment-details-modal{width:calc(100vw - 24px)!important;max-width:none!important;max-height:calc(100dvh - 24px)!important}
+}
+@media(max-width:640px){
+  .role-staff.page-appointments .appointments-v40 .sa-appointments-header,
+  .role-dentist.page-appointments .appointments-v40 .sa-appointments-header,
+  .role-associate_dentist.page-appointments .appointments-v40 .sa-appointments-header{padding:16px!important;border-radius:17px!important}
+  .role-staff.page-appointments .appointments-v40 .sa-appointments-header h2,
+  .role-dentist.page-appointments .appointments-v40 .sa-appointments-header h2,
+  .role-associate_dentist.page-appointments .appointments-v40 .sa-appointments-header h2{font-size:1.9rem!important}
+  .role-staff.page-appointments .appointments-v40 .sa-appointments-header-actions,
+  .role-dentist.page-appointments .appointments-v40 .sa-appointments-header-actions,
+  .role-associate_dentist.page-appointments .appointments-v40 .sa-appointments-header-actions{display:grid!important;grid-template-columns:1fr!important}
+  .role-staff.page-appointments .appointments-v40 .sa-appointments-header-actions>*,
+  .role-dentist.page-appointments .appointments-v40 .sa-appointments-header-actions>*,
+  .role-associate_dentist.page-appointments .appointments-v40 .sa-appointments-header-actions>*{width:100%!important;justify-content:center!important}
+  .role-staff.page-appointments .appointments-v40 .sa-appointments-kpi-grid,
+  .role-dentist.page-appointments .appointments-v40 .sa-appointments-kpi-grid,
+  .role-associate_dentist.page-appointments .appointments-v40 .sa-appointments-kpi-grid{grid-template-columns:1fr!important}
+  .role-staff.page-appointments .appointments-v40 .sa-appointments-view-switcher,
+  .role-dentist.page-appointments .appointments-v40 .sa-appointments-view-switcher,
+  .role-associate_dentist.page-appointments .appointments-v40 .sa-appointments-view-switcher{display:flex!important;width:100%!important;overflow-x:auto!important;scrollbar-width:none!important}
+  .role-staff.page-appointments .appointments-v40 .sa-appointments-view-switcher button,
+  .role-dentist.page-appointments .appointments-v40 .sa-appointments-view-switcher button,
+  .role-associate_dentist.page-appointments .appointments-v40 .sa-appointments-view-switcher button{flex:0 0 145px!important}
+  .role-staff.page-appointments .appointments-v40 .calendar-filter-grid,
+  .role-dentist.page-appointments .appointments-v40 .calendar-filter-grid,
+  .role-associate_dentist.page-appointments .appointments-v40 .calendar-filter-grid{grid-template-columns:1fr!important}
+  .role-staff.page-appointments .appointments-v40 .request-details,
+  .role-dentist.page-appointments .appointments-v40 .request-details,
+  .role-associate_dentist.page-appointments .appointments-v40 .request-details{grid-template-columns:1fr!important}
+  .role-staff .appointment-details-modal,
+  .role-dentist .appointment-details-modal,
+  .role-associate_dentist .appointment-details-modal{width:100vw!important;max-height:94dvh!important;margin:auto 0 0!important;border-radius:20px 20px 0 0!important}
+  .role-staff .appointment-details-modal .details-grid,
+  .role-dentist .appointment-details-modal .details-grid,
+  .role-associate_dentist .appointment-details-modal .details-grid{grid-template-columns:1fr!important}
+}
