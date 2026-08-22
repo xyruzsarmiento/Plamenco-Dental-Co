@@ -30,19 +30,19 @@ import { Navigate, useParams, useNavigate } from 'react-router-dom'
 import { Badge } from '../components/ui/Badge'
 import { Button } from '../components/ui/Button'
 import { useAuth } from '../features/auth/AuthContext'
-import { createAppointment, getAppointmentsByPatient } from '../features/appointments/appointmentStore'
-import { addMinutesToTime } from '../features/appointments/appointmentStore'
+import { getAppointmentsByPatient } from '../features/appointments/appointmentStore'
+import { createPatientPortalAppointmentPersisted } from '../features/appointments/appointmentPersistence'
 import { getAppointmentAvailability, getEligibleProviders } from '../features/appointments/availabilityEngine'
 import {
   getInvoicesByPatient,
   getOutstandingBalanceByPatient,
   getPaymentsByPatient,
   getReceiptsByPatient,
-  initiateOnlinePayment,
 } from '../features/billing/billingStore'
 import { getDentalRecordsByPatientId } from '../features/dentalRecords/dentalRecordStore'
 import { getDocumentsByPatient } from '../features/documents/documentStore'
-import { getCurrentPatientForAuthenticatedUser, updatePatient } from '../features/patients/patientStore'
+import { getCurrentPatientForAuthenticatedUser } from '../features/patients/patientStore'
+import { updateMyPatientProfilePersisted } from '../features/patients/patientPersistence'
 import type { Patient } from '../features/patients/patientTypes'
 import { getPrescriptionsByPatient } from '../features/prescriptions/prescriptionStore'
 import { getStoredServices } from '../features/services/serviceStore'
@@ -181,6 +181,7 @@ export function PatientPortalPage() {
   const [bookingError, setBookingError] = useState<string | null>(null)
   const [bookingSuccessId, setBookingSuccessId] = useState<string | null>(null)
   const [bookingSubmitting, setBookingSubmitting] = useState(false)
+  const [portalRevision, setPortalRevision] = useState(0)
   const [profileForm, setProfileForm] = useState({
     firstName: '',
     middleName: '',
@@ -284,7 +285,10 @@ export function PatientPortalPage() {
     setProfileError(null)
   }, [patient])
 
-  const patientAppointments = useMemo(() => (patient ? getAppointmentsByPatient(patient.patientId) : []), [patient])
+  const patientAppointments = useMemo(() => {
+    void portalRevision
+    return patient ? getAppointmentsByPatient(patient.patientId) : []
+  }, [patient, portalRevision])
   const dentalRecords = useMemo(() => (patient ? getDentalRecordsByPatientId(patient.patientId) : []), [patient])
   const treatments = useMemo(() => (patient ? getTreatmentsByPatient(patient.patientId) : []), [patient])
   const treatmentPlans = useMemo(
@@ -416,7 +420,8 @@ export function PatientPortalPage() {
     setBookingError(null)
   }
 
-  function handleBookingNext() {
+  async function handleBookingNext() {
+    if (bookingSubmitting) return
     if (!patient) {
       setBookingError('Your patient record is unavailable right now.')
       return
@@ -455,37 +460,23 @@ export function PatientPortalPage() {
 
     setBookingError(null)
     setBookingSubmitting(true)
-
-    const appointment = createAppointment(
-      {
-        patientId: patient.patientId,
+    try {
+      const appointment = await createPatientPortalAppointmentPersisted({
         branchId: bookingForm.branchId,
-        providerId: selectedSlot.providerId,
         serviceId: selectedBookingService.id,
+        providerId: selectedSlot.providerId,
         date: bookingForm.date,
         startTime: bookingForm.startTime,
-        endTime: addMinutesToTime(bookingForm.startTime, selectedBookingService.duration),
-        durationMinutes: selectedBookingService.duration,
-        estimatedAmountCents: Math.round(selectedBookingService.price * 100),
-        paymentStatus: 'not_billed',
-        bookingSource: 'patient_portal',
-        patientNotes: bookingForm.notes.trim(),
-        reasonForVisit: selectedBookingService.name,
-        notes: bookingForm.notes.trim() || 'Requested through the patient portal.',
-        status: 'pending',
-      },
-      'patient-portal',
-    )
-
-    setBookingSubmitting(false)
-
-    if (!appointment) {
-      setBookingError('That slot is no longer available. Please choose another time.')
-      return
+        notes: bookingForm.notes.trim(),
+      })
+      setBookingSuccessId(appointment.appointmentNumber ?? appointment.id)
+      setPortalRevision((value) => value + 1)
+      setBookingStep(bookingSteps.length)
+    } catch (error) {
+      setBookingError(error instanceof Error ? error.message : 'That appointment could not be submitted. Please choose another time or try again.')
+    } finally {
+      setBookingSubmitting(false)
     }
-
-    setBookingSuccessId(appointment.id)
-    setBookingStep(bookingSteps.length)
   }
 
   function resetBookingFlow() {
@@ -516,8 +507,8 @@ export function PatientPortalPage() {
     reader.readAsDataURL(file)
   }
 
-  function handleSaveProfile() {
-    if (!patient) return
+  async function handleSaveProfile() {
+    if (!patient || profileSaved === 'saving') return
 
     const nextPhone = profileForm.phone.trim()
     const nextEmail = profileForm.email.trim().toLowerCase()
@@ -532,8 +523,7 @@ export function PatientPortalPage() {
     setProfileError(null)
 
     try {
-      const updated = updatePatient(patient.id, {
-        ...patient,
+      const updated = await updateMyPatientProfilePersisted({
         firstName: profileForm.firstName.trim(),
         middleName: profileForm.middleName.trim(),
         lastName: profileForm.lastName.trim(),
@@ -545,32 +535,7 @@ export function PatientPortalPage() {
         emergencyContactPhone: profileForm.emergencyContactPhone.trim(),
         emergencyContactRelationship: profileForm.emergencyContactRelationship.trim(),
         profileImage,
-        allergies: patient.allergies,
-        medicalConditions: patient.medicalConditions,
-        currentMedications: patient.currentMedications,
-        previousSurgeries: patient.previousSurgeries,
-        medicalNotes: patient.medicalNotes,
-        sex: patient.sex,
-        status: patient.status,
-        registrationDate: patient.registrationDate,
       })
-
-      const currentUser = localStorage.getItem('plamenco.auth.user')
-      if (currentUser) {
-        const parsed = JSON.parse(currentUser) as { email?: string; name?: string }
-        localStorage.setItem(
-          'plamenco.auth.user',
-          JSON.stringify({
-            ...parsed,
-            email: nextEmail,
-            name: `${profileForm.firstName.trim()} ${profileForm.lastName.trim()}`.trim(),
-          }),
-        )
-      }
-
-      if (!updated) {
-        throw new Error('Unable to update your patient record.')
-      }
 
       setPatient(updated)
       setIsProfileEditing(false)
@@ -585,23 +550,7 @@ export function PatientPortalPage() {
   function handlePayNow(invoiceId?: string) {
     const invoice = invoiceId ? invoices.find((entry) => entry.id === invoiceId) : openInvoices[0]
     if (!patient || !invoice || invoice.balanceCents <= 0) return
-
-    try {
-      initiateOnlinePayment({
-        patientId: patient.patientId,
-        invoiceId: invoice.id,
-        branchId: invoice.branchId,
-        amountCents: invoice.balanceCents,
-        paymentMethod: 'online_gateway',
-        date: new Date().toISOString().slice(0, 10),
-        recordedBy: patient.patientId,
-        gatewayProvider: 'not_configured',
-        notes: 'Patient portal payment initiated. Awaiting configured gateway verification.',
-      })
-      window.alert('Payment processing has been prepared. Online gateway secrets must be configured server-side before accepting live payments.')
-    } catch (error) {
-      window.alert(error instanceof Error ? error.message : 'Unable to start payment processing.')
-    }
+    window.alert('Online payment is not yet configured. No payment record was created. Please contact the clinic for available payment options.')
   }
 
   const treatmentProgress = activeTreatmentPlan
@@ -923,7 +872,7 @@ export function PatientPortalPage() {
                       <button
                         type="button"
                         className="btn btn-primary"
-                        onClick={handleBookingNext}
+                        onClick={() => void handleBookingNext()}
                         disabled={bookingSubmitting}
                       >
                         {bookingSubmitting ? 'Submitting...' : bookingStep === bookingSteps.length - 1 ? 'Confirm appointment' : 'Continue'}
@@ -1622,7 +1571,7 @@ export function PatientPortalPage() {
                     <Button 
                       type="button" 
                       icon={<Save size={16} />} 
-                      onClick={handleSaveProfile} 
+                      onClick={() => void handleSaveProfile()} 
                       disabled={profileSaved === 'saving'}
                     >
                       {profileSaved === 'saving' ? 'Saving...' : 'Save changes'}
@@ -1710,7 +1659,7 @@ export function PatientPortalPage() {
                     {!isProfileEditing ? (
                       <div className="info-display-grid">
                         <div className="info-block">
-                          <span className="info-label">Email</span>
+                          <span className="info-label">Contact email</span>
                           <strong className="info-value">{patient.email || 'Not provided'}</strong>
                         </div>
                         <div className="info-block">
@@ -1725,7 +1674,7 @@ export function PatientPortalPage() {
                     ) : (
                       <div className="form-grid">
                         <div className="form-field full-width">
-                          <label>Email</label>
+                          <label>Contact email</label>
                           <input 
                             type="email" 
                             value={profileForm.email} 
@@ -1774,10 +1723,10 @@ export function PatientPortalPage() {
 
                     <div className="security-display">
                       <div className="security-item">
-                        <span className="security-label">Email verification</span>
+                        <span className="security-label">Login email</span>
                         <span className="security-status verified">
                           <CheckCircle2 size={14} />
-                          Verified
+                          {user?.email ?? 'Verified account'}
                         </span>
                       </div>
                       <div className="security-item">
