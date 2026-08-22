@@ -173,7 +173,7 @@ function createMemoryStorage(): Storage {
     getItem: (key: string) => (store.has(key) ? store.get(key)! : null),
     key: (index: number) => Array.from(store.keys())[index] ?? null,
     removeItem: (key: string) => store.delete(key),
-    setItem: (key: string, value: string) => store.setItem(key, value),
+    setItem: (key: string, value: string) => store.set(key, value),
   } as Storage
 }
 
@@ -182,38 +182,74 @@ function getStorage(): Storage {
     return globalThis.localStorage
   }
 
-  const memoryStorage = (globalThis as typeof globalThis & { __plamencoMemoryStorage?: Storage }).__plamencoMemoryStorage
-  if (memoryStorage) return memoryStorage
+  const globalWithMemory = globalThis as typeof globalThis & {
+    __plamencoAuditMemoryStorage?: Storage
+  }
+
+  if (globalWithMemory.__plamencoAuditMemoryStorage) {
+    return globalWithMemory.__plamencoAuditMemoryStorage
+  }
 
   const created = createMemoryStorage()
-  ;(globalThis as typeof globalThis & { __plamencoMemoryStorage?: Storage }).__plamencoMemoryStorage = created
+  globalWithMemory.__plamencoAuditMemoryStorage = created
   return created
 }
 
-function safeParseLogs(value: string | null): AuditLogEntry[] {
-  if (!value) return []
+function safeParse<T>(value: string | null): T | null {
+  if (!value) return null
   try {
-    const parsed = JSON.parse(value) as AuditLogEntry[]
-    return Array.isArray(parsed) ? parsed : []
+    return JSON.parse(value) as T
   } catch {
-    return []
+    return null
   }
 }
 
-export function getAuditLogs(): AuditLogEntry[] {
-  return safeParseLogs(getStorage().getItem(AUDIT_LOG_STORAGE_KEY))
+export function getStoredAuditLogs(): AuditLogEntry[] {
+  const stored = safeParse<AuditLogEntry[]>(getStorage().getItem(AUDIT_LOG_STORAGE_KEY))
+  return Array.isArray(stored) ? stored : []
 }
 
-export function saveAuditLogs(logs: AuditLogEntry[]) {
-  getStorage().setItem(AUDIT_LOG_STORAGE_KEY, JSON.stringify(logs))
+export function saveStoredAuditLogs(entries: AuditLogEntry[]) {
+  getStorage().setItem(AUDIT_LOG_STORAGE_KEY, JSON.stringify(entries))
 }
 
-export function recordAuditEntry(input: Omit<AuditLogEntry, 'id' | 'timestamp'>) {
+export function recordAuditEntry({
+  user,
+  action,
+  entity,
+  entityId,
+  metadata,
+}: {
+  user: string
+  action: AuditAction
+  entity: string
+  entityId: string
+  metadata?: Record<string, string | number | boolean | null | undefined>
+}) {
   const entry: AuditLogEntry = {
-    ...input,
-    id: `audit-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+    id: `audit-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`,
+    user,
+    action,
+    entity,
+    entityId,
     timestamp: new Date().toISOString(),
+    metadata: metadata ?? {},
   }
-  saveAuditLogs([entry, ...getAuditLogs()].slice(0, 1000))
+
+  const next = [entry, ...getStoredAuditLogs()].slice(0, 250)
+  saveStoredAuditLogs(next)
   return entry
 }
+
+export function getAuditLogsByEntity(entity: string, entityId?: string) {
+  return getStoredAuditLogs().filter((entry) => {
+    if (entry.entity !== entity) return false
+    return entityId ? entry.entityId === entityId : true
+  })
+}
+
+export function getRecentAuditLogs(limit = 25) {
+  return getStoredAuditLogs().slice(0, limit)
+}
+
+export { AUDIT_LOG_STORAGE_KEY }
