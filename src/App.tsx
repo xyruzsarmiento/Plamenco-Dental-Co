@@ -14,6 +14,23 @@ import { hydratePatientPortalFromDatabase } from './features/patientPortal/patie
 import { loadServicesFromSupabase } from './features/services/serviceStore'
 import { syncSupabaseToLocalStorage } from './lib/supabaseSync'
 
+const PATIENT_PORTAL_CACHE_KEYS = [
+  'plamenco.appointments',
+  'plamenco.dentalRecords',
+  'plamenco.treatments',
+  'plamenco.treatmentPlans',
+  'plamenco.prescriptions',
+  'plamenco.invoices',
+  'plamenco.payments',
+  'plamenco.billing.receipts',
+  'plamenco.documents',
+]
+
+function clearPatientPortalCaches() {
+  if (typeof window === 'undefined') return
+  PATIENT_PORTAL_CACHE_KEYS.forEach((key) => window.localStorage.removeItem(key))
+}
+
 function DataBootstrap({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, isLoading, user } = useAuth()
   const [ready, setReady] = useState(false)
@@ -38,6 +55,8 @@ function DataBootstrap({ children }: { children: React.ReactNode }) {
     ]
 
     if (user?.role === 'patient') {
+      // A failed patient refresh must never fall back to another session's stale medical/financial cache.
+      clearPatientPortalCaches()
       essentialLoads.push(hydratePatientPortalFromDatabase())
     }
 
