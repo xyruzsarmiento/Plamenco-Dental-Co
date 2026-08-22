@@ -1,0 +1,121 @@
+/* Patient Portal V103 — blue-only brand refinement + modal/navigation hardening. */
+
+/* Keep summary cards strictly in the Plamenco blue/white system. */
+.pv3-kpis>article,
+.pv3-appointment-stats>div,
+.pv3-record-overview>div,
+.pv4-billing-metrics>article{
+  background:#fff!important;
+  border:1px solid #dbe7f7!important;
+  box-shadow:0 10px 28px rgba(37,99,235,.055)!important;
+  position:relative!important;
+  overflow:hidden!important;
+}
+.pv3-kpis>article::before,
+.pv3-appointment-stats>div::before,
+.pv3-record-overview>div::before,
+.pv4-billing-metrics>article::before{
+  content:""!important;
+  position:absolute!important;
+  left:0!important;top:0!important;bottom:0!important;
+  width:4px!important;
+  background:#2563eb!important;
+  border-radius:0!important;
+}
+.pv3-kpis>article>span,
+.pv3-record-overview>div>svg{
+  background:#edf5ff!important;
+  color:#2563eb!important;
+  border-color:#d9e8ff!important;
+}
+.pv3-kpis strong,.pv3-appointment-stats strong,.pv3-record-overview strong,.pv4-billing-metrics strong{color:#172033!important}
+.pv3-kpis small,.pv3-kpis p,.pv3-appointment-stats span,.pv3-record-overview small,.pv4-billing-metrics span,.pv4-billing-metrics small{color:#6b7890!important}
+
+/* Do not use orange for invoice balance or amount due. */
+.pv3-invoice-list [class*="balance"],
+.pv3-invoice-list [class*="due"],
+.pv3-invoice-list [class*="amount"],
+.pv3-invoice-money,
+.pv3-invoice-money strong,
+.pv3-invoice-money .is-due,
+.pv3-invoice-money .is-due strong{
+  color:#1d4ed8!important;
+}
+
+/* Documents or any inactive nav item must never remain visually selected. */
+.pv3-nav button:not(.is-active),
+.pv3-nav button:not(.is-active):focus,
+.pv3-nav button:not(.is-active):focus-visible,
+.pv3-nav button:not(.is-active):active{
+  background:transparent!important;
+  color:#526077!important;
+  box-shadow:none!important;
+  outline:0!important;
+}
+.pv3-nav button:not(.is-active):hover{background:#f5f9ff!important;color:#1d4ed8!important}
+.pv3-nav button.is-active{background:#eaf2ff!important;color:#1d4ed8!important;box-shadow:inset 3px 0 0 #2563eb!important}
+
+/* Appointment / dental / treatment detail modal: real responsive sizing. */
+.pv3-modal-backdrop,.pv4-detail-backdrop{
+  position:fixed!important;inset:0!important;z-index:1000!important;
+  display:flex!important;align-items:center!important;justify-content:center!important;
+  padding:clamp(14px,3vw,32px)!important;overflow:auto!important;
+  background:rgba(15,23,42,.48)!important;backdrop-filter:blur(5px)!important;
+}
+.pv3-detail-modal,.pv4-detail-modal{
+  width:min(760px,100%)!important;max-width:760px!important;
+  max-height:min(880px,calc(100dvh - 48px))!important;
+  overflow:auto!important;margin:auto!important;
+  border:1px solid #dbe5f2!important;border-radius:24px!important;
+  background:#fff!important;box-shadow:0 30px 90px rgba(15,23,42,.24)!important;
+}
+.pv3-detail-modal>header,.pv4-detail-modal>header{
+  position:sticky!important;top:0!important;z-index:5!important;
+  padding:20px 22px!important;background:#f8fbff!important;border-bottom:1px solid #e4ecf7!important;
+}
+.pv3-detail-status{padding:14px 22px!important;display:flex!important;gap:10px!important;align-items:center!important;flex-wrap:wrap!important}
+.pv3-detail-grid{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:12px!important;padding:0 22px 18px!important}
+.pv3-detail-grid>div{min-width:0!important;padding:14px!important;border:1px solid #e5ecf5!important;border-radius:14px!important;background:#fbfdff!important}
+.pv3-detail-grid span{display:block!important;margin-bottom:5px!important;color:#7b8799!important;font-size:.65rem!important;text-transform:uppercase!important;letter-spacing:.04em!important}
+.pv3-detail-grid strong{display:block!important;color:#172033!important;overflow-wrap:anywhere!important;line-height:1.4!important}
+.pv3-detail-note{margin:0 22px 18px!important;padding:15px 16px!important;border:1px solid #dce8fa!important;border-radius:14px!important;background:#f7faff!important}
+.pv3-detail-modal>footer,.pv4-detail-modal>footer{position:sticky!important;bottom:0!important;z-index:5!important;padding:14px 22px!important;background:#fff!important;border-top:1px solid #e8eef5!important}
+
+/* Notification center floats in the content area, not below the sidebar. */
+.pv5-notification-panel{
+  position:fixed!important;left:auto!important;right:24px!important;top:78px!important;bottom:auto!important;
+  width:min(390px,calc(100vw - 48px))!important;max-height:min(620px,calc(100dvh - 100px))!important;
+  transform:none!important;border-radius:20px!important;overflow:hidden!important;
+  box-shadow:0 28px 80px rgba(15,23,42,.22)!important;border:1px solid #dce6f4!important;
+}
+.pv5-notification-panel>header{background:#f8fbff!important}
+.pv5-notification-list{max-height:calc(min(620px,100dvh - 100px) - 76px)!important;overflow:auto!important}
+
+@media(max-width:900px){
+  .pv3-kpis{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+  .pv3-appointment-stats,.pv3-record-overview,.pv4-billing-metrics{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+  .pv3-detail-modal,.pv4-detail-modal{width:min(700px,100%)!important;max-height:calc(100dvh - 28px)!important}
+  .pv5-notification-panel{left:50%!important;right:auto!important;top:auto!important;bottom:16px!important;transform:translateX(-50%)!important;width:min(540px,calc(100vw - 32px))!important;max-height:72dvh!important}
+  .pv5-notification-list{max-height:calc(72dvh - 76px)!important}
+}
+
+@media(max-width:640px){
+  .pv3-kpis{grid-template-columns:1fr 1fr!important;gap:8px!important}
+  .pv3-appointment-stats,.pv3-record-overview,.pv4-billing-metrics{grid-template-columns:1fr!important}
+  .pv3-modal-backdrop,.pv4-detail-backdrop{padding:0!important;align-items:flex-end!important;overflow:hidden!important}
+  .pv3-detail-modal,.pv4-detail-modal{width:100%!important;max-width:none!important;max-height:92dvh!important;margin:0!important;border-radius:22px 22px 0 0!important}
+  .pv3-detail-modal>header,.pv4-detail-modal>header{padding:16px!important}
+  .pv3-detail-status{padding:11px 16px!important}
+  .pv3-detail-grid{grid-template-columns:1fr!important;padding:0 16px 14px!important;gap:8px!important}
+  .pv3-detail-grid>div{padding:12px!important}
+  .pv3-detail-note{margin:0 16px 14px!important}
+  .pv3-detail-modal>footer,.pv4-detail-modal>footer{padding:12px 16px calc(12px + env(safe-area-inset-bottom))!important}
+  .pv3-detail-modal>footer button,.pv4-detail-modal>footer button{width:100%!important}
+  .pv5-notification-panel{left:10px!important;right:10px!important;bottom:10px!important;transform:none!important;width:auto!important;max-height:80dvh!important;border-radius:20px!important}
+  .pv5-notification-list{max-height:calc(80dvh - 76px)!important}
+}
+
+@media(max-width:430px){
+  .pv3-kpis{grid-template-columns:1fr!important}
+  .pv5-notification-panel{left:0!important;right:0!important;bottom:0!important;width:100%!important;max-height:86dvh!important;border-radius:22px 22px 0 0!important}
+}
