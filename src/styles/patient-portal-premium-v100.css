@@ -1,0 +1,141 @@
+/* Patient Portal V100 — premium cards, tighter dashboard panels, responsive modals, anchored notifications. */
+
+/* ---------- Shared premium statistic language ---------- */
+.pv3-kpis,
+.pv3-appointment-stats,
+.pv3-record-overview,
+.pv4-billing-metrics{gap:14px!important}
+
+.pv3-kpis>article,
+.pv3-appointment-stats>div,
+.pv3-record-overview>div,
+.pv4-billing-metrics>article{
+  position:relative;
+  overflow:hidden;
+  border:1px solid rgba(203,213,225,.78)!important;
+  border-radius:18px!important;
+  box-shadow:0 10px 28px rgba(15,23,42,.055)!important;
+  transition:transform .18s ease,border-color .18s ease,box-shadow .18s ease;
+}
+.pv3-kpis>article:hover,
+.pv3-appointment-stats>div:hover,
+.pv3-record-overview>div:hover,
+.pv4-billing-metrics>article:hover{transform:translateY(-2px);box-shadow:0 16px 34px rgba(15,23,42,.08)!important}
+.pv3-kpis>article::after,
+.pv3-appointment-stats>div::after,
+.pv3-record-overview>div::after,
+.pv4-billing-metrics>article::after{
+  content:"";position:absolute;width:86px;height:86px;border-radius:999px;right:-34px;top:-36px;opacity:.48;pointer-events:none
+}
+
+/* Dashboard KPI cards */
+.pv3-kpis>article{min-height:104px!important;padding:18px!important;display:grid!important;grid-template-columns:44px minmax(0,1fr)!important;gap:13px!important;align-items:center!important}
+.pv3-kpis>article:nth-child(1){background:linear-gradient(135deg,#fff 18%,#eef6ff 100%)!important;border-color:#cfe0fb!important}
+.pv3-kpis>article:nth-child(2){background:linear-gradient(135deg,#fff 18%,#f0fdf7 100%)!important;border-color:#ccebdc!important}
+.pv3-kpis>article:nth-child(3){background:linear-gradient(135deg,#fff 18%,#fff7ed 100%)!important;border-color:#fedfc1!important}
+.pv3-kpis>article:nth-child(4){background:linear-gradient(135deg,#fff 18%,#f5f3ff 100%)!important;border-color:#ddd6fe!important}
+.pv3-kpis>article:nth-child(1)::after{background:#dbeafe}.pv3-kpis>article:nth-child(2)::after{background:#d1fae5}.pv3-kpis>article:nth-child(3)::after{background:#ffedd5}.pv3-kpis>article:nth-child(4)::after{background:#ede9fe}
+.pv3-kpis>article>span{width:44px!important;height:44px!important;border-radius:14px!important;display:grid!important;place-items:center!important;box-shadow:inset 0 0 0 1px rgba(255,255,255,.75),0 6px 16px rgba(15,23,42,.05)!important;position:relative;z-index:1}
+.pv3-kpis>article:nth-child(1)>span{background:#e6f0ff!important;color:#2563eb!important}.pv3-kpis>article:nth-child(2)>span{background:#dcfce7!important;color:#16a34a!important}.pv3-kpis>article:nth-child(3)>span{background:#ffedd5!important;color:#ea580c!important}.pv3-kpis>article:nth-child(4)>span{background:#ede9fe!important;color:#7c3aed!important}
+.pv3-kpis>article>div{position:relative;z-index:1}.pv3-kpis small{font-size:.6rem!important;font-weight:850!important;letter-spacing:.085em!important}.pv3-kpis strong{font-size:1.04rem!important;color:#0f172a!important;margin-top:3px!important}.pv3-kpis p{margin:4px 0 0!important;color:#667085!important;font-size:.65rem!important;line-height:1.35!important}
+
+/* Dashboard upcoming card — add breathing room inside its host panel. */
+.pv3-next-panel{padding:18px!important;background:linear-gradient(180deg,#fff 0%,#fbfdff 100%)!important}
+.pv3-next-panel .pv3-panel-head{margin-bottom:2px!important}
+.pv5-upcoming-list{margin:13px 0 0!important;padding:0 2px 2px!important;gap:10px!important}
+.pv5-upcoming-card{padding:12px 13px!important;border-radius:15px!important;border-color:#dbe7f5!important;background:linear-gradient(135deg,#ffffff 0%,#f4f8ff 100%)!important;box-shadow:0 6px 16px rgba(37,99,235,.045)!important}
+.pv5-upcoming-card:hover{box-shadow:0 12px 28px rgba(37,99,235,.09)!important}
+.pv5-upcoming-date{width:48px!important;height:54px!important;background:linear-gradient(145deg,#eaf2ff,#dfeaff)!important;box-shadow:inset 0 0 0 1px #d3e2fc!important}
+.pv5-upcoming-copy>b{font-size:.76rem!important}.pv5-upcoming-copy>small{line-height:1.45!important}
+
+/* Recent activity */
+.pv3-dashboard-grid.lower>.pv3-panel:last-child{background:linear-gradient(180deg,#fff 0%,#f8fbff 100%)!important;border-color:#dbe6f3!important}
+.pv3-activity{display:grid!important;gap:8px!important;margin-top:12px!important}
+.pv3-activity>div{padding:10px 11px!important;border:1px solid #e7edf5!important;border-radius:13px!important;background:rgba(255,255,255,.9)!important;box-shadow:0 4px 12px rgba(15,23,42,.025)!important;transition:all .16s ease!important}
+.pv3-activity>div:hover{border-color:#c8daf5!important;background:#fff!important;transform:translateX(2px)!important}
+.pv3-activity>div>span{width:34px!important;height:34px!important;border-radius:10px!important;background:#edf4ff!important;color:#2563eb!important;display:grid!important;place-items:center!important}
+.pv3-activity>div:nth-child(3n+2)>span{background:#ecfdf3!important;color:#16a34a!important}.pv3-activity>div:nth-child(3n)>span{background:#fff4e5!important;color:#ea580c!important}
+.pv3-activity section strong{color:#172033!important}.pv3-activity section p{color:#7b8798!important}.pv3-activity>div>small{color:#98a2b3!important}
+
+/* Appointments summary cards */
+.pv3-appointment-stats{grid-template-columns:repeat(3,minmax(0,1fr))!important}
+.pv3-appointment-stats>div{min-height:105px!important;padding:18px 18px 16px 64px!important;display:grid!important;align-content:center!important;background:#fff!important}
+.pv3-appointment-stats>div::before{position:absolute;left:16px;top:50%;transform:translateY(-50%);width:36px;height:36px;border-radius:12px;display:grid;place-items:center;font-size:1rem;font-weight:800}
+.pv3-appointment-stats>div:nth-child(1){background:linear-gradient(135deg,#fff,#eef6ff)!important;border-color:#cfe0fb!important}.pv3-appointment-stats>div:nth-child(1)::before{content:"↗";background:#e5efff;color:#2563eb}.pv3-appointment-stats>div:nth-child(1)::after{background:#dbeafe}
+.pv3-appointment-stats>div:nth-child(2){background:linear-gradient(135deg,#fff,#effbf5)!important;border-color:#cfeadf!important}.pv3-appointment-stats>div:nth-child(2)::before{content:"✓";background:#dcfce7;color:#16a34a}.pv3-appointment-stats>div:nth-child(2)::after{background:#d1fae5}
+.pv3-appointment-stats>div:nth-child(3){background:linear-gradient(135deg,#fff,#f7f3ff)!important;border-color:#e0d7fa!important}.pv3-appointment-stats>div:nth-child(3)::before{content:"#";background:#ede9fe;color:#7c3aed}.pv3-appointment-stats>div:nth-child(3)::after{background:#ede9fe}
+.pv3-appointment-stats span{font-size:.61rem!important;text-transform:uppercase!important;letter-spacing:.07em!important;font-weight:800!important;color:#7b8798!important}.pv3-appointment-stats strong{margin-top:4px!important;font-size:1.25rem!important;color:#111827!important}
+
+/* Dental records summary cards already have icons — make them feel intentional. */
+.pv3-record-overview{grid-template-columns:repeat(3,minmax(0,1fr))!important}
+.pv3-record-overview>div{min-height:105px!important;padding:18px!important;gap:13px!important;background:#fff!important}
+.pv3-record-overview>div:nth-child(1){background:linear-gradient(135deg,#fff,#eef6ff)!important;border-color:#cfe0fb!important;color:#2563eb!important}.pv3-record-overview>div:nth-child(1)::after{background:#dbeafe}
+.pv3-record-overview>div:nth-child(2){background:linear-gradient(135deg,#fff,#effbf5)!important;border-color:#cfeadf!important;color:#16a34a!important}.pv3-record-overview>div:nth-child(2)::after{background:#d1fae5}
+.pv3-record-overview>div:nth-child(3){background:linear-gradient(135deg,#fff,#fff8ed)!important;border-color:#f6dfbf!important;color:#d97706!important}.pv3-record-overview>div:nth-child(3)::after{background:#fef3c7}
+.pv3-record-overview>div>svg{width:38px!important;height:38px!important;padding:9px!important;border-radius:12px!important;background:rgba(255,255,255,.82)!important;box-shadow:0 5px 14px rgba(15,23,42,.055)!important;position:relative;z-index:1}
+.pv3-record-overview>div>span{position:relative;z-index:1}.pv3-record-overview strong{font-size:1.05rem!important;color:#111827!important}.pv3-record-overview small{font-size:.62rem!important;color:#7b8798!important;margin-top:3px!important}
+
+/* Billing metric cards injected by enhancement layer. */
+.pv4-billing-metrics{grid-template-columns:repeat(4,minmax(0,1fr))!important}
+.pv4-billing-metrics>article{min-height:112px!important;padding:17px 16px 15px 58px!important;display:grid!important;align-content:center!important;background:#fff!important}
+.pv4-billing-metrics>article::before{position:absolute;left:15px;top:17px;width:34px;height:34px;border-radius:11px;display:grid;place-items:center;font-size:.82rem;font-weight:850;z-index:1}
+.pv4-billing-metrics>article:nth-child(1){background:linear-gradient(135deg,#fff,#eef6ff)!important;border-color:#cfe0fb!important}.pv4-billing-metrics>article:nth-child(1)::before{content:"₱";background:#e5efff;color:#2563eb}.pv4-billing-metrics>article:nth-child(1)::after{background:#dbeafe}
+.pv4-billing-metrics>article:nth-child(2){background:linear-gradient(135deg,#fff,#effbf5)!important;border-color:#cfeadf!important}.pv4-billing-metrics>article:nth-child(2)::before{content:"✓";background:#dcfce7;color:#16a34a}.pv4-billing-metrics>article:nth-child(2)::after{background:#d1fae5}
+.pv4-billing-metrics>article:nth-child(3){background:linear-gradient(135deg,#fff,#fff8ed)!important;border-color:#f6dfbf!important}.pv4-billing-metrics>article:nth-child(3)::before{content:"▤";background:#fef3c7;color:#d97706}.pv4-billing-metrics>article:nth-child(3)::after{background:#fef3c7}
+.pv4-billing-metrics>article:nth-child(4){background:linear-gradient(135deg,#fff,#f7f3ff)!important;border-color:#e0d7fa!important}.pv4-billing-metrics>article:nth-child(4)::before{content:"↙";background:#ede9fe;color:#7c3aed}.pv4-billing-metrics>article:nth-child(4)::after{background:#ede9fe}
+.pv4-billing-metrics>article>span,.pv4-billing-metrics>article>strong,.pv4-billing-metrics>article>small{position:relative;z-index:1}.pv4-billing-metrics>article>span{font-size:.58rem!important;letter-spacing:.07em!important;font-weight:850!important}.pv4-billing-metrics>article>strong{font-size:1rem!important;color:#111827!important;margin-top:4px!important}.pv4-billing-metrics>article>small{font-size:.61rem!important;color:#7b8798!important;margin-top:4px!important;line-height:1.35!important}
+
+/* ---------- Premium details modals ---------- */
+.pv3-modal-backdrop,.pv4-detail-backdrop{padding:24px!important;align-items:center!important;justify-content:center!important;overflow:auto!important}
+.pv3-detail-modal,.pv4-detail-modal{width:min(680px,calc(100vw - 48px))!important;max-height:min(760px,calc(100vh - 48px))!important;overflow:auto!important;border-radius:22px!important;border:1px solid #dce5f0!important;box-shadow:0 28px 80px rgba(15,23,42,.22)!important;background:#fff!important}
+.pv3-detail-modal>header,.pv4-detail-modal>header{position:relative!important;padding:20px 22px!important;background:linear-gradient(135deg,#ffffff 0%,#eef5ff 100%)!important;border-bottom:1px solid #dce8f7!important}
+.pv3-detail-modal>header::after,.pv4-detail-modal>header::after{content:"";position:absolute;right:-34px;top:-54px;width:130px;height:130px;border-radius:999px;border:22px solid rgba(37,99,235,.045);pointer-events:none}
+.pv3-detail-modal>header span,.pv4-detail-modal>header span{font-size:.59rem!important;font-weight:900!important;letter-spacing:.1em!important;color:#2563eb!important}.pv3-detail-modal>header h2,.pv4-detail-modal>header h2{font-size:1.35rem!important;line-height:1.2!important;color:#101828!important;margin:5px 0 3px!important}.pv3-detail-modal>header p,.pv4-detail-modal>header p{color:#7b8798!important;margin:0!important}
+.pv3-detail-status{padding:13px 22px!important;background:#fbfdff!important;border-bottom:1px solid #edf1f6!important;display:flex!important;gap:8px!important;align-items:center!important;flex-wrap:wrap!important}
+.pv3-detail-grid{padding:18px 22px!important;display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:10px!important}
+.pv3-detail-grid>div{min-width:0!important;padding:13px 14px!important;border:1px solid #e6edf5!important;border-radius:13px!important;background:linear-gradient(180deg,#fff,#fbfdff)!important}.pv3-detail-grid span{font-size:.59rem!important;font-weight:800!important;letter-spacing:.045em!important;text-transform:uppercase!important;color:#8a96a8!important}.pv3-detail-grid strong{display:block!important;margin-top:5px!important;color:#172033!important;line-height:1.35!important;word-break:break-word!important}
+.pv3-detail-note{margin:0 22px 18px!important;padding:15px 16px!important;border-radius:14px!important;border:1px solid #dce8f6!important;background:#f7faff!important}.pv3-detail-note>span{font-size:.59rem!important;font-weight:850!important;color:#2563eb!important;letter-spacing:.05em!important}.pv3-detail-note p{margin:6px 0 0!important;line-height:1.55!important;color:#566579!important}
+.pv3-detail-modal>footer,.pv4-detail-modal>footer{padding:14px 22px 18px!important;border-top:1px solid #edf1f6!important;background:#fbfcfe!important}
+.pv3-record-hero{margin:18px 22px 14px!important;border-radius:15px!important;border:1px solid #dce8f6!important;background:linear-gradient(135deg,#f9fbff,#eef5ff)!important;padding:14px!important}
+.pv3-record-privacy{margin:0 22px 18px!important;padding:13px 14px!important;border-radius:13px!important;background:#f8fafc!important;border:1px solid #e6ebf1!important;line-height:1.5!important}
+
+/* Treatment / care-item modal from enhancement layer. */
+.pv4-detail-body{padding:18px 22px!important}.pv4-detail-kpis{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:10px!important;margin-bottom:12px!important}.pv4-detail-kpis>div,.pv4-detail-body>section{min-width:0!important;border:1px solid #e6edf5!important;border-radius:13px!important;background:#fbfdff!important;padding:13px 14px!important}.pv4-detail-kpis span,.pv4-detail-body>section>span{font-size:.58rem!important;text-transform:uppercase!important;letter-spacing:.055em!important;font-weight:850!important;color:#7c8a9d!important}.pv4-detail-kpis strong{display:block!important;margin-top:5px!important;color:#172033!important}.pv4-detail-body>section p{line-height:1.55!important;color:#5f6f82!important}.pv4-schedule-fee{margin-top:10px!important}.pv4-detail-footer-copy{margin-top:8px!important;display:flex!important;flex-wrap:wrap!important;gap:8px 18px!important;align-items:center!important}.pv4-detail-footer-copy>*{margin:0!important}.pv4-detail-body>aside{margin-top:12px!important;padding:12px 13px!important;border-radius:12px!important;background:#f4f8ff!important;color:#62748a!important;line-height:1.5!important}
+
+/* ---------- Notification center: float outside the sidebar instead of expanding below it ---------- */
+.pv5-notification-host{z-index:80!important}
+.pv5-notification-panel{position:fixed!important;left:258px!important;top:150px!important;width:min(390px,calc(100vw - 282px))!important;max-height:min(600px,calc(100vh - 175px))!important;border-radius:20px!important;border-color:#d8e2ef!important;box-shadow:0 28px 70px rgba(15,23,42,.2)!important;background:#fff!important;overflow:hidden!important}
+.pv5-notification-panel>header{padding:16px 17px!important;background:linear-gradient(135deg,#fff,#eef5ff)!important}.pv5-notification-list{max-height:min(500px,calc(100vh - 260px))!important}.pv5-notification-list article{padding:13px 15px!important}.pv5-notification-list article.is-unread{background:linear-gradient(90deg,#f5f9ff,#fff)!important}
+
+/* ---------- Responsive ---------- */
+@media(max-width:1180px){
+  .pv3-kpis{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+  .pv4-billing-metrics{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+  .pv5-notification-panel{left:250px!important;width:min(370px,calc(100vw - 272px))!important}
+}
+@media(max-width:900px){
+  .pv3-appointment-stats,.pv3-record-overview{grid-template-columns:repeat(3,minmax(0,1fr))!important}
+  .pv3-modal-backdrop,.pv4-detail-backdrop{padding:18px!important}
+  .pv3-detail-modal,.pv4-detail-modal{width:min(660px,calc(100vw - 36px))!important;max-height:calc(100vh - 36px)!important}
+  .pv5-notification-panel{left:50%!important;right:auto!important;top:auto!important;bottom:18px!important;transform:translateX(-50%)!important;width:min(520px,calc(100vw - 36px))!important;max-height:72vh!important}
+  .pv5-notification-list{max-height:55vh!important}
+}
+@media(max-width:700px){
+  .pv3-kpis,.pv3-appointment-stats,.pv3-record-overview,.pv4-billing-metrics{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+  .pv3-kpis>article{min-height:98px!important;padding:14px!important;grid-template-columns:40px minmax(0,1fr)!important;gap:10px!important}.pv3-kpis>article>span{width:40px!important;height:40px!important}
+  .pv3-appointment-stats>div{min-height:96px!important;padding:15px 13px 14px 55px!important}.pv3-appointment-stats>div::before{left:13px;width:32px;height:32px}
+  .pv3-record-overview>div{min-height:96px!important;padding:14px!important}
+  .pv4-billing-metrics>article{min-height:102px!important;padding:14px 12px 13px 52px!important}.pv4-billing-metrics>article::before{left:12px;top:14px;width:31px;height:31px}
+  .pv3-detail-grid,.pv4-detail-kpis{grid-template-columns:1fr!important}
+  .pv3-detail-modal>header,.pv4-detail-modal>header{padding:17px!important}.pv3-detail-grid{padding:14px 17px!important}.pv3-detail-note,.pv3-record-hero,.pv3-record-privacy{margin-left:17px!important;margin-right:17px!important}.pv4-detail-body{padding:14px 17px!important}
+}
+@media(max-width:520px){
+  .pv3-kpis,.pv3-appointment-stats,.pv3-record-overview,.pv4-billing-metrics{grid-template-columns:1fr!important}
+  .pv3-kpis>article,.pv3-appointment-stats>div,.pv3-record-overview>div,.pv4-billing-metrics>article{min-height:88px!important}
+  .pv3-next-panel{padding:14px!important}.pv5-upcoming-card{grid-template-columns:44px minmax(0,1fr)!important;padding:10px!important}.pv5-upcoming-date{width:44px!important;height:49px!important}
+  .pv3-modal-backdrop,.pv4-detail-backdrop{padding:0!important;align-items:flex-end!important}
+  .pv3-detail-modal,.pv4-detail-modal{width:100%!important;max-width:none!important;max-height:88vh!important;border-radius:22px 22px 0 0!important;border-bottom:0!important}
+  .pv3-detail-modal>header h2,.pv4-detail-modal>header h2{font-size:1.15rem!important}
+  .pv5-notification-panel{left:8px!important;right:8px!important;bottom:8px!important;transform:none!important;width:auto!important;max-height:78vh!important;border-radius:20px!important}
+  .pv5-notification-list{max-height:60vh!important}
+}
