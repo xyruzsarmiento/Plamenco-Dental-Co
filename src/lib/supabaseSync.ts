@@ -6,18 +6,6 @@ type SyncTableEntry = {
   map: (row: any) => any
 }
 
-/*
- * A number of legacy stores originally generated browser-friendly IDs such as
- * `record-<timestamp>-<random>` and `payment-<timestamp>-<random>`. The live
- * Supabase schema correctly uses UUID primary/foreign keys for those entities,
- * so PostgREST rejects the legacy strings before the row reaches Postgres.
- *
- * Keep the legacy local cache compatible while making every remote write use a
- * stable UUID. The conversion is deterministic: the same legacy ID is mapped
- * to the same UUID for parent rows, child foreign keys, updates and deletes.
- * Existing UUIDs and human-readable text keys (for example `cash`, `utilities`
- * or `clinic`) are left untouched.
- */
 const UUID_VALUE_FIELDS = new Set([
   'id',
   'patient_id',
@@ -51,6 +39,19 @@ const UUID_VALUE_FIELDS = new Set([
 ])
 
 const UUID_ARRAY_FIELDS = new Set(['invoice_ids', 'branch_ids'])
+const PATIENT_REFERENCE_TABLES = new Set([
+  'appointments',
+  'dental_records',
+  'clinical_record_amendments',
+  'treatments',
+  'treatment_plans',
+  'invoices',
+  'payments',
+  'charges',
+  'receipts',
+  'refunds',
+  'stock_movements',
+])
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
 const LEGACY_GENERATED_ID_PATTERN = /^[a-z][a-z0-9-]*-\d{10,}-[a-z0-9]+$/i
 
@@ -95,15 +96,45 @@ function normalizeRemoteRowIds(row: Record<string, unknown>) {
 
   for (const [key, value] of Object.entries(normalized)) {
     if (UUID_VALUE_FIELDS.has(key)) {
-      normalized[key] = normalizeLegacyUuid(value)
+      if (value == null || (typeof value === 'string' && !value.trim())) {
+        normalized[key] = null
+      } else {
+        normalized[key] = normalizeLegacyUuid(value)
+      }
       continue
     }
 
     if (UUID_ARRAY_FIELDS.has(key) && Array.isArray(value)) {
-      normalized[key] = value.map((entry) => normalizeLegacyUuid(entry))
+      normalized[key] = value
+        .filter((entry) => !(typeof entry === 'string' && !entry.trim()))
+        .map((entry) => normalizeLegacyUuid(entry))
     }
   }
 
+  return normalized
+}
+
+async function resolvePatientForeignKey(value: unknown) {
+  if (!supabase || value == null) return value
+  const text = String(value).trim()
+  if (!text) return null
+  if (UUID_PATTERN.test(text)) return text
+
+  const { data, error } = await supabase
+    .from('patients')
+    .select('id')
+    .eq('patient_id', text)
+    .maybeSingle()
+
+  if (!error && data?.id) return String(data.id)
+  return normalizeLegacyUuid(text)
+}
+
+async function prepareRemoteRow(table: string, row: Record<string, unknown>) {
+  const normalized = normalizeRemoteRowIds(row)
+  if (PATIENT_REFERENCE_TABLES.has(table) && Object.prototype.hasOwnProperty.call(normalized, 'patient_id')) {
+    normalized.patient_id = await resolvePatientForeignKey(normalized.patient_id)
+  }
   return normalized
 }
 
@@ -114,6 +145,47 @@ function reportPersistenceError(operation: string, table: string, error: unknown
       detail: { operation, table, error },
     }))
   }
+}
+
+function getCachedPatientPublicId(value: unknown) {
+  if (typeof window === 'undefined' || value == null) return value
+  const text = String(value)
+  try {
+    const patients = JSON.parse(window.localStorage.getItem('plamenco.patients') ?? '[]') as Array<{ id?: string; patientId?: string }>
+    const match = patients.find((patient) => patient.id === text || patient.patientId === text)
+    return match?.patientId ?? value
+  } catch {
+    return value
+  }
+}
+
+function reconcileMappedPatientReferences(table: string, rows: any[]) {
+  if (!PATIENT_REFERENCE_TABLES.has(table)) return rows
+  return rows.map((row) => row && typeof row === 'object' && 'patientId' in row
+    ? { ...row, patientId: getCachedPatientPublicId(row.patientId) }
+    : row)
+}
+
+let mutationQueue: Promise<unknown> = Promise.resolve()
+
+function queueMutation<T>(operation: () => Promise<T>) {
+  const run = mutationQueue.then(operation, operation)
+  mutationQueue = run.then(() => undefined, () => undefined)
+  return run
+}
+
+async function nextUniqueHumanNumber(table: 'expenses' | 'expense_vendors') {
+  if (!supabase) return null
+  const config = table === 'expenses'
+    ? { column: 'expense_number', prefix: 'EXP' }
+    : { column: 'vendor_number', prefix: 'VND' }
+  const { data, error } = await supabase.from(table).select(config.column)
+  if (error) return null
+  const highest = (data ?? []).reduce((max, row: Record<string, unknown>) => {
+    const match = String(row[config.column] ?? '').match(new RegExp(`^${config.prefix}-(\\d+)$`))
+    return match ? Math.max(max, Number(match[1])) : max
+  }, 0)
+  return `${config.prefix}-${String(highest + 1).padStart(6, '0')}`
 }
 
 const tablesToSync: SyncTableEntry[] = [
@@ -406,21 +478,12 @@ const tablesToSync: SyncTableEntry[] = [
   {
     table: 'inventory_categories',
     localKey: 'plamenco.inventory.categories',
-    map: (row: any) => ({
-      id: row.id,
-      name: row.name,
-      status: row.status ?? 'active',
-    }),
+    map: (row: any) => ({ id: row.id, name: row.name, status: row.status ?? 'active' }),
   },
   {
     table: 'inventory_units',
     localKey: 'plamenco.inventory.units',
-    map: (row: any) => ({
-      id: row.id,
-      label: row.label,
-      abbreviation: row.abbreviation,
-      status: row.status ?? 'active',
-    }),
+    map: (row: any) => ({ id: row.id, label: row.label, abbreviation: row.abbreviation, status: row.status ?? 'active' }),
   },
   {
     table: 'suppliers',
@@ -578,12 +641,7 @@ const tablesToSync: SyncTableEntry[] = [
   {
     table: 'expense_categories',
     localKey: 'plamenco.expense.categories',
-    map: (row: any) => ({
-      id: row.id,
-      name: row.name,
-      parentId: row.parent_id ?? undefined,
-      status: row.status ?? 'active',
-    }),
+    map: (row: any) => ({ id: row.id, name: row.name, parentId: row.parent_id ?? undefined, status: row.status ?? 'active' }),
   },
   {
     table: 'expense_vendors',
@@ -781,90 +839,95 @@ const tablesToSync: SyncTableEntry[] = [
 ]
 
 export async function syncSupabaseToLocalStorage() {
-  if (!isSupabaseConfigured || !supabase || typeof window === 'undefined') {
-    return false
-  }
+  if (!isSupabaseConfigured || !supabase || typeof window === 'undefined') return false
 
   let synced = false
-
   for (const entry of tablesToSync) {
     const { data, error } = await supabase.from(entry.table).select('*')
-
-    if (error || !Array.isArray(data)) {
-      continue
-    }
+    if (error || !Array.isArray(data)) continue
 
     window.localStorage.removeItem(entry.localKey)
+    if (data.length === 0) continue
 
-    if (data.length === 0) {
-      continue
-    }
-
-    const rows = data.map(entry.map)
+    const rows = reconcileMappedPatientReferences(entry.table, data.map(entry.map))
     window.localStorage.setItem(entry.localKey, JSON.stringify(rows))
     synced = true
   }
-
   return synced
 }
 
 export async function upsertRemoteTableRows(table: string, rows: Record<string, unknown>[]) {
-  if (!isSupabaseConfigured || !supabase || !rows.length) {
-    return null
-  }
+  if (!isSupabaseConfigured || !supabase || !rows.length) return null
 
-  const normalizedRows = rows.map(normalizeRemoteRowIds)
-  const { data, error } = await supabase.from(table).upsert(normalizedRows).select()
-  if (error) {
-    reportPersistenceError('upsert', table, error)
-    return null
-  }
-
-  return data
+  return queueMutation(async () => {
+    const normalizedRows = await Promise.all(rows.map((row) => prepareRemoteRow(table, row)))
+    const { data, error } = await supabase.from(table).upsert(normalizedRows).select()
+    if (error) {
+      reportPersistenceError('upsert', table, error)
+      return null
+    }
+    return data
+  })
 }
 
 export async function insertRemoteTableRow(table: string, row: Record<string, unknown>) {
-  if (!isSupabaseConfigured || !supabase) {
-    return null
-  }
+  if (!isSupabaseConfigured || !supabase) return null
 
-  const normalizedRow = normalizeRemoteRowIds(row)
-  const { data, error } = await supabase.from(table).insert([normalizedRow]).select()
-  if (error) {
-    reportPersistenceError('insert', table, error)
-    return null
-  }
+  return queueMutation(async () => {
+    let normalizedRow = await prepareRemoteRow(table, row)
 
-  return data?.[0] ?? null
+    for (let attempt = 0; attempt < 3; attempt += 1) {
+      const { data, error } = await supabase.from(table).insert([normalizedRow]).select()
+      if (!error) return data?.[0] ?? null
+
+      const duplicateHumanNumber = String(error.code ?? '') === '23505'
+        && ((table === 'expenses' && String(error.message ?? '').includes('expense_number'))
+          || (table === 'expense_vendors' && String(error.message ?? '').includes('vendor_number')))
+
+      if (duplicateHumanNumber) {
+        const nextNumber = await nextUniqueHumanNumber(table as 'expenses' | 'expense_vendors')
+        if (nextNumber) {
+          normalizedRow = {
+            ...normalizedRow,
+            ...(table === 'expenses' ? { expense_number: nextNumber } : { vendor_number: nextNumber }),
+          }
+          continue
+        }
+      }
+
+      reportPersistenceError('insert', table, error)
+      return null
+    }
+
+    return null
+  })
 }
 
 export async function updateRemoteTableRow(table: string, id: string, row: Record<string, unknown>) {
-  if (!isSupabaseConfigured || !supabase) {
-    return null
-  }
+  if (!isSupabaseConfigured || !supabase) return null
 
-  const normalizedId = normalizeLegacyUuid(id) as string
-  const normalizedRow = normalizeRemoteRowIds(row)
-  const { data, error } = await supabase.from(table).update(normalizedRow).eq('id', normalizedId).select()
-  if (error) {
-    reportPersistenceError('update', table, error)
-    return null
-  }
-
-  return data?.[0] ?? null
+  return queueMutation(async () => {
+    const normalizedId = normalizeLegacyUuid(id) as string
+    const normalizedRow = await prepareRemoteRow(table, row)
+    const { data, error } = await supabase.from(table).update(normalizedRow).eq('id', normalizedId).select()
+    if (error) {
+      reportPersistenceError('update', table, error)
+      return null
+    }
+    return data?.[0] ?? null
+  })
 }
 
 export async function deleteRemoteTableRow(table: string, id: string) {
-  if (!isSupabaseConfigured || !supabase) {
-    return false
-  }
+  if (!isSupabaseConfigured || !supabase) return false
 
-  const normalizedId = normalizeLegacyUuid(id) as string
-  const { error } = await supabase.from(table).delete().eq('id', normalizedId)
-  if (error) {
-    reportPersistenceError('delete', table, error)
-    return false
-  }
-
-  return true
+  return queueMutation(async () => {
+    const normalizedId = normalizeLegacyUuid(id) as string
+    const { error } = await supabase.from(table).delete().eq('id', normalizedId)
+    if (error) {
+      reportPersistenceError('delete', table, error)
+      return false
+    }
+    return true
+  })
 }
