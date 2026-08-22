@@ -1,14 +1,15 @@
 import { supabase } from '../../lib/supabase'
 import { createUuid } from '../../lib/id'
 import {
-  BRANCH_STOCK_KEY,
-  MOVEMENT_KEY,
   getBranchInventory,
   getStockMovements,
   type BranchInventory,
   type StockMovement,
   type StockMovementType,
 } from './inventoryStore'
+
+const BRANCH_STOCK_KEY = 'plamenco.inventory.branchStock'
+const MOVEMENT_KEY = 'plamenco.inventory.movements'
 
 function requireDatabase() {
   if (!supabase) throw new Error('Clinic database is not configured. Stock cannot be changed safely.')
