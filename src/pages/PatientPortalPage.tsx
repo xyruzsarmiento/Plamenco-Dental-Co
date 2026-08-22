@@ -1,5 +1,6 @@
 import '../styles/patient-portal-premium-v94.css'
 import '../styles/patient-portal-premium-v97.css'
+import '../styles/patient-portal-premium-v98.css'
 import { PatientPortalInteractionEnhancements } from '../features/patientPortal/PatientPortalInteractionEnhancements'
 import { PatientPortalPage as PatientPortalPageV3 } from './PatientPortalPageV3'
 
