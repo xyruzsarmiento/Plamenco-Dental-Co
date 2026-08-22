@@ -29,7 +29,7 @@
   .ex57-row-end .badge,.ex57-row-end .btn{max-width:100%!important}
 }
 
-/* Calendar: keep the control header inside the viewport. Only the actual calendar grid scrolls horizontally. */
+/* Calendar: controls remain viewport-width; each calendar body owns its horizontal swipe area. */
 @media(max-width:760px){
   .appointments-v40 .sa-appointments-calendar-shell{
     width:100%!important;
@@ -41,7 +41,7 @@
     width:100%!important;
     max-width:100%!important;
     min-width:0!important;
-    overflow:hidden!important;
+    overflow:visible!important;
     border-radius:14px!important;
   }
   .appointments-v40 .advanced-calendar-header{
@@ -117,25 +117,31 @@
     line-height:1!important;
     border-radius:7px!important;
   }
+
+  /* Important: do not give the calendar body a large min-width. Its grid tracks overflow inside
+     a viewport-width scroll container so touch/trackpad horizontal scrolling remains interactive. */
   .appointments-v40 .advanced-week-view,
   .appointments-v40 .advanced-month-grid,
   .appointments-v40 .provider-day-view{
     width:100%!important;
     max-width:100%!important;
+    min-width:0!important;
     overflow-x:auto!important;
     overflow-y:visible!important;
     -webkit-overflow-scrolling:touch!important;
     overscroll-behavior-x:contain!important;
+    touch-action:pan-x pan-y!important;
+    scrollbar-width:thin!important;
   }
   .appointments-v40 .advanced-week-view{
     grid-template-columns:48px repeat(7,84px)!important;
-    min-width:636px!important;
   }
   .appointments-v40 .advanced-month-grid{
     grid-template-columns:repeat(7,84px)!important;
-    min-width:588px!important;
   }
-  .appointments-v40 .provider-day-view{min-width:560px!important}
+  .appointments-v40 .provider-day-view{
+    min-width:0!important;
+  }
 }
 @media(max-width:430px){
   .appointments-v40 .sa-appointments-calendar-shell{padding:6px!important}
