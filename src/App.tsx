@@ -14,6 +14,7 @@ import { PatientDocumentLinkInterceptor } from './features/patientPortal/Patient
 import { hydratePatientPortalFromDatabase } from './features/patientPortal/patientPortalHydration'
 import { loadServicesFromSupabase } from './features/services/serviceStore'
 import { syncSupabaseToLocalStorage } from './lib/supabaseSync'
+import './styles/adaptive-pagination.css'
 
 const PATIENT_PORTAL_CACHE_KEYS = [
   'plamenco.appointments',
