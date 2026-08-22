@@ -55,14 +55,47 @@ function sleep(ms: number) {
   return new Promise((resolve) => window.setTimeout(resolve, ms))
 }
 
+const LEGACY_GENERATED_ID_PATTERN = /^[a-z][a-z0-9-]*-\d{10,}-[a-z0-9]+$/i
+
+function deterministicUuid(value: string) {
+  let h1 = 0xdeadbeef ^ value.length
+  let h2 = 0x41c6ce57 ^ value.length
+  for (let index = 0; index < value.length; index += 1) {
+    const code = value.charCodeAt(index)
+    h1 = Math.imul(h1 ^ code, 2654435761)
+    h2 = Math.imul(h2 ^ code, 1597334677)
+  }
+  h1 = Math.imul(h1 ^ (h1 >>> 16), 2246822507) ^ Math.imul(h2 ^ (h2 >>> 13), 3266489909)
+  h2 = Math.imul(h2 ^ (h2 >>> 16), 2246822507) ^ Math.imul(h1 ^ (h1 >>> 13), 3266489909)
+  let seed = `${(h1 >>> 0).toString(16).padStart(8, '0')}${(h2 >>> 0).toString(16).padStart(8, '0')}`
+  let state = (h1 ^ h2) >>> 0
+  while (seed.length < 32) {
+    state ^= state << 13
+    state ^= state >>> 17
+    state ^= state << 5
+    seed += (state >>> 0).toString(16).padStart(8, '0')
+  }
+  const hex = seed.slice(0, 32).split('')
+  hex[12] = '4'
+  hex[16] = '8'
+  const normalized = hex.join('')
+  return `${normalized.slice(0, 8)}-${normalized.slice(8, 12)}-${normalized.slice(12, 16)}-${normalized.slice(16, 20)}-${normalized.slice(20, 32)}`
+}
+
+function persistenceIdCandidates(id: string) {
+  if (!LEGACY_GENERATED_ID_PATTERN.test(id)) return [id]
+  return [id, deterministicUuid(id)]
+}
+
 async function confirmRemote(table: string, id: string) {
   if (!isSupabaseConfigured || !supabase) return
 
+  const candidates = persistenceIdCandidates(id)
   let waitMs = 120
   for (let attempt = 0; attempt < 8; attempt += 1) {
-    const { data, error } = await supabase.from(table).select('id').eq('id', id).maybeSingle()
+    const { data, error } = await supabase.from(table).select('id').in('id', candidates).limit(1)
     if (error) throw new Error(`Database persistence failed: ${error.message}`)
-    if (data) return
+    if (Array.isArray(data) && data.length > 0) return
     if (attempt < 7) {
       await sleep(waitMs)
       waitMs = Math.min(Math.round(waitMs * 1.6), 700)
