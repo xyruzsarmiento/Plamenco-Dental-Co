@@ -6,6 +6,7 @@ import { ModalAccessibilityManager } from './components/ui/ModalAccessibilityMan
 import { useAuth } from './features/auth/AuthContext'
 import { AuthProvider } from './features/auth/AuthProvider'
 import { loadBranchesFromSupabase } from './features/branches/branchStore'
+import { loadPatientVisibleDentalRecords } from './features/dentalRecords/patientVisibleDentalRecordPersistence'
 import { loadProviderFoundationFromSupabase } from './features/dentists/dentistStore'
 import { loadPatientsFromSupabase } from './features/patients/patientPersistence'
 import { OfflineStatusBanner } from './features/patientPortal/OfflineStatusBanner'
@@ -13,7 +14,7 @@ import { loadServicesFromSupabase } from './features/services/serviceStore'
 import { syncSupabaseToLocalStorage } from './lib/supabaseSync'
 
 function DataBootstrap({ children }: { children: React.ReactNode }) {
-  const { isAuthenticated, isLoading } = useAuth()
+  const { isAuthenticated, isLoading, user } = useAuth()
   const [ready, setReady] = useState(false)
 
   useEffect(() => {
@@ -28,22 +29,35 @@ function DataBootstrap({ children }: { children: React.ReactNode }) {
 
     setReady(false)
 
-    // Only block on the small set of records required to render clinic pages
-    // correctly. The broad operational cache hydration is intentionally moved
-    // to the background so a large Supabase workspace cannot hold the whole UI
-    // behind a full-screen loading state.
-    void Promise.allSettled([
+    const essentialLoads: Promise<unknown>[] = [
       loadBranchesFromSupabase({ strict: false }),
       loadProviderFoundationFromSupabase({ strict: false }),
       loadPatientsFromSupabase({ strict: false }),
       loadServicesFromSupabase({ strict: false }),
-    ]).finally(() => {
+    ]
+
+    // Patient sessions must never hydrate raw dental_records rows. The dedicated
+    // RPC returns only finalized/amended patient-visible summaries and blanks
+    // internal clinical fields before the portal renders.
+    if (user?.role === 'patient') {
+      essentialLoads.push(loadPatientVisibleDentalRecords())
+    }
+
+    void Promise.allSettled(essentialLoads).finally(() => {
       if (!active) return
       setReady(true)
       backgroundTimer = window.setTimeout(() => {
-        void syncSupabaseToLocalStorage().catch((error) => {
-          console.error('[background clinic sync failed]', error)
-        })
+        void syncSupabaseToLocalStorage()
+          .then(async () => {
+            // Broad cache hydration cannot read raw clinical rows for patients
+            // after the RLS hardening. Restore the sanitized cache after sync.
+            if (user?.role === 'patient') {
+              await loadPatientVisibleDentalRecords()
+            }
+          })
+          .catch((error) => {
+            console.error('[background clinic sync failed]', error)
+          })
       }, 0)
     })
 
@@ -51,7 +65,7 @@ function DataBootstrap({ children }: { children: React.ReactNode }) {
       active = false
       if (backgroundTimer !== undefined) window.clearTimeout(backgroundTimer)
     }
-  }, [isAuthenticated, isLoading])
+  }, [isAuthenticated, isLoading, user?.role])
 
   if (isLoading || !ready) {
     return (
