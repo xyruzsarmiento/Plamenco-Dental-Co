@@ -2,7 +2,8 @@ import type { Patient } from '../patients/patientTypes'
 import { getStoredPatients } from '../patients/patientStore'
 import { recordAuditEntry } from '../security/auditLogStore'
 import { getCurrentSessionUserName } from '../security/security'
-import { insertRemoteTableRow, updateRemoteTableRow } from '../../lib/supabaseSync'
+import { insertRemoteTableRow } from '../../lib/supabaseSync'
+import { supabase } from '../../lib/supabase'
 import { createUuid } from '../../lib/id'
 import type { ClinicalRecordAmendment, ClinicalRecordAmendmentFormValues, DentalRecord, DentalRecordFormValues } from './dentalRecordTypes'
 import type { Appointment } from '../appointments/appointmentTypes'
@@ -29,6 +30,10 @@ function resolvePatient(patientRef: string) {
 
 function patientDatabaseId(patientRef: string) {
   return resolvePatient(patientRef)?.id ?? patientRef
+}
+
+function patientReferenceFromDatabaseId(patientId: string) {
+  return getStoredPatients().find((patient) => patient.id === patientId)?.patientId ?? patientId
 }
 
 function patientRefs(patientRef: string) {
@@ -102,6 +107,53 @@ function remoteRecordRow(record: DentalRecord) {
   }
 }
 
+function mapSupabaseDentalRecordRow(row: Record<string, any>): DentalRecord {
+  return normalizeDentalRecord({
+    id: String(row.id),
+    patientId: patientReferenceFromDatabaseId(String(row.patient_id ?? '')),
+    recordDate: row.record_date ?? '',
+    visitType: row.visit_type ?? 'consultation',
+    appointmentNumber: row.appointment_number ?? undefined,
+    branchId: row.branch_id ?? undefined,
+    providerId: row.provider_id ?? undefined,
+    providerNameSnapshot: row.provider_name_snapshot ?? undefined,
+    chiefComplaint: row.chief_complaint ?? '',
+    clinicalFindings: row.clinical_findings ?? '',
+    assessment: row.assessment ?? '',
+    treatmentPerformed: row.treatment_performed ?? '',
+    recommendations: row.recommendations ?? '',
+    patientVisibleSummary: row.patient_visible_summary ?? '',
+    diagnosis: row.diagnosis ?? '',
+    treatmentPlan: row.treatment_plan ?? '',
+    findings: row.findings ?? '',
+    treatmentNotes: row.treatment_notes ?? '',
+    clinicalNotes: row.clinical_notes ?? '',
+    followUpRequired: Boolean(row.follow_up_required),
+    followUpDate: row.follow_up_date ?? '',
+    followUpNotes: row.follow_up_notes ?? '',
+    status: row.status ?? 'draft',
+    relatedAppointmentId: row.related_appointment_id ?? undefined,
+    source: row.source ?? 'native',
+    historicalProviderText: row.historical_provider_text ?? undefined,
+    finalizedAt: row.finalized_at ?? undefined,
+    finalizedBy: row.finalized_by ?? undefined,
+    lastUpdatedBy: row.last_updated_by ?? row.created_by ?? '',
+    createdBy: row.created_by ?? '',
+    createdAt: row.created_at ?? new Date().toISOString(),
+    updatedAt: row.updated_at ?? row.created_at ?? new Date().toISOString(),
+  })
+}
+
+function replaceCachedDentalRecord(confirmed: DentalRecord) {
+  const records = getStoredDentalRecords().filter((record) => record.id !== confirmed.id)
+  saveStoredDentalRecords([confirmed, ...records])
+}
+
+function persistenceError(message: string, cause?: { message?: string } | null) {
+  if (import.meta.env.DEV && cause?.message) console.error('[dental record persistence]', cause)
+  return new Error(message)
+}
+
 export function getStoredDentalRecords(): DentalRecord[] {
   const stored = safeParseDentalRecords(window.localStorage.getItem(DENTAL_RECORD_STORAGE_KEY))
   if (stored?.length) return stored.map(normalizeDentalRecord)
@@ -120,10 +172,11 @@ export function getDentalRecordsByPatientId(patientId: string): DentalRecord[] {
     .sort((a, b) => new Date(b.recordDate).getTime() - new Date(a.recordDate).getTime())
 }
 
-export function createDentalRecord(values: DentalRecordFormValues): DentalRecord {
-  const records = getStoredDentalRecords()
+export async function createDentalRecord(values: DentalRecordFormValues): Promise<DentalRecord> {
+  if (!supabase) throw new Error('Clinic database is not configured. Clinical records cannot be saved safely.')
+
   const now = new Date().toISOString()
-  const record: DentalRecord = {
+  const draft: DentalRecord = {
     id: createUuid(),
     ...values,
     followUpDate: values.followUpDate ?? '',
@@ -131,55 +184,74 @@ export function createDentalRecord(values: DentalRecordFormValues): DentalRecord
     createdAt: now,
     updatedAt: now,
   }
-  records.push(record)
-  saveStoredDentalRecords(records)
-  void insertRemoteTableRow('dental_records', remoteRecordRow(record))
+  const row = remoteRecordRow(draft) as Record<string, unknown>
+  delete row.id
+
+  const { data, error } = await supabase.from('dental_records').insert(row).select('*').single()
+  if (error || !data) throw persistenceError('Clinical record could not be saved. Your changes were not submitted.', error)
+
+  const confirmed = mapSupabaseDentalRecordRow(data as Record<string, any>)
+  replaceCachedDentalRecord(confirmed)
   recordAuditEntry({
     user: getCurrentSessionUserName(),
     action: 'clinical_record_created',
     entity: 'dental_record',
-    entityId: record.patientId,
-    metadata: { patientId: record.patientId, recordId: record.id, visitType: record.visitType },
+    entityId: confirmed.patientId,
+    metadata: { patientId: confirmed.patientId, recordId: confirmed.id, visitType: confirmed.visitType },
   })
-  return record
+  return confirmed
 }
 
-export function updateDentalRecord(id: string, values: DentalRecordFormValues): DentalRecord | null {
-  const records = getStoredDentalRecords()
-  const index = records.findIndex((record) => record.id === id)
-  if (index === -1) return null
-  if (records[index].status === 'finalized' || records[index].status === 'amended') return null
+export async function updateDentalRecord(id: string, values: DentalRecordFormValues): Promise<DentalRecord> {
+  if (!supabase) throw new Error('Clinic database is not configured. Clinical records cannot be saved safely.')
 
-  const updated: DentalRecord = {
-    ...records[index],
+  const current = getStoredDentalRecords().find((record) => record.id === id)
+  if (!current) throw new Error('Clinical record was not found.')
+  if (current.status !== 'draft') throw new Error('Only draft clinical records can be edited.')
+
+  const candidate: DentalRecord = {
+    ...current,
     ...values,
+    id: current.id,
+    patientId: current.patientId,
+    createdBy: current.createdBy,
     relatedAppointmentId: values.relatedAppointmentId || undefined,
-    updatedAt: new Date().toISOString(),
+    updatedAt: current.updatedAt,
   }
-  records[index] = updated
-  saveStoredDentalRecords(records)
+  const row = remoteRecordRow(candidate) as Record<string, unknown>
+  delete row.id
+  delete row.patient_id
+  delete row.created_by
+  delete row.status
 
-  const row = remoteRecordRow(updated)
-  delete (row as Record<string, unknown>).id
-  delete (row as Record<string, unknown>).patient_id
-  delete (row as Record<string, unknown>).created_by
-  void updateRemoteTableRow('dental_records', id, row)
+  const { data, error } = await supabase
+    .from('dental_records')
+    .update(row)
+    .eq('id', id)
+    .eq('status', 'draft')
+    .select('*')
+    .maybeSingle()
 
+  if (error) throw persistenceError('Clinical record could not be saved. Your changes were not submitted.', error)
+  if (!data) throw new Error('This clinical record is no longer editable. Refresh and try again.')
+
+  const confirmed = mapSupabaseDentalRecordRow(data as Record<string, any>)
+  replaceCachedDentalRecord(confirmed)
   recordAuditEntry({
     user: getCurrentSessionUserName(),
     action: 'clinical_record_draft_updated',
     entity: 'dental_record',
-    entityId: updated.patientId,
-    metadata: { patientId: updated.patientId, recordId: updated.id, visitType: updated.visitType },
+    entityId: confirmed.patientId,
+    metadata: { patientId: confirmed.patientId, recordId: confirmed.id, visitType: confirmed.visitType },
   })
-  return updated
+  return confirmed
 }
 
 export function getClinicalVisitByAppointment(appointmentId: string) {
   return getStoredDentalRecords().find((record) => record.relatedAppointmentId === appointmentId)
 }
 
-export function createClinicalVisitFromAppointment(appointment: Appointment, actor: string): DentalRecord {
+export async function createClinicalVisitFromAppointment(appointment: Appointment, actor: string): Promise<DentalRecord> {
   const existing = getClinicalVisitByAppointment(appointment.id)
   if (existing) return existing
   const provider = getStoredProviders().find((entry) => entry.id === appointment.providerId)
@@ -216,35 +288,35 @@ export function createClinicalVisitFromAppointment(appointment: Appointment, act
   })
 }
 
-export function finalizeDentalRecord(id: string, actor: string): DentalRecord | null {
-  const records = getStoredDentalRecords()
-  const index = records.findIndex((record) => record.id === id)
-  if (index === -1 || records[index].status !== 'draft') return null
-  const now = new Date().toISOString()
-  const updated: DentalRecord = {
-    ...records[index],
-    status: 'finalized',
-    finalizedAt: now,
-    finalizedBy: actor,
-    lastUpdatedBy: actor,
-    updatedAt: now,
-  }
-  records[index] = updated
-  saveStoredDentalRecords(records)
-  void updateRemoteTableRow('dental_records', id, {
-    status: updated.status,
-    finalized_at: updated.finalizedAt,
-    finalized_by: updated.finalizedBy,
-    last_updated_by: actor,
-  })
+export async function finalizeDentalRecord(id: string, actor: string): Promise<DentalRecord> {
+  if (!supabase) throw new Error('Clinic database is not configured. Clinical records cannot be finalized safely.')
+
+  const { data, error } = await supabase
+    .from('dental_records')
+    .update({
+      status: 'finalized',
+      finalized_at: new Date().toISOString(),
+      finalized_by: actor,
+      last_updated_by: actor,
+    })
+    .eq('id', id)
+    .eq('status', 'draft')
+    .select('*')
+    .maybeSingle()
+
+  if (error) throw persistenceError('Clinical record could not be finalized.', error)
+  if (!data) throw new Error('This clinical record was already finalized or changed. Refresh before trying again.')
+
+  const confirmed = mapSupabaseDentalRecordRow(data as Record<string, any>)
+  replaceCachedDentalRecord(confirmed)
   recordAuditEntry({
     user: actor,
     action: 'clinical_record_finalized',
     entity: 'dental_record',
-    entityId: updated.id,
-    metadata: { patientId: updated.patientId, providerId: updated.providerId },
+    entityId: confirmed.id,
+    metadata: { patientId: confirmed.patientId, providerId: confirmed.providerId },
   })
-  return updated
+  return confirmed
 }
 
 function safeParseAmendments(value: string | null): ClinicalRecordAmendment[] {
