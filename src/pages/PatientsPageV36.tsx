@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { ArrowRight, CalendarDays, Import, Mail, Phone, Plus, Search, UserRound, UsersRound } from 'lucide-react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { Button } from '../components/ui/Button'
@@ -9,13 +9,12 @@ import { getStoredAppointments } from '../features/appointments/appointmentStore
 import { getStoredBranches } from '../features/branches/branchStore'
 import { getTreatmentsByPatient } from '../features/treatments/treatmentStore'
 import {
-  createPatient,
   findPotentialPatientDuplicates,
   filterPatients,
   getPatientDisplayName,
   getStoredPatients,
-  searchPatients,
 } from '../features/patients/patientStore'
+import { createPatientPersisted, loadPatientsFromSupabase } from '../features/patients/patientPersistence'
 import type { Patient, PatientFormValues, PatientOrigin } from '../features/patients/patientTypes'
 import { PatientsPageV10 } from './PatientsPageV10'
 
@@ -134,6 +133,8 @@ export function PatientsPageV36() {
   const [formError, setFormError] = useState<string | null>(null)
   const [duplicateMatches, setDuplicateMatches] = useState<ReturnType<typeof findPotentialPatientDuplicates>>([])
   const [allowDuplicate, setAllowDuplicate] = useState(false)
+  const [isSaving, setIsSaving] = useState(false)
+  const [loadError, setLoadError] = useState<string | null>(null)
 
   const branches = useMemo(() => getStoredBranches(), [])
   const appointments = useMemo(() => getStoredAppointments(), [patients])
@@ -141,6 +142,21 @@ export function PatientsPageV36() {
   const branchMap = useMemo(() => new Map(branches.map((branch) => [branch.id, branch.name])), [branches])
   const canCreate = permissions.can('patients.create')
   const canImport = permissions.can('patients.import')
+
+  useEffect(() => {
+    let active = true
+    void loadPatientsFromSupabase({ strict: true })
+      .then((rows) => {
+        if (!active) return
+        setPatients(rows)
+        setLoadError(null)
+      })
+      .catch((cause) => {
+        if (!active) return
+        setLoadError(cause instanceof Error ? cause.message : 'Unable to load patient records from Supabase.')
+      })
+    return () => { active = false }
+  }, [])
 
   const metrics = useMemo(() => {
     const cutoff = new Date()
@@ -157,7 +173,10 @@ export function PatientsPageV36() {
   }, [appointments, patients, today])
 
   const filteredPatients = useMemo(() => {
-    let rows = query.trim() ? searchPatients(query) : patients
+    const lower = query.trim().toLowerCase()
+    let rows = lower
+      ? patients.filter((patient) => `${patient.firstName} ${patient.middleName} ${patient.lastName} ${patient.patientId} ${patient.phone} ${patient.email}`.toLowerCase().includes(lower))
+      : patients
     rows = filterPatients(rows, { status: statusFilter === 'all' ? undefined : statusFilter })
     if (branchFilter !== 'all') rows = rows.filter((patient) => patient.preferredBranchId === branchFilter)
     if (originFilter !== 'all') rows = rows.filter((patient) => (patient.origin ?? 'staff_created') === originFilter)
@@ -182,25 +201,36 @@ export function PatientsPageV36() {
     setShowForm(true)
   }
 
-  function savePatient() {
+  async function savePatient() {
+    if (isSaving) return
     if (!formValues.firstName.trim() || !formValues.lastName.trim() || !formValues.dateOfBirth || !formValues.phone.trim()) {
       setFormError('First name, last name, date of birth, and phone are required.')
       return
     }
     if (!allowDuplicate) {
-      const matches = findPotentialPatientDuplicates(formValues)
+      const matches = findPotentialPatientDuplicates(formValues, patients)
       if (matches.length) {
         setDuplicateMatches(matches)
         setFormError('Possible existing patient found. Review before creating another record.')
         return
       }
     }
-    createPatient(formValues)
-    setPatients(getStoredPatients())
-    setShowForm(false)
+
+    setIsSaving(true)
     setFormError(null)
-    setDuplicateMatches([])
-    setAllowDuplicate(false)
+    try {
+      await createPatientPersisted(formValues)
+      const rows = await loadPatientsFromSupabase({ strict: true })
+      setPatients(rows)
+      setShowForm(false)
+      setDuplicateMatches([])
+      setAllowDuplicate(false)
+      setLoadError(null)
+    } catch (cause) {
+      setFormError(cause instanceof Error ? cause.message : 'Patient could not be saved to Supabase.')
+    } finally {
+      setIsSaving(false)
+    }
   }
 
   const noFilters = !query.trim() && statusFilter === 'all' && branchFilter === 'all' && originFilter === 'all'
@@ -211,6 +241,8 @@ export function PatientsPageV36() {
         <div className="patients36-hero-copy"><span>PATIENT INTELLIGENCE</span><h1>Patient Records</h1><p>Search, review and manage the clinic's patient population from one workspace.</p></div>
         <div className="patients36-hero-actions">{canImport && <Button variant="secondary" onClick={() => setShowImport(true)}><Import size={16} />Import</Button>}{canCreate && <Button onClick={openAdd}><Plus size={16} />Add patient</Button>}</div>
       </header>
+
+      {loadError && <div className="tp13-error" role="alert">{loadError}</div>}
 
       <div className="patients36-insight-grid">
         <div className="patients36-kpis">
@@ -251,8 +283,8 @@ export function PatientsPageV36() {
         </div>
       </section>
 
-      {showForm && <PatientFormModal error={formError} mode="add" values={formValues} onChange={setFormValues} onClose={() => setShowForm(false)} onSubmit={savePatient} duplicateMatches={duplicateMatches} onOpenDuplicate={(patientId) => { setShowForm(false); navigate(`/app/patients/${encodeURIComponent(patientId)}`) }} onContinueDuplicate={() => { setAllowDuplicate(true); setDuplicateMatches([]); setFormError(null) }} />}
-      {showImport && <PatientImportModal onClose={() => setShowImport(false)} onImported={() => setPatients(getStoredPatients())} />}
+      {showForm && <PatientFormModal error={formError ?? (isSaving ? 'Saving patient to clinic database…' : null)} mode="add" values={formValues} onChange={setFormValues} onClose={() => { if (!isSaving) setShowForm(false) }} onSubmit={() => void savePatient()} duplicateMatches={duplicateMatches} onOpenDuplicate={(patientId) => { setShowForm(false); navigate(`/app/patients/${encodeURIComponent(patientId)}`) }} onContinueDuplicate={() => { setAllowDuplicate(true); setDuplicateMatches([]); setFormError(null) }} />}
+      {showImport && <PatientImportModal onClose={() => setShowImport(false)} onImported={() => { void loadPatientsFromSupabase({ strict: true }).then(setPatients).catch((cause) => setLoadError(cause instanceof Error ? cause.message : 'Unable to refresh patients.')) }} />}
     </section>
   )
 }
