@@ -113,6 +113,7 @@ import './styles/appointments-modern-v79.css'
 import './styles/super-admin-treatment-plans-v80.css'
 import './styles/payment-confirmation-premium-v81.css'
 import './styles/premium-actions-modals-calendar-v82.css'
+import './styles/premium-action-responsiveness-v83.css'
 import App from './App.tsx'
 import { registerPatientPortalPwa } from './features/patientPortal/pwaRegistration'
 
