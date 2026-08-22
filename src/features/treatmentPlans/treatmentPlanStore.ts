@@ -85,7 +85,7 @@ function requireSupabase() {
 
 async function resolvePatientDbId(patientId: string) {
   const client = requireSupabase()
-  const { data, error } = await client.from('patients').select('id').eq('patient_id', patientId).maybeSingle()
+  const { data, error } = await client.from('patients').select('id,patient_id').or(`patient_id.eq.${patientId},id.eq.${patientId}`).maybeSingle()
   if (error) throw error
   if (!data?.id) throw new Error('Patient record could not be resolved.')
   return String(data.id)
@@ -146,20 +146,12 @@ function mapPlan(row: Record<string, any>, patientPublicId: string, items: Treat
 export async function getTreatmentPlansByPatientId(patientId: string): Promise<TreatmentPlan[]> {
   const client = requireSupabase()
   const patientDbId = await resolvePatientDbId(patientId)
-  const { data: plans, error } = await client
-    .from('treatment_plans')
-    .select('*')
-    .eq('patient_id', patientDbId)
-    .order('created_at', { ascending: false })
+  const { data: plans, error } = await client.from('treatment_plans').select('*').eq('patient_id', patientDbId).order('created_at', { ascending: false })
   if (error) throw error
   if (!plans?.length) return []
 
   const ids = plans.map((plan) => plan.id)
-  const { data: items, error: itemsError } = await client
-    .from('treatment_plan_items')
-    .select('*')
-    .in('plan_id', ids)
-    .order('sort_order', { ascending: true })
+  const { data: items, error: itemsError } = await client.from('treatment_plan_items').select('*').in('plan_id', ids).order('sort_order', { ascending: true })
   if (itemsError) throw itemsError
 
   const grouped = new Map<string, TreatmentPlanItem[]>()
@@ -167,7 +159,6 @@ export async function getTreatmentPlansByPatientId(patientId: string): Promise<T
     const mapped = mapItem(row)
     grouped.set(mapped.planId, [...(grouped.get(mapped.planId) ?? []), mapped])
   }
-
   return plans.map((plan) => mapPlan(plan, patientId, grouped.get(plan.id) ?? []))
 }
 
@@ -179,7 +170,7 @@ export async function createTreatmentPlan(input: CreateTreatmentPlanInput): Prom
   const pricedItems = input.items.map((item) => {
     const catalogueService = getServiceById(item.serviceId)
     const catalogueCents = catalogueService ? servicePriceToCents(catalogueService.price) : item.catalogPriceSnapshotCents
-    const quotedCents = catalogueService ? servicePriceToCents(catalogueService.price) : item.quotedPriceCents
+    const quotedCents = item.quotedPriceCents ?? catalogueCents
     return {
       ...item,
       serviceNameSnapshot: catalogueService?.name ?? item.serviceNameSnapshot,
@@ -189,42 +180,33 @@ export async function createTreatmentPlan(input: CreateTreatmentPlanInput): Prom
     }
   })
 
-  const invalidPrice = pricedItems.some((item) => item.quotedPriceCents == null || item.quotedPriceCents < 0)
-  if (invalidPrice) throw new Error('Every quoted item must have a configured price before the plan can be saved.')
+  const invalidPrice = pricedItems.some((item) => item.quotedPriceCents == null || !Number.isFinite(Number(item.quotedPriceCents)) || Number(item.quotedPriceCents) < 0)
+  if (invalidPrice) throw new Error('Every quoted item must have a valid configured price before the plan can be saved.')
 
   const subtotal = pricedItems.reduce((sum, item) => sum + Number(item.quotedPriceCents ?? 0) * Math.max(1, Number(item.quantity ?? 1)), 0)
-  const { data: plan, error } = await client
-    .from('treatment_plans')
-    .insert({
-      patient_id: patientDbId,
-      name: input.name.trim() || 'Treatment Plan',
-      description: input.description?.trim() ?? '',
-      treatments: [],
-      overall_cost: subtotal / 100,
-      amount_paid: 0,
-      status: 'draft',
-      branch_id: input.branchId ?? null,
-      provider_id: input.providerId ?? null,
-      provider_name_snapshot: input.providerNameSnapshot ?? '',
-      clinical_visit_id: input.clinicalVisitId ?? null,
-      version_number: 1,
-      patient_notes: input.patientNotes?.trim() ?? '',
-      internal_notes: input.internalNotes?.trim() ?? '',
-      quoted_subtotal_cents: subtotal,
-      discount_cents: 0,
-      quoted_total_cents: subtotal,
-    })
-    .select('*')
-    .single()
+  const { data: plan, error } = await client.from('treatment_plans').insert({
+    patient_id: patientDbId,
+    name: input.name.trim() || 'Treatment Plan',
+    description: input.description?.trim() ?? '',
+    treatments: [],
+    overall_cost: subtotal / 100,
+    amount_paid: 0,
+    status: 'draft',
+    branch_id: input.branchId ?? null,
+    provider_id: input.providerId ?? null,
+    provider_name_snapshot: input.providerNameSnapshot ?? '',
+    clinical_visit_id: input.clinicalVisitId ?? null,
+    version_number: 1,
+    patient_notes: input.patientNotes?.trim() ?? '',
+    internal_notes: input.internalNotes?.trim() ?? '',
+    quoted_subtotal_cents: subtotal,
+    discount_cents: 0,
+    quoted_total_cents: subtotal,
+  }).select('*').single()
   if (error) throw error
 
   const planNumber = `TP-${String(plan.id).replace(/-/g, '').slice(0, 8).toUpperCase()}`
-  const { data: numberedPlan, error: numberError } = await client
-    .from('treatment_plans')
-    .update({ plan_number: planNumber })
-    .eq('id', plan.id)
-    .select('*')
-    .single()
+  const { data: numberedPlan, error: numberError } = await client.from('treatment_plans').update({ plan_number: planNumber }).eq('id', plan.id).select('*').single()
   if (numberError) throw numberError
 
   const itemRows = pricedItems.map((item, index) => ({
@@ -261,13 +243,7 @@ export async function presentTreatmentPlan(planId: string) {
   const client = requireSupabase()
   const now = new Date().toISOString()
   const { data: authData } = await client.auth.getUser()
-  const { data, error } = await client
-    .from('treatment_plans')
-    .update({ status: 'presented', presented_at: now, presented_by: authData.user?.id ?? null })
-    .eq('id', planId)
-    .eq('status', 'draft')
-    .select('id,status,presented_at')
-    .single()
+  const { data, error } = await client.from('treatment_plans').update({ status: 'presented', presented_at: now, presented_by: authData.user?.id ?? null }).eq('id', planId).eq('status', 'draft').select('id,status,presented_at').single()
   if (error) throw error
   await client.from('treatment_plan_events').insert({
     plan_id: planId,
