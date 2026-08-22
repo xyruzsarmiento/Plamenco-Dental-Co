@@ -27,6 +27,11 @@ function prettyDate(value?: string) {
   return Number.isNaN(parsed.getTime()) ? value : parsed.toLocaleDateString('en-PH', { month: 'long', day: 'numeric', year: 'numeric', timeZone: 'Asia/Manila' })
 }
 
+function paymentMethodLabel(payment: ReturnType<typeof getPaymentsByPatient>[number]) {
+  if (payment.gatewayProvider?.toLowerCase().includes('paymongo')) return 'QR Ph'
+  return payment.paymentMethod.replaceAll('_', ' ')
+}
+
 function createDetailModal(title: string, subtitle: string, bodyHtml: string, eyebrow = 'CARE DETAILS') {
   closeEnhancementModal()
   const backdrop = document.createElement('div')
@@ -77,6 +82,8 @@ function decoratePaymentRows(patientId: string) {
     row.tabIndex = 0
     row.setAttribute('role', 'button')
     row.setAttribute('aria-label', `View payment ${payment.paymentNumber}`)
+    const copy = row.querySelector<HTMLElement>('section p')
+    if (copy) copy.textContent = `${prettyDate(payment.date)} · ${paymentMethodLabel(payment)}`
     if (!row.querySelector('.pv4-row-arrow')) {
       const arrow = document.createElement('span')
       arrow.className = 'pv4-row-arrow'
@@ -91,7 +98,7 @@ function openPaymentReceipt(patientId: string, paymentId: string) {
   if (!payment) return
   const invoice = getInvoicesByPatient(patientId).find((entry) => entry.id === payment.invoiceId)
   const receipt = getReceiptsByPatient(patientId).find((entry) => entry.paymentId === payment.id)
-  const method = payment.paymentMethod === 'qrph' ? 'QR Ph' : payment.paymentMethod.replaceAll('_', ' ')
+  const method = paymentMethodLabel(payment)
   createDetailModal(
     receipt ? `Official Receipt ${receipt.receiptNumber}` : `Payment ${payment.paymentNumber}`,
     receipt ? 'Clinic-issued payment receipt' : 'Payment transaction details',
