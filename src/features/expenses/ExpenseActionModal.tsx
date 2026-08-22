@@ -5,16 +5,17 @@ import { Input } from '../../components/ui/Input'
 import { Select } from '../../components/ui/Select'
 import { Textarea } from '../../components/ui/Textarea'
 import { getStoredBranches } from '../branches/branchStore'
-import { getCurrentSessionUserName } from '../security/security'
-import { isSupabaseConfigured, supabase } from '../../lib/supabase'
 import {
-  createExpenseVendor,
-  createRecurringExpenseTemplate,
   getExpenseCategories,
   getExpenseVendors,
   type RecurringFrequency,
 } from './expenseStore'
-import { createExpensePersisted, recordPettyCashPersisted } from './expensePersistence'
+import {
+  createExpensePersisted,
+  createExpenseVendorPersisted,
+  createRecurringExpenseTemplatePersisted,
+  recordPettyCashPersisted,
+} from './expensePersistence'
 
 export type ExpenseDialogType = 'add_expense' | 'petty_cash' | 'add_vendor' | 'recurring'
 
@@ -31,18 +32,10 @@ function todayManila() {
   }).format(new Date())
 }
 
-async function confirmRemote(table: string, id: string) {
-  if (!isSupabaseConfigured || !supabase) throw new Error('Clinic database is not configured. This record cannot be saved safely.')
-  const { data, error } = await supabase.from(table).select('id').eq('id', id).maybeSingle()
-  if (error) throw new Error(`Database persistence failed: ${error.message}`)
-  if (!data) throw new Error('Database persistence could not be confirmed. The form remains open so you can retry safely.')
-}
-
 export function ExpenseActionModal({ type, preferredBranchId, onClose, onSuccess }: Props) {
   const branches = useMemo(() => getStoredBranches().filter((branch) => branch.status === 'active'), [])
   const categories = useMemo(() => getExpenseCategories().filter((category) => category.status === 'active'), [])
   const vendors = useMemo(() => getExpenseVendors().filter((vendor) => vendor.status === 'active'), [])
-  const actor = getCurrentSessionUserName() || 'Clinic user'
   const defaultBranch = preferredBranchId && preferredBranchId !== 'all' && preferredBranchId !== 'clinic_wide'
     ? preferredBranchId
     : branches[0]?.id ?? ''
@@ -103,8 +96,7 @@ export function ExpenseActionModal({ type, preferredBranchId, onClose, onSuccess
       if (type === 'add_vendor') {
         if (!vendorName.trim()) throw new Error('Vendor name is required.')
         if (email && !/^\S+@\S+\.\S+$/.test(email)) throw new Error('Enter a valid email address.')
-        const vendor = createExpenseVendor({ name: vendorName, contactPerson, phone, email, address, notes, status: 'active' })
-        await confirmRemote('expense_vendors', vendor.id)
+        const vendor = await createExpenseVendorPersisted({ name: vendorName.trim(), contactPerson, phone, email, address, notes })
         setSuccess(`Vendor ${vendor.name} saved.`)
       } else if (type === 'petty_cash') {
         if (!branchId) throw new Error('Branch is required for petty cash.')
@@ -127,21 +119,18 @@ export function ExpenseActionModal({ type, preferredBranchId, onClose, onSuccess
         if (!categoryId) throw new Error('Expense category is required.')
         if (!nextDueDate) throw new Error('Next due date is required.')
         const defaultAmountCents = amount.trim() ? validateMoney(amount, 'Default amount') : undefined
-        const template = createRecurringExpenseTemplate({
-          name: templateName,
+        const template = await createRecurringExpenseTemplatePersisted({
+          name: templateName.trim(),
           scope,
           branchId: scope === 'branch' ? branchId : undefined,
           categoryId,
           vendorId: vendorId || undefined,
-          payeeName,
+          payeeName: payeeName.trim(),
           frequency,
           defaultAmountCents,
           nextDueDate,
           autoCreate,
-          status: 'active',
-          createdBy: actor,
         })
-        await confirmRemote('expense_recurring_templates', template.id)
         setSuccess(`Recurring template ${template.name} saved.`)
       } else {
         if (scope === 'branch' && !branchId) throw new Error('Branch is required.')
