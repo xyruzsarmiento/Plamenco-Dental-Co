@@ -25,14 +25,16 @@ import type { Appointment, AppointmentFormValues, AppointmentStatus } from '../f
 import {
   addMinutesToTime,
   checkScheduleConflict,
-  createAppointment,
   getOperatories,
   getScheduleConflictDetail,
   getStoredAppointments,
   getAppointmentHistory,
   resendAppointmentCommunication,
-  transitionAppointmentStatus,
 } from '../features/appointments/appointmentStore'
+import {
+  createAppointmentPersisted,
+  transitionAppointmentStatusPersisted,
+} from '../features/appointments/appointmentPersistence'
 import { createClinicalVisitFromAppointment } from '../features/dentalRecords/dentalRecordStore'
 import type { DentalRecord } from '../features/dentalRecords/dentalRecordTypes'
 import { formatAppointmentTime, getAvailableAppointmentSlots, getEligibleProviders } from '../features/appointments/availabilityEngine'
@@ -233,6 +235,7 @@ export function AppointmentsPage() {
   const [operationReason, setOperationReason] = useState('')
   const [operationError, setOperationError] = useState<string | null>(null)
   const [clinicalRecord, setClinicalRecord] = useState<DentalRecord | null>(null)
+  const [isAppointmentSaving, setIsAppointmentSaving] = useState(false)
 
   const confirmedCount = appointments.filter((appointment) => appointment.status === 'confirmed').length
   const pendingCount = appointments.filter((appointment) => appointment.status === 'pending').length
@@ -366,7 +369,8 @@ export function AppointmentsPage() {
     }
   }
 
-  function handleSubmitForm() {
+  async function handleSubmitForm() {
+    if (isAppointmentSaving) return
     if (!formValues.patientId) {
       setFormError('Please select a patient')
       return
@@ -391,7 +395,6 @@ export function AppointmentsPage() {
       setFormError('Please select a time')
       return
     }
-
     if (conflictError) {
       setFormError('Cannot create appointment: ' + conflictError)
       return
@@ -411,63 +414,79 @@ export function AppointmentsPage() {
       return
     }
 
-    const result = createAppointment({
-      ...formValues,
-      endTime,
-      durationMinutes: selectedService?.duration,
-      estimatedAmountCents: selectedService?.price,
-      depositStatus: formValues.depositStatus ?? 'not_required',
-      depositRequiredCents: formValues.depositRequiredCents ?? 0,
-      depositPaidCents: formValues.depositPaidCents ?? 0,
-    }, user?.email ?? 'staff-entry')
-    if (!result) {
-      setFormError('Failed to create appointment. Time slot may be booked.')
-      return
-    }
-
-    setAppointments(getStoredAppointments())
-    setShowForm(false)
+    setIsAppointmentSaving(true)
     setFormError(null)
-    setConflictError(null)
-  }
-
-  function handleStatusChange(status: AppointmentStatus) {
-    if (!selectedAppointment) return
-
-    const result = transitionAppointmentStatus(selectedAppointment.id, status, {
-      actor: user?.email ?? 'clinic-user',
-      expectedUpdatedAt: selectedAppointment.updatedAt,
-    })
-    if (result.appointment) {
+    try {
+      await createAppointmentPersisted({
+        ...formValues,
+        endTime,
+        durationMinutes: selectedService?.duration,
+        estimatedAmountCents: undefined,
+        depositStatus: formValues.depositStatus ?? 'not_required',
+        depositRequiredCents: formValues.depositRequiredCents ?? 0,
+        depositPaidCents: formValues.depositPaidCents ?? 0,
+      }, user?.email ?? 'staff-entry')
       setAppointments(getStoredAppointments())
-      setSelectedAppointment(result.appointment)
-    } else if (result.error) {
-      alert(result.error)
+      setShowForm(false)
+      setConflictError(null)
+    } catch (cause) {
+      setFormError(cause instanceof Error ? cause.message : 'The appointment could not be saved.')
+    } finally {
+      setIsAppointmentSaving(false)
     }
   }
 
-  function handleApproveRequest(appointmentId: string) {
-    const appointment = appointments.find((entry) => entry.id === appointmentId)
-    if (!appointment) return
-    const result = transitionAppointmentStatus(appointmentId, 'confirmed', {
-      actor: user?.email ?? 'clinic-user',
-      expectedUpdatedAt: appointment.updatedAt,
-    })
-    if (result.appointment) {
+  async function handleStatusChange(status: AppointmentStatus) {
+    if (!selectedAppointment || isAppointmentSaving) return
+    setIsAppointmentSaving(true)
+    try {
+      const updated = await transitionAppointmentStatusPersisted(selectedAppointment.id, status, {
+        actor: user?.email ?? 'clinic-user',
+        expectedUpdatedAt: selectedAppointment.updatedAt,
+      })
       setAppointments(getStoredAppointments())
+      setSelectedAppointment(updated)
+    } catch (cause) {
+      alert(cause instanceof Error ? cause.message : 'The appointment status could not be changed.')
+    } finally {
+      setIsAppointmentSaving(false)
     }
   }
 
-  function handleDisapproveRequest(appointmentId: string) {
+  async function handleApproveRequest(appointmentId: string) {
+    if (isAppointmentSaving) return
     const appointment = appointments.find((entry) => entry.id === appointmentId)
     if (!appointment) return
-    const result = transitionAppointmentStatus(appointmentId, 'rejected', {
-      actor: user?.email ?? 'clinic-user',
-      expectedUpdatedAt: appointment.updatedAt,
-      reason: 'Rejected from appointment requests',
-    })
-    if (result.appointment) {
+    setIsAppointmentSaving(true)
+    try {
+      await transitionAppointmentStatusPersisted(appointmentId, 'confirmed', {
+        actor: user?.email ?? 'clinic-user',
+        expectedUpdatedAt: appointment.updatedAt,
+      })
       setAppointments(getStoredAppointments())
+    } catch (cause) {
+      setOperationError(cause instanceof Error ? cause.message : 'The request could not be approved.')
+    } finally {
+      setIsAppointmentSaving(false)
+    }
+  }
+
+  async function handleDisapproveRequest(appointmentId: string) {
+    if (isAppointmentSaving) return
+    const appointment = appointments.find((entry) => entry.id === appointmentId)
+    if (!appointment) return
+    setIsAppointmentSaving(true)
+    try {
+      await transitionAppointmentStatusPersisted(appointmentId, 'rejected', {
+        actor: user?.email ?? 'clinic-user',
+        expectedUpdatedAt: appointment.updatedAt,
+        reason: 'Rejected from appointment requests',
+      })
+      setAppointments(getStoredAppointments())
+    } catch (cause) {
+      setOperationError(cause instanceof Error ? cause.message : 'The request could not be rejected.')
+    } finally {
+      setIsAppointmentSaving(false)
     }
   }
 
@@ -477,28 +496,30 @@ export function AppointmentsPage() {
     setOperationError(null)
   }
 
-  function confirmOperationAction() {
-    if (!operationAction) return
+  async function confirmOperationAction() {
+    if (!operationAction || isAppointmentSaving) return
     if (operationAction.requiresReason && !operationReason.trim()) {
       setOperationError('Please enter a reason before continuing.')
       return
     }
 
-    const result = transitionAppointmentStatus(operationAction.appointment.id, operationAction.status, {
-      actor: user?.email ?? 'clinic-user',
-      reason: operationReason.trim(),
-      expectedUpdatedAt: operationAction.appointment.updatedAt,
-    })
-    if (result.error) {
-      setOperationError(result.error)
-      return
-    }
-
-    setAppointments(getStoredAppointments())
-    setSelectedAppointment(result.appointment ?? null)
-    setOperationAction(null)
-    setOperationReason('')
+    setIsAppointmentSaving(true)
     setOperationError(null)
+    try {
+      const updated = await transitionAppointmentStatusPersisted(operationAction.appointment.id, operationAction.status, {
+        actor: user?.email ?? 'clinic-user',
+        reason: operationReason.trim(),
+        expectedUpdatedAt: operationAction.appointment.updatedAt,
+      })
+      setAppointments(getStoredAppointments())
+      setSelectedAppointment(updated)
+      setOperationAction(null)
+      setOperationReason('')
+    } catch (cause) {
+      setOperationError(cause instanceof Error ? cause.message : 'The appointment could not be updated.')
+    } finally {
+      setIsAppointmentSaving(false)
+    }
   }
 
   function handleManualResend(appointment: Appointment, templateKey: CommunicationTemplateKey) {
@@ -516,9 +537,17 @@ export function AppointmentsPage() {
     setSelectedAppointment(getStoredAppointments().find((entry) => entry.id === appointment.id) ?? appointment)
   }
 
-  function openClinicalRecord(appointment: Appointment) {
-    const record = createClinicalVisitFromAppointment(appointment, user?.email ?? 'clinic-user')
-    setClinicalRecord(record)
+  async function openClinicalRecord(appointment: Appointment) {
+    if (isAppointmentSaving) return
+    setIsAppointmentSaving(true)
+    try {
+      const record = await createClinicalVisitFromAppointment(appointment, user?.email ?? 'clinic-user')
+      setClinicalRecord(record)
+    } catch (cause) {
+      alert(cause instanceof Error ? cause.message : 'The clinical record could not be opened.')
+    } finally {
+      setIsAppointmentSaving(false)
+    }
   }
 
   function formatCurrency(cents: number) {
@@ -538,6 +567,7 @@ export function AppointmentsPage() {
   }
 
   function handleCloseForm() {
+    if (isAppointmentSaving) return
     setShowForm(false)
     setFormError(null)
     setConflictError(null)
@@ -564,7 +594,7 @@ export function AppointmentsPage() {
             <span>{formatDate(today)}</span>
           </button>
           {permissions.can('appointments.create') && (
-            <Button icon={<Plus size={16} />} onClick={() => handleAddAppointment(today)}>
+            <Button icon={<Plus size={16} />} onClick={() => handleAddAppointment(today)} disabled={isAppointmentSaving}>
               New appointment
             </Button>
           )}
@@ -712,19 +742,19 @@ export function AppointmentsPage() {
                           <div className="operations-card-actions">
                             <button type="button" className="text-button" onClick={() => setSelectedAppointment(appointment)}>Details</button>
                             {appointment.status === 'confirmed' && permissions.can('appointments.check_in') && (
-                              <button type="button" className="text-button" onClick={() => openOperationAction(appointment, 'checked_in', 'Check In')}>Check In</button>
+                              <button type="button" className="text-button" disabled={isAppointmentSaving} onClick={() => openOperationAction(appointment, 'checked_in', 'Check In')}>Check In</button>
                             )}
                             {appointment.status === 'checked_in' && permissions.can('appointments.check_in') && (
-                              <button type="button" className="text-button" onClick={() => openOperationAction(appointment, 'waiting', 'Move to Waiting')}>Move to Waiting</button>
+                              <button type="button" className="text-button" disabled={isAppointmentSaving} onClick={() => openOperationAction(appointment, 'waiting', 'Move to Waiting')}>Move to Waiting</button>
                             )}
                             {appointment.status === 'waiting' && permissions.can('appointments.start') && (
-                              <button type="button" className="text-button" onClick={() => openOperationAction(appointment, 'in_progress', 'Start Visit')}>Start Visit</button>
+                              <button type="button" className="text-button" disabled={isAppointmentSaving} onClick={() => openOperationAction(appointment, 'in_progress', 'Start Visit')}>Start Visit</button>
                             )}
                             {appointment.status === 'in_progress' && permissions.can('appointments.complete') && (
-                              <button type="button" className="text-button" onClick={() => openOperationAction(appointment, 'completed', 'Complete Visit')}>Complete</button>
+                              <button type="button" className="text-button" disabled={isAppointmentSaving} onClick={() => openOperationAction(appointment, 'completed', 'Complete Visit')}>Complete</button>
                             )}
                             {appointment.status === 'confirmed' && permissions.can('appointments.mark_no_show') && (
-                              <button type="button" className="text-button" onClick={() => openOperationAction(appointment, 'no_show', 'Mark No Show', true)}>No Show</button>
+                              <button type="button" className="text-button" disabled={isAppointmentSaving} onClick={() => openOperationAction(appointment, 'no_show', 'Mark No Show', true)}>No Show</button>
                             )}
                           </div>
                         </article>
@@ -828,6 +858,7 @@ export function AppointmentsPage() {
             <div><span className="sa-appointments-kicker">Decision queue</span><h3>Appointment requests</h3><p>Review patient requests using their recorded branch, provider, service, and appointment details.</p></div>
             <span className="sa-appointments-request-count">{pendingRequests.length}</span>
           </div>
+          {operationError && <div className="inline-alert" role="alert">{operationError}</div>}
           {pendingRequests.length === 0 ? (
             <div className="empty-state-panel sa-appointments-empty-state">
               <Clock size={28} />
@@ -863,8 +894,8 @@ export function AppointmentsPage() {
                     {request.notes && <div className="request-notes"><span className="detail-label">Notes</span><p>{request.notes}</p></div>}
 
                     <div className="request-actions">
-                      <Button onClick={() => handleApproveRequest(request.id)} className="btn-success"><CheckCircle2 size={16} />Approve</Button>
-                      <Button variant="secondary" onClick={() => handleDisapproveRequest(request.id)} className="btn-danger"><XCircle size={16} />Disapprove</Button>
+                      <Button disabled={isAppointmentSaving} onClick={() => void handleApproveRequest(request.id)} className="btn-success"><CheckCircle2 size={16} />Approve</Button>
+                      <Button disabled={isAppointmentSaving} variant="secondary" onClick={() => void handleDisapproveRequest(request.id)} className="btn-danger"><XCircle size={16} />Disapprove</Button>
                     </div>
                   </article>
                 )
@@ -882,7 +913,7 @@ export function AppointmentsPage() {
           providers={formValues.branchId ? getEligibleProviders(formValues.branchId) : []}
           values={formValues}
           onChange={handleFormValueChange}
-          onSubmit={handleSubmitForm}
+          onSubmit={() => void handleSubmitForm()}
           onClose={handleCloseForm}
           error={formError}
           conflictError={conflictError}
@@ -900,11 +931,11 @@ export function AppointmentsPage() {
           history={getAppointmentHistory(selectedAppointment.id)}
           canManage={Boolean(user && user.role !== 'patient')}
           onClose={() => setSelectedAppointment(null)}
-          onStatusChange={handleStatusChange}
+          onStatusChange={(status) => void handleStatusChange(status)}
           onActionRequest={(appointment, status, label, requiresReason) => openOperationAction(appointment, status, label, requiresReason)}
           onManualResend={handleManualResend}
           onOpenPatientRecord={() => navigate('/app/patients')}
-          onOpenClinicalRecord={openClinicalRecord}
+          onOpenClinicalRecord={(appointment) => void openClinicalRecord(appointment)}
         />
       )}
 
@@ -933,18 +964,18 @@ export function AppointmentsPage() {
           <section className="modal operation-action-modal" role="dialog" aria-modal="true" aria-labelledby="operation-action-title">
             <div className="modal-header">
               <div><p className="eyebrow">Appointment operation</p><h2 id="operation-action-title">{operationAction.label}</h2></div>
-              <button className="icon-button" type="button" aria-label="Close operation" onClick={() => setOperationAction(null)}><XCircle size={18} /></button>
+              <button className="icon-button" type="button" aria-label="Close operation" disabled={isAppointmentSaving} onClick={() => setOperationAction(null)}><XCircle size={18} /></button>
             </div>
             <div className="operation-confirm-body">
               <strong>{patientMap.get(operationAction.appointment.patientId)?.firstName} {patientMap.get(operationAction.appointment.patientId)?.lastName}</strong>
               <span>{operationAction.appointment.appointmentNumber ?? operationAction.appointment.id}</span>
               <span>{formatDate(operationAction.appointment.date)} - {operationAction.appointment.startTime}</span>
-              <textarea value={operationReason} onChange={(event) => setOperationReason(event.target.value)} placeholder={operationAction.requiresReason ? 'Reason is required' : 'Optional note'} rows={4} />
+              <textarea disabled={isAppointmentSaving} value={operationReason} onChange={(event) => setOperationReason(event.target.value)} placeholder={operationAction.requiresReason ? 'Reason is required' : 'Optional note'} rows={4} />
               {operationError && <div className="inline-alert">{operationError}</div>}
             </div>
             <div className="modal-actions">
-              <Button variant="secondary" onClick={() => setOperationAction(null)}>Cancel</Button>
-              <Button onClick={confirmOperationAction}>Confirm</Button>
+              <Button variant="secondary" disabled={isAppointmentSaving} onClick={() => setOperationAction(null)}>Cancel</Button>
+              <Button disabled={isAppointmentSaving} onClick={() => void confirmOperationAction()}>{isAppointmentSaving ? 'Saving…' : 'Confirm'}</Button>
             </div>
           </section>
         </div>
