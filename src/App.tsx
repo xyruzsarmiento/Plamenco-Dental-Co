@@ -6,10 +6,10 @@ import { ModalAccessibilityManager } from './components/ui/ModalAccessibilityMan
 import { useAuth } from './features/auth/AuthContext'
 import { AuthProvider } from './features/auth/AuthProvider'
 import { loadBranchesFromSupabase } from './features/branches/branchStore'
-import { loadPatientVisibleDentalRecords } from './features/dentalRecords/patientVisibleDentalRecordPersistence'
 import { loadProviderFoundationFromSupabase } from './features/dentists/dentistStore'
 import { loadPatientsFromSupabase } from './features/patients/patientPersistence'
 import { OfflineStatusBanner } from './features/patientPortal/OfflineStatusBanner'
+import { hydratePatientPortalFromDatabase } from './features/patientPortal/patientPortalHydration'
 import { loadServicesFromSupabase } from './features/services/serviceStore'
 import { syncSupabaseToLocalStorage } from './lib/supabaseSync'
 
@@ -36,28 +36,22 @@ function DataBootstrap({ children }: { children: React.ReactNode }) {
       loadServicesFromSupabase({ strict: false }),
     ]
 
-    // Patient sessions must never hydrate raw dental_records rows. The dedicated
-    // RPC returns only finalized/amended patient-visible summaries and blanks
-    // internal clinical fields before the portal renders.
     if (user?.role === 'patient') {
-      essentialLoads.push(loadPatientVisibleDentalRecords())
+      essentialLoads.push(hydratePatientPortalFromDatabase())
     }
 
     void Promise.allSettled(essentialLoads).finally(() => {
       if (!active) return
       setReady(true)
+
+      // Patient sessions intentionally do not run the broad internal clinic sync.
+      // Their portal cache is hydrated only from patient-scoped/sanitized reads.
+      if (user?.role === 'patient') return
+
       backgroundTimer = window.setTimeout(() => {
-        void syncSupabaseToLocalStorage()
-          .then(async () => {
-            // Broad cache hydration cannot read raw clinical rows for patients
-            // after the RLS hardening. Restore the sanitized cache after sync.
-            if (user?.role === 'patient') {
-              await loadPatientVisibleDentalRecords()
-            }
-          })
-          .catch((error) => {
-            console.error('[background clinic sync failed]', error)
-          })
+        void syncSupabaseToLocalStorage().catch((error) => {
+          console.error('[background clinic sync failed]', error)
+        })
       }, 0)
     })
 
