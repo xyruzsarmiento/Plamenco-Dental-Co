@@ -1,3 +1,4 @@
+import '../styles/staff-super-admin-parity-v105.css'
 import { useAuth } from '../features/auth/AuthContext'
 import { SuperAdminOverviewV56 } from '../features/admin/SuperAdminOverviewV56'
 import { DentistTodayWorkspace } from '../features/dentalRecords/DentistTodayWorkspace'
