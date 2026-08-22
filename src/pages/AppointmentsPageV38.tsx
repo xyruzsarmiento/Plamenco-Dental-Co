@@ -8,6 +8,7 @@ import { getStoredBranches } from '../features/branches/branchStore'
 import { getStoredProviders } from '../features/dentists/dentistStore'
 import { getStoredPatients } from '../features/patients/patientStore'
 import { getStoredServices } from '../features/services/serviceStore'
+import '../styles/appointments-confirmation-v41.css'
 import { AppointmentsPage } from './AppointmentsPage'
 
 type AppointmentNotice = {
