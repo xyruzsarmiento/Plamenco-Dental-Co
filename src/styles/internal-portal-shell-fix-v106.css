@@ -1,3 +1,5 @@
+@import './staff-dentist-appointments-v107.css';
+
 /* V106 — shared internal shell geometry fix for Admin, Super Admin, Dentist and Staff. */
 
 /* The shell already owns the sidebar column. Do not offset the main workspace a second time. */
