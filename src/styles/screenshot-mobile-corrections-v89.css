@@ -1,0 +1,214 @@
+/* v89 — screenshot-verified mobile corrections */
+
+/* Expenses hero actions: at phone width every action gets its own row. This removes the Small Cash Purchase collision. */
+@media(max-width:560px){
+  .ex57-actions{
+    display:grid!important;
+    grid-template-columns:1fr!important;
+    width:100%!important;
+    gap:8px!important;
+  }
+  .ex57-actions .btn{
+    width:100%!important;
+    min-width:0!important;
+    max-width:none!important;
+    justify-content:center!important;
+    gap:10px!important;
+    padding-inline:14px!important;
+  }
+  .ex57-actions .btn>svg{position:static!important;transform:none!important;margin:0!important;flex:0 0 16px!important}
+  .ex57-actions .btn>span{min-width:0!important;white-space:normal!important;text-align:center!important;line-height:1.2!important}
+}
+
+/* Expense ledger cards: ensure card contents never rely on desktop row widths. */
+@media(max-width:820px){
+  .ex57-list-panel{width:100%!important;max-width:100%!important;min-width:0!important}
+  .ex57-list{width:100%!important;min-width:0!important}
+  .ex57-row{box-sizing:border-box!important;max-width:100%!important;overflow:hidden!important}
+  .ex57-row-main,.ex57-row-end{max-width:100%!important;min-width:0!important}
+  .ex57-row-end .badge,.ex57-row-end .btn{max-width:100%!important}
+}
+
+/* Calendar: keep the control header inside the viewport. Only the actual calendar grid scrolls horizontally. */
+@media(max-width:760px){
+  .appointments-v40 .sa-appointments-calendar-shell{
+    width:100%!important;
+    max-width:100%!important;
+    min-width:0!important;
+    overflow:hidden!important;
+  }
+  .appointments-v40 .advanced-calendar-container{
+    width:100%!important;
+    max-width:100%!important;
+    min-width:0!important;
+    overflow:hidden!important;
+    border-radius:14px!important;
+  }
+  .appointments-v40 .advanced-calendar-header{
+    position:relative!important;
+    left:auto!important;
+    width:100%!important;
+    max-width:100%!important;
+    min-width:0!important;
+    box-sizing:border-box!important;
+    display:grid!important;
+    grid-template-columns:1fr!important;
+    gap:7px!important;
+    padding:9px!important;
+    overflow:hidden!important;
+  }
+  .appointments-v40 .calendar-nav{
+    width:100%!important;
+    min-width:0!important;
+    display:grid!important;
+    grid-template-columns:32px minmax(0,1fr) 32px!important;
+    align-items:center!important;
+    gap:6px!important;
+  }
+  .appointments-v40 .advanced-calendar-header .icon-button{
+    width:32px!important;
+    height:32px!important;
+    min-width:32px!important;
+    padding:0!important;
+    border-radius:10px!important;
+  }
+  .appointments-v40 .calendar-title{min-width:0!important;text-align:center!important;overflow:hidden!important}
+  .appointments-v40 .calendar-title h3{
+    margin:0!important;
+    max-width:100%!important;
+    overflow:hidden!important;
+    text-overflow:ellipsis!important;
+    white-space:nowrap!important;
+    font-size:.78rem!important;
+    line-height:1.2!important;
+    letter-spacing:-.01em!important;
+  }
+  .appointments-v40 .calendar-actions{
+    width:100%!important;
+    min-width:0!important;
+    display:grid!important;
+    grid-template-columns:1fr 1fr!important;
+    gap:6px!important;
+  }
+  .appointments-v40 .calendar-actions>.btn{
+    width:100%!important;
+    min-width:0!important;
+    min-height:31px!important;
+    padding:0 8px!important;
+    font-size:.64rem!important;
+    border-radius:9px!important;
+  }
+  .appointments-v40 .view-toggle{
+    grid-column:1/-1!important;
+    width:100%!important;
+    min-width:0!important;
+    display:grid!important;
+    grid-template-columns:repeat(4,minmax(0,1fr))!important;
+    gap:3px!important;
+    padding:3px!important;
+    overflow:hidden!important;
+  }
+  .appointments-v40 .view-btn{
+    width:100%!important;
+    min-width:0!important;
+    min-height:29px!important;
+    padding:0 3px!important;
+    font-size:.6rem!important;
+    line-height:1!important;
+    border-radius:7px!important;
+  }
+  .appointments-v40 .advanced-week-view,
+  .appointments-v40 .advanced-month-grid,
+  .appointments-v40 .provider-day-view{
+    width:100%!important;
+    max-width:100%!important;
+    overflow-x:auto!important;
+    overflow-y:visible!important;
+    -webkit-overflow-scrolling:touch!important;
+    overscroll-behavior-x:contain!important;
+  }
+  .appointments-v40 .advanced-week-view{
+    grid-template-columns:48px repeat(7,84px)!important;
+    min-width:636px!important;
+  }
+  .appointments-v40 .advanced-month-grid{
+    grid-template-columns:repeat(7,84px)!important;
+    min-width:588px!important;
+  }
+  .appointments-v40 .provider-day-view{min-width:560px!important}
+}
+@media(max-width:430px){
+  .appointments-v40 .sa-appointments-calendar-shell{padding:6px!important}
+  .appointments-v40 .advanced-calendar-header{padding:7px!important;gap:6px!important}
+  .appointments-v40 .calendar-nav{grid-template-columns:30px minmax(0,1fr) 30px!important}
+  .appointments-v40 .advanced-calendar-header .icon-button{width:30px!important;height:30px!important;min-width:30px!important}
+  .appointments-v40 .calendar-title h3{font-size:.72rem!important}
+  .appointments-v40 .calendar-actions>.btn{min-height:29px!important;font-size:.61rem!important}
+  .appointments-v40 .view-btn{min-height:27px!important;font-size:.57rem!important}
+}
+
+/* Dental Record footer: screenshot showed stacked full-width actions. Keep two equal buttons centered in one row. */
+@media(max-width:680px){
+  .page-dental-records .modal.patient-modal .modal-actions{
+    display:grid!important;
+    grid-template-columns:repeat(2,minmax(0,1fr))!important;
+    align-items:center!important;
+    justify-content:center!important;
+    gap:9px!important;
+    width:auto!important;
+    margin:14px -14px 0!important;
+    padding:12px 14px 14px!important;
+  }
+  .page-dental-records .modal.patient-modal .modal-actions .btn{
+    width:100%!important;
+    min-width:0!important;
+    max-width:none!important;
+    margin:0!important;
+  }
+}
+
+/* Payment footer: amount summary stays centered above two equal-width actions. */
+@media(max-width:760px){
+  .pay14-footer{
+    display:grid!important;
+    grid-template-columns:1fr!important;
+    justify-items:stretch!important;
+    align-items:center!important;
+    gap:8px!important;
+    padding:11px 13px 13px!important;
+  }
+  .pay14-footer>div:first-child{width:100%!important;text-align:center!important}
+  .pay14-footer-actions{
+    width:100%!important;
+    display:grid!important;
+    grid-template-columns:repeat(2,minmax(0,1fr))!important;
+    gap:9px!important;
+    justify-content:stretch!important;
+  }
+  .pay14-footer-actions .btn{width:100%!important;min-width:0!important;max-width:none!important;margin:0!important}
+}
+
+/* Invoice footer: same mobile geometry as payment, fixing the off-position Cancel/Create pair. */
+@media(max-width:760px){
+  .inv32-footer{
+    display:grid!important;
+    grid-template-columns:1fr!important;
+    align-items:center!important;
+    gap:8px!important;
+    padding:11px 13px 13px!important;
+  }
+  .inv32-footer>div:first-child{width:100%!important;text-align:center!important}
+  .inv32-footer-actions{
+    width:100%!important;
+    display:grid!important;
+    grid-template-columns:repeat(2,minmax(0,1fr))!important;
+    gap:9px!important;
+    justify-content:stretch!important;
+  }
+  .inv32-footer-actions .btn{width:100%!important;min-width:0!important;max-width:none!important;margin:0!important}
+}
+
+/* Keep queue action readable even if older communication styles win specificity. */
+.communications-v24-reminder-action button.btn,
+.communications-v24-reminder-action button.btn span,
+.communications-v24-reminder-action button.btn svg{color:#fff!important;stroke:#fff!important}
