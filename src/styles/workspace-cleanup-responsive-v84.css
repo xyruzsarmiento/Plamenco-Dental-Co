@@ -1,0 +1,352 @@
+/* V84 — remove redundant scaffold headings, restore expense action icons, and harden Task / Work Queue responsiveness. */
+
+/* The active workspaces already contain their own contextual hero/command header. Hide the duplicate PageScaffold heading only on these pages. */
+.premium-page-scaffold:has(.tasks-v17) > .premium-page-header,
+.premium-page-scaffold:has(.recall-v18) > .premium-page-header,
+.premium-page-scaffold:has(.automation-v20) > .premium-page-header,
+.premium-page-scaffold:has(.communications-v24) > .premium-page-header,
+.premium-page-scaffold:has(.team-v26) > .premium-page-header,
+.premium-page-scaffold:has(.forms-v28) > .premium-page-header {
+  display:none!important;
+}
+
+.premium-page-scaffold:has(.tasks-v17),
+.premium-page-scaffold:has(.recall-v18),
+.premium-page-scaffold:has(.automation-v20),
+.premium-page-scaffold:has(.communications-v24),
+.premium-page-scaffold:has(.team-v26),
+.premium-page-scaffold:has(.forms-v28) {
+  gap:0!important;
+}
+
+/* Expense hero actions — icons are part of the buttons; force them visible even when older responsive rules hide button SVGs. */
+.ex57-page .ex57-actions .btn svg {
+  display:block!important;
+  visibility:visible!important;
+  opacity:1!important;
+  width:16px!important;
+  height:16px!important;
+  min-width:16px!important;
+  flex:0 0 16px!important;
+  stroke:currentColor!important;
+}
+.ex57-page .ex57-actions .btn {
+  display:inline-flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  gap:8px!important;
+}
+
+/* ---------- Task / Work Queue responsive hardening ---------- */
+.tasks-v17,
+.tasks-v17 * {
+  box-sizing:border-box;
+}
+.tasks-v17 {
+  width:100%;
+  max-width:100%;
+  min-width:0;
+  overflow-x:hidden;
+}
+.tasks-v17-hero,
+.tasks-v17-command,
+.tasks-v17-workspace,
+.tasks-v17-queue,
+.tasks-v17-detail,
+.tasks-v17-history-grid,
+.tasks-v17-detail-grid,
+.tasks-v17-action-card {
+  min-width:0;
+  max-width:100%;
+}
+.tasks-v17-hero {
+  align-items:center!important;
+}
+.tasks-v17-hero > div {
+  min-width:0;
+}
+.tasks-v17-hero h1,
+.tasks-v17-hero p,
+.tasks-v17-card h3,
+.tasks-v17-card p,
+.tasks-v17-detail-header h2,
+.tasks-v17-detail-header p,
+.tasks-v17-detail-grid strong,
+.tasks-v17-detail-grid span,
+.tasks-v17-history-card p,
+.tasks-v17-note-row p,
+.tasks-v17-timeline-row p {
+  overflow-wrap:anywhere;
+  word-break:break-word;
+}
+.tasks-v17-tabs {
+  width:100%;
+  max-width:100%;
+  overflow-x:auto!important;
+  overscroll-behavior-inline:contain;
+  scrollbar-width:thin;
+  -webkit-overflow-scrolling:touch;
+}
+.tasks-v17-tabs button {
+  flex:0 0 auto;
+}
+.tasks-v17-filters > label {
+  min-width:0;
+}
+.tasks-v17-filters input,
+.tasks-v17-filters select {
+  min-width:0!important;
+}
+.tasks-v17-card-meta,
+.tasks-v17-card-footer,
+.tasks-v17-detail-actions,
+.tasks-v17-action-grid {
+  min-width:0;
+}
+.tasks-v17-detail-actions > *,
+.tasks-v17-action-grid > * {
+  min-width:0;
+}
+.tasks-v17-source-link {
+  max-width:100%;
+  overflow-wrap:anywhere;
+}
+
+@media (max-width:1280px) {
+  .tasks-v17-workspace {
+    grid-template-columns:minmax(300px,.8fr) minmax(0,1.2fr)!important;
+  }
+  .tasks-v17-detail-grid {
+    grid-template-columns:repeat(2,minmax(0,1fr))!important;
+  }
+}
+
+@media (max-width:1100px) {
+  .tasks-v17-workspace {
+    grid-template-columns:1fr!important;
+  }
+  .tasks-v17-queue,
+  .tasks-v17-detail {
+    width:100%;
+  }
+  .tasks-v17-detail {
+    position:static!important;
+  }
+  .tasks-v17-metrics {
+    grid-template-columns:repeat(2,minmax(0,1fr))!important;
+  }
+  .tasks-v17-filters {
+    grid-template-columns:minmax(0,1.4fr) minmax(190px,.7fr)!important;
+  }
+  .tasks-v17-filters > label:last-child {
+    grid-column:1/-1;
+  }
+}
+
+@media (max-width:760px) {
+  .tasks-v17 {
+    gap:14px!important;
+  }
+  .tasks-v17-hero {
+    display:grid!important;
+    grid-template-columns:1fr!important;
+    gap:16px!important;
+    padding:18px!important;
+    border-radius:18px!important;
+  }
+  .tasks-v17-hero h1 {
+    font-size:clamp(1.75rem,8vw,2.25rem)!important;
+  }
+  .tasks-v17-hero p {
+    font-size:.86rem!important;
+    line-height:1.55!important;
+  }
+  .tasks-v17-hero .btn,
+  .tasks-v17-hero .button {
+    width:100%!important;
+    justify-content:center!important;
+  }
+  .tasks-v17-metrics {
+    grid-template-columns:repeat(2,minmax(0,1fr))!important;
+    gap:9px!important;
+  }
+  .tasks-v17-metrics article {
+    min-width:0!important;
+    padding:14px!important;
+    gap:10px!important;
+    border-radius:15px!important;
+  }
+  .tasks-v17-metrics strong {
+    font-size:1.4rem!important;
+  }
+  .tasks-v17-metrics p {
+    font-size:.67rem!important;
+  }
+  .tasks-v17-command {
+    padding:13px!important;
+    border-radius:17px!important;
+  }
+  .tasks-v17-tabs {
+    margin:0!important;
+    padding:0 0 5px!important;
+  }
+  .tasks-v17-tabs button {
+    min-height:40px!important;
+    padding:8px 10px!important;
+    border-radius:10px!important;
+    font-size:.74rem!important;
+  }
+  .tasks-v17-filters {
+    grid-template-columns:1fr!important;
+    gap:9px!important;
+  }
+  .tasks-v17-filters > label:last-child {
+    grid-column:auto!important;
+  }
+  .tasks-v17-filters label,
+  .tasks-v17-search {
+    min-height:44px!important;
+  }
+  .tasks-v17-queue,
+  .tasks-v17-detail {
+    border-radius:17px!important;
+  }
+  .tasks-v17-queue > header,
+  .tasks-v17-detail-header {
+    padding:15px!important;
+  }
+  .tasks-v17-list {
+    padding:9px!important;
+  }
+  .tasks-v17-card {
+    padding:13px!important;
+  }
+  .tasks-v17-card-top {
+    align-items:flex-start!important;
+    flex-wrap:wrap!important;
+  }
+  .tasks-v17-card-meta {
+    grid-template-columns:1fr!important;
+  }
+  .tasks-v17-card-footer {
+    display:grid!important;
+    grid-template-columns:1fr!important;
+  }
+  .tasks-v17-detail-header {
+    display:grid!important;
+    grid-template-columns:1fr!important;
+  }
+  .tasks-v17-detail-header > .tasks-v17-status {
+    justify-self:start!important;
+  }
+  .tasks-v17-detail-grid {
+    grid-template-columns:1fr!important;
+    padding:12px!important;
+  }
+  .tasks-v17-blocked {
+    margin-inline:12px!important;
+  }
+  .tasks-v17-detail-actions {
+    display:grid!important;
+    grid-template-columns:1fr!important;
+    padding-inline:12px!important;
+  }
+  .tasks-v17-detail-actions .btn,
+  .tasks-v17-detail-actions .button,
+  .tasks-v17-source-link {
+    width:100%!important;
+    justify-content:center!important;
+  }
+  .tasks-v17-action-card {
+    margin-inline:12px!important;
+    padding:14px!important;
+  }
+  .tasks-v17-action-grid {
+    grid-template-columns:1fr 1fr!important;
+  }
+  .tasks-v17-action-grid .btn,
+  .tasks-v17-action-grid .button {
+    width:100%!important;
+    justify-content:center!important;
+  }
+  .tasks-v17-history-grid {
+    grid-template-columns:1fr!important;
+    padding-inline:12px!important;
+  }
+  .tasks-v17-history-card {
+    min-width:0!important;
+  }
+}
+
+@media (max-width:520px) {
+  .tasks-v17-metrics {
+    grid-template-columns:1fr!important;
+  }
+  .tasks-v17-metrics article {
+    display:grid!important;
+    grid-template-columns:auto minmax(0,1fr)!important;
+  }
+  .tasks-v17-queue > header {
+    display:grid!important;
+    grid-template-columns:1fr auto!important;
+    align-items:start!important;
+  }
+  .tasks-v17-action-grid {
+    grid-template-columns:1fr!important;
+  }
+  .tasks-v17-action-card > .btn,
+  .tasks-v17-action-card > .button {
+    width:100%!important;
+    justify-content:center!important;
+  }
+  .tasks-v17-card {
+    border-radius:13px!important;
+  }
+  .tasks-v17-card-top {
+    display:grid!important;
+    grid-template-columns:1fr!important;
+    justify-items:start!important;
+  }
+  .tasks-v17-priority,
+  .tasks-v17-status {
+    max-width:100%;
+    white-space:normal!important;
+  }
+}
+
+@media (max-width:390px) {
+  .tasks-v17-hero,
+  .tasks-v17-command {
+    padding:12px!important;
+  }
+  .tasks-v17-hero h1 {
+    font-size:1.65rem!important;
+  }
+  .tasks-v17-tabs button {
+    padding-inline:9px!important;
+  }
+  .tasks-v17-queue > header,
+  .tasks-v17-detail-header,
+  .tasks-v17-card,
+  .tasks-v17-detail-grid,
+  .tasks-v17-action-card,
+  .tasks-v17-history-card {
+    padding:11px!important;
+  }
+  .tasks-v17-action-card,
+  .tasks-v17-blocked,
+  .tasks-v17-history-grid {
+    margin-inline:8px!important;
+  }
+  .tasks-v17-detail-actions {
+    padding-inline:8px!important;
+  }
+}
+
+@media (prefers-reduced-motion:reduce) {
+  .tasks-v17-card,
+  .tasks-v17-tabs button,
+  .ex57-page .ex57-actions .btn {
+    transition:none!important;
+  }
+}
