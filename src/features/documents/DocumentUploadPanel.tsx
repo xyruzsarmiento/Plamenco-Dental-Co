@@ -14,7 +14,7 @@ type DocumentUploadPanelProps = {
     category: DocumentCategory
     uploadedBy: string
     content: string
-  }) => void
+  }) => Promise<unknown> | unknown
 }
 
 export function DocumentUploadPanel({ patientId, onUpload }: DocumentUploadPanelProps) {
@@ -22,10 +22,12 @@ export function DocumentUploadPanel({ patientId, onUpload }: DocumentUploadPanel
   const [fileName, setFileName] = useState('')
   const [fileType, setFileType] = useState('application/pdf')
   const [category, setCategory] = useState<DocumentCategory>('medical')
-  const [uploadedBy, setUploadedBy] = useState('Front desk')
+  const [uploadedBy, setUploadedBy] = useState('Clinic user')
   const [content, setContent] = useState('')
-  const [uploading, setUploading] = useState(false)
+  const [readingFile, setReadingFile] = useState(false)
   const [progress, setProgress] = useState(0)
+  const [saving, setSaving] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   function handleFilesSelected(event: React.ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0]
@@ -33,71 +35,75 @@ export function DocumentUploadPanel({ patientId, onUpload }: DocumentUploadPanel
 
     setFileName(file.name)
     setFileType(file.type || 'application/octet-stream')
-    setUploading(true)
+    setReadingFile(true)
     setProgress(20)
+    setError(null)
 
     const reader = new FileReader()
     reader.onload = () => {
       setContent(String(reader.result ?? ''))
       setProgress(100)
-      window.setTimeout(() => setUploading(false), 350)
+      setReadingFile(false)
     }
     reader.onerror = () => {
-      setUploading(false)
+      setReadingFile(false)
       setProgress(0)
+      setError('The selected file could not be read.')
     }
     reader.readAsDataURL(file)
   }
 
-  function handleSubmit() {
-    if (!content || !fileName.trim()) {
-      return
-    }
+  async function handleSubmit() {
+    if (saving || readingFile || !content || !fileName.trim()) return
+    setSaving(true)
+    setError(null)
+    try {
+      await onUpload({
+        patientId,
+        fileName,
+        fileType,
+        category,
+        uploadedBy,
+        content,
+      })
 
-    onUpload({
-      patientId,
-      fileName,
-      fileType,
-      category,
-      uploadedBy,
-      content,
-    })
-
-    setFileName('')
-    setFileType('application/pdf')
-    setCategory('medical')
-    setUploadedBy('Front desk')
-    setContent('')
-    setProgress(0)
-    if (fileInputRef.current) {
-      fileInputRef.current.value = ''
+      setFileName('')
+      setFileType('application/pdf')
+      setCategory('medical')
+      setUploadedBy('Clinic user')
+      setContent('')
+      setProgress(0)
+      if (fileInputRef.current) fileInputRef.current.value = ''
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : 'The document could not be uploaded.')
+    } finally {
+      setSaving(false)
     }
   }
 
   return (
     <div className="upload-panel">
       <div className="upload-row">
-        <input ref={fileInputRef} type="file" onChange={handleFilesSelected} />
-        <Button variant="secondary" icon={<Upload size={16} />} onClick={() => fileInputRef.current?.click()}>
+        <input ref={fileInputRef} type="file" onChange={handleFilesSelected} disabled={saving} />
+        <Button variant="secondary" icon={<Upload size={16} />} onClick={() => fileInputRef.current?.click()} disabled={saving}>
           Select file
         </Button>
       </div>
 
-      {uploading && (
+      {readingFile && (
         <div className="upload-progress">
-          <div className="progress-track">
-            <span style={{ width: `${progress}%` }} />
-          </div>
-          <small>{progress}% uploaded</small>
+          <div className="progress-track"><span style={{ width: `${progress}%` }} /></div>
+          <small>Preparing file…</small>
         </div>
       )}
 
       <div className="form-grid">
-        <Input label="File name" value={fileName} onChange={(event) => setFileName(event.target.value)} />
+        <Input label="File name" value={fileName} onChange={(event) => setFileName(event.target.value)} disabled={saving} />
         <Select
           label="Category"
           value={category}
           onChange={(event) => setCategory(event.target.value as DocumentCategory)}
+          disabled={saving}
           options={[
             { label: 'X-ray', value: 'xray' },
             { label: 'Consent form', value: 'consent' },
@@ -106,13 +112,15 @@ export function DocumentUploadPanel({ patientId, onUpload }: DocumentUploadPanel
             { label: 'Other', value: 'other' },
           ]}
         />
-        <Input label="Uploaded by" value={uploadedBy} onChange={(event) => setUploadedBy(event.target.value)} />
-        <Input label="File type" value={fileType} onChange={(event) => setFileType(event.target.value)} />
+        <Input label="Uploaded by" value={uploadedBy} onChange={(event) => setUploadedBy(event.target.value)} disabled={saving} />
+        <Input label="File type" value={fileType} onChange={(event) => setFileType(event.target.value)} disabled={saving} />
       </div>
 
+      {error && <div className="error-alert" role="alert">{error}</div>}
+
       <div className="modal-actions">
-        <Button onClick={handleSubmit} icon={<Upload size={16} />} disabled={!content || !fileName.trim()}>
-          Upload document
+        <Button onClick={() => void handleSubmit()} icon={<Upload size={16} />} disabled={!content || !fileName.trim() || readingFile || saving}>
+          {saving ? 'Saving to database…' : 'Upload document'}
         </Button>
       </div>
     </div>
@@ -125,32 +133,22 @@ type DocumentListProps = {
 }
 
 export function DocumentList({ documents, onDelete }: DocumentListProps) {
-  if (documents.length === 0) {
-    return null
-  }
+  if (documents.length === 0) return null
 
   return (
     <div className="document-list">
       {documents.map((document) => (
         <article key={document.id} className="document-card">
-          <div className="document-icon">
-            <FileText size={18} />
-          </div>
+          <div className="document-icon"><FileText size={18} /></div>
           <div className="document-details">
             <strong>{document.fileName}</strong>
             <span>{document.category}</span>
             <small>{new Date(document.uploadDate).toLocaleDateString()} • {document.uploadedBy}</small>
           </div>
           <div className="document-actions">
-            <a href={document.content} target="_blank" rel="noreferrer" aria-label={`Preview ${document.fileName}`}>
-              <Eye size={16} />
-            </a>
-            <a href={document.content} download={document.fileName} aria-label={`Download ${document.fileName}`}>
-              <Download size={16} />
-            </a>
-            <button type="button" aria-label={`Delete ${document.fileName}`} onClick={() => onDelete(document.id)}>
-              <Trash2 size={16} />
-            </button>
+            {document.content && <a href={document.content} target="_blank" rel="noreferrer" aria-label={`Preview ${document.fileName}`}><Eye size={16} /></a>}
+            {document.content && <a href={document.content} download={document.fileName} aria-label={`Download ${document.fileName}`}><Download size={16} /></a>}
+            <button type="button" aria-label={`Delete ${document.fileName}`} onClick={() => onDelete(document.id)}><Trash2 size={16} /></button>
           </div>
         </article>
       ))}
