@@ -6,6 +6,116 @@ type SyncTableEntry = {
   map: (row: any) => any
 }
 
+/*
+ * A number of legacy stores originally generated browser-friendly IDs such as
+ * `record-<timestamp>-<random>` and `payment-<timestamp>-<random>`. The live
+ * Supabase schema correctly uses UUID primary/foreign keys for those entities,
+ * so PostgREST rejects the legacy strings before the row reaches Postgres.
+ *
+ * Keep the legacy local cache compatible while making every remote write use a
+ * stable UUID. The conversion is deterministic: the same legacy ID is mapped
+ * to the same UUID for parent rows, child foreign keys, updates and deletes.
+ * Existing UUIDs and human-readable text keys (for example `cash`, `utilities`
+ * or `clinic`) are left untouched.
+ */
+const UUID_VALUE_FIELDS = new Set([
+  'id',
+  'patient_id',
+  'auth_user_id',
+  'preferred_branch_id',
+  'branch_id',
+  'from_branch_id',
+  'to_branch_id',
+  'provider_id',
+  'preferred_provider_id',
+  'profile_id',
+  'service_id',
+  'operatory_id',
+  'related_appointment_id',
+  'appointment_id',
+  'dental_record_id',
+  'clinical_visit_id',
+  'treatment_id',
+  'invoice_id',
+  'payment_id',
+  'charge_id',
+  'supplier_id',
+  'default_supplier_id',
+  'linked_supplier_id',
+  'inventory_item_id',
+  'batch_id',
+  'purchase_order_id',
+  'expense_id',
+  'vendor_id',
+  'recurring_template_id',
+])
+
+const UUID_ARRAY_FIELDS = new Set(['invoice_ids', 'branch_ids'])
+const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
+const LEGACY_GENERATED_ID_PATTERN = /^[a-z][a-z0-9-]*-\d{10,}-[a-z0-9]+$/i
+
+function deterministicUuid(value: string) {
+  let h1 = 0xdeadbeef ^ value.length
+  let h2 = 0x41c6ce57 ^ value.length
+
+  for (let index = 0; index < value.length; index += 1) {
+    const code = value.charCodeAt(index)
+    h1 = Math.imul(h1 ^ code, 2654435761)
+    h2 = Math.imul(h2 ^ code, 1597334677)
+  }
+
+  h1 = Math.imul(h1 ^ (h1 >>> 16), 2246822507) ^ Math.imul(h2 ^ (h2 >>> 13), 3266489909)
+  h2 = Math.imul(h2 ^ (h2 >>> 16), 2246822507) ^ Math.imul(h1 ^ (h1 >>> 13), 3266489909)
+
+  let seed = `${(h1 >>> 0).toString(16).padStart(8, '0')}${(h2 >>> 0).toString(16).padStart(8, '0')}`
+  let state = (h1 ^ h2) >>> 0
+  while (seed.length < 32) {
+    state ^= state << 13
+    state ^= state >>> 17
+    state ^= state << 5
+    seed += (state >>> 0).toString(16).padStart(8, '0')
+  }
+
+  const hex = seed.slice(0, 32).split('')
+  hex[12] = '4'
+  hex[16] = '8'
+  const normalized = hex.join('')
+  return `${normalized.slice(0, 8)}-${normalized.slice(8, 12)}-${normalized.slice(12, 16)}-${normalized.slice(16, 20)}-${normalized.slice(20, 32)}`
+}
+
+function normalizeLegacyUuid(value: unknown) {
+  if (typeof value !== 'string' || !value) return value
+  if (UUID_PATTERN.test(value)) return value
+  if (!LEGACY_GENERATED_ID_PATTERN.test(value)) return value
+  return deterministicUuid(value)
+}
+
+function normalizeRemoteRowIds(row: Record<string, unknown>) {
+  const normalized: Record<string, unknown> = { ...row }
+
+  for (const [key, value] of Object.entries(normalized)) {
+    if (UUID_VALUE_FIELDS.has(key)) {
+      normalized[key] = normalizeLegacyUuid(value)
+      continue
+    }
+
+    if (UUID_ARRAY_FIELDS.has(key) && Array.isArray(value)) {
+      normalized[key] = value.map((entry) => normalizeLegacyUuid(entry))
+    }
+  }
+
+  return normalized
+}
+
+function reportPersistenceError(operation: string, table: string, error: unknown) {
+  console.error(`Supabase ${operation} failed for ${table}:`, error)
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new CustomEvent('plamenco:persistence-error', {
+      detail: { operation, table, error },
+    }))
+  }
+}
+
 const tablesToSync: SyncTableEntry[] = [
   {
     table: 'staff',
@@ -703,9 +813,10 @@ export async function upsertRemoteTableRows(table: string, rows: Record<string, 
     return null
   }
 
-  const { data, error } = await supabase.from(table).upsert(rows).select()
+  const normalizedRows = rows.map(normalizeRemoteRowIds)
+  const { data, error } = await supabase.from(table).upsert(normalizedRows).select()
   if (error) {
-    console.error(`Supabase upsert failed for ${table}:`, error)
+    reportPersistenceError('upsert', table, error)
     return null
   }
 
@@ -717,9 +828,10 @@ export async function insertRemoteTableRow(table: string, row: Record<string, un
     return null
   }
 
-  const { data, error } = await supabase.from(table).insert([row]).select()
+  const normalizedRow = normalizeRemoteRowIds(row)
+  const { data, error } = await supabase.from(table).insert([normalizedRow]).select()
   if (error) {
-    console.error(`Supabase insert failed for ${table}:`, error)
+    reportPersistenceError('insert', table, error)
     return null
   }
 
@@ -731,9 +843,11 @@ export async function updateRemoteTableRow(table: string, id: string, row: Recor
     return null
   }
 
-  const { data, error } = await supabase.from(table).update(row).eq('id', id).select()
+  const normalizedId = normalizeLegacyUuid(id) as string
+  const normalizedRow = normalizeRemoteRowIds(row)
+  const { data, error } = await supabase.from(table).update(normalizedRow).eq('id', normalizedId).select()
   if (error) {
-    console.error(`Supabase update failed for ${table}:`, error)
+    reportPersistenceError('update', table, error)
     return null
   }
 
@@ -745,9 +859,10 @@ export async function deleteRemoteTableRow(table: string, id: string) {
     return false
   }
 
-  const { error } = await supabase.from(table).delete().eq('id', id)
+  const normalizedId = normalizeLegacyUuid(id) as string
+  const { error } = await supabase.from(table).delete().eq('id', normalizedId)
   if (error) {
-    console.error(`Supabase delete failed for ${table}:`, error)
+    reportPersistenceError('delete', table, error)
     return false
   }
 
