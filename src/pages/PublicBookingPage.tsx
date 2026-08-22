@@ -18,7 +18,7 @@ import { Input } from '../components/ui/Input'
 import { Textarea } from '../components/ui/Textarea'
 import { getEligibleProviders } from '../features/appointments/availabilityEngine'
 import { useAuth } from '../features/auth/AuthContext'
-import { getStoredBranches } from '../features/branches/branchStore'
+import { getStoredBranches, loadBranchesFromSupabase } from '../features/branches/branchStore'
 import { createPublicBooking, getAvailableBookingTimes } from '../features/patientPortal/patientPortalStore'
 import { getStoredServices, loadServicesFromSupabase } from '../features/services/serviceStore'
 
@@ -73,33 +73,40 @@ function formatDate(value: string) {
 export function PublicBookingPage() {
   const { user, isLoading: authLoading } = useAuth()
   const [services, setServices] = useState<ReturnType<typeof getStoredServices>>([])
+  const [branches, setBranches] = useState<ReturnType<typeof getStoredBranches>>([])
   const [serviceLoadState, setServiceLoadState] = useState<ServiceLoadState>('loading')
   const [serviceLoadError, setServiceLoadError] = useState<string | null>(null)
   const [form, setForm] = useState<BookingForm>(emptyForm)
   const [step, setStep] = useState(0)
   const [error, setError] = useState('')
   const [bookingId, setBookingId] = useState('')
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
   useEffect(() => {
     let isMounted = true
 
-    const loadServices = async () => {
+    const loadPublicBookingData = async () => {
       try {
         setServiceLoadState('loading')
         setServiceLoadError(null)
-        const loaded = await loadServicesFromSupabase()
+        const [loadedServices, loadedBranches] = await Promise.all([
+          loadServicesFromSupabase(),
+          loadBranchesFromSupabase({ strict: true }),
+        ])
         if (!isMounted) return
-        setServices(loaded)
-        setServiceLoadState(loaded.length ? 'loaded' : 'no-services')
+        setServices(loadedServices.filter((service) => service.status === 'active' && service.onlineBookable && !service.internalOnly && service.showOnWebsite))
+        setBranches(loadedBranches.filter((branch) => branch.status === 'active'))
+        setServiceLoadState(loadedServices.length ? 'loaded' : 'no-services')
       } catch (loadError) {
         if (!isMounted) return
-        setServiceLoadError(loadError instanceof Error ? loadError.message : 'Failed to load services')
+        setServiceLoadError(loadError instanceof Error ? loadError.message : 'Failed to load booking options')
         setServiceLoadState('error')
         setServices([])
+        setBranches([])
       }
     }
 
-    void loadServices()
+    void loadPublicBookingData()
     return () => {
       isMounted = false
     }
@@ -117,7 +124,6 @@ export function PublicBookingPage() {
     }))
   }, [user])
 
-  const branches = useMemo(() => getStoredBranches().filter((branch) => branch.status === 'active'), [])
   const selectedBranch = useMemo(() => branches.find((branch) => branch.id === form.branchId), [branches, form.branchId])
   const selectedService = useMemo(() => services.find((service) => service.id === form.serviceId), [form.serviceId, services])
   const eligibleProviders = useMemo(() => form.branchId ? getEligibleProviders(form.branchId) : [], [form.branchId])
@@ -128,6 +134,7 @@ export function PublicBookingPage() {
   }, [form.branchId, form.date, form.providerId, form.serviceId])
 
   const nextDisabled = (() => {
+    if (isSubmitting) return true
     if (step === 0) return !form.branchId
     if (step === 1) return !form.serviceId
     if (step === 3) return !form.date
@@ -137,6 +144,7 @@ export function PublicBookingPage() {
   })()
 
   function updateForm<K extends keyof BookingForm>(key: K, value: BookingForm[K]) {
+    if (isSubmitting) return
     setForm((current) => {
       const next = { ...current, [key]: value }
       if (key === 'branchId') {
@@ -144,17 +152,15 @@ export function PublicBookingPage() {
         next.date = ''
         next.startTime = ''
       }
-      if (key === 'serviceId' || key === 'providerId' || key === 'date') {
-        next.startTime = ''
-      }
+      if (key === 'serviceId' || key === 'providerId' || key === 'date') next.startTime = ''
       return next
     })
     setError('')
   }
 
-  function handleNext() {
+  async function handleNext() {
     if (nextDisabled) {
-      setError('Please complete this step before continuing.')
+      if (!isSubmitting) setError('Please complete this step before continuing.')
       return
     }
 
@@ -163,8 +169,10 @@ export function PublicBookingPage() {
       return
     }
 
+    setIsSubmitting(true)
+    setError('')
     try {
-      const appointment = createPublicBooking({
+      const appointment = await createPublicBooking({
         branchId: form.branchId,
         serviceId: form.serviceId,
         providerId: form.providerId,
@@ -176,15 +184,17 @@ export function PublicBookingPage() {
         phone: form.phone,
         notes: form.notes,
       })
-      setBookingId(appointment.appointmentNumber ?? appointment.id)
+      setBookingId(appointment.appointmentNumber || appointment.id)
       setStep(steps.length)
     } catch (bookingError) {
       setError(bookingError instanceof Error ? bookingError.message : 'Unable to create booking.')
+    } finally {
+      setIsSubmitting(false)
     }
   }
 
   function handleBack() {
-    if (step > 0) setStep((current) => current - 1)
+    if (!isSubmitting && step > 0) setStep((current) => current - 1)
   }
 
   const portalHref = user?.role === 'patient' && user.patientId ? `/portal/${user.patientId}` : '/login'
@@ -196,8 +206,8 @@ export function PublicBookingPage() {
       <div className="auth-page">
         <div className="error-state" style={{ textAlign: 'center', padding: '48px 20px' }}>
           <AlertCircle size={48} style={{ marginBottom: '16px', color: 'var(--danger)' }} />
-          <h2>Unable to load services</h2>
-          <p style={{ color: 'var(--text-muted)', marginBottom: '24px' }}>{serviceLoadError || 'There was a problem loading available services. Please try again later.'}</p>
+          <h2>Unable to load booking options</h2>
+          <p style={{ color: 'var(--text-muted)', marginBottom: '24px' }}>{serviceLoadError || 'There was a problem loading available services or branches. Please try again later.'}</p>
           <Link to={portalHref}><Button variant="secondary">Return to patient portal</Button></Link>
         </div>
       </div>
@@ -250,7 +260,7 @@ export function PublicBookingPage() {
                     <div className="section-title-row"><MapPin size={18} /><h2>Choose clinic branch</h2></div>
                     <div className="branch-choice-grid">
                       {branches.map((branch) => (
-                        <button key={branch.id} type="button" className={`branch-choice ${form.branchId === branch.id ? 'is-selected' : ''}`} onClick={() => updateForm('branchId', branch.id)}>
+                        <button key={branch.id} type="button" disabled={isSubmitting} className={`branch-choice ${form.branchId === branch.id ? 'is-selected' : ''}`} onClick={() => updateForm('branchId', branch.id)}>
                           <strong>{branch.name}</strong>
                           <small>{[branch.city, branch.province].filter(Boolean).join(', ') || 'Clinic location'}</small>
                           {(branch.openingTime || branch.closingTime) && <span>{branch.openingTime} - {branch.closingTime}</span>}
@@ -265,7 +275,7 @@ export function PublicBookingPage() {
                     <div className="section-title-row"><FileText size={18} /><h2>Select service</h2></div>
                     <div className="service-option-list">
                       {services.map((service) => (
-                        <button key={service.id} type="button" className={`service-option ${form.serviceId === service.id ? 'is-selected' : ''}`} onClick={() => updateForm('serviceId', service.id)}>
+                        <button key={service.id} type="button" disabled={isSubmitting} className={`service-option ${form.serviceId === service.id ? 'is-selected' : ''}`} onClick={() => updateForm('serviceId', service.id)}>
                           <div className="service-option-copy"><strong>{service.name}</strong><small>{service.description || service.category}</small></div>
                           <div className="service-option-meta"><strong>{formatPrice(service.price)}</strong><small>{service.duration} min</small></div>
                         </button>
@@ -278,12 +288,12 @@ export function PublicBookingPage() {
                   <div className="booking-section">
                     <div className="section-title-row"><Stethoscope size={18} /><h2>Choose dentist</h2></div>
                     <div className="branch-choice-grid">
-                      <button type="button" className={`branch-choice ${!form.providerId ? 'is-selected' : ''}`} onClick={() => updateForm('providerId', '')}>
+                      <button type="button" disabled={isSubmitting} className={`branch-choice ${!form.providerId ? 'is-selected' : ''}`} onClick={() => updateForm('providerId', '')}>
                         <strong>Any available dentist</strong>
                         <small>The clinic will assign an eligible dentist for your chosen slot.</small>
                       </button>
                       {eligibleProviders.map((provider) => (
-                        <button key={provider.id} type="button" className={`branch-choice ${form.providerId === provider.id ? 'is-selected' : ''}`} onClick={() => updateForm('providerId', provider.id)}>
+                        <button key={provider.id} type="button" disabled={isSubmitting} className={`branch-choice ${form.providerId === provider.id ? 'is-selected' : ''}`} onClick={() => updateForm('providerId', provider.id)}>
                           <strong>{provider.displayName}</strong>
                           <small>{provider.specialization || (provider.role === 'associate_dentist' ? 'Associate Dentist' : 'Dentist')}</small>
                         </button>
@@ -295,7 +305,7 @@ export function PublicBookingPage() {
                 {step === 3 && (
                   <div className="booking-section">
                     <div className="section-title-row"><CalendarDays size={18} /><h2>Select date</h2></div>
-                    <Input label="Preferred date" type="date" value={form.date} onChange={(event) => updateForm('date', event.target.value)} />
+                    <Input label="Preferred date" type="date" value={form.date} disabled={isSubmitting} onChange={(event) => updateForm('date', event.target.value)} />
                   </div>
                 )}
 
@@ -307,7 +317,7 @@ export function PublicBookingPage() {
                     ) : (
                       <div className="time-slot-grid">
                         {availableTimes.map((time) => (
-                          <button key={time} type="button" className={`time-slot ${form.startTime === time ? 'is-selected' : ''}`} onClick={() => updateForm('startTime', time)}>{formatTime(time)}</button>
+                          <button key={time} type="button" disabled={isSubmitting} className={`time-slot ${form.startTime === time ? 'is-selected' : ''}`} onClick={() => updateForm('startTime', time)}>{formatTime(time)}</button>
                         ))}
                       </div>
                     )}
@@ -318,12 +328,12 @@ export function PublicBookingPage() {
                   <div className="booking-section">
                     <div className="section-title-row"><UserRound size={18} /><h2>Enter patient information</h2></div>
                     <div className="form-grid">
-                      <Input label="First name" value={form.firstName} onChange={(event) => updateForm('firstName', event.target.value)} />
-                      <Input label="Last name" value={form.lastName} onChange={(event) => updateForm('lastName', event.target.value)} />
-                      <Input label="Email" type="email" value={form.email} onChange={(event) => updateForm('email', event.target.value)} />
-                      <Input label="Phone" value={form.phone} onChange={(event) => updateForm('phone', event.target.value)} />
+                      <Input label="First name" value={form.firstName} disabled={isSubmitting} onChange={(event) => updateForm('firstName', event.target.value)} />
+                      <Input label="Last name" value={form.lastName} disabled={isSubmitting} onChange={(event) => updateForm('lastName', event.target.value)} />
+                      <Input label="Email" type="email" value={form.email} disabled={isSubmitting} onChange={(event) => updateForm('email', event.target.value)} />
+                      <Input label="Phone" value={form.phone} disabled={isSubmitting} onChange={(event) => updateForm('phone', event.target.value)} />
                     </div>
-                    <Textarea label="Appointment notes" value={form.notes} onChange={(event) => updateForm('notes', event.target.value)} />
+                    <Textarea label="Appointment notes" value={form.notes} disabled={isSubmitting} onChange={(event) => updateForm('notes', event.target.value)} />
                   </div>
                 )}
 
@@ -344,8 +354,10 @@ export function PublicBookingPage() {
                 )}
 
                 <div className="booking-actions">
-                  <Button variant="secondary" onClick={handleBack} disabled={step === 0}>Back</Button>
-                  <Button onClick={handleNext} disabled={nextDisabled}>{step === steps.length - 1 ? 'Confirm appointment' : 'Continue'}</Button>
+                  <Button variant="secondary" onClick={handleBack} disabled={step === 0 || isSubmitting}>Back</Button>
+                  <Button onClick={() => { void handleNext() }} disabled={nextDisabled}>
+                    {isSubmitting ? 'Confirming appointment...' : step === steps.length - 1 ? 'Confirm appointment' : 'Continue'}
+                  </Button>
                 </div>
               </div>
 
@@ -373,7 +385,7 @@ export function PublicBookingPage() {
             <div className="booking-panel booking-success">
               <CheckCircle2 size={32} />
               <h2>Booking request submitted</h2>
-              <p>Your appointment is pending confirmation by the clinic team. Reference number: {bookingId}</p>
+              <p>Your appointment is saved in the clinic database and is pending confirmation. Reference number: {bookingId}</p>
               <div className="booking-actions">
                 <Link className="btn btn-primary" to={portalHref}>View patient portal</Link>
                 <Button variant="secondary" onClick={() => { setForm(emptyForm); setStep(0); setError(''); setBookingId('') }}>Book another visit</Button>
