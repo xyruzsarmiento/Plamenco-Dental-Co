@@ -1,5 +1,6 @@
-import { createUuid } from '../../lib/id'
 import { supabase } from '../../lib/supabase'
+import { recordAuditEntry } from '../security/auditLogStore'
+import { getCurrentSessionUserName } from '../security/security'
 import type { Patient, PatientFormValues } from './patientTypes'
 import {
   getPatientDisplayName,
@@ -46,29 +47,10 @@ function mapPatientToRemoteRow(patient: Patient) {
   }
 }
 
-function numericPatientSequence(patientId: string) {
-  const match = /^PT-(\d+)$/.exec(patientId.trim())
-  return match ? Number(match[1]) : null
-}
-
-async function getNextPatientId() {
-  if (!supabase) throw new Error('Clinic database is not configured. Patient records cannot be saved safely.')
-
-  const { data, error } = await supabase.from('patients').select('patient_id')
-  if (error) throw new Error(`Unable to generate a patient number: ${error.message}`)
-
-  const highest = (data ?? []).reduce((max, row) => {
-    const sequence = numericPatientSequence(String(row.patient_id ?? ''))
-    return sequence == null || !Number.isFinite(sequence) ? max : Math.max(max, sequence)
-  }, 0)
-
-  return `PT-${String(highest + 1).padStart(6, '0')}`
-}
-
-function buildPatient(values: PatientFormValues & { patientId?: string }, patientId: string): Patient {
+function buildPatient(values: PatientFormValues & { patientId?: string }, patientId = '', id = ''): Patient {
   const now = new Date().toISOString()
   return {
-    id: createUuid(),
+    id,
     ...values,
     patientId,
     authUserId: values.authUserId ?? undefined,
@@ -89,6 +71,20 @@ function buildPatient(values: PatientFormValues & { patientId?: string }, patien
   }
 }
 
+function replaceCachedPatient(confirmed: Patient) {
+  const cached = getStoredPatients().filter(
+    (entry) => entry.id !== confirmed.id && entry.patientId !== confirmed.patientId,
+  )
+  saveStoredPatients([confirmed, ...cached])
+}
+
+function userFacingDatabaseError(prefix: string, cause: { message?: string } | null | undefined) {
+  if (import.meta.env.DEV && cause?.message) {
+    console.error(`[patient persistence] ${prefix}`, cause)
+  }
+  return new Error(prefix)
+}
+
 export async function loadPatientsFromSupabase(options: { strict?: boolean } = {}): Promise<Patient[]> {
   if (!supabase) {
     if (options.strict) throw new Error('Clinic database is not configured. Unable to load patient records.')
@@ -101,7 +97,7 @@ export async function loadPatientsFromSupabase(options: { strict?: boolean } = {
     .order('created_at', { ascending: false })
 
   if (error) {
-    if (options.strict) throw new Error(`Unable to load patient records from the clinic database: ${error.message}`)
+    if (options.strict) throw userFacingDatabaseError('Unable to load patient records from the clinic database.', error)
     return getStoredPatients()
   }
 
@@ -113,32 +109,174 @@ export async function loadPatientsFromSupabase(options: { strict?: boolean } = {
 export async function createPatientPersisted(values: PatientFormValues & { patientId?: string }): Promise<Patient> {
   if (!supabase) throw new Error('Clinic database is not configured. Patient records cannot be saved safely.')
 
-  let requestedPatientId = values.patientId?.trim() || await getNextPatientId()
-  let lastError: { code?: string; message?: string } | null = null
+  const requestedPatientId = values.patientId?.trim() ?? ''
+  const draft = buildPatient(values, requestedPatientId)
+  const remoteRow = mapPatientToRemoteRow(draft) as Record<string, unknown>
 
-  for (let attempt = 0; attempt < 3; attempt += 1) {
-    const patient = buildPatient(values, requestedPatientId)
-    const { data, error } = await supabase
-      .from('patients')
-      .insert(mapPatientToRemoteRow(patient))
-      .select('*')
-      .single()
+  // PostgreSQL owns the durable UUID and, unless explicitly supplied for a
+  // controlled import, the PT-xxxxxx patient number.
+  delete remoteRow.id
+  if (!requestedPatientId) delete remoteRow.patient_id
 
-    if (!error && data) {
-      const confirmed = mapSupabasePatientRow(data as Record<string, unknown>)
-      const cached = getStoredPatients().filter((entry) => entry.id !== confirmed.id && entry.patientId !== confirmed.patientId)
-      saveStoredPatients([confirmed, ...cached])
-      return confirmed
-    }
+  const { data, error } = await supabase
+    .from('patients')
+    .insert(remoteRow)
+    .select('*')
+    .single()
 
-    lastError = error
-    const duplicatePatientNumber = error?.code === '23505' && String(error.message ?? '').includes('patient_id')
-    if (!values.patientId?.trim() && duplicatePatientNumber) {
-      requestedPatientId = await getNextPatientId()
-      continue
-    }
-    break
+  if (error || !data) {
+    throw userFacingDatabaseError('Unable to save the patient. Your changes were not submitted.', error)
   }
 
-  throw new Error(`Patient was not saved to Supabase${lastError?.message ? `: ${lastError.message}` : '.'}`)
+  const confirmed = mapSupabasePatientRow(data as Record<string, unknown>)
+  replaceCachedPatient(confirmed)
+
+  recordAuditEntry({
+    user: getCurrentSessionUserName(),
+    action: 'patient_created',
+    entity: 'patient',
+    entityId: confirmed.patientId,
+    metadata: { patientId: confirmed.patientId, createdAt: confirmed.createdAt },
+  })
+
+  return confirmed
+}
+
+export async function updatePatientPersisted(id: string, values: PatientFormValues): Promise<Patient> {
+  if (!supabase) throw new Error('Clinic database is not configured. Patient changes cannot be saved safely.')
+
+  let current = getStoredPatients().find((patient) => patient.id === id)
+  if (!current) {
+    const { data, error } = await supabase.from('patients').select('*').eq('id', id).maybeSingle()
+    if (error) throw userFacingDatabaseError('Unable to load the patient before saving changes.', error)
+    if (!data) throw new Error('Patient record was not found.')
+    current = mapSupabasePatientRow(data as Record<string, unknown>)
+  }
+
+  const candidate: Patient = {
+    ...current,
+    ...values,
+    id: current.id,
+    patientId: current.patientId,
+    authUserId: current.authUserId,
+    fullName: values.fullName ?? [values.firstName, values.middleName, values.lastName].filter(Boolean).join(' '),
+    email: normalizePatientEmail(values.email ?? ''),
+    phone: normalizePatientPhone(values.phone),
+    profileImage: values.profileImage ?? current.profileImage ?? '',
+    emergencyContactRelationship: values.emergencyContactRelationship ?? current.emergencyContactRelationship ?? '',
+    city: values.city ?? '',
+    province: values.province ?? '',
+    preferredBranchId: values.preferredBranchId ?? '',
+    origin: values.origin ?? current.origin ?? 'staff_created',
+    administrativeNotes: values.administrativeNotes ?? '',
+    updatedAt: current.updatedAt,
+  }
+
+  const remoteRow = mapPatientToRemoteRow(candidate) as Record<string, unknown>
+  delete remoteRow.id
+  delete remoteRow.patient_id
+  delete remoteRow.auth_user_id
+
+  const { data, error } = await supabase
+    .from('patients')
+    .update(remoteRow)
+    .eq('id', id)
+    .select('*')
+    .single()
+
+  if (error || !data) {
+    throw userFacingDatabaseError('Unable to save the patient. Your changes were not submitted.', error)
+  }
+
+  const confirmed = mapSupabasePatientRow(data as Record<string, unknown>)
+  replaceCachedPatient(confirmed)
+
+  recordAuditEntry({
+    user: getCurrentSessionUserName(),
+    action: 'patient_updated',
+    entity: 'patient',
+    entityId: confirmed.patientId,
+    metadata: { patientId: confirmed.patientId, updatedAt: confirmed.updatedAt },
+  })
+
+  return confirmed
+}
+
+export async function archivePatientPersisted(id: string): Promise<Patient> {
+  if (!supabase) throw new Error('Clinic database is not configured. Patient archival cannot be saved safely.')
+
+  const { data, error } = await supabase
+    .from('patients')
+    .update({ status: 'inactive' })
+    .eq('id', id)
+    .select('*')
+    .single()
+
+  if (error || !data) {
+    throw userFacingDatabaseError('Unable to archive the patient. No records were removed or changed locally.', error)
+  }
+
+  const confirmed = mapSupabasePatientRow(data as Record<string, unknown>)
+  replaceCachedPatient(confirmed)
+
+  recordAuditEntry({
+    user: getCurrentSessionUserName(),
+    action: 'patient_archived',
+    entity: 'patient',
+    entityId: confirmed.patientId,
+    metadata: { patientId: confirmed.patientId, archivedAt: (data as Record<string, unknown>).archived_at ?? confirmed.updatedAt },
+  })
+
+  return confirmed
+}
+
+export type PatientSelfServiceProfileUpdate = {
+  firstName: string
+  middleName: string
+  lastName: string
+  dateOfBirth: string
+  email: string
+  phone: string
+  address: string
+  emergencyContact: string
+  emergencyContactPhone: string
+  emergencyContactRelationship: string
+  profileImage?: string
+}
+
+export async function updateMyPatientProfilePersisted(values: PatientSelfServiceProfileUpdate): Promise<Patient> {
+  if (!supabase) throw new Error('Clinic database is not configured. Profile changes cannot be saved safely.')
+
+  const { data: authData, error: authError } = await supabase.auth.getUser()
+  const authUser = authData.user
+  if (authError || !authUser) throw new Error('Your session is no longer valid. Please sign in again.')
+
+  const fullName = [values.firstName, values.middleName, values.lastName].filter(Boolean).join(' ').trim()
+  const { data, error } = await supabase
+    .from('patients')
+    .update({
+      first_name: values.firstName.trim(),
+      middle_name: values.middleName.trim(),
+      last_name: values.lastName.trim(),
+      full_name: fullName,
+      date_of_birth: values.dateOfBirth || null,
+      email: normalizePatientEmail(values.email),
+      phone: normalizePatientPhone(values.phone),
+      address: values.address.trim(),
+      emergency_contact: values.emergencyContact.trim(),
+      emergency_contact_phone: values.emergencyContactPhone.trim(),
+      emergency_contact_relationship: values.emergencyContactRelationship.trim(),
+      ...(values.profileImage !== undefined ? { profile_image: values.profileImage } : {}),
+    })
+    .eq('auth_user_id', authUser.id)
+    .select('*')
+    .single()
+
+  if (error || !data) {
+    throw userFacingDatabaseError('Unable to save your profile. Your changes were not submitted.', error)
+  }
+
+  const confirmed = mapSupabasePatientRow(data as Record<string, unknown>)
+  replaceCachedPatient(confirmed)
+  return confirmed
 }
