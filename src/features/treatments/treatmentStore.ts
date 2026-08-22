@@ -49,8 +49,10 @@ function serviceSnapshotCents(treatment: Partial<Treatment>, service?: Service) 
 
 function normalizeTreatment(treatment: Treatment): Treatment {
   const service = getStoredServices().find((entry) => entry.id === treatment.serviceId)
+  const patient = resolvePatient(treatment.patientId)
   return {
     ...treatment,
+    patientId: patient?.patientId ?? treatment.patientId,
     serviceNameSnapshot: treatment.serviceNameSnapshot ?? service?.name ?? '',
     priceSnapshotCents: serviceSnapshotCents(treatment, service),
     quantity: treatment.quantity ?? 1,
@@ -140,6 +142,7 @@ export function createTreatment(values: TreatmentFormValues): Treatment {
   const treatment: Treatment = {
     id: createUuid(),
     ...values,
+    patientId: patient.patientId,
     serviceNameSnapshot: values.serviceNameSnapshot || service?.name || '',
     priceSnapshotCents,
     quantity: Math.max(1, values.quantity ?? 1),
@@ -171,9 +174,11 @@ export function updateTreatment(id: string, values: TreatmentFormValues): Treatm
   if (!values.treatmentDate) throw new Error('Treatment date is required.')
 
   const service = getStoredServices().find((entry) => entry.id === values.serviceId)
+  const patient = resolvePatient(values.patientId)
   const updated: Treatment = {
     ...treatments[index],
     ...values,
+    patientId: patient?.patientId ?? values.patientId,
     serviceNameSnapshot: values.serviceNameSnapshot || service?.name || treatments[index].serviceNameSnapshot,
     priceSnapshotCents: values.priceSnapshotCents && values.priceSnapshotCents > 0
       ? values.priceSnapshotCents
