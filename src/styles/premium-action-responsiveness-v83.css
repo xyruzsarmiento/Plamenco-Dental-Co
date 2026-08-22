@@ -1,0 +1,262 @@
+/* Responsive premium primary actions. Loaded after v82 to neutralize older full-width mobile rules. */
+
+:root{
+  --action-blue:#2563eb;
+  --action-blue-deep:#1d4ed8;
+  --action-blue-soft:#eef5ff;
+  --action-border:#d6e1ef;
+  --action-text:#29415f;
+}
+
+/* Shared compact premium treatment for the requested page actions. */
+.patients36-page .patients36-hero-actions :is(.btn,.button),
+.dr11-page .dr11-command-header :is(.btn,.button),
+.appointments-v40 .sa-appointments-header-actions :is(.btn,.button),
+.tx43-page .tx43-hero > :is(.btn,.button),
+.tx43-page .tx43-management-head > :is(.btn,.button),
+.tp80-page .tp80-hero > :is(.btn,.button),
+.bill32-shell .bill32-create-strip :is(.btn,.button),
+.bill46-page .bill14-command-header :is(.btn,.button),
+.bill14-page .bill14-command-header :is(.btn,.button),
+.services49-shell .svc15-command > :is(.btn,.button),
+.ex57-page .ex57-actions :is(.btn,.button),
+.forms-v28 .forms-v28-hero-actions :is(.btn,.button),
+.team-v26 .team-v26-hero :is(.btn,.button){
+  display:inline-flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  flex:0 0 auto!important;
+  width:max-content!important;
+  max-width:100%!important;
+  min-width:0!important;
+  min-height:42px!important;
+  height:auto!important;
+  padding:0 14px!important;
+  gap:7px!important;
+  border-radius:12px!important;
+  font-size:.75rem!important;
+  line-height:1.15!important;
+  font-weight:850!important;
+  letter-spacing:-.01em!important;
+  white-space:nowrap!important;
+  box-sizing:border-box!important;
+  box-shadow:0 7px 18px rgba(15,23,42,.055)!important;
+  transition:transform .16s ease,box-shadow .16s ease,border-color .16s ease,background .16s ease!important;
+}
+
+/* Primary actions: restrained blue gradient, not oversized. */
+.patients36-page .patients36-hero-actions :is(.btn-primary,.button-primary),
+.dr11-page .dr11-command-header :is(.btn-primary,.button-primary),
+.appointments-v40 .sa-appointments-header-actions :is(.btn-primary,.button-primary),
+.tx43-page .tx43-hero > :is(.btn-primary,.button-primary),
+.tx43-page .tx43-management-head > :is(.btn-primary,.button-primary),
+.tp80-page .tp80-hero > :is(.btn-primary,.button-primary),
+.bill32-shell .bill32-create-strip :is(.btn-primary,.button-primary),
+.bill46-page .bill14-command-header :is(.btn-primary,.button-primary),
+.bill14-page .bill14-command-header :is(.btn-primary,.button-primary),
+.services49-shell .svc15-command > :is(.btn-primary,.button-primary),
+.ex57-page .ex57-actions :is(.btn-primary,.button-primary),
+.forms-v28 .forms-v28-hero-actions :is(.btn-primary,.button-primary),
+.team-v26 .team-v26-hero :is(.btn-primary,.button-primary){
+  border:1px solid var(--action-blue-deep)!important;
+  background:linear-gradient(135deg,var(--action-blue-deep) 0%,var(--action-blue) 62%,#3b82f6 100%)!important;
+  color:#fff!important;
+  box-shadow:0 9px 22px rgba(37,99,235,.20),inset 0 1px 0 rgba(255,255,255,.18)!important;
+}
+
+/* Secondary actions such as Import / Small Cash Purchase / Add Vendor. */
+.patients36-page .patients36-hero-actions :is(.btn-secondary,.button-secondary),
+.bill46-page .bill14-command-header :is(.btn-secondary,.button-secondary),
+.bill14-page .bill14-command-header :is(.btn-secondary,.button-secondary),
+.ex57-page .ex57-actions :is(.btn-secondary,.button-secondary),
+.forms-v28 .forms-v28-hero-actions :is(.btn-secondary,.button-secondary){
+  border:1px solid var(--action-border)!important;
+  background:linear-gradient(180deg,#fff 0%,#f7faff 100%)!important;
+  color:var(--action-text)!important;
+  box-shadow:0 6px 16px rgba(15,23,42,.045)!important;
+}
+
+.patients36-page .patients36-hero-actions :is(.btn,.button):hover,
+.dr11-page .dr11-command-header :is(.btn,.button):hover,
+.appointments-v40 .sa-appointments-header-actions :is(.btn,.button):hover,
+.tx43-page .tx43-hero > :is(.btn,.button):hover,
+.tx43-page .tx43-management-head > :is(.btn,.button):hover,
+.tp80-page .tp80-hero > :is(.btn,.button):hover,
+.bill32-shell .bill32-create-strip :is(.btn,.button):hover,
+.bill46-page .bill14-command-header :is(.btn,.button):hover,
+.bill14-page .bill14-command-header :is(.btn,.button):hover,
+.services49-shell .svc15-command > :is(.btn,.button):hover,
+.ex57-page .ex57-actions :is(.btn,.button):hover,
+.forms-v28 .forms-v28-hero-actions :is(.btn,.button):hover,
+.team-v26 .team-v26-hero :is(.btn,.button):hover{
+  transform:translateY(-1px)!important;
+  box-shadow:0 12px 26px rgba(37,99,235,.14)!important;
+}
+
+/* Keep icons proportionate. */
+.patients36-page .patients36-hero-actions :is(.btn,.button) svg,
+.dr11-page .dr11-command-header :is(.btn,.button) svg,
+.appointments-v40 .sa-appointments-header-actions :is(.btn,.button) svg,
+.tx43-page :is(.tx43-hero,.tx43-management-head) :is(.btn,.button) svg,
+.tp80-page .tp80-hero :is(.btn,.button) svg,
+.bill32-shell .bill32-create-strip :is(.btn,.button) svg,
+.bill46-page .bill14-command-header :is(.btn,.button) svg,
+.bill14-page .bill14-command-header :is(.btn,.button) svg,
+.services49-shell .svc15-command :is(.btn,.button) svg,
+.ex57-page .ex57-actions :is(.btn,.button) svg,
+.forms-v28 .forms-v28-hero-actions :is(.btn,.button) svg,
+.team-v26 .team-v26-hero :is(.btn,.button) svg{
+  width:16px!important;
+  height:16px!important;
+  flex:0 0 16px!important;
+  margin:0!important;
+}
+
+/* Action groups: desktop stays compact and right aligned. */
+.patients36-page .patients36-hero-actions,
+.appointments-v40 .sa-appointments-header-actions,
+.ex57-page .ex57-actions,
+.forms-v28 .forms-v28-hero-actions{
+  display:flex!important;
+  align-items:center!important;
+  justify-content:flex-end!important;
+  gap:9px!important;
+  flex-wrap:wrap!important;
+  width:auto!important;
+  min-width:0!important;
+}
+
+/* Tablet: actions wrap naturally without turning into long full-width bars. */
+@media(max-width:900px){
+  .patients36-page .patients36-hero,
+  .dr11-page .dr11-command-header,
+  .appointments-v40 .sa-appointments-header,
+  .tx43-page .tx43-hero,
+  .tp80-page .tp80-hero,
+  .bill32-shell .bill32-create-strip,
+  .bill46-page .bill14-command-header,
+  .bill14-page .bill14-command-header,
+  .services49-shell .svc15-command,
+  .ex57-page .ex57-hero,
+  .forms-v28 .forms-v28-hero,
+  .team-v26 .team-v26-hero{
+    gap:16px!important;
+  }
+
+  .patients36-page .patients36-hero-actions,
+  .appointments-v40 .sa-appointments-header-actions,
+  .ex57-page .ex57-actions,
+  .forms-v28 .forms-v28-hero-actions{
+    justify-content:flex-start!important;
+    width:100%!important;
+  }
+
+  .patients36-page .patients36-hero-actions :is(.btn,.button),
+  .dr11-page .dr11-command-header :is(.btn,.button),
+  .appointments-v40 .sa-appointments-header-actions :is(.btn,.button),
+  .tx43-page .tx43-hero > :is(.btn,.button),
+  .tx43-page .tx43-management-head > :is(.btn,.button),
+  .tp80-page .tp80-hero > :is(.btn,.button),
+  .bill32-shell .bill32-create-strip :is(.btn,.button),
+  .bill46-page .bill14-command-header :is(.btn,.button),
+  .bill14-page .bill14-command-header :is(.btn,.button),
+  .services49-shell .svc15-command > :is(.btn,.button),
+  .ex57-page .ex57-actions :is(.btn,.button),
+  .forms-v28 .forms-v28-hero-actions :is(.btn,.button),
+  .team-v26 .team-v26-hero :is(.btn,.button){
+    width:max-content!important;
+    max-width:100%!important;
+    min-height:42px!important;
+  }
+}
+
+/* Phone: multi-action groups use a balanced two-column layout where useful. */
+@media(max-width:640px){
+  .patients36-page .patients36-hero-actions,
+  .ex57-page .ex57-actions,
+  .forms-v28 .forms-v28-hero-actions{
+    display:grid!important;
+    grid-template-columns:repeat(2,minmax(0,1fr))!important;
+    gap:8px!important;
+    width:100%!important;
+  }
+
+  .patients36-page .patients36-hero-actions :is(.btn,.button),
+  .ex57-page .ex57-actions :is(.btn,.button),
+  .forms-v28 .forms-v28-hero-actions :is(.btn,.button){
+    width:100%!important;
+    min-width:0!important;
+    padding-inline:12px!important;
+    white-space:normal!important;
+    text-align:center!important;
+  }
+
+  /* Single-action pages stay compact instead of stretching edge-to-edge. */
+  .dr11-page .dr11-command-header :is(.btn,.button),
+  .appointments-v40 .sa-appointments-header-actions :is(.btn,.button),
+  .tx43-page .tx43-hero > :is(.btn,.button),
+  .tx43-page .tx43-management-head > :is(.btn,.button),
+  .tp80-page .tp80-hero > :is(.btn,.button),
+  .bill32-shell .bill32-create-strip :is(.btn,.button),
+  .bill46-page .bill14-command-header :is(.btn,.button),
+  .bill14-page .bill14-command-header :is(.btn,.button),
+  .services49-shell .svc15-command > :is(.btn,.button),
+  .team-v26 .team-v26-hero :is(.btn,.button){
+    width:max-content!important;
+    max-width:100%!important;
+    min-height:43px!important;
+    padding-inline:13px!important;
+    white-space:normal!important;
+  }
+
+  .appointments-v40 .sa-appointments-header-actions,
+  .team-v26 .team-v26-hero{
+    align-items:flex-start!important;
+  }
+}
+
+/* Very narrow phones: avoid clipped labels; actions stack only when necessary. */
+@media(max-width:420px){
+  .patients36-page .patients36-hero-actions,
+  .ex57-page .ex57-actions,
+  .forms-v28 .forms-v28-hero-actions{
+    grid-template-columns:1fr!important;
+  }
+
+  .patients36-page .patients36-hero-actions :is(.btn,.button),
+  .ex57-page .ex57-actions :is(.btn,.button),
+  .forms-v28 .forms-v28-hero-actions :is(.btn,.button){
+    width:100%!important;
+    min-height:44px!important;
+  }
+
+  .dr11-page .dr11-command-header :is(.btn,.button),
+  .appointments-v40 .sa-appointments-header-actions :is(.btn,.button),
+  .tx43-page .tx43-hero > :is(.btn,.button),
+  .tx43-page .tx43-management-head > :is(.btn,.button),
+  .tp80-page .tp80-hero > :is(.btn,.button),
+  .bill32-shell .bill32-create-strip :is(.btn,.button),
+  .bill46-page .bill14-command-header :is(.btn,.button),
+  .bill14-page .bill14-command-header :is(.btn,.button),
+  .services49-shell .svc15-command > :is(.btn,.button),
+  .team-v26 .team-v26-hero :is(.btn,.button){
+    width:100%!important;
+    max-width:100%!important;
+    min-height:44px!important;
+  }
+}
+
+@media(prefers-reduced-motion:reduce){
+  .patients36-page .patients36-hero-actions :is(.btn,.button),
+  .dr11-page .dr11-command-header :is(.btn,.button),
+  .appointments-v40 .sa-appointments-header-actions :is(.btn,.button),
+  .tx43-page :is(.tx43-hero,.tx43-management-head) :is(.btn,.button),
+  .tp80-page .tp80-hero :is(.btn,.button),
+  .bill32-shell .bill32-create-strip :is(.btn,.button),
+  .bill46-page .bill14-command-header :is(.btn,.button),
+  .bill14-page .bill14-command-header :is(.btn,.button),
+  .services49-shell .svc15-command :is(.btn,.button),
+  .ex57-page .ex57-actions :is(.btn,.button),
+  .forms-v28 .forms-v28-hero-actions :is(.btn,.button),
+  .team-v26 .team-v26-hero :is(.btn,.button){transition:none!important;transform:none!important}
+}
