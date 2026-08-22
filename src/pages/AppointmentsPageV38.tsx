@@ -84,13 +84,15 @@ function focusConfirmedAppointment(appointment: Appointment) {
   }, 20)
 }
 
-function openRequestsWorkspace() {
+function openRequestsWorkspace(scroll = false) {
   window.setTimeout(() => {
     clickWorkspaceTab('Requests')
-    window.setTimeout(() => {
-      document.querySelector('.sa-appointments-requests-panel')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-    }, 80)
-  }, 20)
+    if (scroll) {
+      window.setTimeout(() => {
+        document.querySelector('.sa-appointments-requests-panel')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+      }, 80)
+    }
+  }, 35)
 }
 
 function AppointmentSuccessModal({
@@ -203,59 +205,74 @@ export function AppointmentsPageV38() {
   useEffect(() => {
     if (!ready) return
 
+    function refreshRequestsWorkspace(scroll = false) {
+      setRenderVersion((version) => version + 1)
+      openRequestsWorkspace(scroll)
+    }
+
     function verifyCreatedAppointment(appointment: Appointment) {
       const verificationKey = `${appointment.id}:created`
       if (verifyingRef.current.has(verificationKey)) return
       verifyingRef.current.add(verificationKey)
 
       window.setTimeout(() => {
-        hydratingRef.current = true
         void loadAppointmentsFromSupabase({ strict: true })
           .then((rows) => {
             const remote = rows.find((entry) => entry.id === appointment.id)
             previousRef.current = new Map(rows.map((entry) => [entry.id, entry]))
-            if (remote) setNotice({ kind: 'created', appointment: remote })
+            if (remote) {
+              setNotice({ kind: 'created', appointment: remote })
+              refreshRequestsWorkspace(false)
+            }
           })
           .catch((error) => {
             console.error('[appointment verification failed]', error)
           })
           .finally(() => {
-            hydratingRef.current = false
             verifyingRef.current.delete(verificationKey)
           })
-      }, 700)
+      }, 450)
     }
 
     const timer = window.setInterval(() => {
       if (hydratingRef.current) return
+
       const currentRows = getStoredAppointments()
       const current = new Map(currentRows.map((appointment) => [appointment.id, appointment]))
       const previous = previousRef.current
-      let requestDecisionChanged = false
       const keepRequestsOpen = requestsWorkspaceIsActive()
+      let createdAppointment: Appointment | null = null
+      let requestDecisionChanged = false
 
       for (const appointment of currentRows) {
         const before = previous.get(appointment.id)
         if (!before) {
+          createdAppointment = appointment
           verifyCreatedAppointment(appointment)
           continue
         }
 
-        if (before.status === 'pending' && appointment.status !== 'pending') {
-          requestDecisionChanged = true
-          if (appointment.status === 'confirmed') {
-            setNotice({ kind: 'approved', appointment })
+        if (before.status !== appointment.status) {
+          if (before.status === 'pending') {
+            requestDecisionChanged = true
+            if (appointment.status === 'confirmed') {
+              setNotice({ kind: 'approved', appointment })
+            }
           }
         }
       }
 
-      if (requestDecisionChanged) {
+      if (createdAppointment) {
+        // Immediately remount from the updated local cache instead of waiting for a full browser refresh.
+        refreshRequestsWorkspace(true)
+      } else if (requestDecisionChanged) {
+        // Approve/reject should remove the pending card immediately and preserve the Requests workspace.
         setRenderVersion((version) => version + 1)
-        if (keepRequestsOpen) openRequestsWorkspace()
+        if (keepRequestsOpen) openRequestsWorkspace(false)
       }
 
       previousRef.current = current
-    }, 180)
+    }, 100)
 
     return () => window.clearInterval(timer)
   }, [ready])
@@ -267,7 +284,7 @@ export function AppointmentsPageV38() {
     if (currentNotice.kind === 'approved') {
       focusConfirmedAppointment(currentNotice.appointment)
     } else {
-      openRequestsWorkspace()
+      openRequestsWorkspace(true)
     }
   }
 
