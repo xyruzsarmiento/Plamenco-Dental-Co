@@ -1,8 +1,9 @@
-import { Menu, X } from 'lucide-react'
-import { useState } from 'react'
+import { Camera, Menu, X } from 'lucide-react'
+import { useEffect, useState } from 'react'
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../features/auth/AuthContext'
 import { roleLabels, usePermissions } from '../../features/auth/permissions'
+import { supabase } from '../../lib/supabase'
 import { Button } from '../ui/Button'
 import { navigationGroups, navigationItems } from './navigation'
 
@@ -14,10 +15,24 @@ function getPageClass(pathname: string) {
 
 export function AppLayout() {
   const [isMobileNavOpen, setIsMobileNavOpen] = useState(false)
+  const [avatarUrl, setAvatarUrl] = useState('')
+  const [avatarStatus, setAvatarStatus] = useState('')
   const { user, signOut } = useAuth()
   const { canAny } = usePermissions()
   const location = useLocation()
   const navigate = useNavigate()
+
+  useEffect(() => {
+    let active = true
+    if (!supabase || !user?.id || user.role === 'patient') {
+      setAvatarUrl('')
+      return () => { active = false }
+    }
+    void supabase.from('profiles').select('avatar_url').eq('id', user.id).maybeSingle().then(({ data }) => {
+      if (active) setAvatarUrl(String(data?.avatar_url ?? ''))
+    })
+    return () => { active = false }
+  }, [user?.id, user?.role])
 
   const currentPage =
     navigationItems.find(
@@ -47,6 +62,37 @@ export function AppLayout() {
           : user?.role === 'super_admin'
             ? 'Executive administration'
             : 'Clinic workspace'
+
+  async function uploadAvatar(file?: File) {
+    if (!file || !user || !supabase || user.role === 'patient') return
+    if (!file.type.startsWith('image/')) {
+      setAvatarStatus('Choose an image file.')
+      return
+    }
+    if (file.size > 2 * 1024 * 1024) {
+      setAvatarStatus('Image must be 2 MB or smaller.')
+      return
+    }
+    setAvatarStatus('Saving…')
+    const dataUrl = await new Promise<string>((resolve, reject) => {
+      const reader = new FileReader()
+      reader.onload = () => resolve(String(reader.result ?? ''))
+      reader.onerror = () => reject(new Error('Unable to read the selected image.'))
+      reader.readAsDataURL(file)
+    }).catch(() => '')
+    if (!dataUrl) {
+      setAvatarStatus('Unable to read the selected image.')
+      return
+    }
+    const { error } = await supabase.from('profiles').update({ avatar_url: dataUrl }).eq('id', user.id)
+    if (error) {
+      setAvatarStatus('Unable to save profile photo.')
+      return
+    }
+    setAvatarUrl(dataUrl)
+    setAvatarStatus('Photo updated')
+    window.setTimeout(() => setAvatarStatus(''), 2500)
+  }
 
   return (
     <div className={`app-shell role-${user?.role ?? 'guest'} ${getPageClass(location.pathname)}`}>
@@ -93,10 +139,16 @@ export function AppLayout() {
 
         <div className="sidebar-footer">
           <div className="user-card">
-            <span className="avatar">{user?.name?.charAt(0)?.toUpperCase() ?? 'U'}</span>
+            <label className="internal-avatar-upload" title="Change profile photo">
+              <span className="avatar" style={avatarUrl ? { backgroundImage: `url(${avatarUrl})` } : undefined}>
+                {!avatarUrl && (user?.name?.charAt(0)?.toUpperCase() ?? 'U')}
+              </span>
+              <span className="internal-avatar-camera"><Camera size={11} /></span>
+              <input type="file" accept="image/jpeg,image/png,image/webp" onChange={(event) => void uploadAvatar(event.target.files?.[0])} />
+            </label>
             <span>
               <strong>{user?.name || user?.email || 'Signed in user'}</strong>
-              <small>{user?.role ? roleLabels[user.role] : 'User'}</small>
+              <small>{avatarStatus || (user?.role ? roleLabels[user.role] : 'User')}</small>
             </span>
           </div>
           <Button
