@@ -170,6 +170,7 @@ function AppointmentSuccessModal({
 export function AppointmentsPageV38() {
   const [ready, setReady] = useState(false)
   const [notice, setNotice] = useState<AppointmentNotice | null>(null)
+  const [renderVersion, setRenderVersion] = useState(0)
   const previousRef = useRef<Map<string, Appointment>>(new Map())
   const hydratingRef = useRef(false)
   const verifyingRef = useRef<Set<string>>(new Set())
@@ -196,8 +197,8 @@ export function AppointmentsPageV38() {
   useEffect(() => {
     if (!ready) return
 
-    function verifyWithDatabase(appointment: Appointment, kind: AppointmentNotice['kind']) {
-      const verificationKey = `${appointment.id}:${kind}`
+    function verifyCreatedAppointment(appointment: Appointment) {
+      const verificationKey = `${appointment.id}:created`
       if (verifyingRef.current.has(verificationKey)) return
       verifyingRef.current.add(verificationKey)
 
@@ -207,11 +208,7 @@ export function AppointmentsPageV38() {
           .then((rows) => {
             const remote = rows.find((entry) => entry.id === appointment.id)
             previousRef.current = new Map(rows.map((entry) => [entry.id, entry]))
-            if (!remote) return
-            if (kind === 'approved' && remote.status !== 'confirmed') return
-
-            if (kind === 'approved') focusConfirmedAppointment(remote)
-            setNotice({ kind, appointment: remote })
+            if (remote) setNotice({ kind: 'created', appointment: remote })
           })
           .catch((error) => {
             console.error('[appointment verification failed]', error)
@@ -220,7 +217,7 @@ export function AppointmentsPageV38() {
             hydratingRef.current = false
             verifyingRef.current.delete(verificationKey)
           })
-      }, 450)
+      }, 700)
     }
 
     const timer = window.setInterval(() => {
@@ -228,21 +225,29 @@ export function AppointmentsPageV38() {
       const currentRows = getStoredAppointments()
       const current = new Map(currentRows.map((appointment) => [appointment.id, appointment]))
       const previous = previousRef.current
+      let requestDecisionChanged = false
 
       for (const appointment of currentRows) {
         const before = previous.get(appointment.id)
         if (!before) {
-          verifyWithDatabase(appointment, 'created')
-          break
+          verifyCreatedAppointment(appointment)
+          continue
         }
-        if (before.status === 'pending' && appointment.status === 'confirmed') {
-          verifyWithDatabase(appointment, 'approved')
-          break
+
+        if (before.status === 'pending' && appointment.status !== 'pending') {
+          requestDecisionChanged = true
+          if (appointment.status === 'confirmed') {
+            setNotice({ kind: 'approved', appointment })
+          }
         }
       }
 
+      if (requestDecisionChanged) {
+        setRenderVersion((version) => version + 1)
+      }
+
       previousRef.current = current
-    }, 300)
+    }, 180)
 
     return () => window.clearInterval(timer)
   }, [ready])
@@ -272,7 +277,7 @@ export function AppointmentsPageV38() {
 
   return (
     <div className="appointments-v40" data-storage-key={APPOINTMENT_STORAGE_KEY}>
-      <AppointmentsPage />
+      <AppointmentsPage key={renderVersion} />
       {notice && <AppointmentSuccessModal notice={notice} onClose={() => setNotice(null)} onContinue={handleContinue} />}
     </div>
   )
