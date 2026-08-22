@@ -1,3 +1,3 @@
-import '../styles/patient-portal-premium-v95.css'
+import '../styles/patient-portal-premium-v94.css'
 
-export { PatientPortalPage } from './PatientPortalPageV2'
+export { PatientPortalPage } from './PatientPortalPageV3'
