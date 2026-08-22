@@ -2,7 +2,7 @@ import type { Patient, PatientFormValues } from './patientTypes'
 import { recordAuditEntry } from '../security/auditLogStore'
 import { getCurrentSessionUserName } from '../security/security'
 import { supabase } from '../../lib/supabase'
-import { insertRemoteTableRow, updateRemoteTableRow, deleteRemoteTableRow } from '../../lib/supabaseSync'
+import { insertRemoteTableRow, updateRemoteTableRow } from '../../lib/supabaseSync'
 
 const PATIENT_STORAGE_KEY = 'plamenco.patients'
 
@@ -323,18 +323,36 @@ export function updatePatient(id: string, values: PatientFormValues): Patient | 
   return updated
 }
 
+/**
+ * Legacy compatibility name. Patient records are retained for clinical/financial
+ * auditability; this operation archives the patient instead of deleting rows.
+ */
 export function deletePatient(id: string): boolean {
   const patients = getStoredPatients()
-  const index = patients.findIndex((p) => p.id === id)
+  const index = patients.findIndex((patient) => patient.id === id)
 
   if (index === -1) {
     return false
   }
 
-  patients.splice(index, 1)
-  saveStoredPatients(patients)
+  const archived: Patient = {
+    ...patients[index],
+    status: 'inactive',
+    updatedAt: new Date().toISOString(),
+  }
 
-  void deleteRemoteTableRow('patients', id)
+  const nextPatients = patients.map((patient) => (patient.id === id ? archived : patient))
+  saveStoredPatients(nextPatients)
+
+  void updateRemoteTableRow('patients', id, { status: 'inactive' })
+
+  recordAuditEntry({
+    user: getCurrentSessionUserName(),
+    action: 'patient_archived',
+    entity: 'patient',
+    entityId: archived.patientId,
+    metadata: { patientId: archived.patientId, archivedAt: archived.updatedAt },
+  })
 
   return true
 }
@@ -382,7 +400,7 @@ export function sortPatients(patients: Patient[], key: SortKey, direction: 'asc'
         bVal = `${b.firstName} ${b.lastName}`.toLowerCase()
         break
       case 'patientId':
-        aVal = a.patientId
+        aVal = patient.patientId
         bVal = b.patientId
         break
       case 'registrationDate':
