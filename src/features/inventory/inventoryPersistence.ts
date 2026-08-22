@@ -218,8 +218,43 @@ export async function postStockMovementPersisted(input: {
   return { movement, stock }
 }
 
-export function stockInPersisted(input: Omit<Parameters<typeof postStockMovementPersisted>[0], 'movementType'>) {
-  return postStockMovementPersisted({ ...input, movementType: 'manual_stock_in' })
+export async function stockInPersisted(input: {
+  branchId: string
+  itemId: string
+  quantity: number
+  unitCostCents?: number
+  reason: string
+  reference?: string
+  receivedDate?: string
+  batchNumber?: string
+  expiryDate?: string
+  clientRequestId?: string
+}) {
+  if (!input.branchId.trim()) throw new Error('Branch is required.')
+  if (!input.itemId.trim()) throw new Error('Inventory item is required.')
+  if (!Number.isFinite(input.quantity) || input.quantity <= 0) throw new Error('Quantity must be greater than zero.')
+  if (!input.reason.trim()) throw new Error('Reason is required.')
+  const db = requireDatabase()
+  const { data, error } = await db.rpc('post_manual_stock_in_atomic', {
+    p_branch_id: input.branchId,
+    p_inventory_item_id: input.itemId,
+    p_quantity: input.quantity,
+    p_unit_cost_cents: input.unitCostCents ?? 0,
+    p_reason: input.reason.trim(),
+    p_reference: input.reference ?? '',
+    p_received_date: input.receivedDate ?? new Date().toISOString().slice(0, 10),
+    p_batch_number: input.batchNumber ?? '',
+    p_expiry_date: input.expiryDate ?? null,
+    p_client_request_id: input.clientRequestId ?? createUuid(),
+  })
+  if (error || !data) throw new Error(error?.message || 'Stock was not added. The database rejected the inventory operation.')
+  const result = data as Record<string, any>
+  const movement = mapMovement(result.movement as Record<string, any>)
+  const { data: stockRow, error: stockError } = await db.from('branch_inventory').select('*').eq('branch_id', input.branchId).eq('inventory_item_id', input.itemId).single()
+  if (stockError || !stockRow) throw new Error('Stock was saved, but the authoritative balance could not be refreshed. Reload the page.')
+  const stock = mapStock(stockRow as Record<string, any>)
+  updateCaches(movement, stock)
+  return { movement, stock, duplicateReused: Boolean(result.duplicate_reused) }
 }
 
 export function stockOutPersisted(input: Omit<Parameters<typeof postStockMovementPersisted>[0], 'movementType'>) {
@@ -293,6 +328,26 @@ export async function createStockTransferPersisted(input: {
     p_client_request_id: input.clientRequestId ?? createUuid(),
   })
   if (error || !data) throw new Error(error?.message || 'Unable to create stock transfer.')
+  await refreshInventoryOperationalCaches()
+  return mapTransfer(data as Record<string, any>)
+}
+
+export async function completeStockTransferPersisted(input: {
+  fromBranchId: string
+  toBranchId: string
+  items: Array<{ id: string; itemId: string; quantity: number }>
+  notes?: string
+  clientRequestId?: string
+}) {
+  const db = requireDatabase()
+  const { data, error } = await db.rpc('complete_stock_transfer_atomic', {
+    p_from_branch_id: input.fromBranchId,
+    p_to_branch_id: input.toBranchId,
+    p_items: input.items,
+    p_notes: input.notes ?? '',
+    p_client_request_id: input.clientRequestId ?? createUuid(),
+  })
+  if (error || !data) throw new Error(error?.message || 'Quick transfer failed. No partial transfer was committed.')
   await refreshInventoryOperationalCaches()
   return mapTransfer(data as Record<string, any>)
 }
