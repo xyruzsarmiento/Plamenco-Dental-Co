@@ -53,8 +53,8 @@ function AppointmentSuccessModal({ notice, onClose }: { notice: AppointmentNotic
         <h2 id="appointment-success-title">{approved ? 'Appointment confirmed' : 'Booking saved successfully'}</h2>
         <p className="appointment-success-copy">
           {approved
-            ? 'The appointment is now confirmed and saved in the clinic database.'
-            : 'The appointment request has been saved in the clinic database and is ready for review.'}
+            ? 'The appointment is now confirmed and verified in the clinic database.'
+            : 'The appointment request has been verified in the clinic database and is ready for review.'}
         </p>
 
         <div className="appointment-success-summary">
@@ -80,6 +80,7 @@ export function AppointmentsPageV38() {
   const [notice, setNotice] = useState<AppointmentNotice | null>(null)
   const previousRef = useRef<Map<string, Appointment>>(new Map())
   const hydratingRef = useRef(false)
+  const verifyingRef = useRef<Set<string>>(new Set())
 
   useEffect(() => {
     let cancelled = false
@@ -104,6 +105,32 @@ export function AppointmentsPageV38() {
   useEffect(() => {
     if (!ready) return
 
+    function verifyWithDatabase(appointment: Appointment, kind: AppointmentNotice['kind']) {
+      const verificationKey = `${appointment.id}:${kind}`
+      if (verifyingRef.current.has(verificationKey)) return
+      verifyingRef.current.add(verificationKey)
+
+      window.setTimeout(() => {
+        hydratingRef.current = true
+        void loadAppointmentsFromSupabase({ strict: true })
+          .then((rows) => {
+            const remote = rows.find((entry) => entry.id === appointment.id)
+            previousRef.current = new Map(rows.map((entry) => [entry.id, entry]))
+            setVersion((currentVersion) => currentVersion + 1)
+            if (!remote) return
+            if (kind === 'approved' && remote.status !== 'confirmed') return
+            setNotice({ kind, appointment: remote })
+          })
+          .catch((error) => {
+            console.error('[appointment verification failed]', error)
+          })
+          .finally(() => {
+            hydratingRef.current = false
+            verifyingRef.current.delete(verificationKey)
+          })
+      }, 650)
+    }
+
     const timer = window.setInterval(() => {
       if (hydratingRef.current) return
       const currentRows = getStoredAppointments()
@@ -113,20 +140,11 @@ export function AppointmentsPageV38() {
       for (const appointment of currentRows) {
         const before = previous.get(appointment.id)
         if (!before) {
-          setNotice({ kind: 'created', appointment })
+          verifyWithDatabase(appointment, 'created')
           break
         }
         if (before.status === 'pending' && appointment.status === 'confirmed') {
-          setNotice({ kind: 'approved', appointment })
-          window.setTimeout(() => {
-            hydratingRef.current = true
-            void loadAppointmentsFromSupabase({ strict: false })
-              .then((rows) => {
-                previousRef.current = new Map(rows.map((entry) => [entry.id, entry]))
-                setVersion((currentVersion) => currentVersion + 1)
-              })
-              .finally(() => { hydratingRef.current = false })
-          }, 650)
+          verifyWithDatabase(appointment, 'approved')
           break
         }
       }
