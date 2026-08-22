@@ -1,0 +1,90 @@
+/* V106 — shared internal shell geometry fix for Admin, Super Admin, Dentist and Staff. */
+
+/* The shell already owns the sidebar column. Do not offset the main workspace a second time. */
+.app-shell{
+  width:100%!important;
+  max-width:none!important;
+  grid-template-columns:244px minmax(0,1fr)!important;
+  column-gap:0!important;
+  overflow-x:clip!important;
+}
+.app-shell>.sidebar{
+  width:244px!important;
+  max-width:244px!important;
+  min-width:244px!important;
+  margin:0!important;
+}
+.app-shell>.main-shell{
+  width:100%!important;
+  max-width:none!important;
+  min-width:0!important;
+  margin:0!important;
+  margin-left:0!important;
+  padding:0!important;
+  transform:none!important;
+}
+.app-shell .topbar{
+  width:100%!important;
+  max-width:none!important;
+  margin:0!important;
+  box-sizing:border-box!important;
+}
+.app-shell .content-area{
+  width:100%!important;
+  max-width:none!important;
+  margin:0!important;
+  padding:26px clamp(18px,2.2vw,32px) 40px!important;
+  box-sizing:border-box!important;
+}
+.app-shell .content-area>*{
+  width:100%!important;
+  max-width:none!important;
+  margin-left:0!important;
+  margin-right:0!important;
+  box-sizing:border-box!important;
+}
+
+/* Prevent page-level centered/max-width wrappers from recreating the large desktop gutter. */
+.app-shell .content-area>.page-stack,
+.app-shell .content-area>[class*="workspace"],
+.app-shell .content-area>[class*="dashboard"],
+.app-shell .content-area>[class*="page-v"],
+.app-shell .content-area>[class*="page-shell"]{
+  width:100%!important;
+  max-width:none!important;
+  margin-inline:0!important;
+}
+
+/* Tablet: slightly narrower sidebar, still no duplicate offset. */
+@media(max-width:1180px) and (min-width:901px){
+  .app-shell{grid-template-columns:226px minmax(0,1fr)!important}
+  .app-shell>.sidebar{width:226px!important;max-width:226px!important;min-width:226px!important}
+  .app-shell .content-area{padding:20px 18px 34px!important}
+}
+
+/* Mobile/tablet: sidebar becomes an overlay drawer and main content uses the full viewport. */
+@media(max-width:900px){
+  .app-shell{display:block!important;grid-template-columns:1fr!important;width:100%!important}
+  .app-shell>.sidebar{
+    position:fixed!important;
+    inset:0 auto 0 0!important;
+    width:min(286px,88vw)!important;
+    max-width:min(286px,88vw)!important;
+    min-width:0!important;
+    height:100dvh!important;
+    transform:translateX(-105%)!important;
+    transition:transform .2s ease!important;
+    z-index:1000!important;
+    box-shadow:20px 0 48px rgba(15,23,42,.18)!important;
+  }
+  .app-shell>.sidebar.is-open{transform:translateX(0)!important}
+  .app-shell>.main-shell{width:100%!important;margin:0!important}
+  .app-shell .topbar{position:sticky!important;top:0!important;z-index:70!important}
+  .app-shell .content-area{padding:16px 14px 30px!important}
+  .app-shell .nav-backdrop{position:fixed!important;inset:0!important;display:block!important;background:rgba(15,23,42,.36)!important;backdrop-filter:blur(2px)!important;z-index:900!important}
+}
+
+@media(max-width:640px){
+  .app-shell .content-area{padding:12px 10px 24px!important}
+  .app-shell .topbar{min-height:62px!important;padding:10px 12px!important}
+}
