@@ -10,6 +10,7 @@ export type AuthUser = {
   status?: AccountStatus
   permissions?: string[]
   patientId?: string
+  avatarUrl?: string
 }
 
 export type StaffStatus = 'active' | 'inactive'
