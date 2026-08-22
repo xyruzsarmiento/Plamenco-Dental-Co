@@ -1,0 +1,42 @@
+/* Final x-axis paint fix for the Expense Control Center trend chart.
+ * The report can supply up to 60 date samples for a year. Keep every plotted
+ * point interactive, but force only a sparse set of labels to paint so SVG
+ * text cannot overlap into the dense number string seen in Chrome. */
+.ex57-trend svg .ex57-axis {
+  display: none !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+  user-select: none !important;
+}
+
+.ex57-trend svg .ex57-axis:nth-of-type(10n + 1),
+.ex57-trend svg .ex57-axis:last-of-type {
+  display: block !important;
+  visibility: visible !important;
+}
+
+@media (max-width: 1100px) {
+  .ex57-trend svg .ex57-axis {
+    display: none !important;
+    visibility: hidden !important;
+  }
+
+  .ex57-trend svg .ex57-axis:nth-of-type(15n + 1),
+  .ex57-trend svg .ex57-axis:last-of-type {
+    display: block !important;
+    visibility: visible !important;
+  }
+}
+
+@media (max-width: 700px) {
+  .ex57-trend svg .ex57-axis {
+    display: none !important;
+    visibility: hidden !important;
+  }
+
+  .ex57-trend svg .ex57-axis:nth-of-type(20n + 1),
+  .ex57-trend svg .ex57-axis:last-of-type {
+    display: block !important;
+    visibility: visible !important;
+  }
+}
