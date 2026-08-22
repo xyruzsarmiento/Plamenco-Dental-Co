@@ -17,6 +17,7 @@ export type AuditAction =
   | 'dental_record_created'
   | 'dental_record_updated'
   | 'treatment_created'
+  | 'treatment_updated'
   | 'charge_added'
   | 'invoice_created'
   | 'invoice_voided'
@@ -91,6 +92,7 @@ export function formatAuditAction(action: AuditAction) {
     dental_record_created: { label: 'Dental record added', description: 'A new dental record was created.' },
     dental_record_updated: { label: 'Dental record updated', description: 'A dental record was revised.' },
     treatment_created: { label: 'Treatment recorded', description: 'A new treatment was added to care history.' },
+    treatment_updated: { label: 'Treatment updated', description: 'An existing treatment record was changed or voided.' },
     charge_added: { label: 'Charge added', description: 'A financial charge was created from authorized clinic work.' },
     invoice_created: { label: 'Invoice created', description: 'A billing invoice was created.' },
     invoice_voided: { label: 'Invoice voided', description: 'An unpaid invoice was voided with a reason.' },
@@ -171,7 +173,7 @@ function createMemoryStorage(): Storage {
     getItem: (key: string) => (store.has(key) ? store.get(key)! : null),
     key: (index: number) => Array.from(store.keys())[index] ?? null,
     removeItem: (key: string) => store.delete(key),
-    setItem: (key: string, value: string) => store.set(key, value),
+    setItem: (key: string, value: string) => store.setItem(key, value),
   } as Storage
 }
 
@@ -180,74 +182,38 @@ function getStorage(): Storage {
     return globalThis.localStorage
   }
 
-  const globalWithMemory = globalThis as typeof globalThis & {
-    __plamencoAuditMemoryStorage?: Storage
-  }
-
-  if (globalWithMemory.__plamencoAuditMemoryStorage) {
-    return globalWithMemory.__plamencoAuditMemoryStorage
-  }
+  const memoryStorage = (globalThis as typeof globalThis & { __plamencoMemoryStorage?: Storage }).__plamencoMemoryStorage
+  if (memoryStorage) return memoryStorage
 
   const created = createMemoryStorage()
-  globalWithMemory.__plamencoAuditMemoryStorage = created
+  ;(globalThis as typeof globalThis & { __plamencoMemoryStorage?: Storage }).__plamencoMemoryStorage = created
   return created
 }
 
-function safeParse<T>(value: string | null): T | null {
-  if (!value) return null
+function safeParseLogs(value: string | null): AuditLogEntry[] {
+  if (!value) return []
   try {
-    return JSON.parse(value) as T
+    const parsed = JSON.parse(value) as AuditLogEntry[]
+    return Array.isArray(parsed) ? parsed : []
   } catch {
-    return null
+    return []
   }
 }
 
-export function getStoredAuditLogs(): AuditLogEntry[] {
-  const stored = safeParse<AuditLogEntry[]>(getStorage().getItem(AUDIT_LOG_STORAGE_KEY))
-  return Array.isArray(stored) ? stored : []
+export function getAuditLogs(): AuditLogEntry[] {
+  return safeParseLogs(getStorage().getItem(AUDIT_LOG_STORAGE_KEY))
 }
 
-export function saveStoredAuditLogs(entries: AuditLogEntry[]) {
-  getStorage().setItem(AUDIT_LOG_STORAGE_KEY, JSON.stringify(entries))
+export function saveAuditLogs(logs: AuditLogEntry[]) {
+  getStorage().setItem(AUDIT_LOG_STORAGE_KEY, JSON.stringify(logs))
 }
 
-export function recordAuditEntry({
-  user,
-  action,
-  entity,
-  entityId,
-  metadata,
-}: {
-  user: string
-  action: AuditAction
-  entity: string
-  entityId: string
-  metadata?: Record<string, string | number | boolean | null | undefined>
-}) {
+export function recordAuditEntry(input: Omit<AuditLogEntry, 'id' | 'timestamp'>) {
   const entry: AuditLogEntry = {
-    id: `audit-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`,
-    user,
-    action,
-    entity,
-    entityId,
+    ...input,
+    id: `audit-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
     timestamp: new Date().toISOString(),
-    metadata: metadata ?? {},
   }
-
-  const next = [entry, ...getStoredAuditLogs()].slice(0, 250)
-  saveStoredAuditLogs(next)
+  saveAuditLogs([entry, ...getAuditLogs()].slice(0, 1000))
   return entry
 }
-
-export function getAuditLogsByEntity(entity: string, entityId?: string) {
-  return getStoredAuditLogs().filter((entry) => {
-    if (entry.entity !== entity) return false
-    return entityId ? entry.entityId === entityId : true
-  })
-}
-
-export function getRecentAuditLogs(limit = 25) {
-  return getStoredAuditLogs().slice(0, limit)
-}
-
-export { AUDIT_LOG_STORAGE_KEY }
