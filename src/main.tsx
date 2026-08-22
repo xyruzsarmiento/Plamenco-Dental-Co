@@ -127,10 +127,12 @@ import App from './App.tsx'
 import { registerPatientPortalPwa } from './features/patientPortal/pwaRegistration'
 import { registerAppointmentTrendChartInteractivity } from './lib/appointmentTrendInteractivity'
 import { registerAnalyticsChartInteractivity } from './lib/analyticsChartInteractivity'
+import { registerSessionCacheSecurity } from './lib/sessionCacheSecurity'
 
 registerPatientPortalPwa()
 registerAppointmentTrendChartInteractivity()
 registerAnalyticsChartInteractivity()
+registerSessionCacheSecurity()
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
