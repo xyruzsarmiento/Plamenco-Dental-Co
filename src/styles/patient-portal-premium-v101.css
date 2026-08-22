@@ -1,0 +1,176 @@
+/* Patient Portal V101 — blue-only premium palette, modal responsiveness, notification placement fixes. */
+
+/* Keep patient portal stat surfaces within the product's blue / white / slate design system. */
+.pv3-kpis>article,
+.pv3-appointment-stats>div,
+.pv3-record-overview>div,
+.pv4-billing-metrics>article{
+  border-color:#d7e4f7!important;
+  background:linear-gradient(135deg,#ffffff 14%,#f5f9ff 100%)!important;
+  box-shadow:0 10px 28px rgba(37,99,235,.055)!important;
+}
+.pv3-kpis>article::after,
+.pv3-appointment-stats>div::after,
+.pv3-record-overview>div::after,
+.pv4-billing-metrics>article::after{background:#dbeafe!important;opacity:.5!important}
+
+/* Dashboard KPI icons: one family, varied only by blue intensity. */
+.pv3-kpis>article>span{
+  background:#eaf2ff!important;
+  color:#2563eb!important;
+  border:1px solid #d7e7ff!important;
+}
+.pv3-kpis>article:nth-child(2)>span{background:#edf5ff!important;color:#1d4ed8!important}
+.pv3-kpis>article:nth-child(3)>span{background:#e8f1ff!important;color:#2563eb!important}
+.pv3-kpis>article:nth-child(4)>span{background:#f0f6ff!important;color:#3b82f6!important}
+.pv3-kpis>article.is-due>span{background:#e8f1ff!important;color:#2563eb!important}
+.pv3-kpis small{color:#718096!important}.pv3-kpis strong{color:#10213a!important}.pv3-kpis p{color:#718096!important}
+
+/* Appointment stats — blue family only. */
+.pv3-appointment-stats>div:nth-child(1),
+.pv3-appointment-stats>div:nth-child(2),
+.pv3-appointment-stats>div:nth-child(3){background:linear-gradient(135deg,#fff,#f3f8ff)!important;border-color:#d5e3f8!important}
+.pv3-appointment-stats>div:nth-child(1)::before,
+.pv3-appointment-stats>div:nth-child(2)::before,
+.pv3-appointment-stats>div:nth-child(3)::before{background:#eaf2ff!important;color:#2563eb!important;box-shadow:inset 0 0 0 1px #d7e7ff}
+.pv3-appointment-stats>div:nth-child(1)::after,
+.pv3-appointment-stats>div:nth-child(2)::after,
+.pv3-appointment-stats>div:nth-child(3)::after{background:#dbeafe!important}
+
+/* Dental record overview — blue family only. */
+.pv3-record-overview>div:nth-child(1),
+.pv3-record-overview>div:nth-child(2),
+.pv3-record-overview>div:nth-child(3){background:linear-gradient(135deg,#fff,#f4f8ff)!important;border-color:#d6e3f6!important;color:#2563eb!important}
+.pv3-record-overview>div:nth-child(1)::after,
+.pv3-record-overview>div:nth-child(2)::after,
+.pv3-record-overview>div:nth-child(3)::after{background:#dbeafe!important}
+.pv3-record-overview>div>svg{color:#2563eb!important;background:#eaf2ff!important}
+
+/* Billing metrics — remove green/orange/violet accents. */
+.pv4-billing-metrics>article:nth-child(1),
+.pv4-billing-metrics>article:nth-child(2),
+.pv4-billing-metrics>article:nth-child(3),
+.pv4-billing-metrics>article:nth-child(4){background:linear-gradient(135deg,#fff,#f4f8ff)!important;border-color:#d6e3f6!important}
+.pv4-billing-metrics>article:nth-child(1)::before,
+.pv4-billing-metrics>article:nth-child(2)::before,
+.pv4-billing-metrics>article:nth-child(3)::before,
+.pv4-billing-metrics>article:nth-child(4)::before{background:#eaf2ff!important;color:#2563eb!important;box-shadow:inset 0 0 0 1px #d7e7ff}
+.pv4-billing-metrics>article:nth-child(1)::after,
+.pv4-billing-metrics>article:nth-child(2)::after,
+.pv4-billing-metrics>article:nth-child(3)::after,
+.pv4-billing-metrics>article:nth-child(4)::after{background:#dbeafe!important}
+
+/* Invoice balance should use the brand blue, not warning orange. */
+.pv3-invoice-list article strong,
+.pv3-invoice-list article b{color:#172033!important}
+.pv3-invoice-list article footer strong,
+.pv3-invoice-list article aside strong,
+.pv3-invoice-list article [class*="balance"]{color:#2563eb!important}
+.pv3-billing-summary strong{color:#1d4ed8!important}
+
+/* Recent activity: blue-only icon language. */
+.pv3-activity>div>span,
+.pv3-activity>div:nth-child(3n+2)>span,
+.pv3-activity>div:nth-child(3n)>span{background:#edf4ff!important;color:#2563eb!important}
+
+/* Appointment details + dental/treatment detail modals: desktop proportions. */
+.pv3-modal-backdrop,.pv4-detail-backdrop{
+  padding:24px!important;
+  align-items:center!important;
+  justify-content:center!important;
+  overflow:auto!important;
+}
+.pv3-detail-modal,.pv4-detail-modal{
+  width:min(720px,calc(100vw - 48px))!important;
+  max-width:720px!important;
+  max-height:min(820px,calc(100dvh - 48px))!important;
+  overflow:auto!important;
+  overscroll-behavior:contain;
+}
+.pv3-detail-modal>header,.pv4-detail-modal>header{display:flex!important;align-items:flex-start!important;justify-content:space-between!important;gap:18px!important}
+.pv3-detail-modal>header>div,.pv4-detail-modal>header>div{min-width:0!important;flex:1!important}
+.pv3-detail-modal>header h2,.pv4-detail-modal>header h2{overflow-wrap:anywhere}
+.pv3-detail-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+.pv3-detail-grid>div{min-width:0!important}
+.pv3-detail-grid strong{overflow-wrap:anywhere!important}
+.pv3-detail-modal>footer,.pv4-detail-modal>footer{position:sticky!important;bottom:0!important;z-index:3!important;background:rgba(251,252,254,.96)!important;backdrop-filter:blur(10px)}
+
+/* Notification panel should float beside the sidebar, not render as a dropdown trapped below it. */
+.pv5-notification-host{z-index:80!important}
+.pv5-notification-panel{
+  position:fixed!important;
+  left:288px!important;
+  top:118px!important;
+  width:min(390px,calc(100vw - 320px))!important;
+  max-height:min(620px,calc(100dvh - 150px))!important;
+  border-radius:20px!important;
+  box-shadow:0 28px 80px rgba(15,23,42,.2)!important;
+  border-color:#d8e4f4!important;
+  overflow:hidden!important;
+}
+.pv5-notification-panel>header{padding:16px 17px!important;background:linear-gradient(135deg,#fff,#f1f6ff)!important}
+.pv5-notification-list{max-height:min(500px,calc(100dvh - 245px))!important}
+.pv5-notification-list article{padding:13px 15px!important}
+
+/* Explicitly reset non-active navigation state so browser focus cannot make Documents look selected. */
+.pv3-nav button:not(.is-active){background:transparent!important;color:#526077!important;box-shadow:none!important}
+.pv3-nav button:not(.is-active):hover{background:#f6f9ff!important;color:#1d4ed8!important}
+.pv3-nav button:not(.is-active):focus:not(:focus-visible){outline:none!important;background:transparent!important;color:#526077!important}
+.pv3-nav button.is-active{background:#eaf2ff!important;color:#1d4ed8!important;box-shadow:inset 3px 0 0 #2563eb!important}
+
+@media(max-width:1180px){
+  .pv3-kpis{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+  .pv4-billing-metrics{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+  .pv5-notification-panel{left:274px!important;width:min(370px,calc(100vw - 302px))!important}
+}
+
+@media(max-width:900px){
+  .pv3-appointment-stats,.pv3-record-overview{grid-template-columns:repeat(3,minmax(0,1fr))!important}
+  .pv5-notification-panel{
+    left:50%!important;right:auto!important;top:auto!important;bottom:18px!important;
+    transform:translateX(-50%)!important;
+    width:min(520px,calc(100vw - 32px))!important;
+    max-height:min(72dvh,640px)!important;
+  }
+  .pv5-notification-list{max-height:calc(72dvh - 86px)!important}
+}
+
+@media(max-width:700px){
+  .pv3-kpis{grid-template-columns:1fr!important;gap:10px!important}
+  .pv3-kpis>article{min-height:92px!important;padding:14px!important;grid-template-columns:40px minmax(0,1fr)!important}
+  .pv3-kpis>article>span{width:40px!important;height:40px!important;border-radius:12px!important}
+  .pv3-appointment-stats,.pv3-record-overview{grid-template-columns:1fr!important;gap:9px!important}
+  .pv3-appointment-stats>div,.pv3-record-overview>div{min-height:88px!important}
+  .pv4-billing-metrics{grid-template-columns:1fr!important}
+
+  .pv3-modal-backdrop,.pv4-detail-backdrop{
+    padding:0!important;
+    align-items:flex-end!important;
+    overflow:hidden!important;
+  }
+  .pv3-detail-modal,.pv4-detail-modal{
+    width:100%!important;
+    max-width:none!important;
+    max-height:92dvh!important;
+    border-radius:22px 22px 0 0!important;
+    margin:0!important;
+    overflow:auto!important;
+  }
+  .pv3-detail-modal>header,.pv4-detail-modal>header{padding:17px 17px!important;gap:12px!important;position:sticky!important;top:0!important;z-index:4!important}
+  .pv3-detail-modal>header h2,.pv4-detail-modal>header h2{font-size:1.15rem!important}
+  .pv3-detail-status{padding:11px 16px!important}
+  .pv3-detail-grid{grid-template-columns:1fr!important;padding:14px 16px!important;gap:8px!important}
+  .pv3-detail-grid>div{padding:11px 12px!important}
+  .pv3-detail-note{margin:0 16px 14px!important;padding:13px 14px!important}
+  .pv3-record-hero{margin:14px 16px 12px!important}
+  .pv3-record-privacy{margin-left:16px!important;margin-right:16px!important}
+  .pv3-detail-modal>footer,.pv4-detail-modal>footer{padding:12px 16px calc(12px + env(safe-area-inset-bottom))!important}
+  .pv3-detail-modal>footer button,.pv4-detail-modal>footer button{width:100%!important}
+}
+
+@media(max-width:430px){
+  .pv5-notification-panel{bottom:0!important;width:100%!important;max-height:82dvh!important;border-radius:22px 22px 0 0!important}
+  .pv5-notification-list{max-height:calc(82dvh - 88px)!important}
+  .pv5-notification-panel>header{padding:14px 15px!important}
+  .pv5-notification-panel>header button{font-size:.6rem!important}
+}
