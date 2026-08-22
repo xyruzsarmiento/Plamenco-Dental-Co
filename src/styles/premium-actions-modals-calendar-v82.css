@@ -1,0 +1,290 @@
+/* Premium action buttons, responsive action modals, and calendar refinement.
+   Appointment Today's Flow selectors are intentionally excluded. */
+
+/* ---------- Compact premium page actions ---------- */
+.patients36-page .patients36-hero-actions .btn,
+.dr11-page .dr11-command-header .btn,
+.appointments-v40 .sa-appointments-header-actions .btn,
+.tx43-page .tx43-hero > .btn,
+.tx43-page .tx43-management-head > .btn,
+.tp80-page .tp80-hero > .btn,
+.bill46-page .bill32-create-strip .btn,
+.bill46-page .bill14-command-header .btn,
+.services49-shell .svc15-command > .btn,
+.ex57-page .ex57-actions .btn,
+.team-v26 .team-v26-hero .btn,
+.forms-v28 .forms-v28-hero-actions .btn {
+  width:auto!important;
+  min-width:0!important;
+  min-height:40px!important;
+  padding:0 13px!important;
+  border-radius:11px!important;
+  font-size:.75rem!important;
+  font-weight:850!important;
+  letter-spacing:-.01em!important;
+  white-space:nowrap!important;
+  gap:7px!important;
+  transition:transform .16s ease,box-shadow .16s ease,border-color .16s ease,background .16s ease!important;
+}
+.patients36-page .patients36-hero-actions .btn-primary,
+.dr11-page .dr11-command-header .btn-primary,
+.appointments-v40 .sa-appointments-header-actions .btn-primary,
+.tx43-page .tx43-hero > .btn-primary,
+.tx43-page .tx43-management-head > .btn-primary,
+.tp80-page .tp80-hero > .btn-primary,
+.bill46-page .bill32-create-strip .btn-primary,
+.bill46-page .bill14-command-header .btn-primary,
+.services49-shell .svc15-command > .btn-primary,
+.ex57-page .ex57-actions .btn-primary,
+.team-v26 .team-v26-hero .btn-primary,
+.forms-v28 .forms-v28-hero-actions .btn-primary {
+  border:1px solid #1d4ed8!important;
+  background:linear-gradient(135deg,#1d4ed8 0%,#2563eb 58%,#3b82f6 100%)!important;
+  color:#fff!important;
+  box-shadow:0 8px 20px rgba(37,99,235,.20),inset 0 1px 0 rgba(255,255,255,.18)!important;
+}
+.patients36-page .patients36-hero-actions .btn-secondary,
+.bill46-page .bill14-command-header .btn-secondary,
+.ex57-page .ex57-actions .btn-secondary,
+.forms-v28 .forms-v28-hero-actions .btn-secondary {
+  border:1px solid #cfdbeb!important;
+  background:linear-gradient(180deg,#fff 0%,#f8fbff 100%)!important;
+  color:#315b9e!important;
+  box-shadow:0 5px 14px rgba(15,23,42,.05)!important;
+}
+.patients36-page .patients36-hero-actions .btn:hover,
+.dr11-page .dr11-command-header .btn:hover,
+.appointments-v40 .sa-appointments-header-actions .btn:hover,
+.tx43-page .tx43-hero > .btn:hover,
+.tx43-page .tx43-management-head > .btn:hover,
+.tp80-page .tp80-hero > .btn:hover,
+.bill46-page .bill32-create-strip .btn:hover,
+.bill46-page .bill14-command-header .btn:hover,
+.services49-shell .svc15-command > .btn:hover,
+.ex57-page .ex57-actions .btn:hover,
+.team-v26 .team-v26-hero .btn:hover,
+.forms-v28 .forms-v28-hero-actions .btn:hover {
+  transform:translateY(-1px)!important;
+  box-shadow:0 11px 24px rgba(37,99,235,.18)!important;
+}
+
+/* Dashboard quick hero actions */
+.sav56 .sav56-hero-actions{display:flex!important;align-items:center!important;gap:8px!important;flex-wrap:wrap!important;width:auto!important}
+.sav56 .sav56-hero-actions a{
+  flex:0 0 auto!important;
+  width:auto!important;
+  min-height:40px!important;
+  padding:0 13px!important;
+  border:1px solid #cfdbeb!important;
+  border-radius:11px!important;
+  background:linear-gradient(180deg,#fff,#f8fbff)!important;
+  color:#315b9e!important;
+  font-size:.74rem!important;
+  font-weight:850!important;
+  box-shadow:0 5px 14px rgba(15,23,42,.05)!important;
+}
+.sav56 .sav56-hero-actions a.is-primary{border-color:#1d4ed8!important;background:linear-gradient(135deg,#1d4ed8,#2563eb 60%,#3b82f6)!important;color:#fff!important;box-shadow:0 8px 20px rgba(37,99,235,.20)!important}
+.sav56 .sav56-hero-actions a:hover{transform:translateY(-1px)!important;box-shadow:0 11px 24px rgba(37,99,235,.14)!important}
+
+/* ---------- Responsive modals ---------- */
+.modal-backdrop:has(.patient-modal){padding:20px!important}
+.patient-modal{width:min(960px,calc(100vw - 40px))!important;max-height:92dvh!important;overflow:hidden!important}
+.patient-modal .form-stack{max-height:calc(92dvh - 86px)!important;overflow-y:auto!important;overscroll-behavior:contain!important}
+.patient-modal .modal-actions{position:sticky!important;bottom:0!important;z-index:12!important}
+
+.tx12-modal-backdrop{padding:20px!important;overflow:auto!important}
+.tx12-modal{width:min(900px,calc(100vw - 40px))!important;max-height:92dvh!important;overflow:hidden!important;display:flex!important;flex-direction:column!important}
+.tx12-modal-form{min-height:0!important;overflow-y:auto!important;overscroll-behavior:contain!important}
+.tx12-modal-actions{position:sticky!important;bottom:0!important;z-index:5!important;background:rgba(255,255,255,.98)!important;backdrop-filter:blur(12px)!important}
+
+.tp80-backdrop{padding:20px!important}
+.tp80-create-modal{width:min(1040px,calc(100vw - 40px))!important;max-height:92dvh!important;display:flex!important;flex-direction:column!important}
+.tp80-create-body{min-height:0!important;max-height:none!important;overflow-y:auto!important;overscroll-behavior:contain!important}
+.tp80-create-footer{position:sticky!important;bottom:0!important;z-index:5!important;flex:0 0 auto!important;background:rgba(251,252,254,.98)!important;backdrop-filter:blur(12px)!important}
+
+.pay14-backdrop{padding:20px!important;overflow:auto!important}
+.pay14-modal{width:min(1040px,calc(100vw - 40px))!important;max-height:92dvh!important;overflow:hidden!important;display:flex!important;flex-direction:column!important}
+.pay14-body{min-height:0!important;overflow-y:auto!important;overscroll-behavior:contain!important}
+.pay14-footer{flex:0 0 auto!important}
+
+.team-v26-modal-backdrop{padding:20px!important}
+.team-v26-modal{width:min(820px,calc(100vw - 40px))!important;max-height:92dvh!important;overflow:auto!important;overscroll-behavior:contain!important}
+.team-v26-modal footer{position:sticky!important;bottom:0!important;z-index:4!important;background:rgba(255,255,255,.98)!important;backdrop-filter:blur(12px)!important;border-top:1px solid #e8eef6!important}
+
+.forms-v28-modal-backdrop{padding:20px!important}
+.forms-v28-modal,.forms-v28-modal.large,.forms-v28-modal.compact{max-height:92dvh!important;overflow:hidden!important}
+.forms-v28-modal-body{min-height:0!important;overflow-y:auto!important;overscroll-behavior:contain!important}
+.forms-v28-modal>footer{position:sticky!important;bottom:0!important;z-index:4!important;background:rgba(255,255,255,.98)!important;backdrop-filter:blur(12px)!important}
+
+.inv56-backdrop{padding:20px!important;overflow:auto!important}
+.inv56-modal{width:min(920px,calc(100vw - 40px))!important;max-height:92dvh!important;overflow:hidden!important;display:flex!important;flex-direction:column!important}
+.inv56-modal-body{min-height:0!important;overflow-y:auto!important;overscroll-behavior:contain!important}
+.inv56-modal-actions{position:sticky!important;bottom:0!important;z-index:5!important;flex:0 0 auto!important;background:rgba(255,255,255,.98)!important;backdrop-filter:blur(12px)!important}
+
+/* ---------- Calendar: modern, full-width, responsive ---------- */
+.appointments-v40 .premium-appointments-page:has(.sa-appointments-calendar-workspace),
+.appointments-v40 .sa-appointments-calendar-workspace,
+.appointments-v40 .sa-appointments-calendar-shell,
+.appointments-v40 .advanced-calendar-container{
+  width:100%!important;
+  max-width:none!important;
+  min-width:0!important;
+  box-sizing:border-box!important;
+}
+.appointments-v40 .sa-appointments-calendar-workspace{gap:14px!important}
+.appointments-v40 .sa-appointments-calendar-shell{
+  overflow:hidden!important;
+  border:1px solid #d9e5f4!important;
+  border-radius:24px!important;
+  background:#fff!important;
+  box-shadow:0 22px 52px rgba(15,23,42,.075)!important;
+}
+.appointments-v40 .advanced-calendar-container{border:0!important;border-radius:0!important;box-shadow:none!important;background:linear-gradient(180deg,#fff,#fbfdff)!important}
+.appointments-v40 .advanced-calendar-header{
+  display:flex!important;
+  align-items:center!important;
+  justify-content:space-between!important;
+  gap:16px!important;
+  padding:17px 18px!important;
+  border-bottom:1px solid #e3ebf5!important;
+  background:linear-gradient(135deg,#fff 0%,#f7faff 55%,#eef5ff 100%)!important;
+}
+.appointments-v40 .calendar-nav{display:flex!important;align-items:center!important;gap:9px!important;min-width:0!important}
+.appointments-v40 .calendar-title{min-width:0!important}
+.appointments-v40 .calendar-title h3{margin:0!important;color:#12213a!important;font-size:clamp(1rem,1.4vw,1.2rem)!important;font-weight:900!important;letter-spacing:-.03em!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important}
+.appointments-v40 .advanced-calendar-header .icon-button{display:grid!important;place-items:center!important;width:38px!important;height:38px!important;min-width:38px!important;padding:0!important;border:1px solid #d5e1ef!important;border-radius:11px!important;background:#fff!important;color:#315b9e!important;box-shadow:0 4px 12px rgba(15,23,42,.05)!important}
+.appointments-v40 .advanced-calendar-header .calendar-actions{display:flex!important;align-items:center!important;justify-content:flex-end!important;gap:7px!important;flex-wrap:wrap!important}
+.appointments-v40 .advanced-calendar-header .calendar-actions>.btn{min-height:36px!important;padding:0 11px!important;border-radius:10px!important;font-size:.7rem!important;font-weight:850!important}
+.appointments-v40 .view-toggle{display:flex!important;align-items:center!important;gap:3px!important;padding:4px!important;border:1px solid #d9e3ef!important;border-radius:12px!important;background:#edf3fb!important;box-shadow:inset 0 1px 2px rgba(15,23,42,.035)!important}
+.appointments-v40 .view-btn{min-height:32px!important;padding:0 10px!important;border:0!important;border-radius:8px!important;background:transparent!important;color:#69778c!important;font-size:.69rem!important;font-weight:850!important;letter-spacing:.01em!important}
+.appointments-v40 .view-btn.is-active{background:#fff!important;color:#1d4ed8!important;box-shadow:0 3px 10px rgba(30,64,175,.12)!important}
+
+/* Week */
+.appointments-v40 .advanced-week-view{background:#fff!important}
+.appointments-v40 .advanced-week-heading{min-height:58px!important;display:flex!important;align-items:center!important;justify-content:center!important;padding:10px 6px!important;border-color:#e5edf6!important;background:linear-gradient(180deg,#f9fbfe,#f2f7fd)!important;color:#31445f!important;font-size:.72rem!important;font-weight:900!important;letter-spacing:.01em!important}
+.appointments-v40 .week-time-axis{background:#fbfcfe!important;border-color:#e8eef5!important;color:#8290a3!important;font-size:.62rem!important;font-weight:800!important}
+.appointments-v40 .advanced-week-cell{min-height:88px!important;padding:7px!important;border-color:#edf1f6!important;background:#fff!important;transition:background .15s ease,box-shadow .15s ease!important}
+.appointments-v40 .advanced-week-cell:hover{background:#f7faff!important;box-shadow:inset 0 0 0 1px #d8e7fb!important}
+
+/* Day */
+.appointments-v40 .provider-day-view{background:#fff!important}
+.appointments-v40 .provider-day-corner,.appointments-v40 .provider-day-heading{min-height:62px!important;padding:11px!important;border-color:#e4ecf6!important;background:linear-gradient(180deg,#f9fbfe,#f1f6fd)!important}
+.appointments-v40 .provider-day-heading{display:grid!important;align-content:center!important;gap:3px!important;text-align:center!important}
+.appointments-v40 .provider-day-heading strong{color:#263a57!important;font-size:.75rem!important;font-weight:900!important}
+.appointments-v40 .provider-day-heading span{color:#8995a6!important;font-size:.58rem!important;text-transform:capitalize!important}
+.appointments-v40 .provider-day-time{padding:11px 8px!important;border-color:#edf1f6!important;background:#fbfcfe!important;color:#8290a3!important;font-size:.62rem!important;font-weight:800!important}
+.appointments-v40 .provider-day-cell{min-height:92px!important;padding:7px!important;border-color:#edf1f6!important;background:#fff!important}
+.appointments-v40 .provider-day-cell:hover{background:#f8fbff!important}
+.appointments-v40 .add-slot{min-height:34px!important;border:1px dashed #c6d8ef!important;border-radius:10px!important;background:#f9fbff!important;color:#3570ce!important;font-size:.67rem!important;font-weight:850!important;opacity:.76!important}
+.appointments-v40 .add-slot:hover{border-color:#8eb7ed!important;background:#eef5ff!important;opacity:1!important}
+
+/* Shared appointment chips */
+.appointments-v40 .appointment-rich-block{width:100%!important;display:grid!important;gap:2px!important;padding:7px 8px!important;border:1px solid #cbdff7!important;border-left:3px solid #3b82f6!important;border-radius:10px!important;background:linear-gradient(135deg,#fff,#f2f7ff)!important;color:#1e293b!important;box-shadow:0 4px 12px rgba(15,23,42,.055)!important;text-align:left!important;transition:transform .15s ease,box-shadow .15s ease!important}
+.appointments-v40 .appointment-rich-block:hover{transform:translateY(-1px)!important;box-shadow:0 7px 17px rgba(37,99,235,.11)!important}
+.appointments-v40 .appointment-rich-block>span{color:#2563eb!important;font-size:.62rem!important;font-weight:900!important}
+.appointments-v40 .appointment-rich-block>strong{font-size:.72rem!important;line-height:1.3!important}
+.appointments-v40 .appointment-rich-block>small{color:#748196!important;font-size:.58rem!important;line-height:1.3!important}
+.appointments-v40 .appointment-rich-block.status-completed{border-color:#c7ead4!important;border-left-color:#16a34a!important;background:linear-gradient(135deg,#fff,#f1fbf4)!important}
+.appointments-v40 .appointment-rich-block.status-waiting,.appointments-v40 .appointment-rich-block.status-checked_in{border-color:#f2dfac!important;border-left-color:#f59e0b!important;background:linear-gradient(135deg,#fff,#fff9eb)!important}
+.appointments-v40 .appointment-rich-block.status-in_progress{border-color:#ddd5fb!important;border-left-color:#7c3aed!important;background:linear-gradient(135deg,#fff,#f7f4ff)!important}
+.appointments-v40 .appointment-rich-block.status-cancelled,.appointments-v40 .appointment-rich-block.status-no_show{border-color:#f3caca!important;border-left-color:#dc2626!important;background:linear-gradient(135deg,#fff,#fff5f5)!important}
+
+/* Month */
+.appointments-v40 .advanced-month-grid{gap:1px!important;padding:1px!important;background:#e6edf5!important}
+.appointments-v40 .month-day-header{min-height:44px!important;display:grid!important;place-items:center!important;padding:8px!important;background:linear-gradient(180deg,#f9fbfe,#f2f7fd)!important;color:#718096!important;font-size:.65rem!important;font-weight:900!important;letter-spacing:.04em!important;text-transform:uppercase!important}
+.appointments-v40 .advanced-month-cell{min-height:142px!important;padding:10px!important;border:0!important;background:#fff!important;text-align:left!important;transition:background .15s ease,box-shadow .15s ease!important}
+.appointments-v40 .advanced-month-cell:hover{background:#f8fbff!important;box-shadow:inset 0 0 0 1px #d7e6fa!important}
+.appointments-v40 .advanced-month-cell.is-today{background:linear-gradient(145deg,#f8fbff,#eef5ff)!important;box-shadow:inset 0 0 0 2px rgba(37,99,235,.18)!important}
+.appointments-v40 .month-cell-date{display:inline-flex!important;align-items:center!important;justify-content:center!important;width:29px!important;height:29px!important;border-radius:9px!important;color:#334155!important;font-size:.75rem!important;font-weight:900!important}
+.appointments-v40 .advanced-month-cell.is-today .month-cell-date{background:linear-gradient(135deg,#2563eb,#3b82f6)!important;color:#fff!important;box-shadow:0 6px 14px rgba(37,99,235,.22)!important}
+.appointments-v40 .advanced-month-cell>small{display:block!important;margin:5px 0 6px!important;color:#9aa5b4!important;font-size:.55rem!important}
+.appointments-v40 .mini-appointment{display:block!important;margin-top:4px!important;padding:4px 6px!important;border:1px solid #d8e7fb!important;border-radius:7px!important;background:#f1f6ff!important;color:#2c63bb!important;font-size:.56rem!important;font-weight:750!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important}
+.appointments-v40 .mini-appointment-more{display:block!important;margin-top:5px!important;color:#64748b!important;font-size:.56rem!important;font-weight:800!important}
+
+/* Agenda */
+.appointments-v40 .agenda-view{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:12px!important;padding:16px!important;background:#f7faff!important}
+.appointments-v40 .agenda-day{min-width:0!important;overflow:hidden!important;border:1px solid #dfe7f1!important;border-radius:17px!important;background:#fff!important;box-shadow:0 8px 22px rgba(15,23,42,.04)!important}
+.appointments-v40 .agenda-day-header{display:flex!important;align-items:center!important;justify-content:space-between!important;gap:12px!important;padding:13px 14px!important;border-bottom:1px solid #e9eef5!important;background:linear-gradient(135deg,#fbfdff,#f4f8ff)!important;color:#263a57!important;font-size:.75rem!important;font-weight:900!important}
+.appointments-v40 .agenda-day>div:not(.agenda-day-header){padding:10px!important}
+.appointments-v40 .agenda-empty{grid-column:1/-1!important;min-height:220px!important;display:grid!important;place-items:center!important;align-content:center!important;gap:8px!important;border:1px dashed #cbd9eb!important;border-radius:18px!important;background:linear-gradient(180deg,#fff,#f7faff)!important;color:#7c899b!important;text-align:center!important}
+
+/* Month day panel */
+.appointments-v40 .day-panel-backdrop{background:rgba(15,23,42,.56)!important;backdrop-filter:blur(8px)!important}
+.appointments-v40 .day-panel{width:min(470px,calc(100vw - 34px))!important;max-height:88dvh!important;border:1px solid rgba(255,255,255,.6)!important;border-radius:23px!important;background:#fff!important;box-shadow:0 30px 80px rgba(15,23,42,.28)!important;overflow:hidden!important}
+.appointments-v40 .day-panel-header{padding:18px!important;border-bottom:1px solid #e8eef6!important;background:linear-gradient(135deg,#fff,#f3f8ff)!important}
+.appointments-v40 .day-panel-list{padding:14px!important;overflow-y:auto!important}
+
+@media (min-width:1001px){
+  .appointments-v40 .advanced-week-view{width:100%!important;min-width:0!important;grid-template-columns:78px repeat(7,minmax(0,1fr))!important}
+  .appointments-v40 .advanced-month-grid{width:100%!important;min-width:0!important;grid-template-columns:repeat(7,minmax(0,1fr))!important}
+  .appointments-v40 .provider-day-view{width:100%!important;min-width:0!important}
+}
+
+@media (max-width:1000px){
+  .appointments-v40 .sa-appointments-calendar-shell{overflow-x:auto!important;overscroll-behavior-inline:contain!important}
+  .appointments-v40 .advanced-week-view{width:max-content!important;min-width:920px!important;grid-template-columns:76px repeat(7,minmax(120px,1fr))!important}
+  .appointments-v40 .advanced-month-grid{width:max-content!important;min-width:840px!important;grid-template-columns:repeat(7,120px)!important}
+  .appointments-v40 .provider-day-view{width:max-content!important;min-width:780px!important}
+  .appointments-v40 .agenda-view{grid-template-columns:1fr!important}
+  .tp80-item-fields{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+}
+
+@media (max-width:760px){
+  .patients36-page .patients36-hero-actions .btn,
+  .dr11-page .dr11-command-header .btn,
+  .appointments-v40 .sa-appointments-header-actions .btn,
+  .tx43-page .tx43-hero > .btn,
+  .tx43-page .tx43-management-head > .btn,
+  .tp80-page .tp80-hero > .btn,
+  .bill46-page .bill32-create-strip .btn,
+  .bill46-page .bill14-command-header .btn,
+  .services49-shell .svc15-command > .btn,
+  .ex57-page .ex57-actions .btn,
+  .team-v26 .team-v26-hero .btn,
+  .forms-v28 .forms-v28-hero-actions .btn{width:100%!important;min-height:44px!important;justify-content:center!important}
+  .sav56 .sav56-hero-actions{display:grid!important;grid-template-columns:1fr!important;width:100%!important}
+  .sav56 .sav56-hero-actions a{width:100%!important;justify-content:center!important;min-height:44px!important}
+
+  .modal-backdrop:has(.patient-modal),.tx12-modal-backdrop,.tp80-backdrop,.pay14-backdrop,.team-v26-modal-backdrop,.forms-v28-modal-backdrop,.inv56-backdrop{align-items:flex-end!important;place-items:end stretch!important;padding:0!important}
+  .patient-modal,.tx12-modal,.tp80-create-modal,.pay14-modal,.team-v26-modal,.forms-v28-modal,.forms-v28-modal.large,.forms-v28-modal.compact,.inv56-modal{width:100%!important;max-width:none!important;max-height:94dvh!important;border-radius:24px 24px 0 0!important;border-bottom:0!important}
+  .patient-modal .form-grid,.tx12-form-grid,.tp80-form-grid,.tp80-item-fields,.pay14-grid-2,.team-v26-form-grid,.team-v26-branch-picker,.forms-v28-form-grid,.inventory-form-grid,.inv56-toggle-grid{grid-template-columns:1fr!important}
+  .tp80-form-grid .is-wide,.pay14-span-2,.team-v26-span-2{grid-column:auto!important}
+  .tp80-item{grid-template-columns:auto minmax(0,1fr) auto!important;align-items:start!important}
+  .tp80-item-total{grid-column:2!important;text-align:left!important}
+  .pay14-body{grid-template-columns:1fr!important}
+  .pay14-summary-column{border-left:0!important;border-top:1px solid #e8edf4!important}
+  .pay14-header,.pay14-form-column,.pay14-summary-column{padding-left:16px!important;padding-right:16px!important}
+  .pay14-footer{padding:13px 16px calc(13px + env(safe-area-inset-bottom))!important;align-items:stretch!important;flex-direction:column!important}
+  .pay14-footer-actions{display:grid!important;grid-template-columns:1fr 1fr!important}
+  .pay14-footer-actions .btn{width:100%!important}
+  .tx12-modal-actions,.tp80-create-footer,.team-v26-modal footer,.forms-v28-modal>footer,.inv56-modal-actions{padding-bottom:calc(13px + env(safe-area-inset-bottom))!important}
+  .tp80-create-footer{align-items:stretch!important;flex-direction:column!important}
+  .tp80-create-footer>div:last-child{display:grid!important;grid-template-columns:1fr 1fr!important}
+  .tp80-create-footer .btn{width:100%!important}
+  .inv56-modal-actions{display:grid!important;grid-template-columns:1fr 1fr!important}
+  .inv56-modal-actions .btn{width:100%!important}
+
+  .appointments-v40 .advanced-calendar-header{align-items:stretch!important;flex-direction:column!important;padding:14px!important}
+  .appointments-v40 .calendar-nav{justify-content:space-between!important}
+  .appointments-v40 .calendar-title{flex:1!important;text-align:center!important}
+  .appointments-v40 .calendar-actions{justify-content:flex-start!important;overflow-x:auto!important;flex-wrap:nowrap!important;padding-bottom:2px!important;scrollbar-width:none!important}
+  .appointments-v40 .calendar-actions::-webkit-scrollbar{display:none!important}
+  .appointments-v40 .view-toggle{flex:0 0 auto!important}
+  .appointments-v40 .advanced-month-cell{min-height:122px!important}
+  .appointments-v40 .day-panel-backdrop{align-items:flex-end!important;padding:0!important}
+  .appointments-v40 .day-panel{width:100%!important;max-height:92dvh!important;border-radius:24px 24px 0 0!important}
+}
+
+@media (max-width:430px){
+  .patient-modal .modal-actions,.tx12-modal-actions,.pay14-footer-actions,.tp80-create-footer>div:last-child,.team-v26-modal footer,.forms-v28-modal>footer,.inv56-modal-actions{display:grid!important;grid-template-columns:1fr!important}
+  .patient-modal .modal-actions .btn,.tx12-modal-actions .btn,.pay14-footer-actions .btn,.tp80-create-footer .btn,.team-v26-modal footer .btn,.forms-v28-modal>footer .btn,.inv56-modal-actions .btn{width:100%!important}
+  .appointments-v40 .advanced-calendar-header .calendar-actions>.btn{min-height:34px!important;padding-inline:9px!important}
+  .appointments-v40 .view-btn{padding-inline:8px!important}
+  .appointments-v40 .advanced-week-view{min-width:850px!important}
+  .appointments-v40 .advanced-month-grid{min-width:770px!important;grid-template-columns:repeat(7,110px)!important}
+  .appointments-v40 .agenda-view{padding:10px!important}
+}
+
+@media (prefers-reduced-motion:reduce){
+  .patients36-page .patients36-hero-actions .btn,.dr11-page .dr11-command-header .btn,.appointments-v40 .sa-appointments-header-actions .btn,.tx43-page .btn,.tp80-page .btn,.bill46-page .btn,.services49-shell .btn,.ex57-page .btn,.team-v26 .btn,.sav56 .sav56-hero-actions a,.appointments-v40 .appointment-rich-block,.appointments-v40 .advanced-week-cell,.appointments-v40 .advanced-month-cell{transition:none!important;transform:none!important}
+}
