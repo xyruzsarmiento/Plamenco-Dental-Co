@@ -8,7 +8,23 @@ import { findStaffByEmail } from './staffStore'
 const STORAGE_KEY = 'plamenco.auth.user'
 const allowLegacyLocalAuth = import.meta.env.DEV && import.meta.env.VITE_ENABLE_LEGACY_LOCAL_AUTH === 'true'
 
+type SessionUser = {
+  id: string
+  email?: string | null
+  user_metadata?: Record<string, unknown>
+}
+
+type ProfileRow = {
+  id: string
+  full_name?: string | null
+  role?: string | null
+  status?: string | null
+  permissions?: string[] | null
+}
+
 function readStoredUser(): AuthUser | null {
+  if (!allowLegacyLocalAuth) return null
+
   try {
     const stored = window.localStorage.getItem(STORAGE_KEY)
     return stored ? (JSON.parse(stored) as AuthUser) : null
@@ -17,24 +33,12 @@ function readStoredUser(): AuthUser | null {
   }
 }
 
-function buildPatientUserFromSupabase(sessionUser: { id: string; email?: string | null; user_metadata?: Record<string, unknown> }, patientId?: string, status: AccountStatus = 'active'): AuthUser | null {
-  if (!sessionUser.email) {
-    return null
-  }
+function clearCachedUser() {
+  window.localStorage.removeItem(STORAGE_KEY)
+}
 
-  const metadata = sessionUser.user_metadata ?? {}
-  const firstName = typeof metadata.first_name === 'string' ? metadata.first_name.trim() : ''
-  const lastName = typeof metadata.last_name === 'string' ? metadata.last_name.trim() : ''
-
-  return {
-    id: sessionUser.id,
-    name: `${firstName} ${lastName}`.trim() || sessionUser.email.split('@')[0] || 'Patient',
-    email: sessionUser.email.toLowerCase(),
-    role: 'patient',
-    status,
-    permissions: getRolePermissions('patient'),
-    patientId: patientId ?? (typeof metadata.patient_id === 'string' ? metadata.patient_id : undefined),
-  }
+function cacheUser(user: AuthUser) {
+  window.localStorage.setItem(STORAGE_KEY, JSON.stringify(user))
 }
 
 function isUserRole(value: unknown): value is UserRole {
@@ -52,7 +56,29 @@ function isAccountStatus(value: unknown): value is AccountStatus {
   return value === 'active' || value === 'inactive' || value === 'suspended'
 }
 
-async function getSupabaseProfileForSession(sessionUser: { id: string; email?: string | null; user_metadata?: Record<string, unknown> }) {
+function buildPatientUserFromSupabase(
+  sessionUser: SessionUser,
+  patientId: string,
+  status: AccountStatus = 'active',
+): AuthUser | null {
+  if (!sessionUser.email || !patientId) return null
+
+  const metadata = sessionUser.user_metadata ?? {}
+  const firstName = typeof metadata.first_name === 'string' ? metadata.first_name.trim() : ''
+  const lastName = typeof metadata.last_name === 'string' ? metadata.last_name.trim() : ''
+
+  return {
+    id: sessionUser.id,
+    name: `${firstName} ${lastName}`.trim() || sessionUser.email.split('@')[0] || 'Patient',
+    email: sessionUser.email.toLowerCase(),
+    role: 'patient',
+    status,
+    permissions: getRolePermissions('patient'),
+    patientId,
+  }
+}
+
+async function getSupabaseProfileForSession(sessionUser: SessionUser): Promise<ProfileRow | null> {
   if (!supabase) return null
 
   const { data, error } = await supabase
@@ -62,25 +88,14 @@ async function getSupabaseProfileForSession(sessionUser: { id: string; email?: s
     .maybeSingle()
 
   if (error) {
-    if (import.meta.env.DEV) {
-      console.debug('[profile lookup skipped]', error.message)
-    }
+    if (import.meta.env.DEV) console.debug('[profile lookup failed]', error.message)
     return null
   }
 
-  return data as {
-    id: string
-    full_name?: string | null
-    role?: string | null
-    status?: string | null
-    permissions?: string[] | null
-  } | null
+  return data as ProfileRow | null
 }
 
-function buildProfileUserFromSupabase(
-  sessionUser: { id: string; email?: string | null; user_metadata?: Record<string, unknown> },
-  profile: Awaited<ReturnType<typeof getSupabaseProfileForSession>>,
-): AuthUser | null {
+function buildProfileUserFromSupabase(sessionUser: SessionUser, profile: ProfileRow | null): AuthUser | null {
   if (!sessionUser.email || !profile || !isUserRole(profile.role)) return null
 
   const status = isAccountStatus(profile.status) ? profile.status : 'active'
@@ -96,29 +111,15 @@ function buildProfileUserFromSupabase(
     email: sessionUser.email.toLowerCase(),
     role: profile.role,
     status,
-    permissions: Array.isArray(profile.permissions) && profile.permissions.length > 0 ? profile.permissions : getRolePermissions(profile.role),
+    permissions:
+      Array.isArray(profile.permissions) && profile.permissions.length > 0
+        ? profile.permissions
+        : getRolePermissions(profile.role),
   }
 }
 
-async function buildUserFromSupabaseSession(sessionUser: { id: string; email?: string | null; user_metadata?: Record<string, unknown> }) {
-  const profile = await getSupabaseProfileForSession(sessionUser)
-  const profileUser = buildProfileUserFromSupabase(sessionUser, profile)
-
-  if (profileUser && profileUser.role !== 'patient') {
-    return profileUser
-  }
-
-  const metadataRole = sessionUser.user_metadata?.role
-  if (!profile && isUserRole(metadataRole) && metadataRole !== 'patient') return null
-
-  const patientProfile = await ensurePatientProfileForSession(sessionUser)
-  return buildPatientUserFromSupabase(sessionUser, patientProfile?.patientId, patientProfile?.status)
-}
-
-async function ensurePatientProfileForSession(sessionUser: { id: string; email?: string | null; user_metadata?: Record<string, unknown> }) {
-  if (!supabase) {
-    return undefined
-  }
+async function ensurePatientProfileForSession(sessionUser: SessionUser) {
+  if (!supabase) return null
 
   const { data: existingProfile, error: lookupError } = await supabase
     .from('patients')
@@ -126,7 +127,12 @@ async function ensurePatientProfileForSession(sessionUser: { id: string; email?:
     .eq('auth_user_id', sessionUser.id)
     .maybeSingle()
 
-  if (!lookupError && existingProfile?.patient_id) {
+  if (lookupError) {
+    console.error('Failed to load patient profile:', lookupError)
+    return null
+  }
+
+  if (existingProfile?.patient_id) {
     return {
       patientId: existingProfile.patient_id as string,
       status: isAccountStatus(existingProfile.status) ? existingProfile.status : 'active',
@@ -136,7 +142,9 @@ async function ensurePatientProfileForSession(sessionUser: { id: string; email?:
   const metadata = sessionUser.user_metadata ?? {}
   const firstName = typeof metadata.first_name === 'string' ? metadata.first_name.trim() : 'Patient'
   const lastName = typeof metadata.last_name === 'string' ? metadata.last_name.trim() : 'User'
-  const email = sessionUser.email?.trim().toLowerCase() ?? 'patient@plamencodental.local'
+  const email = sessionUser.email?.trim().toLowerCase()
+  if (!email) return null
+
   const generatedPatientId =
     typeof metadata.patient_id === 'string' && metadata.patient_id.trim()
       ? metadata.patient_id.trim()
@@ -159,15 +167,35 @@ async function ensurePatientProfileForSession(sessionUser: { id: string; email?:
         medical_notes: 'Patient account created via Supabase Auth registration.',
       },
     ])
-    .select('patient_id')
+    .select('patient_id, status')
     .single()
 
-  if (insertError) {
+  if (insertError || !createdProfile?.patient_id) {
     console.error('Failed to create patient profile for authenticated user:', insertError)
-    return { patientId: generatedPatientId, status: 'active' as AccountStatus }
+    return null
   }
 
-  return { patientId: createdProfile?.patient_id ?? generatedPatientId, status: 'active' as AccountStatus }
+  return {
+    patientId: createdProfile.patient_id as string,
+    status: isAccountStatus(createdProfile.status) ? createdProfile.status : 'active',
+  }
+}
+
+async function buildUserFromSupabaseSession(sessionUser: SessionUser): Promise<AuthUser | null> {
+  const profile = await getSupabaseProfileForSession(sessionUser)
+  const profileUser = buildProfileUserFromSupabase(sessionUser, profile)
+
+  if (profileUser && profileUser.role !== 'patient') return profileUser
+
+  // Never authorize an internal role from user-editable metadata. Internal roles
+  // require a matching database profile row.
+  const metadataRole = sessionUser.user_metadata?.role
+  if (!profile && isUserRole(metadataRole) && metadataRole !== 'patient') return null
+
+  const patientProfile = await ensurePatientProfileForSession(sessionUser)
+  if (!patientProfile) return null
+
+  return buildPatientUserFromSupabase(sessionUser, patientProfile.patientId, patientProfile.status)
 }
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
@@ -179,52 +207,69 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const client = supabase
 
     if (!client) {
+      if (!allowLegacyLocalAuth) {
+        clearCachedUser()
+        setUser(null)
+      }
       setIsLoading(false)
       return undefined
     }
 
     let isMounted = true
 
-    const applySupabaseSession = async () => {
-      const {
-        data: { session },
-      } = await client.auth.getSession()
-
+    const applySession = async (sessionUser: SessionUser | null | undefined) => {
       if (!isMounted) return
 
-      if (!session?.user) {
-        setUser(readStoredUser())
+      if (!sessionUser) {
+        if (allowLegacyLocalAuth) {
+          setUser(readStoredUser())
+        } else {
+          clearCachedUser()
+          setUser(null)
+        }
         setIsLoading(false)
         return
       }
 
-      const nextUser = await buildUserFromSupabaseSession(session.user)
+      const nextUser = await buildUserFromSupabaseSession(sessionUser)
+      if (!isMounted) return
+
       if (nextUser) {
-        window.localStorage.setItem(STORAGE_KEY, JSON.stringify(nextUser))
+        cacheUser(nextUser)
+        setUser(nextUser)
+        setAuthError(null)
+      } else {
+        clearCachedUser()
+        setUser(null)
+        setAuthError('Unable to load an authorized clinic account for this session.')
       }
-      setUser(nextUser)
       setIsLoading(false)
+    }
+
+    const applySupabaseSession = async () => {
+      const {
+        data: { session },
+        error,
+      } = await client.auth.getSession()
+
+      if (!isMounted) return
+      if (error) {
+        clearCachedUser()
+        setUser(null)
+        setAuthError('Unable to restore your secure session. Please sign in again.')
+        setIsLoading(false)
+        return
+      }
+
+      await applySession(session?.user)
     }
 
     void applySupabaseSession()
 
     const {
       data: { subscription },
-    } = client.auth.onAuthStateChange(async (_event, session) => {
-      if (!isMounted) return
-
-      if (!session?.user) {
-        setUser(readStoredUser())
-        setIsLoading(false)
-        return
-      }
-
-      const nextUser = await buildUserFromSupabaseSession(session.user)
-      if (nextUser) {
-        window.localStorage.setItem(STORAGE_KEY, JSON.stringify(nextUser))
-      }
-      setUser(nextUser)
-      setIsLoading(false)
+    } = client.auth.onAuthStateChange((_event, session) => {
+      void applySession(session?.user)
     })
 
     return () => {
@@ -255,26 +300,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             status: staff.status,
             permissions: getRolePermissions(staff.role),
           }
-
-          window.localStorage.setItem(STORAGE_KEY, JSON.stringify(nextUser))
+          cacheUser(nextUser)
           setUser(nextUser)
           setIsLoading(false)
           return true
         }
 
         if (!supabase) {
+          clearCachedUser()
+          setUser(null)
           setAuthError('Supabase authentication is not configured.')
           setIsLoading(false)
           return false
         }
 
-        const { data, error } = await supabase.auth.signInWithPassword({
-          email: normalizedEmail,
-          password,
-        })
-
-        if (error) {
-          const message = error.message.toLowerCase()
+        const { data, error } = await supabase.auth.signInWithPassword({ email: normalizedEmail, password })
+        if (error || !data.user) {
+          clearCachedUser()
+          setUser(null)
+          const message = error?.message.toLowerCase() ?? ''
           setAuthError(
             message.includes('confirm') || message.includes('email not confirmed')
               ? 'Please confirm your account through the email we sent you.'
@@ -286,12 +330,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
         const nextUser = await buildUserFromSupabaseSession(data.user)
         if (!nextUser) {
-          setAuthError('Unable to load your patient account.')
+          await supabase.auth.signOut()
+          clearCachedUser()
+          setUser(null)
+          setAuthError('Unable to load an authorized clinic account for this session.')
           setIsLoading(false)
           return false
         }
 
-        window.localStorage.setItem(STORAGE_KEY, JSON.stringify(nextUser))
+        cacheUser(nextUser)
         setUser(nextUser)
         setIsLoading(false)
         return true
@@ -300,33 +347,33 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setAuthError(null)
 
         if (!values.firstName.trim() || !values.lastName.trim() || !values.email.trim()) {
-          setAuthError('Please complete all required profile details.')
-          return { success: false, message: 'Please complete all required profile details.' }
+          const message = 'Please complete all required profile details.'
+          setAuthError(message)
+          return { success: false, message }
         }
-
         if (values.password.length < 8) {
-          setAuthError('Password must be at least 8 characters long.')
-          return { success: false, message: 'Password must be at least 8 characters long.' }
+          const message = 'Password must be at least 8 characters long.'
+          setAuthError(message)
+          return { success: false, message }
         }
-
         if (values.password !== values.confirmPassword) {
-          setAuthError('Passwords do not match.')
-          return { success: false, message: 'Passwords do not match.' }
+          const message = 'Passwords do not match.'
+          setAuthError(message)
+          return { success: false, message }
         }
-
         if (!values.acceptedTerms) {
-          setAuthError('Please accept the terms to create your account.')
-          return { success: false, message: 'Please accept the terms to create your account.' }
+          const message = 'Please accept the terms to create your account.'
+          setAuthError(message)
+          return { success: false, message }
         }
-
         if (!supabase) {
-          setAuthError('Supabase authentication is not configured.')
-          return { success: false, message: 'Supabase authentication is not configured.' }
+          const message = 'Supabase authentication is not configured.'
+          setAuthError(message)
+          return { success: false, message }
         }
 
         const email = values.email.trim().toLowerCase()
         const generatedPatientId = `PT-${Date.now().toString().slice(-8)}-${Math.random().toString(36).slice(2, 7).toUpperCase()}`
-
         const { data, error } = await supabase.auth.signUp({
           email,
           password: values.password,
@@ -344,8 +391,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         })
 
         if (error || !data.user) {
-          setAuthError(error?.message ?? 'Unable to create your account right now.')
-          return { success: false, message: error?.message ?? 'Unable to create your account right now.' }
+          const message = error?.message ?? 'Unable to create your account right now.'
+          setAuthError(message)
+          return { success: false, message }
         }
 
         const { error: profileError } = await supabase.from('patients').upsert(
@@ -367,11 +415,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
         if (profileError) {
           console.error('Supabase patient profile creation failed:', profileError)
-          setAuthError('Your sign-in account was created, but we could not create the linked patient profile. Please contact the clinic before logging in.')
-          return {
-            success: false,
-            message: 'Your sign-in account was created, but we could not create the linked patient profile. Please contact the clinic before logging in.',
-          }
+          const message = 'Your sign-in account was created, but we could not create the linked patient profile. Please contact the clinic before logging in.'
+          setAuthError(message)
+          return { success: false, message }
         }
 
         return {
@@ -381,68 +427,56 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       },
       requestPasswordReset: async (email) => {
         setAuthError(null)
-
         if (!supabase) {
-          setAuthError('Supabase authentication is not configured.')
-          return { success: false, message: 'Supabase authentication is not configured.' }
+          const message = 'Supabase authentication is not configured.'
+          setAuthError(message)
+          return { success: false, message }
         }
-
         const { error } = await supabase.auth.resetPasswordForEmail(email.trim().toLowerCase(), {
           redirectTo: `${window.location.origin}/reset-password`,
         })
-
         if (error) {
           setAuthError(error.message)
           return { success: false, message: error.message }
         }
-
-        return {
-          success: true,
-          message: 'A password reset email has been sent to your address.',
-        }
+        return { success: true, message: 'A password reset email has been sent to your address.' }
       },
       resetPassword: async (newPassword, confirmPassword) => {
         setAuthError(null)
-
         if (!newPassword || !confirmPassword) {
-          setAuthError('Both fields are required.')
-          return { success: false, message: 'Both fields are required.' }
+          const message = 'Both fields are required.'
+          setAuthError(message)
+          return { success: false, message }
         }
-
         if (newPassword.length < 8) {
-          setAuthError('Password must be at least 8 characters long.')
-          return { success: false, message: 'Password must be at least 8 characters long.' }
+          const message = 'Password must be at least 8 characters long.'
+          setAuthError(message)
+          return { success: false, message }
         }
-
         if (newPassword !== confirmPassword) {
-          setAuthError('Passwords do not match.')
-          return { success: false, message: 'Passwords do not match.' }
+          const message = 'Passwords do not match.'
+          setAuthError(message)
+          return { success: false, message }
         }
-
         if (!supabase) {
-          setAuthError('Supabase authentication is not configured.')
-          return { success: false, message: 'Supabase authentication is not configured.' }
+          const message = 'Supabase authentication is not configured.'
+          setAuthError(message)
+          return { success: false, message }
         }
-
         const { error } = await supabase.auth.updateUser({ password: newPassword })
         if (error) {
           setAuthError(error.message)
           return { success: false, message: error.message }
         }
-
         return { success: true, message: 'Password updated successfully.' }
       },
       signOut: async () => {
-        if (supabase) {
-          await supabase.auth.signOut()
-        }
-        window.localStorage.removeItem(STORAGE_KEY)
+        if (supabase) await supabase.auth.signOut()
+        clearCachedUser()
         setUser(null)
         setAuthError(null)
       },
-      clearAuthError: () => {
-        setAuthError(null)
-      },
+      clearAuthError: () => setAuthError(null),
     }),
     [authError, isLoading, user],
   )
