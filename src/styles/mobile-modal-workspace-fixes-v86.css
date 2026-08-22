@@ -1,0 +1,381 @@
+/* v86 — targeted responsive repair after real-device review */
+
+/* Expense action icons: Button wraps JSX children in an inner span, so icons passed as children
+   are nested under .btn > span rather than being direct button children. Keep them visible. */
+.ex57-actions .btn > span,
+.ex57-section .btn > span {
+  display:inline-flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  gap:8px!important;
+  min-width:0;
+}
+.ex57-actions .btn > span > svg,
+.ex57-section .btn > span > svg {
+  display:block!important;
+  visibility:visible!important;
+  opacity:1!important;
+  width:16px!important;
+  height:16px!important;
+  min-width:16px!important;
+  flex:0 0 16px!important;
+  stroke:currentColor!important;
+}
+
+/* Expenses workspace */
+.ex57-page{min-width:0;overflow-x:hidden}
+.ex57-hero,.ex57-command,.ex57-workspace,.ex57-section,.ex57-trend-card{min-width:0}
+.ex57-tabs{min-width:0}
+@media(max-width:980px){
+  .ex57-hero{align-items:flex-start!important;flex-direction:column!important}
+  .ex57-actions{width:100%!important;display:flex!important;flex-wrap:wrap!important;justify-content:flex-start!important}
+  .ex57-actions .btn{width:auto!important;max-width:100%;flex:0 0 auto!important}
+  .ex57-workspace{grid-template-columns:1fr!important}
+  .ex57-filters{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+  .ex57-tabs{display:flex!important;overflow-x:auto!important;overscroll-behavior-inline:contain;padding-bottom:5px!important;scrollbar-width:thin}
+  .ex57-tabs>button{flex:0 0 170px!important;min-width:170px!important;scroll-snap-align:start}
+}
+@media(max-width:620px){
+  .ex57-hero{padding:18px!important;border-radius:18px!important}
+  .ex57-actions{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:8px!important}
+  .ex57-actions .btn{width:100%!important;justify-content:center!important;min-width:0!important;padding-inline:11px!important;font-size:12px!important}
+  .ex57-actions .btn:first-child{grid-column:1/-1}
+  .ex57-command{padding:12px!important;border-radius:16px!important}
+  .ex57-tabs{margin-inline:-2px!important}
+  .ex57-tabs>button{flex-basis:148px!important;min-width:148px!important;padding:10px!important}
+  .ex57-tabs>button strong{font-size:11px!important}
+  .ex57-tabs>button span{font-size:9px!important;line-height:1.25!important}
+  .ex57-filters{grid-template-columns:1fr!important}
+  .ex57-row{grid-template-columns:auto minmax(0,1fr)!important}
+  .ex57-row-end{grid-column:2!important;justify-items:start!important;text-align:left!important}
+  .ex57-detail-kpis,.ex57-info-grid{grid-template-columns:1fr!important}
+  .ex57-card-grid,.ex57-vendor-grid{grid-template-columns:1fr!important}
+}
+@media(max-width:400px){
+  .ex57-actions{grid-template-columns:1fr!important}
+  .ex57-actions .btn:first-child{grid-column:auto}
+}
+
+/* Dental Records — screenshot showed a mobile hero being stretched vertically. */
+@media(max-width:900px){
+  .dr11-page,.dr11-layout,.dr11-main{width:100%!important;min-width:0!important}
+  .dr11-command-header{
+    height:auto!important;
+    min-height:0!important;
+    display:grid!important;
+    grid-template-columns:1fr!important;
+    align-items:start!important;
+    justify-items:start!important;
+    gap:14px!important;
+  }
+  .dr11-command-header>div{min-width:0!important}
+  .dr11-command-header .btn{position:static!important;align-self:auto!important;margin:0!important;width:auto!important;max-width:100%!important}
+  .dr11-directory{width:100%!important;min-width:0!important}
+  .dr11-patient-list{max-width:100%!important}
+}
+@media(max-width:680px){
+  .dr11-command-header{padding:16px!important;border-radius:16px!important}
+  .dr11-command-header h2{font-size:1.45rem!important}
+  .dr11-command-header p{font-size:.84rem!important;line-height:1.5!important}
+  .dr11-command-header .btn{min-height:40px!important;padding-inline:13px!important}
+  .dr11-directory{padding:13px!important;border-radius:16px!important}
+  .dr11-patient-list{grid-auto-columns:minmax(220px,82vw)!important}
+  .dr11-patient-hero{padding:15px!important}
+  .dr11-contact-row span{min-width:0;overflow-wrap:anywhere}
+  .dr11-profile-grid,.dr11-metrics{grid-template-columns:1fr!important}
+  .dr11-timeline-card{padding:14px!important}
+}
+
+/* Shared mobile dialog principle: centered floating surface with an internal scroll region,
+   not a full-screen page. */
+@media(max-width:760px){
+  .page-dental-records .modal-backdrop,
+  .pay14-backdrop,
+  .inv32-backdrop,
+  .tp80-backdrop,
+  .tx12-modal-backdrop,
+  .svc15-modal-backdrop,
+  .inv56-backdrop,
+  .expense-modal-backdrop,
+  .team-v26-modal-backdrop,
+  .branches-v27-modal-backdrop,
+  .forms-v28-modal-backdrop{
+    padding:12px!important;
+    align-items:center!important;
+    justify-content:center!important;
+    place-items:center!important;
+    overflow:hidden!important;
+  }
+
+  .page-dental-records .modal.patient-modal,
+  .pay14-modal,
+  .inv32-modal,
+  .tp80-create-modal,
+  .tp80-detail-modal,
+  .tx12-modal,
+  .svc15-modal,
+  .inv56-modal,
+  .expense-modal,
+  .team-v26-modal,
+  .branches-v27-modal,
+  .forms-v28-modal,
+  .forms-v28-modal.large{
+    position:relative!important;
+    inset:auto!important;
+    width:min(100%,680px)!important;
+    max-width:calc(100vw - 24px)!important;
+    height:auto!important;
+    min-height:0!important;
+    max-height:86dvh!important;
+    margin:0 auto!important;
+    border-radius:20px!important;
+    overflow:hidden!important;
+    box-shadow:0 22px 65px rgba(15,23,42,.24)!important;
+  }
+
+  .page-dental-records .modal.patient-modal,
+  .tx12-modal,
+  .svc15-modal,
+  .inv56-modal,
+  .expense-modal,
+  .team-v26-modal,
+  .branches-v27-modal,
+  .forms-v28-modal{display:flex!important;flex-direction:column!important}
+
+  .page-dental-records .modal.patient-modal>.modal-header,
+  .pay14-header,
+  .inv32-header,
+  .tp80-create-modal>header,
+  .tx12-modal-head,
+  .svc15-modal-head,
+  .inv56-modal-header,
+  .expense-modal-header,
+  .team-v26-modal>header,
+  .branches-v27-modal>header,
+  .forms-v28-modal>header{
+    position:relative!important;
+    top:auto!important;
+    flex:0 0 auto!important;
+    padding:14px 15px!important;
+  }
+
+  .page-dental-records .modal.patient-modal>.form-stack,
+  .pay14-body,
+  .inv32-body,
+  .tp80-create-body,
+  .tp80-detail-body,
+  .tx12-modal-form,
+  .svc15-modal-body,
+  .inv56-modal-body,
+  .expense-modal-body,
+  .team-v26-modal>form,
+  .branches-v27-modal-body,
+  .forms-v28-modal-body{
+    min-height:0!important;
+    overflow-y:auto!important;
+    overscroll-behavior:contain!important;
+    -webkit-overflow-scrolling:touch;
+  }
+
+  .page-dental-records .modal.patient-modal>.form-stack{padding:14px!important}
+  .page-dental-records .modal.patient-modal .form-grid{grid-template-columns:1fr!important}
+  .page-dental-records .modal.patient-modal .form-section{padding:0!important}
+  .page-dental-records .modal.patient-modal .modal-actions,
+  .tx12-modal-actions,
+  .svc15-modal-actions,
+  .inv56-modal-actions,
+  .expense-modal-actions,
+  .team-v26-modal footer,
+  .branches-v27-modal footer,
+  .forms-v28-modal footer,
+  .inv32-footer-actions{
+    display:flex!important;
+    align-items:center!important;
+    justify-content:center!important;
+    flex-wrap:wrap!important;
+    gap:8px!important;
+  }
+  .page-dental-records .modal.patient-modal .modal-actions .btn,
+  .tx12-modal-actions .btn,
+  .svc15-modal-actions .btn,
+  .inv56-modal-actions .btn,
+  .expense-modal-actions .btn,
+  .team-v26-modal footer .btn,
+  .branches-v27-modal footer .btn,
+  .forms-v28-modal footer .btn,
+  .inv32-footer-actions .btn{
+    width:auto!important;
+    min-width:118px!important;
+    flex:0 1 auto!important;
+  }
+
+  /* Payment recorder */
+  .pay14-modal{max-width:660px!important}
+  .pay14-body{display:block!important}
+  .pay14-form-column,.pay14-summary-column{padding:14px!important}
+  .pay14-summary-column{border-left:0!important;border-top:1px solid #e8edf4!important}
+  .pay14-grid-2{grid-template-columns:1fr!important}
+  .pay14-span-2{grid-column:auto!important}
+  .pay14-footer{position:relative!important;bottom:auto!important;padding:12px 14px!important;flex-direction:column!important;align-items:stretch!important}
+  .pay14-footer-actions{justify-content:center!important;flex-wrap:wrap!important}
+  .pay14-footer-actions .btn{width:auto!important;min-width:120px!important}
+
+  /* Treatment drawer/modal */
+  .tx12-modal{max-width:620px!important}
+  .tx12-modal-form{padding:0 14px 14px!important}
+  .tx12-form-grid{grid-template-columns:1fr!important}
+  .tx12-form-grid .wide{grid-column:auto!important}
+  .tx12-form-section{padding:14px 0!important}
+  .tx12-modal-actions{position:relative!important;bottom:auto!important;padding:13px 0 0!important;margin-top:4px!important}
+
+  /* Treatment plan */
+  .tp80-create-modal,.tp80-detail-modal{max-width:680px!important}
+  .tp80-create-body,.tp80-detail-body{max-height:none!important;padding:14px!important}
+  .tp80-form-grid,.tp80-item-fields,.tp80-detail-metrics{grid-template-columns:1fr!important}
+  .tp80-form-grid .is-wide{grid-column:auto!important}
+  .tp80-item{grid-template-columns:auto minmax(0,1fr)!important;align-items:start!important}
+  .tp80-item-total{grid-column:2!important;text-align:left!important}
+  .tp80-remove{grid-column:2!important;justify-self:end!important}
+  .tp80-create-footer,.tp80-detail-footer{position:relative!important;bottom:auto!important;padding:12px 14px!important;flex-direction:column!important;align-items:stretch!important}
+  .tp80-create-footer>div:last-child,.tp80-detail-footer>div:last-child{justify-content:center!important;flex-wrap:wrap!important}
+  .tp80-create-footer .btn,.tp80-detail-footer .btn{width:auto!important;min-width:120px!important}
+
+  /* Treatment-plan patient directory search border */
+  .tp80-search{
+    box-sizing:border-box!important;
+    width:100%!important;
+    min-height:42px!important;
+    height:auto!important;
+    border:1px solid #d9e3f0!important;
+    border-radius:12px!important;
+    background:#fff!important;
+    box-shadow:0 1px 2px rgba(15,23,42,.025)!important;
+  }
+  .tp80-search:focus-within{border-color:#7aa7f8!important;box-shadow:0 0 0 3px rgba(37,99,235,.09)!important}
+  .tp80-search input{height:40px!important;padding:0!important;border:0!important;box-shadow:none!important;background:transparent!important}
+
+  /* Invoice creator */
+  .inv32-modal{max-width:690px!important}
+  .inv32-body{display:block!important}
+  .inv32-form-column,.inv32-summary-column{padding:14px!important}
+  .inv32-summary-column{border-left:0!important;border-top:1px solid #e8edf4!important}
+  .inv32-grid-2{grid-template-columns:1fr!important}
+  .inv32-line{grid-template-columns:28px minmax(0,1fr)!important;gap:8px!important}
+  .inv32-line>label{grid-column:2!important}
+  .inv32-remove{grid-column:2!important;justify-self:end!important}
+  .inv32-footer{position:relative!important;bottom:auto!important;padding:12px 14px!important;flex-direction:column!important;align-items:stretch!important}
+  .inv32-footer>div:first-child{text-align:center!important}
+
+  /* Service catalogue modal */
+  .svc15-modal{max-width:650px!important}
+  .svc15-modal-body{display:block!important;padding:14px!important}
+  .svc15-form-grid{grid-template-columns:1fr!important}
+  .svc15-preview{margin-top:12px!important}
+  .svc15-two-col{grid-template-columns:1fr!important}
+  .svc15-modal-actions{position:relative!important;bottom:auto!important;padding-top:13px!important}
+
+  /* Inventory actions — stock count keeps same treatment but all other long forms become floating/scrolled. */
+  .inv56-modal{max-width:650px!important}
+  .inv56-modal-body{padding:13px 14px!important}
+  .inv56-form-stack{min-width:0!important}
+  .inventory-form-grid,.inv56-toggle-grid{grid-template-columns:1fr!important}
+  .inventory-form-wide{grid-column:auto!important}
+  .inv56-modal-actions{position:relative!important;bottom:auto!important;padding:12px 14px!important}
+
+  /* Expense dialogs */
+  .expense-modal{max-width:620px!important}
+  .expense-modal-body{padding:14px!important}
+  .expense-form-grid{grid-template-columns:1fr!important}
+  .expense-form-full{grid-column:auto!important}
+  .expense-modal footer,.expense-modal-actions{position:relative!important;bottom:auto!important;padding:12px 14px!important}
+
+  /* Team, branch, forms */
+  .team-v26-modal,.branches-v27-modal,.forms-v28-modal{max-width:650px!important}
+  .team-v26-modal>form{padding:0!important}
+  .team-v26-form-section,.branches-v27-form-section,.forms-v28-form-section{padding:14px!important}
+  .team-v26-form-grid,.branches-v27-form-grid,.branches-v27-form-grid-three,.forms-v28-form-grid{grid-template-columns:1fr!important}
+  .team-v26-span-2,.branches-v27-form-grid .is-wide{grid-column:auto!important}
+  .team-v26-modal footer,.branches-v27-modal footer,.forms-v28-modal footer{position:relative!important;bottom:auto!important;padding:12px 14px!important}
+}
+
+@media(max-width:430px){
+  .page-dental-records .modal.patient-modal,
+  .pay14-modal,.inv32-modal,.tp80-create-modal,.tp80-detail-modal,.tx12-modal,.svc15-modal,.inv56-modal,.expense-modal,.team-v26-modal,.branches-v27-modal,.forms-v28-modal,
+  .forms-v28-modal.large{max-height:84dvh!important;border-radius:17px!important}
+  .page-dental-records .modal.patient-modal .modal-actions,
+  .pay14-footer-actions,.inv32-footer-actions,.tp80-create-footer>div:last-child,.tx12-modal-actions,.svc15-modal-actions,.inv56-modal-actions,.expense-modal-actions,.team-v26-modal footer,.branches-v27-modal footer,.forms-v28-modal footer{display:grid!important;grid-template-columns:1fr 1fr!important;width:100%!important}
+  .page-dental-records .modal.patient-modal .modal-actions .btn,
+  .pay14-footer-actions .btn,.inv32-footer-actions .btn,.tp80-create-footer .btn,.tx12-modal-actions .btn,.svc15-modal-actions .btn,.inv56-modal-actions .btn,.expense-modal-actions .btn,.team-v26-modal footer .btn,.branches-v27-modal footer .btn,.forms-v28-modal footer .btn{width:100%!important;min-width:0!important}
+}
+
+/* Announcements & Notifications */
+.notifications-v25{min-width:0;overflow-x:hidden}
+@media(max-width:1100px){
+  .notifications-v25-grid{grid-template-columns:1fr!important}
+  .notifications-v25-metrics{grid-template-columns:repeat(3,minmax(0,1fr))!important}
+  .notifications-v25-ops-grid,.notifications-v25-channel-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+}
+@media(max-width:700px){
+  .notifications-v25-hero{flex-direction:column!important;align-items:flex-start!important;padding:18px!important}
+  .notifications-v25-hero .btn{width:auto!important}
+  .notifications-v25-metrics{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+  .notifications-v25-section-head{flex-direction:column!important;align-items:flex-start!important}
+  .notifications-v25-section-head>div:last-child{width:100%!important;display:flex!important;flex-wrap:wrap!important}
+  .notifications-v25-tabs{overflow-x:auto!important;display:flex!important;white-space:nowrap!important;padding-bottom:4px!important}
+  .notifications-v25-row{grid-template-columns:auto minmax(0,1fr) auto!important;min-width:0!important}
+  .notifications-v25-row-main{min-width:0!important}
+  .notifications-v25-row-main p,.notifications-v25-row-main strong{overflow-wrap:anywhere}
+  .notifications-v25-detail-grid{grid-template-columns:1fr!important}
+  .notifications-v25-ops-grid,.notifications-v25-channel-grid{grid-template-columns:1fr!important}
+  .notifications-v25-reminder-card{flex-direction:column!important;align-items:flex-start!important}
+}
+@media(max-width:430px){.notifications-v25-metrics{grid-template-columns:1fr!important}}
+
+/* Mobile top bar role label: rectangular compact tag rather than an oversized long pill. */
+@media(max-width:700px){
+  .topbar-account-pill{
+    max-width:92px!important;
+    min-width:0!important;
+    padding:6px 8px!important;
+    border-radius:9px!important;
+    font-size:10px!important;
+    line-height:1.2!important;
+    white-space:nowrap!important;
+    overflow:hidden!important;
+    text-overflow:ellipsis!important;
+  }
+  .topbar{gap:8px!important;padding-inline:12px!important}
+  .topbar-copy{min-width:0!important}
+  .topbar-copy h1{font-size:15px!important;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .topbar-copy .eyebrow{display:none!important}
+}
+
+/* Appointment calendar — compact controller on tablet/mobile without crushing calendar cells. */
+.advanced-calendar-container{width:100%!important;min-width:0!important;max-width:100%!important;overflow:hidden!important}
+@media(max-width:900px){
+  .advanced-calendar-header{display:grid!important;grid-template-columns:1fr!important;gap:10px!important;padding:12px!important}
+  .calendar-nav{min-width:0!important;display:grid!important;grid-template-columns:auto minmax(0,1fr) auto!important;align-items:center!important;gap:7px!important}
+  .calendar-title{min-width:0!important;text-align:center!important}
+  .calendar-title h3{font-size:clamp(14px,4vw,18px)!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important}
+  .calendar-actions{display:flex!important;align-items:center!important;gap:6px!important;overflow-x:auto!important;padding-bottom:2px!important}
+  .calendar-actions>.btn{flex:0 0 auto!important;width:auto!important;min-height:34px!important;padding:7px 10px!important;font-size:11px!important}
+  .view-toggle{display:flex!important;flex:0 0 auto!important;gap:3px!important;padding:3px!important}
+  .view-toggle .view-btn{min-height:30px!important;padding:6px 8px!important;font-size:10px!important;border-radius:8px!important}
+  .advanced-week-view{width:max(760px,100%)!important;min-width:760px!important}
+  .provider-day-view{min-width:720px!important;width:max(720px,100%)!important}
+  .advanced-month-grid{width:max(720px,100%)!important;min-width:720px!important}
+  .advanced-calendar-container{overflow-x:auto!important;overscroll-behavior-inline:contain}
+  .advanced-calendar-header{position:sticky!important;left:0!important;z-index:4!important;width:min(100%,100vw)!important}
+}
+@media(max-width:480px){
+  .advanced-calendar-header{padding:9px!important;gap:7px!important}
+  .calendar-nav .icon-button{width:32px!important;height:32px!important;min-width:32px!important}
+  .calendar-title h3{font-size:14px!important}
+  .calendar-actions{gap:4px!important}
+  .calendar-actions>.btn{min-height:31px!important;padding:5px 8px!important;font-size:10px!important}
+  .view-toggle .view-btn{padding:5px 7px!important;font-size:9px!important}
+  .advanced-week-view{min-width:680px!important;width:680px!important}
+  .provider-day-view{min-width:660px!important;width:660px!important}
+  .advanced-month-grid{min-width:680px!important;width:680px!important}
+  .agenda-view{grid-template-columns:1fr!important;padding:10px!important}
+}
