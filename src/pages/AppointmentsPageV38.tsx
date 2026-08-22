@@ -9,6 +9,7 @@ import { getStoredProviders } from '../features/dentists/dentistStore'
 import { getStoredPatients } from '../features/patients/patientStore'
 import { getStoredServices } from '../features/services/serviceStore'
 import '../styles/appointments-confirmation-v41.css'
+import '../styles/internal-appointments-final-v104.css'
 import { AppointmentsPage } from './AppointmentsPage'
 
 type AppointmentNotice = {
@@ -263,10 +264,8 @@ export function AppointmentsPageV38() {
       }
 
       if (createdAppointment) {
-        // Immediately remount from the updated local cache instead of waiting for a full browser refresh.
         refreshRequestsWorkspace(true)
       } else if (requestDecisionChanged) {
-        // Approve/reject should remove the pending card immediately and preserve the Requests workspace.
         setRenderVersion((version) => version + 1)
         if (keepRequestsOpen) openRequestsWorkspace(false)
       }
