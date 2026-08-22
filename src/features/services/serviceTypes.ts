@@ -8,6 +8,11 @@ export type Service = {
   price: number
   category: string
   status: ServiceStatus
+  branchIds?: string[]
+  onlineBookable?: boolean
+  internalOnly?: boolean
+  showOnWebsite?: boolean
+  imageUrl?: string
   createdAt: string
   updatedAt: string
 }
