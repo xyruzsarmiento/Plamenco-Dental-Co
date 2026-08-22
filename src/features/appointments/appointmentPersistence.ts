@@ -190,6 +190,34 @@ export async function createAppointmentPersisted(values: AppointmentFormValues, 
   return confirmed
 }
 
+export async function createPatientPortalAppointmentPersisted(input: {
+  branchId: string
+  serviceId: string
+  providerId?: string
+  date: string
+  startTime: string
+  notes?: string
+}): Promise<Appointment> {
+  if (!supabase) throw new Error('Clinic database is not configured. Appointment requests cannot be submitted safely.')
+
+  const { data, error } = await supabase.rpc('create_patient_portal_appointment', {
+    p_branch_id: input.branchId,
+    p_service_id: input.serviceId,
+    p_provider_id: input.providerId || null,
+    p_appointment_date: input.date,
+    p_start_time: input.startTime,
+    p_notes: input.notes?.trim() ?? '',
+  })
+
+  if (error || !data) throw mutationError('The appointment request could not be submitted.', error)
+  const row = Array.isArray(data) ? data[0] : data
+  if (!row) throw new Error('The clinic database did not return the saved appointment.')
+
+  const confirmed = mapAppointmentRow(row as Record<string, any>)
+  replaceCachedAppointment(confirmed)
+  return confirmed
+}
+
 function operationalFields(nextStatus: AppointmentStatus, actor: string) {
   const now = new Date().toISOString()
   switch (nextStatus) {
