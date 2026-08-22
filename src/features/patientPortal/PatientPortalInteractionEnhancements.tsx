@@ -1,17 +1,40 @@
 import { useEffect } from 'react'
+import { useAuth } from '../auth/AuthContext'
+import { getInvoicesByPatient, getPaymentsByPatient, getReceiptsByPatient } from '../billing/billingStore'
+import { getCurrentPatientForAuthenticatedUser } from '../patients/patientStore'
+import { updateMyPatientProfilePersisted } from '../patients/patientPersistence'
 
 function closeEnhancementModal() {
   document.querySelector('.pv4-detail-backdrop')?.remove()
 }
 
-function createDetailModal(title: string, subtitle: string, bodyHtml: string) {
+function escapeHtml(value: unknown) {
+  return String(value ?? '')
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&#039;')
+}
+
+function money(cents: number) {
+  return new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP' }).format(cents / 100)
+}
+
+function prettyDate(value?: string) {
+  if (!value) return '—'
+  const parsed = new Date(value.includes('T') ? value : `${value}T00:00:00+08:00`)
+  return Number.isNaN(parsed.getTime()) ? value : parsed.toLocaleDateString('en-PH', { month: 'long', day: 'numeric', year: 'numeric', timeZone: 'Asia/Manila' })
+}
+
+function createDetailModal(title: string, subtitle: string, bodyHtml: string, eyebrow = 'CARE DETAILS') {
   closeEnhancementModal()
   const backdrop = document.createElement('div')
   backdrop.className = 'pv4-detail-backdrop'
   backdrop.innerHTML = `
-    <section class="pv4-detail-modal" role="dialog" aria-modal="true" aria-label="${title.replaceAll('"', '&quot;')}">
+    <section class="pv4-detail-modal" role="dialog" aria-modal="true" aria-label="${escapeHtml(title)}">
       <header>
-        <div><span>CARE DETAILS</span><h2>${title}</h2><p>${subtitle}</p></div>
+        <div><span>${escapeHtml(eyebrow)}</span><h2>${escapeHtml(title)}</h2><p>${escapeHtml(subtitle)}</p></div>
         <button type="button" class="pv4-detail-close" aria-label="Close details">×</button>
       </header>
       <div class="pv4-detail-body">${bodyHtml}</div>
@@ -25,11 +48,157 @@ function createDetailModal(title: string, subtitle: string, bodyHtml: string) {
   document.body.appendChild(backdrop)
 }
 
+function injectBillingDetails(patientId: string) {
+  const summary = document.querySelector<HTMLElement>('.pv3-billing-summary')
+  if (!summary || summary.parentElement?.querySelector(':scope > .pv4-billing-metrics')) return
+  const invoices = getInvoicesByPatient(patientId)
+  const payments = getPaymentsByPatient(patientId)
+  const receipts = getReceiptsByPatient(patientId)
+  const completed = payments.filter((payment) => payment.status === 'completed')
+  const totalPaid = completed.reduce((sum, payment) => sum + payment.amountCents, 0)
+  const lastPayment = completed[0]
+  const metrics = document.createElement('section')
+  metrics.className = 'pv4-billing-metrics'
+  metrics.innerHTML = `
+    <article><span>TOTAL BILLED</span><strong>${escapeHtml(money(invoices.reduce((sum, invoice) => sum + invoice.totalCents, 0)))}</strong><small>${invoices.length} invoice${invoices.length === 1 ? '' : 's'} issued</small></article>
+    <article><span>TOTAL PAID</span><strong>${escapeHtml(money(totalPaid))}</strong><small>Verified completed payments</small></article>
+    <article><span>RECEIPTS</span><strong>${receipts.length}</strong><small>Official receipt${receipts.length === 1 ? '' : 's'} available</small></article>
+    <article><span>LAST PAYMENT</span><strong>${lastPayment ? escapeHtml(money(lastPayment.amountCents)) : '—'}</strong><small>${lastPayment ? escapeHtml(prettyDate(lastPayment.date)) : 'No completed payment yet'}</small></article>`
+  summary.insertAdjacentElement('afterend', metrics)
+}
+
+function decoratePaymentRows(patientId: string) {
+  const payments = getPaymentsByPatient(patientId)
+  const rows = Array.from(document.querySelectorAll<HTMLElement>('.pv3-payment-history > div'))
+  rows.forEach((row, index) => {
+    const payment = payments[index]
+    if (!payment) return
+    row.dataset.paymentId = payment.id
+    row.tabIndex = 0
+    row.setAttribute('role', 'button')
+    row.setAttribute('aria-label', `View payment ${payment.paymentNumber}`)
+    if (!row.querySelector('.pv4-row-arrow')) {
+      const arrow = document.createElement('span')
+      arrow.className = 'pv4-row-arrow'
+      arrow.textContent = '›'
+      row.appendChild(arrow)
+    }
+  })
+}
+
+function openPaymentReceipt(patientId: string, paymentId: string) {
+  const payment = getPaymentsByPatient(patientId).find((entry) => entry.id === paymentId)
+  if (!payment) return
+  const invoice = getInvoicesByPatient(patientId).find((entry) => entry.id === payment.invoiceId)
+  const receipt = getReceiptsByPatient(patientId).find((entry) => entry.paymentId === payment.id)
+  const method = payment.paymentMethod === 'qrph' ? 'QR Ph' : payment.paymentMethod.replaceAll('_', ' ')
+  createDetailModal(
+    receipt ? `Official Receipt ${receipt.receiptNumber}` : `Payment ${payment.paymentNumber}`,
+    receipt ? 'Clinic-issued payment receipt' : 'Payment transaction details',
+    `<div class="pv4-receipt-hero"><span>${receipt ? 'AMOUNT RECEIVED' : 'PAYMENT AMOUNT'}</span><strong>${escapeHtml(money(payment.amountCents))}</strong><small>${escapeHtml(payment.status.replaceAll('_', ' '))}</small></div>
+     <div class="pv4-receipt-grid">
+       <div><span>Payment reference</span><strong>${escapeHtml(payment.paymentNumber)}</strong></div>
+       <div><span>Invoice</span><strong>${escapeHtml(invoice?.invoiceNumber ?? '—')}</strong></div>
+       <div><span>Payment date</span><strong>${escapeHtml(prettyDate(payment.date))}</strong></div>
+       <div><span>Method</span><strong>${escapeHtml(method)}</strong></div>
+       <div><span>External reference</span><strong>${escapeHtml(payment.referenceNumber || payment.gatewayTransactionId || '—')}</strong></div>
+       <div><span>Remaining balance</span><strong>${escapeHtml(money(receipt?.remainingBalanceCents ?? invoice?.balanceCents ?? 0))}</strong></div>
+     </div>
+     ${receipt ? `<section class="pv4-receipt-note"><span>Receipt issued</span><p>${escapeHtml(prettyDate(receipt.issuedAt))} · ${escapeHtml(receipt.issuedBy || 'Plamenco Dental Co.')}</p></section>` : '<aside>This transaction does not have an official receipt yet. A receipt is generated only after the payment is verified and posted.</aside>'}`,
+    receipt ? 'OFFICIAL RECEIPT' : 'PAYMENT DETAILS',
+  )
+}
+
+function injectProfilePhotoUploader(authUserId: string) {
+  const page = document.querySelector<HTMLElement>('.pv3-profile-layout')
+  if (!page || page.parentElement?.querySelector(':scope > .pv4-profile-photo-card')) return
+  const card = document.createElement('section')
+  card.className = 'pv4-profile-photo-card'
+  card.innerHTML = `
+    <div class="pv4-photo-preview"><span>Photo</span></div>
+    <div><span>PROFILE PHOTO</span><h3>Personalize your account</h3><p>Upload a clear square photo. JPG, PNG or WebP up to 2 MB.</p></div>
+    <label><input type="file" accept="image/jpeg,image/png,image/webp"/><strong>Upload photo</strong></label>
+    <small class="pv4-photo-status" aria-live="polite"></small>`
+  page.insertAdjacentElement('beforebegin', card)
+  const input = card.querySelector<HTMLInputElement>('input')!
+  const preview = card.querySelector<HTMLElement>('.pv4-photo-preview')!
+  const status = card.querySelector<HTMLElement>('.pv4-photo-status')!
+
+  void getCurrentPatientForAuthenticatedUser(authUserId).then((patient) => {
+    if (patient?.profileImage) preview.style.backgroundImage = `url(${patient.profileImage})`
+  })
+
+  input.addEventListener('change', () => {
+    const file = input.files?.[0]
+    if (!file) return
+    if (!file.type.startsWith('image/')) { status.textContent = 'Please choose an image file.'; return }
+    if (file.size > 2 * 1024 * 1024) { status.textContent = 'The image must be 2 MB or smaller.'; return }
+    const reader = new FileReader()
+    reader.onload = () => {
+      void (async () => {
+        const image = String(reader.result ?? '')
+        const patient = await getCurrentPatientForAuthenticatedUser(authUserId)
+        if (!patient) { status.textContent = 'Patient profile could not be loaded.'; return }
+        status.textContent = 'Saving photo…'
+        try {
+          await updateMyPatientProfilePersisted({
+            firstName: patient.firstName,
+            middleName: patient.middleName,
+            lastName: patient.lastName,
+            dateOfBirth: patient.dateOfBirth,
+            email: patient.email,
+            phone: patient.phone,
+            address: patient.address,
+            emergencyContact: patient.emergencyContact,
+            emergencyContactPhone: patient.emergencyContactPhone,
+            emergencyContactRelationship: patient.emergencyContactRelationship ?? '',
+            profileImage: image,
+          })
+          preview.style.backgroundImage = `url(${image})`
+          document.querySelectorAll<HTMLElement>('.pv3-avatar').forEach((avatar) => {
+            avatar.style.backgroundImage = `url(${image})`
+            avatar.textContent = ''
+          })
+          status.textContent = 'Profile photo updated.'
+        } catch (error) {
+          status.textContent = error instanceof Error ? error.message : 'Unable to save profile photo.'
+        }
+      })()
+    }
+    reader.readAsDataURL(file)
+  })
+}
+
 export function PatientPortalInteractionEnhancements() {
+  const { user } = useAuth()
+
   useEffect(() => {
+    const patientId = user?.patientId ?? ''
+    const authUserId = user?.id ?? ''
+    let frame = 0
+    const enhance = () => {
+      cancelAnimationFrame(frame)
+      frame = requestAnimationFrame(() => {
+        if (patientId) {
+          injectBillingDetails(patientId)
+          decoratePaymentRows(patientId)
+        }
+        if (authUserId) injectProfilePhotoUploader(authUserId)
+      })
+    }
+    enhance()
+    const observer = new MutationObserver(enhance)
+    observer.observe(document.body, { childList: true, subtree: true })
+
     const onClick = (event: MouseEvent) => {
       const target = event.target as HTMLElement | null
       if (!target) return
+
+      const paymentRow = target.closest<HTMLElement>('.pv3-payment-history > div[data-payment-id]')
+      if (paymentRow && patientId) {
+        openPaymentReceipt(patientId, paymentRow.dataset.paymentId ?? '')
+        return
+      }
 
       const treatment = target.closest<HTMLElement>('.pv3-treatment-list article')
       if (treatment) {
@@ -41,7 +210,7 @@ export function PatientPortalInteractionEnhancements() {
         createDetailModal(
           title,
           status,
-          `<div class="pv4-detail-kpis"><div><span>Status</span><strong>${status}</strong></div><div><span>Tooth</span><strong>${tooth}</strong></div></div><section><span>Treatment summary</span><p>${description}</p></section><section><span>Schedule & fee</span><div class="pv4-detail-footer-copy">${footer}</div></section><aside>Only patient-visible treatment information is shown here. Clinical notes remain private to your care team.</aside>`,
+          `<div class="pv4-detail-kpis"><div><span>Status</span><strong>${escapeHtml(status)}</strong></div><div><span>Tooth</span><strong>${escapeHtml(tooth)}</strong></div></div><section><span>Treatment summary</span><p>${escapeHtml(description)}</p></section><section class="pv4-schedule-fee"><span>Schedule & fee</span><div class="pv4-detail-footer-copy">${footer}</div></section><aside>Only patient-visible treatment information is shown here. Clinical notes remain private to your care team.</aside>`,
         )
         return
       }
@@ -54,23 +223,32 @@ export function PatientPortalInteractionEnhancements() {
         createDetailModal(
           title,
           `${percentage} complete`,
-          `<div class="pv4-progress-detail"><div class="pv4-progress-ring" style="--pv4-progress:${percentage}"><strong>${percentage}</strong><span>complete</span></div><div><span>Care-plan progress</span><h3>${title}</h3><p>${description}</p></div></div><aside>Progress updates as treatment items are completed by your clinic.</aside>`,
+          `<div class="pv4-progress-detail"><div class="pv4-progress-ring" style="--pv4-progress:${percentage}"><strong>${percentage}</strong><span>complete</span></div><div><span>Care-plan progress</span><h3>${escapeHtml(title)}</h3><p>${escapeHtml(description)}</p></div></div><aside>Progress updates as treatment items are completed by your clinic.</aside>`,
         )
       }
     }
 
     const onKey = (event: KeyboardEvent) => {
       if (event.key === 'Escape') closeEnhancementModal()
+      if (event.key === 'Enter') {
+        const active = document.activeElement as HTMLElement | null
+        if (active?.matches('.pv3-payment-history > div[data-payment-id]') && patientId) {
+          openPaymentReceipt(patientId, active.dataset.paymentId ?? '')
+        }
+      }
     }
 
     document.addEventListener('click', onClick)
     document.addEventListener('keydown', onKey)
     return () => {
+      observer.disconnect()
+      cancelAnimationFrame(frame)
       document.removeEventListener('click', onClick)
       document.removeEventListener('keydown', onKey)
       closeEnhancementModal()
+      document.querySelectorAll('.pv4-billing-metrics,.pv4-profile-photo-card').forEach((node) => node.remove())
     }
-  }, [])
+  }, [user?.id, user?.patientId])
 
   return null
 }
