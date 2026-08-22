@@ -137,6 +137,8 @@ export function ClinicalVisitWorkspace({
   const [prescriptionNotes, setPrescriptionNotes] = useState('')
   const [amendment, setAmendment] = useState({ amendmentText: '', reason: '' })
   const [message, setMessage] = useState<string | null>(null)
+  const [mutationError, setMutationError] = useState<string | null>(null)
+  const [isSavingClinical, setIsSavingClinical] = useState(false)
   const [related, setRelated] = useState<{
     treatments: Treatment[]
     prescriptions: Prescription[]
@@ -165,27 +167,45 @@ export function ClinicalVisitWorkspace({
   const isFinal = record.status === 'finalized' || record.status === 'amended'
   const canWriteDraft = canEditDraft && !isFinal
 
-  function saveDraft() {
-    const updated = updateDentalRecord(record.id, {
-      ...form,
-      findings: form.clinicalFindings,
-      diagnosis: form.assessment,
-      treatmentPlan: form.recommendations,
-      treatmentNotes: form.treatmentPerformed,
-      lastUpdatedBy: actor,
-    })
-    if (updated) {
+  async function saveDraft() {
+    if (isSavingClinical || !canWriteDraft) return
+    setIsSavingClinical(true)
+    setMutationError(null)
+    setMessage(null)
+    try {
+      const updated = await updateDentalRecord(record.id, {
+        ...form,
+        findings: form.clinicalFindings,
+        diagnosis: form.assessment,
+        treatmentPlan: form.recommendations,
+        treatmentNotes: form.treatmentPerformed,
+        lastUpdatedBy: actor,
+      })
       onRecordChange(updated)
+      setForm(buildForm(updated))
       setMessage('Draft saved.')
+    } catch (cause) {
+      setMutationError(cause instanceof Error ? cause.message : 'Clinical draft could not be saved.')
+    } finally {
+      setIsSavingClinical(false)
     }
   }
 
-  function finalizeRecord() {
+  async function finalizeRecord() {
+    if (isSavingClinical || !canFinalize || isFinal) return
     if (!window.confirm('Finalize Clinical Record? Finalized documentation becomes part of permanent clinical history.')) return
-    const updated = finalizeDentalRecord(record.id, actor)
-    if (updated) {
+    setIsSavingClinical(true)
+    setMutationError(null)
+    setMessage(null)
+    try {
+      const updated = await finalizeDentalRecord(record.id, actor)
       onRecordChange(updated)
+      setForm(buildForm(updated))
       setMessage('Clinical record finalized.')
+    } catch (cause) {
+      setMutationError(cause instanceof Error ? cause.message : 'Clinical record could not be finalized.')
+    } finally {
+      setIsSavingClinical(false)
     }
   }
 
@@ -244,7 +264,7 @@ export function ClinicalVisitWorkspace({
             <p className="eyebrow">{appointment?.appointmentNumber ?? record.appointmentNumber ?? 'Clinical visit'}</p>
             <h2 id="clinical-workspace-title">{patient.firstName} {patient.lastName}</h2>
           </div>
-          <button className="icon-button" type="button" aria-label="Close clinical workspace" onClick={onClose}>
+          <button className="icon-button" type="button" aria-label="Close clinical workspace" onClick={onClose} disabled={isSavingClinical}>
             <X size={18} />
           </button>
         </div>
@@ -252,6 +272,7 @@ export function ClinicalVisitWorkspace({
         <div className="clinical-workspace-grid">
           <main className="clinical-workspace-main">
             {message && <div className="success-alert">{message}</div>}
+            {mutationError && <div className="error-alert" role="alert">{mutationError}</div>}
 
             <section className="clinical-section">
               <div className="clinical-section-header">
@@ -259,12 +280,12 @@ export function ClinicalVisitWorkspace({
                 <Badge tone={isFinal ? 'success' : 'warning'}>{record.status}</Badge>
               </div>
               <div className="form-grid">
-                <Input label="Chief complaint" value={form.chiefComplaint} onChange={(event) => setForm({ ...form, chiefComplaint: event.target.value })} disabled={!canWriteDraft} />
+                <Input label="Chief complaint" value={form.chiefComplaint} onChange={(event) => setForm({ ...form, chiefComplaint: event.target.value })} disabled={!canWriteDraft || isSavingClinical} />
                 <Select
                   label="Visit type"
                   value={form.visitType}
                   onChange={(event) => setForm({ ...form, visitType: event.target.value as DentalRecordFormValues['visitType'] })}
-                  disabled={!canWriteDraft}
+                  disabled={!canWriteDraft || isSavingClinical}
                   options={[
                     { label: 'Consultation', value: 'consultation' },
                     { label: 'Cleaning', value: 'cleaning' },
@@ -277,26 +298,26 @@ export function ClinicalVisitWorkspace({
                   ]}
                 />
               </div>
-              <Textarea label="Clinical findings" value={form.clinicalFindings} onChange={(event) => setForm({ ...form, clinicalFindings: event.target.value })} disabled={!canWriteDraft} />
-              <Textarea label="Assessment" value={form.assessment} onChange={(event) => setForm({ ...form, assessment: event.target.value })} disabled={!canWriteDraft} />
-              <Textarea label="Treatment performed" value={form.treatmentPerformed} onChange={(event) => setForm({ ...form, treatmentPerformed: event.target.value })} disabled={!canWriteDraft} />
-              <Textarea label="Clinical notes" value={form.clinicalNotes} onChange={(event) => setForm({ ...form, clinicalNotes: event.target.value })} disabled={!canWriteDraft} />
-              <Textarea label="Recommendations" value={form.recommendations} onChange={(event) => setForm({ ...form, recommendations: event.target.value })} disabled={!canWriteDraft} />
-              <Textarea label="Patient-visible summary" value={form.patientVisibleSummary} onChange={(event) => setForm({ ...form, patientVisibleSummary: event.target.value })} disabled={!canWriteDraft} />
+              <Textarea label="Clinical findings" value={form.clinicalFindings} onChange={(event) => setForm({ ...form, clinicalFindings: event.target.value })} disabled={!canWriteDraft || isSavingClinical} />
+              <Textarea label="Assessment" value={form.assessment} onChange={(event) => setForm({ ...form, assessment: event.target.value })} disabled={!canWriteDraft || isSavingClinical} />
+              <Textarea label="Treatment performed" value={form.treatmentPerformed} onChange={(event) => setForm({ ...form, treatmentPerformed: event.target.value })} disabled={!canWriteDraft || isSavingClinical} />
+              <Textarea label="Clinical notes" value={form.clinicalNotes} onChange={(event) => setForm({ ...form, clinicalNotes: event.target.value })} disabled={!canWriteDraft || isSavingClinical} />
+              <Textarea label="Recommendations" value={form.recommendations} onChange={(event) => setForm({ ...form, recommendations: event.target.value })} disabled={!canWriteDraft || isSavingClinical} />
+              <Textarea label="Patient-visible summary" value={form.patientVisibleSummary} onChange={(event) => setForm({ ...form, patientVisibleSummary: event.target.value })} disabled={!canWriteDraft || isSavingClinical} />
               <div className="form-grid">
                 <Select
                   label="Follow-up required"
                   value={form.followUpRequired ? 'yes' : 'no'}
                   onChange={(event) => setForm({ ...form, followUpRequired: event.target.value === 'yes' })}
-                  disabled={!canWriteDraft}
+                  disabled={!canWriteDraft || isSavingClinical}
                   options={[{ label: 'No', value: 'no' }, { label: 'Yes', value: 'yes' }]}
                 />
-                <Input label="Follow-up date" type="date" value={form.followUpDate} onChange={(event) => setForm({ ...form, followUpDate: event.target.value })} disabled={!canWriteDraft} />
+                <Input label="Follow-up date" type="date" value={form.followUpDate} onChange={(event) => setForm({ ...form, followUpDate: event.target.value })} disabled={!canWriteDraft || isSavingClinical} />
               </div>
-              <Textarea label="Follow-up notes" value={form.followUpNotes} onChange={(event) => setForm({ ...form, followUpNotes: event.target.value })} disabled={!canWriteDraft} />
+              <Textarea label="Follow-up notes" value={form.followUpNotes} onChange={(event) => setForm({ ...form, followUpNotes: event.target.value })} disabled={!canWriteDraft || isSavingClinical} />
               <div className="action-buttons">
-                <Button variant="secondary" onClick={saveDraft} disabled={!canWriteDraft}><Save size={14} /> Save Draft</Button>
-                <Button onClick={finalizeRecord} disabled={!canFinalize || isFinal}><ShieldCheck size={14} /> Finalize Record</Button>
+                <Button variant="secondary" onClick={() => void saveDraft()} disabled={!canWriteDraft || isSavingClinical}><Save size={14} /> {isSavingClinical ? 'Saving…' : 'Save Draft'}</Button>
+                <Button onClick={() => void finalizeRecord()} disabled={!canFinalize || isFinal || isSavingClinical}><ShieldCheck size={14} /> {isSavingClinical ? 'Saving…' : 'Finalize Record'}</Button>
               </div>
             </section>
 
