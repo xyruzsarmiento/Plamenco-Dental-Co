@@ -14,8 +14,28 @@ function requireDatabase() {
   return supabase
 }
 
-function messageFrom(error: unknown, fallback: string) {
-  if (error && typeof error === 'object' && 'message' in error && typeof error.message === 'string') return error.message
+async function functionErrorMessage(error: unknown, fallback: string) {
+  if (error && typeof error === 'object') {
+    const context = 'context' in error ? (error as { context?: unknown }).context : undefined
+    if (context instanceof Response) {
+      try {
+        const payload = await context.clone().json() as { error?: unknown; message?: unknown }
+        if (typeof payload.error === 'string' && payload.error.trim()) return payload.error
+        if (typeof payload.message === 'string' && payload.message.trim()) return payload.message
+      } catch {
+        try {
+          const text = await context.clone().text()
+          if (text.trim()) return text.trim()
+        } catch {
+          // Fall through to the library error message.
+        }
+      }
+    }
+    if ('message' in error && typeof (error as { message?: unknown }).message === 'string') {
+      const message = String((error as { message: string }).message)
+      if (message && !message.toLowerCase().includes('non-2xx')) return message
+    }
+  }
   return fallback
 }
 
@@ -25,7 +45,7 @@ export async function createPatientQrPayment(invoiceId: string): Promise<Patient
     body: { action: 'create', invoiceId },
   })
 
-  if (error) throw new Error(messageFrom(error, 'Unable to start QR Ph payment.'))
+  if (error) throw new Error(await functionErrorMessage(error, 'Online payment is not configured yet. Please choose Pay in clinic or contact the clinic.'))
   if (data?.error) throw new Error(String(data.error))
   if (!data?.paymentId || !data?.paymentIntentId || !data?.qrImage) {
     throw new Error('The payment service did not return a complete QR Ph session.')
@@ -47,7 +67,7 @@ export async function checkPatientQrPayment(paymentId: string): Promise<{ status
     body: { action: 'status', paymentId },
   })
 
-  if (error) throw new Error(messageFrom(error, 'Unable to confirm QR Ph payment status.'))
+  if (error) throw new Error(await functionErrorMessage(error, 'Unable to confirm QR Ph payment status.'))
   if (data?.error) throw new Error(String(data.error))
 
   return {
