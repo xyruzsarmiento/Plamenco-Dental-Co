@@ -1,0 +1,71 @@
+/* Internal portal V103 — shared blue greeting/sidebar/scrollbar contract for staff, dentist, admin and super admin. */
+
+.app-shell{
+  --internal-blue:#2563eb;
+  --internal-blue-deep:#1d4ed8;
+  --internal-blue-soft:#eaf2ff;
+  --internal-blue-pale:#f6f9ff;
+  --internal-border:#dfe8f4;
+}
+
+/* Dashboard greeting card: align internal roles with the Patient Portal greeting language. */
+.app-shell.page-dashboard .dashboard-intro{
+  position:relative!important;overflow:hidden!important;
+  min-height:118px!important;padding:22px 24px!important;
+  border:1px solid #d8e6fa!important;border-radius:20px!important;
+  background:linear-gradient(110deg,#ffffff 0%,#f7faff 62%,#edf4ff 100%)!important;
+  box-shadow:0 12px 34px rgba(37,99,235,.055)!important;
+}
+.app-shell.page-dashboard .dashboard-intro::after{
+  content:"";position:absolute;right:-54px;top:-62px;width:190px;height:190px;border-radius:999px;
+  border:20px solid rgba(37,99,235,.045);pointer-events:none;
+}
+.app-shell.page-dashboard .dashboard-intro-copy{position:relative;z-index:1}
+.app-shell.page-dashboard .dashboard-intro-copy .badge{background:#eaf2ff!important;color:#1d4ed8!important;border-color:#d7e6ff!important}
+.app-shell.page-dashboard .dashboard-intro-copy h2{margin-top:8px!important;color:#172033!important;letter-spacing:-.025em!important}
+.app-shell.page-dashboard .dashboard-intro-copy p{color:#6b7890!important}
+.app-shell.page-dashboard .dashboard-pill-row{position:relative;z-index:1}
+.app-shell.page-dashboard .dashboard-pill{
+  background:#fff!important;color:#42526b!important;border:1px solid #dce8f8!important;
+  box-shadow:0 5px 16px rgba(37,99,235,.045)!important;
+}
+.app-shell.page-dashboard .dashboard-pill svg{color:var(--internal-blue)!important}
+
+/* Force sidebar state to the same Plamenco blue across every internal role. */
+.app-shell>.sidebar .sidebar-nav a,
+.app-shell>.sidebar .sidebar-nav a:visited{color:#526077!important;background:transparent!important}
+.app-shell>.sidebar .sidebar-nav a:hover{color:var(--internal-blue-deep)!important;background:#f5f9ff!important}
+.app-shell>.sidebar .sidebar-nav a.active,
+.app-shell>.sidebar .sidebar-nav a[aria-current="page"]{
+  color:var(--internal-blue-deep)!important;background:var(--internal-blue-soft)!important;
+  box-shadow:inset 3px 0 0 var(--internal-blue)!important;
+}
+.app-shell>.sidebar .sidebar-nav a.active svg,
+.app-shell>.sidebar .sidebar-nav a[aria-current="page"] svg{color:var(--internal-blue)!important}
+.app-shell>.sidebar .brand-symbol,.internal-avatar-camera{background:var(--internal-blue)!important}
+.app-shell .topbar-account-pill{background:var(--internal-blue-soft)!important;color:var(--internal-blue-deep)!important;border-color:#d7e6ff!important}
+
+/* Blue scrollbars across internal shells instead of legacy orange/yellow accents. */
+.app-shell,.app-shell *{scrollbar-color:#8db4f4 #eef4fb!important;scrollbar-width:thin}
+.app-shell *::-webkit-scrollbar{width:10px;height:10px}
+.app-shell *::-webkit-scrollbar-track{background:#eef4fb!important;border-radius:999px}
+.app-shell *::-webkit-scrollbar-thumb{background:#8db4f4!important;border:2px solid #eef4fb!important;border-radius:999px}
+.app-shell *::-webkit-scrollbar-thumb:hover{background:#5d92ea!important}
+.app-shell>.sidebar .sidebar-nav::-webkit-scrollbar-thumb{background:#8db4f4!important}
+
+/* Remove legacy warm accent shadows/borders where shell CSS leaked them into navigation. */
+.app-shell>.sidebar,.app-shell>.sidebar .sidebar-header,.app-shell>.sidebar .sidebar-footer{
+  border-color:#e7edf5!important;
+}
+.app-shell>.sidebar .nav-section-label{color:#98a2b3!important}
+
+@media(max-width:900px){
+  .app-shell.page-dashboard .dashboard-intro{padding:20px!important;min-height:110px!important}
+  .app-shell.page-dashboard .dashboard-pill-row{flex-wrap:wrap!important}
+}
+@media(max-width:640px){
+  .app-shell.page-dashboard .dashboard-intro{border-radius:17px!important;padding:18px!important}
+  .app-shell.page-dashboard .dashboard-intro::after{right:-90px;top:-86px}
+  .app-shell.page-dashboard .dashboard-pill-row{display:grid!important;grid-template-columns:1fr!important;gap:8px!important;margin-top:14px!important}
+  .app-shell.page-dashboard .dashboard-pill{width:100%!important;justify-content:flex-start!important}
+}
