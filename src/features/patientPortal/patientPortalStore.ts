@@ -1,6 +1,7 @@
-import { createPatient, getStoredPatients } from '../patients/patientStore.ts'
-import { createAppointment, getAppointmentsByDate } from '../appointments/appointmentStore.ts'
+import { supabase } from '../../lib/supabase.ts'
+import { getAppointmentsByDate } from '../appointments/appointmentStore.ts'
 import { getAvailableAppointmentSlots } from '../appointments/availabilityEngine.ts'
+import { getStoredPatients } from '../patients/patientStore.ts'
 import { getStoredServices } from '../services/serviceStore.ts'
 
 export type PublicBookingInput = {
@@ -14,6 +15,13 @@ export type PublicBookingInput = {
   email: string
   phone: string
   notes?: string
+}
+
+export type PublicBookingResult = {
+  id: string
+  appointmentNumber: string
+  patientId?: string
+  duplicate: boolean
 }
 
 export function getAvailableBookingTimes(serviceId: string, date: string, branchId?: string, providerId?: string): string[] {
@@ -34,8 +42,7 @@ export function getAvailableBookingTimes(serviceId: string, date: string, branch
   for (let hour = startHour; hour < endHour; hour += 1) {
     const start = `${String(hour).padStart(2, '0')}:00`
     const candidateEndMinutes = timeToMinutes(start) + durationMinutes
-
-    if (candidateEndMinutes > 18 * 60) continue
+    if (candidateEndMinutes > endHour * 60) continue
 
     const overlaps = busy.some((appointment) => {
       const appointmentStart = timeToMinutes(appointment.start)
@@ -43,9 +50,7 @@ export function getAvailableBookingTimes(serviceId: string, date: string, branch
       return timeToMinutes(start) < appointmentEnd && candidateEndMinutes > appointmentStart
     })
 
-    if (!overlaps) {
-      slots.push(start)
-    }
+    if (!overlaps) slots.push(start)
   }
 
   return slots
@@ -56,75 +61,46 @@ function timeToMinutes(value: string): number {
   return hours * 60 + minutes
 }
 
-function minutesToTime(totalMinutes: number): string {
-  const hours = Math.floor(totalMinutes / 60)
-  const minutes = totalMinutes % 60
-  return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`
-}
-
-export function createPublicBooking(input: PublicBookingInput) {
-  const service = getStoredServices().find((item) => item.id === input.serviceId)
-  if (!service) throw new Error('Selected service is not available.')
-  if (input.branchId) {
-    const available = getAvailableAppointmentSlots({
-      branchId: input.branchId,
-      providerId: input.providerId || undefined,
-      serviceId: input.serviceId,
-      date: input.date,
-    }).some((slot) => slot.startTime === input.startTime && (!input.providerId || slot.providerId === input.providerId))
-    if (!available) throw new Error('That time is no longer available. Please choose another time.')
+export async function createPublicBooking(input: PublicBookingInput): Promise<PublicBookingResult> {
+  if (!supabase) {
+    throw new Error('Online booking is temporarily unavailable because the clinic database is not configured.')
   }
+  if (!input.branchId) throw new Error('Please select a clinic branch.')
 
-  const email = input.email.trim().toLowerCase()
-  const phone = input.phone.trim()
-  const patient = getStoredPatients().find((entry) => entry.email.toLowerCase() === email || (!!phone && entry.phone.trim() === phone))
-  const nextPatient = patient ?? createPatient({
-    firstName: input.firstName.trim(),
-    middleName: '',
-    lastName: input.lastName.trim(),
-    dateOfBirth: '',
-    sex: 'prefer_not_to_say',
-    phone,
-    email,
-    address: '',
-    emergencyContact: '',
-    emergencyContactPhone: '',
-    registrationDate: new Date().toISOString().split('T')[0],
-    status: 'active',
-    allergies: '',
-    medicalConditions: '',
-    currentMedications: '',
-    previousSurgeries: '',
-    medicalNotes: '',
+  const { data, error } = await supabase.rpc('create_public_booking', {
+    p_branch_id: input.branchId,
+    p_service_id: input.serviceId,
+    p_provider_id: input.providerId || null,
+    p_appointment_date: input.date,
+    p_start_time: input.startTime,
+    p_first_name: input.firstName.trim(),
+    p_last_name: input.lastName.trim(),
+    p_email: input.email.trim().toLowerCase(),
+    p_phone: input.phone.trim(),
+    p_notes: input.notes?.trim() ?? '',
   })
 
-  const appointment = createAppointment(
-    {
-      patientId: nextPatient.patientId,
-      branchId: input.branchId,
-      providerId: input.providerId,
-      serviceId: input.serviceId,
-      date: input.date,
-      startTime: input.startTime,
-      endTime: minutesToTime(timeToMinutes(input.startTime) + service.duration),
-      durationMinutes: service.duration,
-      estimatedAmountCents: service.price,
-      bookingSource: 'patient_portal',
-      paymentStatus: 'not_billed',
-      depositStatus: 'not_required',
-      patientNotes: input.notes?.trim() ?? '',
-      reasonForVisit: service.name,
-      notes: input.notes?.trim() || `Online booking for ${service.name}.`,
-      status: 'pending',
-    },
-    'public-booking'
-  )
-
-  if (!appointment) {
-    throw new Error('The selected time is no longer available. Please choose another slot.')
+  if (error) {
+    throw new Error(error.message || 'Unable to save this appointment to the clinic database.')
   }
 
-  return appointment
+  const result = data as {
+    id?: unknown
+    appointment_number?: unknown
+    patient_id?: unknown
+    duplicate?: unknown
+  } | null
+
+  if (!result?.id || !result.appointment_number) {
+    throw new Error('The clinic database did not confirm the appointment. Please try again.')
+  }
+
+  return {
+    id: String(result.id),
+    appointmentNumber: String(result.appointment_number),
+    patientId: result.patient_id ? String(result.patient_id) : undefined,
+    duplicate: Boolean(result.duplicate),
+  }
 }
 
 export function getPublicPatientDashboard(patientId: string) {
