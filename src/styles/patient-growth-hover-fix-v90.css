@@ -1,0 +1,18 @@
+/* v90 — stabilize Patient Growth hover tooltip, especially the final/right-edge month */
+.patients36-growth-chart .patients36-tooltip,
+.patients36-growth-chart .patients36-tooltip *{
+  pointer-events:none!important;
+}
+
+.patients36-growth-chart svg > g > circle{
+  cursor:pointer;
+}
+
+/* Keep hover/focus feedback smooth without changing layout geometry. */
+.patients36-growth-chart svg > g > circle{
+  transition:r .12s ease,fill .12s ease,stroke-width .12s ease!important;
+}
+
+@media(prefers-reduced-motion:reduce){
+  .patients36-growth-chart svg > g > circle{transition:none!important}
+}
