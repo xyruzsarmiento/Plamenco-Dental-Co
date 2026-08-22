@@ -1,4 +1,5 @@
 import '../../styles/internal-portal-blue-unification-v103.css'
+import '../../styles/admin-super-parity-v104.css'
 import { Camera, Menu, X } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
