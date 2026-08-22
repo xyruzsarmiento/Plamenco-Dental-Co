@@ -128,11 +128,13 @@ import { registerPatientPortalPwa } from './features/patientPortal/pwaRegistrati
 import { registerAppointmentTrendChartInteractivity } from './lib/appointmentTrendInteractivity'
 import { registerAnalyticsChartInteractivity } from './lib/analyticsChartInteractivity'
 import { registerSessionCacheSecurity } from './lib/sessionCacheSecurity'
+import { registerAdminSuperAdminStyleParity } from './lib/adminSuperAdminStyleParity'
 
 registerPatientPortalPwa()
 registerAppointmentTrendChartInteractivity()
 registerAnalyticsChartInteractivity()
 registerSessionCacheSecurity()
+registerAdminSuperAdminStyleParity()
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
