@@ -18,6 +18,7 @@ function DataBootstrap({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     let active = true
+    let backgroundTimer: number | undefined
 
     if (isLoading) return () => { active = false }
     if (!isAuthenticated) {
@@ -26,26 +27,39 @@ function DataBootstrap({ children }: { children: React.ReactNode }) {
     }
 
     setReady(false)
+
+    // Only block on the small set of records required to render clinic pages
+    // correctly. The broad operational cache hydration is intentionally moved
+    // to the background so a large Supabase workspace cannot hold the whole UI
+    // behind a full-screen loading state.
     void Promise.allSettled([
-      syncSupabaseToLocalStorage(),
-      loadBranchesFromSupabase({ strict: true }),
-      loadProviderFoundationFromSupabase({ strict: true }),
-      loadPatientsFromSupabase({ strict: true }),
-      loadServicesFromSupabase({ strict: true }),
+      loadBranchesFromSupabase({ strict: false }),
+      loadProviderFoundationFromSupabase({ strict: false }),
+      loadPatientsFromSupabase({ strict: false }),
+      loadServicesFromSupabase({ strict: false }),
     ]).finally(() => {
-      if (active) setReady(true)
+      if (!active) return
+      setReady(true)
+      backgroundTimer = window.setTimeout(() => {
+        void syncSupabaseToLocalStorage().catch((error) => {
+          console.error('[background clinic sync failed]', error)
+        })
+      }, 0)
     })
 
-    return () => { active = false }
+    return () => {
+      active = false
+      if (backgroundTimer !== undefined) window.clearTimeout(backgroundTimer)
+    }
   }, [isAuthenticated, isLoading])
 
   if (isLoading || !ready) {
     return (
       <main style={{ minHeight: '100vh', display: 'grid', placeItems: 'center', background: '#f8fafc', padding: 24 }}>
-        <section style={{ display: 'grid', justifyItems: 'center', gap: 10, padding: '26px 30px', border: '1px solid #e2e8f0', borderRadius: 18, background: '#fff', boxShadow: '0 18px 52px rgba(15, 23, 42, .07)', textAlign: 'center' }}>
+        <section style={{ display: 'grid', justifyItems: 'center', gap: 10, padding: '24px 28px', border: '1px solid #e2e8f0', borderRadius: 18, background: '#fff', boxShadow: '0 18px 52px rgba(15, 23, 42, .07)', textAlign: 'center' }}>
           <span style={{ width: 24, height: 24, border: '3px solid #dbeafe', borderTopColor: '#2563eb', borderRadius: '999px' }} />
-          <strong style={{ color: '#0f172a', fontSize: 14 }}>Syncing clinic workspace</strong>
-          <span style={{ color: '#64748b', fontSize: 12 }}>Loading the latest records from Supabase.</span>
+          <strong style={{ color: '#0f172a', fontSize: 14 }}>Preparing clinic workspace</strong>
+          <span style={{ color: '#64748b', fontSize: 12 }}>Loading essential clinic data.</span>
         </section>
       </main>
     )
