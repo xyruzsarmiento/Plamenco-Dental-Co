@@ -1,4 +1,4 @@
-import { Bell, CalendarDays, CheckCheck, Clock3, MapPin } from 'lucide-react'
+import { Bell, CheckCheck } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { getAppointmentsByPatient } from '../appointments/appointmentStore'
@@ -48,6 +48,7 @@ function relativeDate(value: string) {
 
 function useSidebarHost() {
   const [host, setHost] = useState<HTMLElement | null>(null)
+
   useEffect(() => {
     let frame = 0
     const ensure = () => {
@@ -64,15 +65,18 @@ function useSidebarHost() {
         setHost(next)
       })
     }
+
     ensure()
     const observer = new MutationObserver(ensure)
     observer.observe(document.body, { childList: true, subtree: true })
+
     return () => {
       observer.disconnect()
       cancelAnimationFrame(frame)
       document.querySelector('.pv5-notification-host')?.remove()
     }
   }, [])
+
   return host
 }
 
@@ -88,6 +92,7 @@ function PatientSidebarNotifications() {
 
   useEffect(() => {
     if (!supabase || !user?.email || user.role !== 'patient') return
+
     let active = true
     const load = async () => {
       const { data, error: queryError } = await supabase
@@ -96,20 +101,30 @@ function PatientSidebarNotifications() {
         .eq('user_email', user.email)
         .order('created_at', { ascending: false })
         .limit(30)
+
       if (!active) return
       if (queryError) {
         setError('Notifications could not be loaded.')
         return
       }
+
       setError('')
       setRows((data ?? []) as PatientNotificationRow[])
     }
+
     void load()
+
     const channel = supabase
       .channel(`patient-notifications-${user.id}`)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'notifications', filter: `user_email=eq.${user.email}` }, () => { void load() })
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'notifications', filter: `user_email=eq.${user.email}` },
+        () => { void load() },
+      )
       .subscribe()
+
     const timer = window.setInterval(() => { void load() }, 60_000)
+
     return () => {
       active = false
       window.clearInterval(timer)
@@ -126,10 +141,12 @@ function PatientSidebarNotifications() {
       .eq('id', id)
       .eq('user_email', user.email)
     setBusyId(null)
+
     if (updateError) {
       setError('Could not mark this notification as read.')
       return
     }
+
     setRows((current) => current.map((row) => row.id === id ? { ...row, is_read: true } : row))
   }
 
@@ -142,10 +159,12 @@ function PatientSidebarNotifications() {
       .eq('user_email', user.email)
       .eq('is_read', false)
     setBusyId(null)
+
     if (updateError) {
       setError('Could not mark notifications as read.')
       return
     }
+
     setRows((current) => current.map((row) => ({ ...row, is_read: true })))
   }
 
@@ -153,25 +172,56 @@ function PatientSidebarNotifications() {
 
   return createPortal(
     <div className="pv5-notifications">
-      <button className={`pv5-notification-trigger ${open ? 'is-open' : ''}`} type="button" onClick={() => setOpen((value) => !value)} aria-expanded={open}>
+      <button
+        className={`pv5-notification-trigger ${open ? 'is-open' : ''}`}
+        type="button"
+        onClick={() => setOpen((value) => !value)}
+        aria-expanded={open}
+      >
         <span><Bell size={17}/>{unread > 0 && <b>{unread > 99 ? '99+' : unread}</b>}</span>
         <span><strong>Notifications</strong><small>{unread ? `${unread} unread` : 'You are all caught up'}</small></span>
         <i>›</i>
       </button>
-      {open && <section className="pv5-notification-panel">
-        <header>
-          <div><span>UPDATES</span><h3>Notifications</h3></div>
-          <button type="button" onClick={() => void markAllRead()} disabled={!unread || busyId === 'all'}><CheckCheck size={14}/>Mark all read</button>
-        </header>
-        {error && <p className="pv5-notification-error">{error}</p>}
-        <div className="pv5-notification-list">
-          {rows.map((row) => <article key={row.id} className={row.is_read ? '' : 'is-unread'}>
-            <span className="pv5-notification-dot" />
-            <div><header><strong>{row.title}</strong><small>{relativeDate(row.created_at)}</small></header><p>{row.message}</p><footer><span>{(row.kind || 'clinic update').replaceAll('_', ' ')}</span>{!row.is_read && <button type="button" disabled={busyId === row.id} onClick={() => void markRead(row.id)}>Mark as read</button>}</footer></div>
-          </article>)}
-          {!rows.length && !error && <div className="pv5-notification-empty"><Bell size={22}/><strong>No notifications yet</strong><p>Appointment, payment and clinic updates will appear here.</p></div>}
-        </div>
-      </section>}
+
+      {open && (
+        <section className="pv5-notification-panel">
+          <header>
+            <div><span>UPDATES</span><h3>Notifications</h3></div>
+            <button type="button" onClick={() => void markAllRead()} disabled={!unread || busyId === 'all'}>
+              <CheckCheck size={14}/>Mark all read
+            </button>
+          </header>
+
+          {error && <p className="pv5-notification-error">{error}</p>}
+
+          <div className="pv5-notification-list">
+            {rows.map((row) => (
+              <article key={row.id} className={row.is_read ? '' : 'is-unread'}>
+                <span className="pv5-notification-dot" />
+                <div>
+                  <header><strong>{row.title}</strong><small>{relativeDate(row.created_at)}</small></header>
+                  <p>{row.message}</p>
+                  <footer>
+                    <span>{(row.kind || 'clinic update').replaceAll('_', ' ')}</span>
+                    {!row.is_read && (
+                      <button type="button" disabled={busyId === row.id} onClick={() => void markRead(row.id)}>
+                        Mark as read
+                      </button>
+                    )}
+                  </footer>
+                </div>
+              </article>
+            ))}
+
+            {!rows.length && !error && (
+              <div className="pv5-notification-empty">
+                <Bell size={22}/><strong>No notifications yet</strong>
+                <p>Appointment, payment and clinic updates will appear here.</p>
+              </div>
+            )}
+          </div>
+        </section>
+      )}
     </div>,
     host,
   )
@@ -179,58 +229,89 @@ function PatientSidebarNotifications() {
 
 function DashboardUpcomingEnhancer() {
   const { user } = useAuth()
+
   useEffect(() => {
     if (!user?.patientId || user.role !== 'patient') return
+
     let frame = 0
     const render = () => {
       cancelAnimationFrame(frame)
       frame = requestAnimationFrame(() => {
         const panel = document.querySelector<HTMLElement>('.pv3-next-panel')
         if (!panel) return
-        const current = panel.querySelector(':scope > .pv5-upcoming-list')
-        current?.remove()
+
+        panel.querySelector(':scope > .pv5-upcoming-list')?.remove()
         Array.from(panel.children).forEach((child) => {
           if (!(child instanceof HTMLElement)) return
-          if (child.classList.contains('pv3-panel-head')) return
-          if (child.classList.contains('pv5-upcoming-list')) return
+          if (child.classList.contains('pv3-panel-head') || child.classList.contains('pv5-upcoming-list')) return
           child.style.display = 'none'
         })
-        const today = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Manila', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date())
+
+        const today = new Intl.DateTimeFormat('en-CA', {
+          timeZone: 'Asia/Manila',
+          year: 'numeric',
+          month: '2-digit',
+          day: '2-digit',
+        }).format(new Date())
+
         const appointments = getAppointmentsByPatient(user.patientId!)
           .filter((item) => item.date >= today && !['cancelled', 'rejected', 'no_show', 'completed'].includes(item.status))
           .sort((a, b) => `${a.date}T${a.startTime}`.localeCompare(`${b.date}T${b.startTime}`))
+
         const services = new Map(getStoredServices().map((item) => [item.id, item.name]))
         const branches = new Map(getStoredBranches().map((item) => [item.id, item.name]))
         const list = document.createElement('div')
         list.className = 'pv5-upcoming-list'
+
         const visible = appointments.slice(0, 3)
-        list.innerHTML = visible.length ? visible.map((item) => `
-          <button type="button" class="pv5-upcoming-card" data-open-appointments>
-            <span class="pv5-upcoming-date"><strong>${new Date(`${item.date}T00:00:00`).getDate()}</strong><small>${new Date(`${item.date}T00:00:00`).toLocaleDateString('en-PH',{month:'short'}).toUpperCase()}</small></span>
-            <span class="pv5-upcoming-copy"><b>${services.get(item.serviceId) ?? 'Dental appointment'}</b><small><span>${timeLabel(item.startTime)}</span><span>${branches.get(item.branchId ?? '') ?? 'Clinic branch'}</span></small></span>
-            <em>${item.status.replaceAll('_',' ')}</em>
-          </button>`).join('') + (appointments.length > 3 ? `<button class="pv5-upcoming-more" type="button" data-open-appointments>+${appointments.length - 3} more upcoming visit${appointments.length - 3 === 1 ? '' : 's'}</button>` : '') : '<div class="pv5-upcoming-empty"><CalendarDays size="20"></CalendarDays><strong>No upcoming visits</strong><p>Book a visit whenever you are ready.</p></div>'
+        list.innerHTML = visible.length
+          ? visible.map((item) => `
+              <button type="button" class="pv5-upcoming-card" data-open-appointments>
+                <span class="pv5-upcoming-date">
+                  <strong>${new Date(`${item.date}T00:00:00`).getDate()}</strong>
+                  <small>${new Date(`${item.date}T00:00:00`).toLocaleDateString('en-PH', { month: 'short' }).toUpperCase()}</small>
+                </span>
+                <span class="pv5-upcoming-copy">
+                  <b>${services.get(item.serviceId) ?? 'Dental appointment'}</b>
+                  <small><span>${timeLabel(item.startTime)}</span><span>${branches.get(item.branchId ?? '') ?? 'Clinic branch'}</span></small>
+                </span>
+                <em>${item.status.replaceAll('_', ' ')}</em>
+              </button>
+            `).join('') + (
+              appointments.length > 3
+                ? `<button class="pv5-upcoming-more" type="button" data-open-appointments>+${appointments.length - 3} more upcoming visit${appointments.length - 3 === 1 ? '' : 's'}</button>`
+                : ''
+            )
+          : '<div class="pv5-upcoming-empty"><span aria-hidden="true">📅</span><strong>No upcoming visits</strong><p>Book a visit whenever you are ready.</p></div>'
+
         panel.appendChild(list)
-        list.querySelectorAll<HTMLElement>('[data-open-appointments]').forEach((button) => button.addEventListener('click', () => {
-          const nav = Array.from(document.querySelectorAll<HTMLButtonElement>('.pv3-nav button')).find((item) => item.textContent?.trim() === 'Appointments')
-          nav?.click()
-        }))
+        list.querySelectorAll<HTMLElement>('[data-open-appointments]').forEach((button) => {
+          button.addEventListener('click', () => {
+            const nav = Array.from(document.querySelectorAll<HTMLButtonElement>('.pv3-nav button'))
+              .find((item) => item.textContent?.trim() === 'Appointments')
+            nav?.click()
+          })
+        })
       })
     }
+
     render()
-    window.addEventListener('plamenco:appointments-updated', render as EventListener)
+
     const observer = new MutationObserver((mutations) => {
-      if (mutations.some((mutation) => Array.from(mutation.addedNodes).some((node) => node instanceof HTMLElement && node.classList.contains('pv5-upcoming-list')))) return
+      if (mutations.some((mutation) => Array.from(mutation.addedNodes).some(
+        (node) => node instanceof HTMLElement && node.classList.contains('pv5-upcoming-list'),
+      ))) return
       render()
     })
     observer.observe(document.body, { childList: true, subtree: true })
+
     return () => {
       cancelAnimationFrame(frame)
       observer.disconnect()
-      window.removeEventListener('plamenco:appointments-updated', render as EventListener)
       document.querySelectorAll('.pv5-upcoming-list').forEach((node) => node.remove())
     }
   }, [user?.patientId, user?.role])
+
   return null
 }
 
@@ -242,14 +323,28 @@ function PhotoFallbackCleaner() {
         if (background && background !== 'none') preview.textContent = ''
       })
     }
+
     clean()
     const observer = new MutationObserver(clean)
-    observer.observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ['style'] })
+    observer.observe(document.body, {
+      childList: true,
+      subtree: true,
+      attributes: true,
+      attributeFilter: ['style'],
+    })
+
     return () => observer.disconnect()
   }, [])
+
   return null
 }
 
 export function PatientPortalLiveEnhancements() {
-  return <><PatientSidebarNotifications/><DashboardUpcomingEnhancer/><PhotoFallbackCleaner/></>
+  return (
+    <>
+      <PatientSidebarNotifications/>
+      <DashboardUpcomingEnhancer/>
+      <PhotoFallbackCleaner/>
+    </>
+  )
 }
