@@ -1,0 +1,506 @@
+/* Patient Portal V4 presentation layer — visual only. Keeps V3 persistence/auth flows intact. */
+
+.pv3-shell {
+  --pv4-blue: #2563eb;
+  --pv4-blue-deep: #1d4ed8;
+  --pv4-blue-soft: #eaf2ff;
+  --pv4-ink: #172033;
+  --pv4-muted: #667085;
+  --pv4-line: #e6ebf2;
+  --pv4-canvas: #f7f9fc;
+  background: var(--pv4-canvas);
+}
+
+/* Consistent Super Admin-style gradient introduction card on every patient page. */
+.pv3-page > .pv3-page-head {
+  position: relative;
+  overflow: hidden;
+  align-items: center;
+  min-height: 154px;
+  margin-bottom: 20px;
+  padding: 26px 28px;
+  border: 1px solid #dbe5f5;
+  border-radius: 20px;
+  background:
+    radial-gradient(circle at 88% 18%, rgba(37,99,235,.11), transparent 31%),
+    linear-gradient(135deg, #ffffff 0%, #fbfdff 52%, #edf5ff 100%);
+  box-shadow: 0 16px 42px rgba(23,32,51,.055);
+}
+
+.pv3-page > .pv3-page-head::after {
+  content: '';
+  position: absolute;
+  width: 180px;
+  height: 180px;
+  right: -58px;
+  bottom: -102px;
+  border-radius: 50%;
+  border: 30px solid rgba(37,99,235,.04);
+  pointer-events: none;
+}
+
+.pv3-page > .pv3-page-head > div { max-width: 780px; position: relative; z-index: 1; }
+.pv3-page > .pv3-page-head > div > span {
+  display: inline-flex;
+  align-items: center;
+  min-height: 26px;
+  padding: 0 10px;
+  border-radius: 999px;
+  background: #eef5ff;
+  border: 1px solid #d8e7ff;
+  color: var(--pv4-blue-deep);
+  font-size: .7rem;
+  font-weight: 800;
+  letter-spacing: .08em;
+}
+.pv3-page > .pv3-page-head h2 {
+  margin: 10px 0 7px;
+  color: var(--pv4-ink);
+  font-size: clamp(1.7rem, 2vw, 2.35rem);
+  letter-spacing: -.035em;
+}
+.pv3-page > .pv3-page-head p {
+  max-width: 700px;
+  margin: 0;
+  color: #687489;
+  font-size: .92rem;
+  line-height: 1.65;
+}
+.pv3-page > .pv3-page-head > .btn,
+.pv3-page > .pv3-page-head > button { position: relative; z-index: 2; }
+
+/* Dashboard proportions: compact chart with no dead horizontal padding. */
+.pv3-dashboard-grid {
+  grid-template-columns: minmax(0, 1.65fr) minmax(280px, .75fr) !important;
+  align-items: stretch;
+}
+.pv3-chart-panel { min-height: 0 !important; }
+.pv3-chart-wrap {
+  width: 100%;
+  min-height: 154px !important;
+  padding: 2px 0 0 !important;
+  overflow: hidden;
+}
+.pv3-chart-wrap svg { display: block; width: 100% !important; height: 164px !important; }
+.pv3-panel-head { gap: 16px; }
+.pv3-panel-head h3 { letter-spacing: -.02em; }
+
+.pv3-plan-summary,
+.pv3-treatment-hero > section {
+  cursor: pointer;
+  transition: transform .16s ease, box-shadow .16s ease, border-color .16s ease;
+}
+.pv3-plan-summary:hover,
+.pv3-treatment-hero > section:hover {
+  transform: translateY(-1px);
+  border-color: #c7dafb;
+  box-shadow: 0 12px 28px rgba(37,99,235,.07);
+}
+
+/* Booking */
+.pv3-book-layout { grid-template-columns: minmax(0, 1fr) 310px !important; gap: 18px !important; align-items: start; }
+.pv3-book-card { overflow: hidden; }
+.pv3-book-steps {
+  margin: -1px -1px 22px;
+  padding: 16px 18px;
+  background: #fbfcff;
+  border-bottom: 1px solid var(--pv4-line);
+}
+.pv3-book-steps > div { min-width: 0; }
+.pv3-book-steps small { white-space: nowrap; }
+.pv3-book-body { padding: 0 4px; }
+.pv3-step-title {
+  padding: 14px 16px;
+  margin-bottom: 16px;
+  border: 1px solid #e4ebf5;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #fff, #f8fbff);
+}
+.pv3-service-grid { gap: 11px !important; }
+.pv3-service-grid > button,
+.pv3-choice-grid > button,
+.pv3-slot-grid > button {
+  border-color: #e3e9f2 !important;
+  background: #fff !important;
+  box-shadow: 0 5px 16px rgba(23,32,51,.025);
+}
+.pv3-service-grid > button:hover,
+.pv3-choice-grid > button:hover,
+.pv3-slot-grid > button:hover {
+  border-color: #b8cdf7 !important;
+  box-shadow: 0 10px 24px rgba(37,99,235,.07);
+  transform: translateY(-1px);
+}
+.pv3-service-grid > button.is-selected,
+.pv3-choice-grid > button.is-selected,
+.pv3-slot-grid > button.is-selected {
+  border-color: #8fb4fa !important;
+  background: #f6f9ff !important;
+  box-shadow: inset 0 0 0 1px #bfd5fb, 0 10px 24px rgba(37,99,235,.07);
+}
+.pv3-book-summary {
+  position: sticky;
+  top: 92px;
+  border-color: #dfe7f2 !important;
+  background: linear-gradient(180deg,#fff,#f8fbff) !important;
+}
+
+/* Appointments */
+.pv3-appointment-stats {
+  gap: 12px !important;
+  margin-bottom: 16px;
+}
+.pv3-appointment-stats > div {
+  padding: 16px 18px !important;
+  border: 1px solid var(--pv4-line) !important;
+  border-radius: 15px !important;
+  background: #fff !important;
+  box-shadow: 0 7px 20px rgba(23,32,51,.035);
+}
+.pv3-appointment-stats > div strong { color: var(--pv4-ink); font-size: 1.55rem; }
+.pv3-appointment-list { gap: 11px !important; }
+.pv3-appointment-card {
+  grid-template-columns: 64px minmax(0,1fr) minmax(180px,auto) !important;
+  min-height: 118px;
+  padding: 16px !important;
+  border: 1px solid var(--pv4-line) !important;
+  border-radius: 17px !important;
+  background: linear-gradient(135deg,#fff 0%,#fff 76%,#fafcff 100%) !important;
+  box-shadow: 0 8px 24px rgba(23,32,51,.035);
+  transition: border-color .16s ease, transform .16s ease, box-shadow .16s ease;
+}
+.pv3-appointment-card:hover {
+  border-color: #bcd1f8 !important;
+  transform: translateY(-2px);
+  box-shadow: 0 14px 34px rgba(37,99,235,.075);
+}
+.pv3-date-tile { border-radius: 14px !important; background: #eef5ff !important; color: var(--pv4-blue-deep) !important; }
+
+/* Dental records */
+.pv3-record-overview { gap: 12px !important; }
+.pv3-record-overview > div {
+  min-height: 88px;
+  border: 1px solid var(--pv4-line) !important;
+  border-radius: 15px !important;
+  background: #fff !important;
+  box-shadow: 0 7px 20px rgba(23,32,51,.035);
+}
+.pv3-record-list { gap: 11px !important; }
+.pv3-record-list > button {
+  min-height: 108px;
+  padding: 17px 18px !important;
+  border: 1px solid var(--pv4-line) !important;
+  border-radius: 17px !important;
+  background: linear-gradient(135deg,#fff,#fbfdff) !important;
+  box-shadow: 0 7px 22px rgba(23,32,51,.035);
+  transition: all .16s ease;
+}
+.pv3-record-list > button:hover {
+  border-color: #b9cff8 !important;
+  box-shadow: 0 13px 30px rgba(37,99,235,.07);
+  transform: translateY(-1px);
+}
+.pv3-record-icon { background: #eef5ff !important; color: #2563eb !important; }
+
+/* Treatments */
+.pv3-treatment-hero {
+  grid-template-columns: minmax(0,1.2fr) minmax(280px,.8fr) !important;
+  gap: 14px !important;
+}
+.pv3-treatment-hero > section,
+.pv3-treatment-hero > aside {
+  min-height: 180px;
+  padding: 22px !important;
+  border: 1px solid var(--pv4-line) !important;
+  border-radius: 18px !important;
+  background: linear-gradient(135deg,#fff,#f8fbff) !important;
+  box-shadow: 0 9px 26px rgba(23,32,51,.04);
+}
+.pv3-treatment-layout { grid-template-columns: minmax(0,1.45fr) minmax(280px,.55fr) !important; gap: 16px !important; }
+.pv3-treatment-list article {
+  position: relative;
+  cursor: pointer;
+  padding: 15px 14px !important;
+  margin: 0 0 9px;
+  border: 1px solid #e7ebf1;
+  border-radius: 14px;
+  background: #fff;
+  transition: all .16s ease;
+}
+.pv3-treatment-list article::after {
+  content: 'View details';
+  position: absolute;
+  right: 14px;
+  top: 14px;
+  color: #2563eb;
+  font-size: .7rem;
+  font-weight: 750;
+  opacity: 0;
+  transition: opacity .16s ease;
+}
+.pv3-treatment-list article:hover { border-color: #bdd1f8; box-shadow: 0 10px 25px rgba(37,99,235,.06); transform: translateY(-1px); }
+.pv3-treatment-list article:hover::after { opacity: 1; }
+.pv3-plan-detail { background: linear-gradient(180deg,#fff,#f9fbff) !important; }
+
+/* Prescriptions */
+.pv3-rx-grid { grid-template-columns: repeat(2,minmax(0,1fr)) !important; gap: 14px !important; }
+.pv3-rx-grid > article {
+  overflow: hidden;
+  padding: 0 !important;
+  border: 1px solid var(--pv4-line) !important;
+  border-radius: 18px !important;
+  background: #fff !important;
+  box-shadow: 0 8px 24px rgba(23,32,51,.035);
+}
+.pv3-rx-grid > article > header {
+  padding: 16px 18px !important;
+  background: linear-gradient(135deg,#f8fbff,#eef5ff);
+  border-bottom: 1px solid #e4ebf5;
+}
+.pv3-rx-grid > article > small,
+.pv3-rx-grid > article > h3,
+.pv3-rx-grid > article > div,
+.pv3-rx-grid > article > footer { margin-left: 18px !important; margin-right: 18px !important; }
+.pv3-rx-grid > article > h3 { margin-top: 8px !important; color: var(--pv4-ink); }
+.pv3-rx-grid > article > div { display: grid; gap: 10px; margin-bottom: 16px; }
+.pv3-rx-grid > article > div > section {
+  padding: 13px 14px !important;
+  border: 1px solid #e8edf4;
+  border-radius: 12px;
+  background: #fbfcfe;
+}
+
+/* Billing */
+.pv3-billing-summary {
+  min-height: 146px;
+  padding: 22px 24px !important;
+  border: 1px solid #dbe5f5 !important;
+  border-radius: 18px !important;
+  background: linear-gradient(135deg,#fff 0%,#f8fbff 68%,#eef5ff 100%) !important;
+  box-shadow: 0 10px 30px rgba(23,32,51,.04);
+}
+.pv3-billing-layout { grid-template-columns: minmax(0,1.45fr) minmax(300px,.55fr) !important; gap: 16px !important; }
+.pv3-invoice-list article {
+  border: 1px solid var(--pv4-line) !important;
+  border-radius: 17px !important;
+  background: #fff !important;
+  box-shadow: 0 8px 24px rgba(23,32,51,.035);
+}
+.pv3-invoice-list article:hover { border-color: #c7d9fa !important; box-shadow: 0 12px 30px rgba(37,99,235,.06); }
+.pv3-invoice-actions button { min-height: 38px; }
+
+/* Documents */
+.pv3-document-grid { grid-template-columns: repeat(3,minmax(0,1fr)) !important; gap: 13px !important; }
+.pv3-document-grid > article {
+  min-height: 205px;
+  padding: 18px !important;
+  border: 1px solid var(--pv4-line) !important;
+  border-radius: 18px !important;
+  background: linear-gradient(145deg,#fff,#fbfdff) !important;
+  box-shadow: 0 8px 24px rgba(23,32,51,.035);
+}
+.pv3-document-grid > article:hover { border-color: #bfd3f8 !important; box-shadow: 0 13px 32px rgba(37,99,235,.065); transform: translateY(-2px); }
+
+/* Profile */
+.pv3-profile-hero {
+  min-height: 138px;
+  padding: 22px 24px !important;
+  border: 1px solid #dbe5f5 !important;
+  border-radius: 18px !important;
+  background: linear-gradient(135deg,#fff,#f6faff) !important;
+  box-shadow: 0 9px 26px rgba(23,32,51,.04);
+}
+.pv3-profile-layout { grid-template-columns: minmax(0,1.3fr) minmax(320px,.7fr) !important; gap: 16px !important; }
+.pv3-profile-fields { gap: 12px !important; }
+.pv3-profile-fields label {
+  padding: 0 !important;
+  background: transparent !important;
+}
+.pv3-profile-fields input {
+  min-height: 43px;
+  border: 1px solid #dfe5ed !important;
+  border-radius: 11px !important;
+  background: #fff !important;
+}
+.pv3-profile-fields input:focus { border-color: #8db2f7 !important; box-shadow: 0 0 0 3px rgba(37,99,235,.09) !important; }
+
+/* Generic detail modal redesign, including appointment and dental summary modals. */
+.pv3-modal-backdrop { backdrop-filter: blur(4px); background: rgba(15,23,42,.42) !important; }
+.pv3-detail-modal,
+.pv3-pay-modal {
+  overflow: hidden;
+  border: 1px solid #dfe5ed !important;
+  border-radius: 20px !important;
+  box-shadow: 0 28px 80px rgba(15,23,42,.22) !important;
+}
+.pv3-detail-modal > header,
+.pv3-pay-modal > header {
+  padding: 20px 22px !important;
+  background: linear-gradient(135deg,#fff,#eef5ff) !important;
+  border-bottom: 1px solid #dfe7f2 !important;
+}
+.pv3-detail-grid > div {
+  padding: 13px 14px !important;
+  border: 1px solid #e7ebf1;
+  border-radius: 12px;
+  background: #fbfcfe;
+}
+
+/* Treatment/care interaction modal added without touching persistence. */
+.pv4-detail-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 2600;
+  display: grid;
+  place-items: center;
+  padding: 22px;
+  background: rgba(15,23,42,.46);
+  backdrop-filter: blur(5px);
+}
+.pv4-detail-modal {
+  width: min(620px,100%);
+  max-height: min(760px,calc(100vh - 40px));
+  overflow: auto;
+  border: 1px solid #dfe5ed;
+  border-radius: 20px;
+  background: #fff;
+  box-shadow: 0 28px 85px rgba(15,23,42,.24);
+}
+.pv4-detail-modal > header {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 21px 22px;
+  background: linear-gradient(135deg,#fff,#eef5ff);
+  border-bottom: 1px solid #dfe7f2;
+}
+.pv4-detail-modal header span,
+.pv4-detail-body > section > span,
+.pv4-progress-detail > div > span {
+  display: block;
+  color: #2563eb;
+  font-size: .69rem;
+  font-weight: 800;
+  letter-spacing: .08em;
+}
+.pv4-detail-modal header h2 { margin: 5px 0 4px; color: #172033; font-size: 1.45rem; letter-spacing: -.025em; }
+.pv4-detail-modal header p { margin: 0; color: #667085; font-size: .84rem; }
+.pv4-detail-close {
+  width: 34px;
+  height: 34px;
+  border: 1px solid #dfe5ed;
+  border-radius: 10px;
+  background: #fff;
+  color: #667085;
+  font-size: 1.35rem;
+  cursor: pointer;
+}
+.pv4-detail-body { display: grid; gap: 14px; padding: 20px 22px; }
+.pv4-detail-kpis { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 10px; }
+.pv4-detail-kpis > div { padding: 13px 14px; border: 1px solid #e7ebf1; border-radius: 12px; background: #fbfcfe; }
+.pv4-detail-kpis span { display: block; color: #7b8799; font-size: .72rem; text-transform: uppercase; letter-spacing: .05em; }
+.pv4-detail-kpis strong { display: block; margin-top: 5px; color: #172033; }
+.pv4-detail-body > section { padding: 15px; border: 1px solid #e7ebf1; border-radius: 13px; }
+.pv4-detail-body > section p { margin: 8px 0 0; color: #526077; line-height: 1.6; }
+.pv4-detail-body > aside { padding: 12px 14px; border: 1px solid #d8e6fb; border-radius: 12px; background: #f7faff; color: #5d6b80; font-size: .8rem; line-height: 1.55; }
+.pv4-detail-footer-copy footer { display: flex; justify-content: space-between; gap: 12px; margin-top: 9px; color: #526077; }
+.pv4-detail-modal > footer { display: flex; justify-content: flex-end; padding: 14px 22px 20px; }
+.pv4-detail-done { min-height: 38px; padding: 0 18px; border: 0; border-radius: 10px; background: #2563eb; color: #fff; font-weight: 750; cursor: pointer; }
+.pv4-progress-detail { display: grid; grid-template-columns: 128px minmax(0,1fr); gap: 18px; align-items: center; }
+.pv4-progress-ring {
+  --angle: calc(var(--pv4-progress, 0%) * 3.6);
+  width: 118px;
+  aspect-ratio: 1;
+  display: grid;
+  place-content: center;
+  border-radius: 50%;
+  background: radial-gradient(circle at center,#fff 59%,transparent 60%), conic-gradient(#2563eb var(--pv4-progress),#e8eef8 0);
+  text-align: center;
+}
+.pv4-progress-ring strong { font-size: 1.5rem; color: #172033; }
+.pv4-progress-ring span { color: #7b8799; font-size: .72rem; }
+.pv4-progress-detail h3 { margin: 6px 0; color: #172033; }
+.pv4-progress-detail p { margin: 0; color: #667085; line-height: 1.55; }
+
+/* Responsive behavior */
+@media (max-width: 1180px) {
+  .pv3-dashboard-grid,
+  .pv3-dashboard-grid.lower,
+  .pv3-billing-layout,
+  .pv3-treatment-layout,
+  .pv3-profile-layout { grid-template-columns: 1fr !important; }
+  .pv3-book-layout { grid-template-columns: 1fr !important; }
+  .pv3-book-summary { position: static; }
+  .pv3-document-grid { grid-template-columns: repeat(2,minmax(0,1fr)) !important; }
+}
+
+@media (max-width: 900px) {
+  .pv3-page > .pv3-page-head { min-height: 0; padding: 22px; }
+  .pv3-treatment-hero { grid-template-columns: 1fr !important; }
+  .pv3-rx-grid { grid-template-columns: 1fr !important; }
+  .pv3-appointment-card { grid-template-columns: 58px minmax(0,1fr) !important; }
+  .pv3-appointment-card > aside { grid-column: 2; justify-content: flex-start !important; text-align: left !important; }
+  .pv3-record-overview { grid-template-columns: 1fr 1fr !important; }
+  .pv3-record-overview > div:last-child { grid-column: 1 / -1; }
+}
+
+@media (max-width: 640px) {
+  .pv3-content { padding-left: 14px !important; padding-right: 14px !important; }
+  .pv3-page > .pv3-page-head { margin-bottom: 14px; padding: 19px 17px; border-radius: 16px; }
+  .pv3-page > .pv3-page-head h2 { font-size: 1.55rem; }
+  .pv3-page > .pv3-page-head p { font-size: .84rem; }
+  .pv3-page > .pv3-page-head > .btn { width: 100%; margin-top: 14px; }
+  .pv3-chart-wrap svg { height: 148px !important; }
+  .pv3-book-steps { overflow-x: auto; justify-content: flex-start !important; gap: 16px !important; scrollbar-width: none; }
+  .pv3-book-steps > div { flex: 0 0 auto; min-width: 58px; }
+  .pv3-service-grid,
+  .pv3-choice-grid { grid-template-columns: 1fr !important; }
+  .pv3-slot-grid { grid-template-columns: repeat(2,minmax(0,1fr)) !important; }
+  .pv3-review-grid { grid-template-columns: 1fr !important; }
+  .pv3-book-actions { position: sticky; bottom: 0; z-index: 3; margin: 16px -18px -18px; padding: 12px 18px; background: rgba(255,255,255,.97); border-top: 1px solid #e7ebf1; }
+  .pv3-appointment-stats { grid-template-columns: repeat(3,minmax(0,1fr)) !important; gap: 7px !important; }
+  .pv3-appointment-stats > div { padding: 12px 9px !important; }
+  .pv3-appointment-stats > div strong { font-size: 1.25rem; }
+  .pv3-appointment-card { grid-template-columns: 52px minmax(0,1fr) !important; padding: 13px !important; min-height: 0; }
+  .pv3-appointment-card section p { flex-wrap: wrap; }
+  .pv3-record-overview { grid-template-columns: 1fr !important; }
+  .pv3-record-overview > div:last-child { grid-column: auto; }
+  .pv3-record-list > button { grid-template-columns: 42px minmax(0,1fr) 18px !important; padding: 14px !important; }
+  .pv3-treatment-hero > section,
+  .pv3-treatment-hero > aside { min-height: 0; padding: 18px !important; }
+  .pv3-treatment-list article { grid-template-columns: 36px minmax(0,1fr) !important; padding: 13px 12px !important; }
+  .pv3-treatment-list article::after { display: none; }
+  .pv3-document-grid { grid-template-columns: 1fr !important; }
+  .pv3-document-grid > article { min-height: 0; }
+  .pv3-billing-summary { align-items: flex-start !important; flex-direction: column !important; }
+  .pv3-invoice-actions { grid-template-columns: 1fr !important; }
+  .pv3-profile-hero { align-items: flex-start !important; flex-direction: column !important; }
+  .pv3-profile-fields { grid-template-columns: 1fr !important; }
+  .pv4-detail-backdrop { align-items: end; padding: 0; }
+  .pv4-detail-modal { width: 100%; max-height: 88vh; border-radius: 20px 20px 0 0; }
+  .pv4-progress-detail { grid-template-columns: 1fr; justify-items: center; text-align: center; }
+}
+
+@media (max-width: 430px) {
+  .pv3-slot-grid { grid-template-columns: 1fr 1fr !important; gap: 7px !important; }
+  .pv3-appointment-stats > div span { font-size: .66rem; }
+  .pv3-date-tile { width: 48px !important; min-width: 48px !important; }
+  .pv3-rx-grid > article > header { padding: 14px 15px !important; }
+  .pv3-rx-grid > article > small,
+  .pv3-rx-grid > article > h3,
+  .pv3-rx-grid > article > div,
+  .pv3-rx-grid > article > footer { margin-left: 15px !important; margin-right: 15px !important; }
+  .pv4-detail-kpis { grid-template-columns: 1fr; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pv3-service-grid > button,
+  .pv3-choice-grid > button,
+  .pv3-slot-grid > button,
+  .pv3-appointment-card,
+  .pv3-record-list > button,
+  .pv3-treatment-list article,
+  .pv3-document-grid > article,
+  .pv3-plan-summary,
+  .pv3-treatment-hero > section { transition: none !important; }
+}
