@@ -122,12 +122,15 @@ import './styles/mobile-ledger-communications-fixes-v88.css'
 import './styles/screenshot-mobile-corrections-v89.css'
 import './styles/patient-growth-hover-fix-v90.css'
 import './styles/appointment-volume-interactive-v91.css'
+import './styles/analytics-interactive-v92.css'
 import App from './App.tsx'
 import { registerPatientPortalPwa } from './features/patientPortal/pwaRegistration'
 import { registerAppointmentTrendChartInteractivity } from './lib/appointmentTrendInteractivity'
+import { registerAnalyticsChartInteractivity } from './lib/analyticsChartInteractivity'
 
 registerPatientPortalPwa()
 registerAppointmentTrendChartInteractivity()
+registerAnalyticsChartInteractivity()
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
