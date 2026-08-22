@@ -400,7 +400,7 @@ export function sortPatients(patients: Patient[], key: SortKey, direction: 'asc'
         bVal = `${b.firstName} ${b.lastName}`.toLowerCase()
         break
       case 'patientId':
-        aVal = patient.patientId
+        aVal = a.patientId
         bVal = b.patientId
         break
       case 'registrationDate':
