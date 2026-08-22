@@ -1,0 +1,254 @@
+/* v87 — responsive action + dialog system after mobile viewport review */
+
+/* Shared action alignment. The Button component now promotes a leading JSX icon out of the label span. */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:9px;white-space:nowrap}
+.btn>svg{display:block;flex:0 0 auto;width:16px;height:16px}
+.btn>span{display:inline-flex;align-items:center;line-height:1.15;min-width:0}
+
+/* Patients — consistent Import/Add Patient alignment and mobile use of available hero width. */
+.patients36-hero-actions .btn{min-height:42px;padding-inline:15px;border-radius:12px}
+@media(max-width:760px){
+  .patients36-hero-actions{width:100%;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:9px!important}
+  .patients36-hero-actions .btn{width:100%!important;min-width:0!important;gap:9px!important}
+}
+@media(max-width:430px){.patients36-hero-actions{grid-template-columns:1fr!important}}
+
+/* Appointment header — New Appointment consumes the action area instead of remaining a tiny chip. */
+@media(max-width:760px){
+  .sa-appointments-header{display:grid!important;grid-template-columns:1fr!important;gap:15px!important;padding:18px!important}
+  .sa-appointments-header-actions{width:100%!important;display:grid!important;grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr)!important;gap:9px!important}
+  .sa-appointments-header-actions>.sa-appointments-date-chip,
+  .sa-appointments-header-actions>.btn{width:100%!important;min-width:0!important;min-height:42px!important;justify-content:center!important;margin:0!important}
+}
+@media(max-width:460px){
+  .sa-appointments-header-actions{grid-template-columns:1fr!important}
+  .sa-appointments-header-copy h2{font-size:1.55rem!important}
+}
+
+/* ---------- Patient modal ---------- */
+.page-patients .modal-backdrop{padding:18px!important;align-items:center!important;justify-content:center!important}
+.page-patients .modal.patient-modal{width:min(820px,calc(100vw - 36px))!important;max-height:min(88dvh,820px)!important;height:auto!important;display:flex!important;flex-direction:column!important;overflow:hidden!important;border:1px solid #dce7f5!important;border-radius:24px!important;background:#fff!important;box-shadow:0 28px 80px rgba(15,23,42,.25)!important}
+.page-patients .modal.patient-modal>.modal-header{flex:0 0 auto;padding:19px 22px!important;border-bottom:1px solid #e8eef6!important;background:linear-gradient(135deg,#f7fbff,#fff 60%,#edf5ff)!important}
+.page-patients .modal.patient-modal>.form-stack{min-height:0!important;overflow-y:auto!important;padding:20px 22px 0!important}
+.page-patients .modal.patient-modal .form-section{padding:16px!important;margin:0 0 12px!important;border:1px solid #e5ebf3!important;border-radius:16px!important;background:#fbfdff!important}
+.page-patients .modal.patient-modal .form-section h3{margin:0 0 13px!important;color:#172033!important;font-size:.92rem!important}
+.page-patients .modal.patient-modal .modal-actions{position:sticky!important;bottom:0!important;z-index:3!important;display:flex!important;justify-content:center!important;gap:9px!important;margin:18px -22px 0!important;padding:14px 22px 16px!important;border-top:1px solid #e7edf5!important;background:rgba(255,255,255,.97)!important;backdrop-filter:blur(12px)!important}
+.page-patients .modal.patient-modal .modal-actions .btn{flex:1 1 0!important;max-width:220px!important;min-height:43px!important}
+@media(max-width:640px){
+  .page-patients .modal-backdrop{padding:12px!important}
+  .page-patients .modal.patient-modal{width:calc(100vw - 24px)!important;max-height:86dvh!important;border-radius:19px!important}
+  .page-patients .modal.patient-modal>.modal-header{padding:15px 16px!important}
+  .page-patients .modal.patient-modal>.form-stack{padding:14px 14px 0!important}
+  .page-patients .modal.patient-modal .form-grid{grid-template-columns:1fr!important}
+  .page-patients .modal.patient-modal .form-section{padding:13px!important;border-radius:14px!important}
+  .page-patients .modal.patient-modal .modal-actions{margin:14px -14px 0!important;padding:12px 14px 14px!important}
+  .page-patients .modal.patient-modal .modal-actions .btn{max-width:none!important}
+}
+@media(max-width:390px){.page-patients .modal.patient-modal .modal-actions{display:grid!important;grid-template-columns:1fr 1fr!important}.page-patients .modal.patient-modal .modal-actions .btn{width:100%!important;min-width:0!important}}
+
+/* ---------- Dental record modal: rebuilt visual system ---------- */
+.page-dental-records .modal-backdrop{padding:18px!important;align-items:center!important;justify-content:center!important;background:rgba(15,23,42,.52)!important;backdrop-filter:blur(8px)!important}
+.page-dental-records .modal.patient-modal{width:min(900px,calc(100vw - 36px))!important;max-height:min(88dvh,860px)!important;height:auto!important;display:flex!important;flex-direction:column!important;overflow:hidden!important;border:1px solid rgba(219,234,254,.95)!important;border-radius:25px!important;background:#fff!important;box-shadow:0 32px 90px rgba(15,23,42,.28)!important}
+.page-dental-records .modal.patient-modal>.modal-header{position:relative!important;flex:0 0 auto!important;padding:21px 24px!important;border-bottom:1px solid #e5edf7!important;background:linear-gradient(135deg,#f5f9ff 0%,#fff 54%,#edf5ff 100%)!important}
+.page-dental-records .modal.patient-modal>.modal-header:before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:linear-gradient(180deg,#2563eb,#60a5fa)}
+.page-dental-records .modal.patient-modal>.modal-header .eyebrow{margin:0 0 5px!important;color:#2563eb!important;font-size:10px!important;font-weight:900!important;letter-spacing:.12em!important;text-transform:uppercase!important}
+.page-dental-records .modal.patient-modal>.modal-header h2{margin:0!important;color:#0f172a!important;font-size:1.55rem!important;letter-spacing:-.035em!important}
+.page-dental-records .modal.patient-modal>.form-stack{min-height:0!important;overflow-y:auto!important;padding:20px 22px 0!important;background:#f8fafc!important}
+.page-dental-records .modal.patient-modal .form-section{margin:0 0 12px!important;padding:17px!important;border:1px solid #e2e8f0!important;border-radius:17px!important;background:#fff!important;box-shadow:0 6px 18px rgba(15,23,42,.025)!important}
+.page-dental-records .modal.patient-modal .form-section h3{display:flex!important;align-items:center!important;gap:9px!important;margin:0 0 14px!important;color:#172033!important;font-size:.94rem!important;letter-spacing:-.01em!important}
+.page-dental-records .modal.patient-modal .form-section h3:before{content:"";width:8px;height:8px;border-radius:3px;background:#2563eb;box-shadow:0 0 0 4px #eaf2ff}
+.page-dental-records .modal.patient-modal .form-grid{gap:11px!important}
+.page-dental-records .modal.patient-modal input,.page-dental-records .modal.patient-modal select,.page-dental-records .modal.patient-modal textarea{border-color:#dbe4ef!important;border-radius:11px!important;background:#fbfdff!important}
+.page-dental-records .modal.patient-modal input:focus,.page-dental-records .modal.patient-modal select:focus,.page-dental-records .modal.patient-modal textarea:focus{border-color:#7eabf5!important;box-shadow:0 0 0 3px rgba(37,99,235,.08)!important;background:#fff!important}
+.page-dental-records .modal.patient-modal .modal-actions{position:sticky!important;bottom:0!important;z-index:4!important;display:flex!important;justify-content:center!important;gap:9px!important;margin:18px -22px 0!important;padding:14px 22px 16px!important;border-top:1px solid #e4eaf2!important;background:rgba(255,255,255,.96)!important;backdrop-filter:blur(12px)!important}
+.page-dental-records .modal.patient-modal .modal-actions .btn{flex:1 1 0!important;max-width:220px!important;min-height:43px!important;border-radius:11px!important}
+@media(max-width:680px){
+  .page-dental-records .modal-backdrop{padding:12px!important}
+  .page-dental-records .modal.patient-modal{width:calc(100vw - 24px)!important;max-height:86dvh!important;border-radius:19px!important}
+  .page-dental-records .modal.patient-modal>.modal-header{padding:15px 16px!important}
+  .page-dental-records .modal.patient-modal>.modal-header h2{font-size:1.25rem!important}
+  .page-dental-records .modal.patient-modal>.form-stack{padding:14px 14px 0!important}
+  .page-dental-records .modal.patient-modal .form-grid{grid-template-columns:1fr!important}
+  .page-dental-records .modal.patient-modal .form-section{padding:13px!important;border-radius:14px!important}
+  .page-dental-records .modal.patient-modal .modal-actions{margin:14px -14px 0!important;padding:12px 14px 14px!important}
+  .page-dental-records .modal.patient-modal .modal-actions .btn{max-width:none!important}
+}
+
+/* ---------- Treatment modal ---------- */
+.tx12-modal{width:min(760px,calc(100vw - 36px))!important;max-height:min(88dvh,850px)!important;border-radius:24px!important;border:1px solid #dce7f4!important;box-shadow:0 30px 84px rgba(15,23,42,.28)!important}
+.tx12-modal-head{padding:18px 21px!important;background:linear-gradient(135deg,#f6faff,#fff 60%,#edf5ff)!important}
+.tx12-modal-form{min-height:0!important;overflow-y:auto!important;padding:0 20px 0!important;background:#f8fafc!important}
+.tx12-form-section{margin:12px 0!important;padding:16px!important;border:1px solid #e3eaf3!important;border-radius:16px!important;background:#fff!important}
+.tx12-form-title{margin-bottom:13px!important}
+.tx12-form-grid{gap:11px!important}
+.tx12-price-preview{border-radius:13px!important;background:linear-gradient(135deg,#f7fbff,#eef5ff)!important}
+.tx12-modal-actions{position:sticky!important;bottom:0!important;z-index:4!important;display:flex!important;justify-content:center!important;gap:9px!important;margin:14px -20px 0!important;padding:13px 20px 15px!important;border-top:1px solid #e3e9f1!important;background:rgba(255,255,255,.97)!important}
+.tx12-modal-actions .btn{flex:1 1 0!important;max-width:210px!important}
+@media(max-width:650px){
+  .tx12-modal-backdrop{padding:12px!important}
+  .tx12-modal{width:calc(100vw - 24px)!important;max-height:86dvh!important;border-radius:19px!important}
+  .tx12-modal-head{padding:14px 15px!important}
+  .tx12-modal-form{padding:0 13px!important}
+  .tx12-form-section{padding:13px!important;margin:10px 0!important}
+  .tx12-form-grid{grid-template-columns:1fr!important}
+  .tx12-form-grid .wide{grid-column:auto!important}
+  .tx12-modal-actions{margin:12px -13px 0!important;padding:12px 13px 14px!important}
+  .tx12-modal-actions .btn{max-width:none!important}
+}
+
+/* ---------- Payment modal: premium finance surface ---------- */
+.pay14-backdrop{padding:18px!important;background:rgba(15,23,42,.54)!important;backdrop-filter:blur(9px)!important;align-items:center!important;justify-content:center!important}
+.pay14-modal{width:min(920px,calc(100vw - 36px))!important;max-height:min(88dvh,860px)!important;height:auto!important;display:flex!important;flex-direction:column!important;overflow:hidden!important;border:1px solid #dbe6f4!important;border-radius:25px!important;background:#fff!important;box-shadow:0 34px 92px rgba(15,23,42,.28)!important}
+.pay14-header{position:relative!important;top:auto!important;flex:0 0 auto!important;padding:20px 22px!important;background:linear-gradient(135deg,#f5f9ff,#fff 55%,#eef5ff)!important}
+.pay14-icon{width:44px!important;height:44px!important;border-radius:13px!important;background:linear-gradient(135deg,#1d4ed8,#3b82f6)!important;color:#fff!important;box-shadow:0 9px 22px rgba(37,99,235,.23)!important}
+.pay14-kicker{color:#2563eb!important;font-size:9px!important;font-weight:900!important;letter-spacing:.11em!important;text-transform:uppercase!important}
+.pay14-body{min-height:0!important;overflow-y:auto!important;background:#f8fafc!important}
+.pay14-form-column{padding:18px 20px!important}
+.pay14-section{margin-bottom:11px!important;padding:15px!important;border:1px solid #e2e8f0!important;border-radius:16px!important;background:#fff!important}
+.pay14-section:last-child{margin-bottom:0!important;border-bottom:1px solid #e2e8f0!important}
+.pay14-section-head>span{border-radius:8px!important;background:#eaf2ff!important}
+.pay14-grid input,.pay14-grid select{border-radius:11px!important;background:#fbfdff!important}
+.pay14-summary-column{padding:18px!important;background:linear-gradient(180deg,#f5f9ff,#f8fafc)!important}
+.pay14-summary-card,.pay14-trust-card{border-radius:15px!important;box-shadow:0 6px 18px rgba(15,23,42,.025)!important}
+.pay14-summary-metrics .is-emphasis{border-radius:10px!important;background:#eff6ff!important}
+.pay14-footer{position:relative!important;bottom:auto!important;flex:0 0 auto!important;padding:13px 20px!important;background:#fff!important}
+.pay14-footer-actions{display:flex!important;justify-content:flex-end!important;gap:9px!important}
+.pay14-footer-actions .btn{min-width:140px!important}
+@media(max-width:760px){
+  .pay14-backdrop{padding:12px!important}
+  .pay14-modal{width:calc(100vw - 24px)!important;max-height:86dvh!important;border-radius:19px!important}
+  .pay14-header{padding:14px 15px!important}
+  .pay14-header h2{font-size:1.24rem!important}
+  .pay14-body{display:block!important}
+  .pay14-form-column,.pay14-summary-column{padding:13px!important}
+  .pay14-grid-2{grid-template-columns:1fr!important}
+  .pay14-span-2{grid-column:auto!important}
+  .pay14-section{padding:13px!important}
+  .pay14-summary-column{border-left:0!important;border-top:1px solid #e2e8f0!important}
+  .pay14-footer{padding:11px 13px 13px!important;display:grid!important;grid-template-columns:1fr!important;gap:9px!important;text-align:center!important}
+  .pay14-footer-actions{display:grid!important;grid-template-columns:1fr 1fr!important;width:100%!important}
+  .pay14-footer-actions .btn{width:100%!important;min-width:0!important}
+}
+
+/* ---------- Invoice creator ---------- */
+.inv32-modal{width:min(980px,calc(100vw - 36px))!important;max-height:min(88dvh,880px)!important;height:auto!important;display:flex!important;flex-direction:column!important;overflow:hidden!important}
+.inv32-header{position:relative!important;top:auto!important;flex:0 0 auto!important}
+.inv32-body{min-height:0!important;overflow-y:auto!important}
+.inv32-footer{position:relative!important;bottom:auto!important;flex:0 0 auto!important}
+.inv32-footer-actions{display:flex!important;align-items:center!important;justify-content:flex-end!important;gap:9px!important}
+.inv32-footer-actions .btn{min-width:140px!important}
+@media(max-width:760px){
+  .inv32-backdrop{padding:12px!important}
+  .inv32-modal{width:calc(100vw - 24px)!important;max-height:86dvh!important;border-radius:19px!important}
+  .inv32-body{display:block!important}
+  .inv32-form-column,.inv32-summary-column{padding:13px!important}
+  .inv32-grid-2{grid-template-columns:1fr!important}
+  .inv32-line{grid-template-columns:28px minmax(0,1fr)!important}
+  .inv32-line>label{grid-column:2!important}
+  .inv32-remove{grid-column:2!important;justify-self:end!important}
+  .inv32-footer{display:grid!important;grid-template-columns:1fr!important;gap:8px!important;padding:11px 13px 13px!important;text-align:center!important}
+  .inv32-footer-actions{display:grid!important;grid-template-columns:1fr 1fr!important;width:100%!important}
+  .inv32-footer-actions .btn{width:100%!important;min-width:0!important}
+}
+
+/* ---------- Expense action buttons ---------- */
+.ex57-actions .btn{min-height:42px!important;padding:0 14px!important;border-radius:12px!important;gap:9px!important;font-size:12px!important;box-shadow:none!important}
+.ex57-actions .btn-primary{box-shadow:0 8px 18px rgba(37,99,235,.16)!important}
+.ex57-actions .btn-secondary{border-color:#dbe5f2!important;background:#fff!important;color:#334155!important}
+.ex57-actions .btn-secondary:hover{border-color:#bfd4f4!important;background:#f7faff!important;color:#1d4ed8!important}
+.ex57-actions .btn>svg{display:block!important;visibility:visible!important;opacity:1!important;color:currentColor!important;stroke:currentColor!important;flex:0 0 16px!important}
+@media(max-width:700px){
+  .ex57-actions{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;width:100%!important;gap:8px!important}
+  .ex57-actions .btn{width:100%!important;min-width:0!important}
+  .ex57-actions .btn:first-child{grid-column:1/-1}
+}
+@media(max-width:420px){.ex57-actions{grid-template-columns:1fr!important}.ex57-actions .btn:first-child{grid-column:auto}}
+
+/* Expense action modals — one premium system for Add Expense, Petty Cash and Vendor. */
+.expense-modal-backdrop{padding:18px!important;background:rgba(15,23,42,.54)!important;backdrop-filter:blur(9px)!important;display:grid!important;place-items:center!important}
+.expense-modal{width:min(720px,calc(100vw - 36px))!important;max-height:min(86dvh,820px)!important;height:auto!important;display:flex!important;flex-direction:column!important;overflow:hidden!important;border:1px solid #dbe6f4!important;border-radius:24px!important;background:#fff!important;box-shadow:0 32px 88px rgba(15,23,42,.28)!important}
+.expense-modal-header{position:relative!important;flex:0 0 auto!important;padding:20px 22px!important;border-bottom:1px solid #e6edf6!important;background:linear-gradient(135deg,#f6faff,#fff 56%,#edf5ff)!important}
+.expense-modal-header:before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:linear-gradient(180deg,#2563eb,#60a5fa)}
+.expense-modal-header h2{margin:0 0 5px!important;color:#0f172a!important;font-size:1.4rem!important;letter-spacing:-.03em!important}
+.expense-modal-header p{margin:0!important;color:#64748b!important;font-size:11px!important}
+.expense-modal-body{min-height:0!important;overflow-y:auto!important;padding:19px 21px!important;background:#f8fafc!important}
+.expense-form-grid{gap:12px!important;padding:16px!important;border:1px solid #e3eaf3!important;border-radius:17px!important;background:#fff!important;box-shadow:0 6px 18px rgba(15,23,42,.025)!important}
+.expense-modal input,.expense-modal select,.expense-modal textarea{border-radius:11px!important;background:#fbfdff!important}
+.expense-modal>footer,.expense-modal-actions{position:relative!important;bottom:auto!important;flex:0 0 auto!important;display:flex!important;justify-content:center!important;gap:9px!important;padding:13px 20px 15px!important;border-top:1px solid #e5ebf3!important;background:#fff!important}
+.expense-modal>footer .btn,.expense-modal-actions .btn{flex:1 1 0!important;max-width:210px!important}
+@media(max-width:650px){
+  .expense-modal-backdrop{padding:12px!important}
+  .expense-modal{width:calc(100vw - 24px)!important;max-height:84dvh!important;border-radius:19px!important}
+  .expense-modal-header{padding:15px 16px!important}.expense-modal-header h2{font-size:1.2rem!important}
+  .expense-modal-body{padding:13px!important}
+  .expense-form-grid{grid-template-columns:1fr!important;padding:13px!important;border-radius:14px!important}
+  .expense-form-full{grid-column:auto!important}
+  .expense-modal>footer,.expense-modal-actions{padding:11px 13px 13px!important}
+  .expense-modal>footer .btn,.expense-modal-actions .btn{max-width:none!important}
+}
+
+/* Expense ledger/history — cards cannot overflow and selected detail no longer steals width on tablets. */
+.ex57-list-panel,.ex57-list,.ex57-row,.ex57-row-main,.ex57-row-end{min-width:0!important}
+.ex57-row-main strong,.ex57-row-main span,.ex57-row-main small{overflow-wrap:anywhere!important}
+@media(max-width:980px){.ex57-workspace{grid-template-columns:1fr!important}.ex57-detail{position:static!important;top:auto!important}}
+@media(max-width:700px){
+  .ex57-list{padding:6px!important}
+  .ex57-row{grid-template-columns:38px minmax(0,1fr)!important;gap:10px!important;padding:11px!important;align-items:start!important}
+  .ex57-row-end{grid-column:2!important;display:flex!important;align-items:center!important;justify-content:flex-start!important;flex-wrap:wrap!important;gap:6px!important;text-align:left!important}
+  .ex57-row-main strong,.ex57-row-main span{white-space:normal!important;text-overflow:clip!important}
+  .ex57-list-panel>header,.ex57-detail>header{padding:14px!important}
+  .ex57-detail-kpis,.ex57-info-grid{grid-template-columns:1fr!important;padding-inline:13px!important}
+  .ex57-history{margin-inline:13px!important}
+  .ex57-correction{flex-direction:column!important;padding:13px!important}
+  .ex57-correction>div:first-child{max-width:none!important}
+}
+
+/* Ledger correction/edit record modal redesign. */
+.ex57-modal-backdrop{padding:18px!important;background:rgba(15,23,42,.54)!important;backdrop-filter:blur(9px)!important}
+.ex57-modal{width:min(760px,calc(100vw - 36px))!important;max-height:min(86dvh,820px)!important;border:1px solid #dbe6f4!important;border-radius:24px!important;box-shadow:0 32px 88px rgba(15,23,42,.28)!important}
+.ex57-modal>header{position:relative!important;padding:20px 22px!important;background:linear-gradient(135deg,#f6faff,#fff 60%,#edf5ff)!important}
+.ex57-modal>header:before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:#2563eb}
+.ex57-modal>header h2{font-size:1.35rem!important;letter-spacing:-.03em!important}
+.ex57-modal-body{padding:18px 20px!important;background:#f8fafc!important}
+.ex57-form-grid{padding:15px!important;border:1px solid #e3eaf3!important;border-radius:16px!important;background:#fff!important}
+.ex57-modal>footer{justify-content:center!important;padding:13px 20px 15px!important;background:#fff!important}
+.ex57-modal>footer .btn{flex:1 1 0!important;max-width:210px!important}
+@media(max-width:650px){
+  .ex57-modal-backdrop{padding:12px!important}.ex57-modal{width:calc(100vw - 24px)!important;max-height:84dvh!important;border-radius:19px!important}
+  .ex57-modal>header{padding:15px 16px!important}.ex57-modal-body{padding:13px!important}.ex57-form-grid{grid-template-columns:1fr!important;padding:13px!important}.ex57-form-full{grid-column:auto!important}.ex57-modal>footer{padding:11px 13px 13px!important}.ex57-modal>footer .btn{max-width:none!important}
+}
+
+/* Forms and assignment dialogs */
+.forms-v28-modal-backdrop{padding:18px!important;display:grid!important;place-items:center!important;overflow:hidden!important}
+.forms-v28-modal,.forms-v28-modal.large{width:min(760px,calc(100vw - 36px))!important;max-height:min(86dvh,840px)!important;height:auto!important;display:flex!important;flex-direction:column!important;overflow:hidden!important}
+.forms-v28-modal.large{width:min(900px,calc(100vw - 36px))!important}
+.forms-v28-modal>header{flex:0 0 auto!important}.forms-v28-modal-body{min-height:0!important;overflow-y:auto!important}.forms-v28-modal>footer{position:relative!important;bottom:auto!important;flex:0 0 auto!important;display:flex!important;justify-content:center!important;gap:9px!important}.forms-v28-modal>footer .btn{flex:1 1 0!important;max-width:220px!important}
+@media(max-width:650px){
+  .forms-v28-modal-backdrop{padding:12px!important}.forms-v28-modal,.forms-v28-modal.large{width:calc(100vw - 24px)!important;max-height:84dvh!important;border-radius:19px!important}.forms-v28-form-grid{grid-template-columns:1fr!important}.forms-v28-modal>footer{padding:11px 13px 13px!important}.forms-v28-modal>footer .btn{max-width:none!important}
+}
+
+/* Calendar controller: compact date + controls on touch widths; grid itself may scroll. */
+.advanced-calendar-header{min-width:0!important}
+.calendar-title h3{overflow-wrap:anywhere}
+@media(max-width:760px){
+  .advanced-calendar-container{border-radius:16px!important;min-width:0!important}
+  .advanced-calendar-header{display:grid!important;grid-template-columns:1fr!important;gap:9px!important;padding:11px 12px!important}
+  .calendar-nav{display:grid!important;grid-template-columns:34px minmax(0,1fr) 34px!important;align-items:center!important;gap:6px!important;width:100%!important}
+  .calendar-nav .icon-button{width:34px!important;height:34px!important;min-width:34px!important}
+  .calendar-title{text-align:center!important;min-width:0!important}
+  .calendar-title h3{margin:0!important;font-size:.92rem!important;line-height:1.25!important;white-space:normal!important}
+  .calendar-actions{display:grid!important;grid-template-columns:auto auto minmax(0,1fr)!important;align-items:center!important;gap:6px!important;width:100%!important;min-width:0!important}
+  .calendar-actions>.btn{min-height:34px!important;height:34px!important;padding:0 10px!important;font-size:10px!important;border-radius:9px!important}
+  .view-toggle{display:flex!important;min-width:0!important;overflow-x:auto!important;gap:3px!important;padding:3px!important;border-radius:10px!important}
+  .view-toggle .view-btn{flex:1 0 auto!important;min-width:52px!important;padding:6px 8px!important;font-size:9px!important;border-radius:7px!important}
+  .advanced-week-view{min-width:720px!important}
+  .provider-day-view{min-width:680px!important}
+  .advanced-month-grid{min-width:700px!important}
+}
+@media(max-width:430px){
+  .advanced-calendar-header{padding:9px!important}
+  .calendar-title h3{font-size:.85rem!important}
+  .calendar-actions{grid-template-columns:1fr 1fr!important}
+  .calendar-actions>.btn{width:100%!important}
+  .calendar-actions .view-toggle{grid-column:1/-1!important;width:100%!important}
+}
