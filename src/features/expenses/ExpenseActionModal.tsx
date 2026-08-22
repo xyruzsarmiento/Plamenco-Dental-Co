@@ -8,15 +8,13 @@ import { getStoredBranches } from '../branches/branchStore'
 import { getCurrentSessionUserName } from '../security/security'
 import { isSupabaseConfigured, supabase } from '../../lib/supabase'
 import {
-  createExpense,
   createExpenseVendor,
   createRecurringExpenseTemplate,
   getExpenseCategories,
   getExpenseVendors,
-  recordPettyCashDisbursement,
-  type Expense,
   type RecurringFrequency,
 } from './expenseStore'
+import { createExpensePersisted, recordPettyCashPersisted } from './expensePersistence'
 
 export type ExpenseDialogType = 'add_expense' | 'petty_cash' | 'add_vendor' | 'recurring'
 
@@ -34,49 +32,10 @@ function todayManila() {
 }
 
 async function confirmRemote(table: string, id: string) {
-  if (!isSupabaseConfigured || !supabase) return
+  if (!isSupabaseConfigured || !supabase) throw new Error('Clinic database is not configured. This record cannot be saved safely.')
   const { data, error } = await supabase.from(table).select('id').eq('id', id).maybeSingle()
   if (error) throw new Error(`Database persistence failed: ${error.message}`)
   if (!data) throw new Error('Database persistence could not be confirmed. The form remains open so you can retry safely.')
-}
-
-async function persistExpenseRemote(expense: Expense) {
-  if (!isSupabaseConfigured || !supabase) return
-  const payload = {
-    id: expense.id,
-    expense_number: expense.expenseNumber,
-    scope: expense.scope,
-    branch_id: expense.branchId ?? null,
-    category_id: expense.categoryId,
-    vendor_id: expense.vendorId ?? null,
-    payee_name: expense.payeeName,
-    description: expense.description,
-    expense_date: expense.expenseDate,
-    due_date: expense.dueDate ?? null,
-    billing_period_start: expense.billingPeriodStart ?? null,
-    billing_period_end: expense.billingPeriodEnd ?? null,
-    subtotal_cents: expense.subtotalCents,
-    tax_cents: expense.taxCents,
-    total_cents: expense.totalCents,
-    amount_paid_cents: expense.amountPaidCents,
-    balance_cents: expense.balanceCents,
-    status: expense.status,
-    payment_method: expense.paymentMethod ?? null,
-    reference_number: expense.referenceNumber ?? '',
-    source_type: expense.sourceType,
-    source_id: expense.sourceId ?? null,
-    notes: expense.notes,
-    recurring_template_id: expense.recurringTemplateId ?? null,
-    created_by: expense.createdBy,
-    approved_by: expense.approvedBy ?? '',
-    approved_at: expense.approvedAt ?? null,
-    void_reason: expense.voidReason ?? '',
-    voided_by: expense.voidedBy ?? '',
-    voided_at: expense.voidedAt ?? null,
-  }
-  const { data, error } = await supabase.from('expenses').upsert([payload], { onConflict: 'id' }).select('id').maybeSingle()
-  if (error) throw new Error(`Database persistence failed: ${error.message}`)
-  if (!data?.id) throw new Error('Database persistence could not be confirmed. The form remains open so you can retry safely.')
 }
 
 export function ExpenseActionModal({ type, preferredBranchId, onClose, onSuccess }: Props) {
@@ -136,6 +95,7 @@ export function ExpenseActionModal({ type, preferredBranchId, onClose, onSuccess
   }
 
   async function submit() {
+    if (busy) return
     setError(null)
     setSuccess(null)
     setBusy(true)
@@ -143,15 +103,7 @@ export function ExpenseActionModal({ type, preferredBranchId, onClose, onSuccess
       if (type === 'add_vendor') {
         if (!vendorName.trim()) throw new Error('Vendor name is required.')
         if (email && !/^\S+@\S+\.\S+$/.test(email)) throw new Error('Enter a valid email address.')
-        const vendor = createExpenseVendor({
-          name: vendorName,
-          contactPerson,
-          phone,
-          email,
-          address,
-          notes,
-          status: 'active',
-        })
+        const vendor = createExpenseVendor({ name: vendorName, contactPerson, phone, email, address, notes, status: 'active' })
         await confirmRemote('expense_vendors', vendor.id)
         setSuccess(`Vendor ${vendor.name} saved.`)
       } else if (type === 'petty_cash') {
@@ -159,16 +111,14 @@ export function ExpenseActionModal({ type, preferredBranchId, onClose, onSuccess
         if (!payeeName.trim()) throw new Error('Payee is required.')
         if (!description.trim()) throw new Error('Purpose is required.')
         const amountCents = validateMoney(amount, 'Petty cash amount')
-        const expense = recordPettyCashDisbursement({
+        const { expense } = await recordPettyCashPersisted({
           branchId,
           amountCents,
           paymentDate: expenseDate,
-          payeeName,
-          description,
-          recordedBy: actor,
+          payeeName: payeeName.trim(),
+          description: description.trim(),
           notes,
         })
-        await persistExpenseRemote(expense)
         setSuccess(`Petty cash ${expense.expenseNumber} recorded.`)
       } else if (type === 'recurring') {
         if (!templateName.trim()) throw new Error('Template name is required.')
@@ -200,13 +150,13 @@ export function ExpenseActionModal({ type, preferredBranchId, onClose, onSuccess
         if (!categoryId) throw new Error('Expense category is required.')
         const subtotalCents = validateMoney(amount, 'Expense amount')
         const taxCents = validateMoney(tax, 'Tax amount', true)
-        const expense = createExpense({
+        const expense = await createExpensePersisted({
           scope,
           branchId: scope === 'branch' ? branchId : undefined,
           categoryId,
           vendorId: vendorId || undefined,
-          payeeName,
-          description,
+          payeeName: payeeName.trim(),
+          description: description.trim(),
           expenseDate,
           dueDate: dueDate || undefined,
           subtotalCents,
@@ -214,9 +164,7 @@ export function ExpenseActionModal({ type, preferredBranchId, onClose, onSuccess
           referenceNumber: referenceNumber || undefined,
           sourceType: 'manual',
           notes,
-          createdBy: actor,
         })
-        await persistExpenseRemote(expense)
         setSuccess(`Expense ${expense.expenseNumber} saved.`)
       }
       onSuccess()
