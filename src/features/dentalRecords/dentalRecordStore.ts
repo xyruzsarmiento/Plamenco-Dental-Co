@@ -381,13 +381,23 @@ export function addClinicalRecordAmendment(recordId: string, values: ClinicalRec
   return amendment
 }
 
-export function deleteDentalRecord(id: string): boolean {
-  const records = getStoredDentalRecords()
-  const index = records.findIndex((record) => record.id === id)
-  if (index === -1) return false
-  if (records[index].status === 'finalized' || records[index].status === 'amended') return false
-  records.splice(index, 1)
-  saveStoredDentalRecords(records)
+export async function deleteDentalRecord(id: string): Promise<boolean> {
+  if (!supabase) throw new Error('Clinic database is not configured. Clinical records cannot be deleted safely.')
+  const current = getStoredDentalRecords().find((record) => record.id === id)
+  if (!current || current.status !== 'draft') return false
+
+  const { data, error } = await supabase
+    .from('dental_records')
+    .delete()
+    .eq('id', id)
+    .eq('status', 'draft')
+    .select('id')
+    .maybeSingle()
+
+  if (error) throw persistenceError('Draft clinical record could not be deleted.', error)
+  if (!data) return false
+
+  saveStoredDentalRecords(getStoredDentalRecords().filter((record) => record.id !== id))
   return true
 }
 
