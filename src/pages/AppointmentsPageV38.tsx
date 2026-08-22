@@ -52,6 +52,12 @@ function clickWorkspaceTab(label: string) {
   return Boolean(tab)
 }
 
+function requestsWorkspaceIsActive() {
+  const root = document.querySelector('.appointments-v40')
+  const tabs = Array.from(root?.querySelectorAll<HTMLButtonElement>('[role="tab"]') ?? [])
+  return tabs.some((button) => button.getAttribute('aria-selected') === 'true' && button.textContent?.toLowerCase().includes('requests'))
+}
+
 function setReactInputValue(input: HTMLInputElement, value: string) {
   const setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')?.set
   setter?.call(input, value)
@@ -226,6 +232,7 @@ export function AppointmentsPageV38() {
       const current = new Map(currentRows.map((appointment) => [appointment.id, appointment]))
       const previous = previousRef.current
       let requestDecisionChanged = false
+      const keepRequestsOpen = requestsWorkspaceIsActive()
 
       for (const appointment of currentRows) {
         const before = previous.get(appointment.id)
@@ -244,6 +251,7 @@ export function AppointmentsPageV38() {
 
       if (requestDecisionChanged) {
         setRenderVersion((version) => version + 1)
+        if (keepRequestsOpen) openRequestsWorkspace()
       }
 
       previousRef.current = current
