@@ -120,6 +120,7 @@ import './styles/mobile-modal-workspace-fixes-v86.css'
 import './styles/responsive-dialogs-actions-v87.css'
 import './styles/mobile-ledger-communications-fixes-v88.css'
 import './styles/screenshot-mobile-corrections-v89.css'
+import './styles/patient-growth-hover-fix-v90.css'
 import App from './App.tsx'
 import { registerPatientPortalPwa } from './features/patientPortal/pwaRegistration'
 
