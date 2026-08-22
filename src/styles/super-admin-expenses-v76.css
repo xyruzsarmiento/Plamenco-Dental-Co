@@ -16,6 +16,10 @@
 .ex57-trend-scroll {
   width: 100%;
   min-width: 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+  overscroll-behavior-inline: contain;
+  -webkit-overflow-scrolling: touch;
 }
 
 .ex57-trend svg {
@@ -23,6 +27,30 @@
   width: 100% !important;
   min-width: 820px !important;
   min-height: 350px;
+}
+
+/* Keep the x-axis readable when the report returns long month/date labels. */
+.ex57-axis:nth-of-type(even) {
+  display: none;
+}
+
+.ex57-actions .btn {
+  min-height: 36px !important;
+  padding: 0 11px !important;
+  border-radius: 10px !important;
+  font-size: 11px !important;
+  line-height: 1 !important;
+}
+
+.ex57-actions .btn > span {
+  gap: 6px !important;
+  line-height: 1 !important;
+}
+
+.ex57-actions .btn svg {
+  width: 14px !important;
+  height: 14px !important;
+  flex: 0 0 auto !important;
 }
 
 .ex57-section > header .btn {
@@ -93,16 +121,18 @@
     padding: 18px !important;
   }
 
-  .ex57-trend-scroll {
-    overflow-x: auto;
-    overscroll-behavior-inline: contain;
-    -webkit-overflow-scrolling: touch;
+  .ex57-trend svg {
+    width: 100% !important;
+    min-width: 760px !important;
+    min-height: 310px;
   }
 
-  .ex57-trend svg {
-    width: 920px !important;
-    min-width: 920px !important;
-    min-height: 310px;
+  .ex57-axis {
+    display: none;
+  }
+
+  .ex57-axis:nth-of-type(3n + 1) {
+    display: block;
   }
 }
 
@@ -113,6 +143,11 @@
 
   .ex57-section > header .btn {
     flex: 0 0 auto !important;
+  }
+
+  .ex57-actions .btn {
+    min-height: 38px !important;
+    padding: 0 12px !important;
   }
 }
 
@@ -125,6 +160,18 @@
   .ex57-section > header .btn {
     width: 100% !important;
     min-height: 44px !important;
+  }
+
+  .ex57-trend svg {
+    min-width: 680px !important;
+  }
+
+  .ex57-axis {
+    display: none;
+  }
+
+  .ex57-axis:nth-of-type(4n + 1) {
+    display: block;
   }
 }
 
