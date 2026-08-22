@@ -1,0 +1,274 @@
+/* Internal Portal V105 — shared responsive contract for Admin, Super Admin, Dentist and Staff. */
+
+.app-shell{
+  --ir-blue:#2563eb;
+  --ir-blue-soft:#eef5ff;
+  --ir-border:#dfe7f2;
+  --ir-text:#172033;
+  --ir-muted:#6b7890;
+}
+
+.app-shell .main-shell,
+.app-shell .content-area,
+.app-shell .content-area > *,
+.app-shell .page-stack,
+.app-shell [class*="workspace"],
+.app-shell [class*="-workspace"],
+.app-shell [class*="-page-v"]{
+  min-width:0!important;
+  max-width:100%!important;
+  box-sizing:border-box!important;
+}
+
+.app-shell .content-area{overflow-x:clip!important}
+.app-shell .content-area img,.app-shell .content-area svg{max-width:100%}
+
+/* Headers / actions wrap instead of overflowing. */
+.app-shell .page-header,
+.app-shell [class*="page-header"],
+.app-shell [class*="header-row"],
+.app-shell [class*="header-actions"],
+.app-shell [class*="toolbar"],
+.app-shell [class*="filter-bar"],
+.app-shell [class*="filters-row"],
+.app-shell .filters,
+.app-shell .filter-row{
+  min-width:0!important;
+  max-width:100%!important;
+  flex-wrap:wrap!important;
+}
+.app-shell [class*="header-actions"]>*,
+.app-shell [class*="toolbar"]>*,
+.app-shell [class*="filter-bar"]>*,
+.app-shell [class*="filters-row"]>*{min-width:0!important}
+
+/* Shared metric / dashboard grids. */
+.app-shell [class*="kpi-grid"],
+.app-shell [class*="metric-grid"],
+.app-shell [class*="metrics-grid"],
+.app-shell [class*="stats-grid"],
+.app-shell [class*="summary-grid"]{
+  min-width:0!important;
+  grid-template-columns:repeat(auto-fit,minmax(min(220px,100%),1fr))!important;
+}
+.app-shell [class*="insights-grid"],
+.app-shell [class*="overview-grid"],
+.app-shell [class*="analytics-grid"],
+.app-shell [class*="main-grid"],
+.app-shell [class*="secondary-grid"],
+.app-shell [class*="lower-grid"],
+.app-shell [class*="content-grid"]{min-width:0!important}
+
+/* Cards/panels should never force viewport width. */
+.app-shell .card,
+.app-shell .panel,
+.app-shell [class*="-card"],
+.app-shell [class*="-panel"]{
+  min-width:0!important;
+  max-width:100%!important;
+  box-sizing:border-box!important;
+}
+
+/* Data tables stay usable on phones/tablets via local horizontal scrolling. */
+.app-shell .table-scroll,
+.app-shell .table-container,
+.app-shell [class*="table-wrap"],
+.app-shell [class*="table-shell"],
+.app-shell [class*="ledger-shell"],
+.app-shell [class*="calendar-shell"],
+.app-shell [class*="chart-scroll"]{
+  width:100%!important;
+  max-width:100%!important;
+  min-width:0!important;
+  overflow-x:auto!important;
+  overscroll-behavior-inline:contain;
+  -webkit-overflow-scrolling:touch;
+}
+
+/* Forms collapse predictably. */
+.app-shell form,
+.app-shell fieldset{min-width:0!important;max-width:100%!important}
+.app-shell form input,
+.app-shell form select,
+.app-shell form textarea,
+.app-shell [role="dialog"] input,
+.app-shell [role="dialog"] select,
+.app-shell [role="dialog"] textarea{
+  min-width:0!important;
+  max-width:100%!important;
+  box-sizing:border-box!important;
+}
+.app-shell [class*="form-grid"],
+.app-shell [class*="field-grid"],
+.app-shell [class*="details-grid"],
+.app-shell [class*="detail-grid"]{min-width:0!important}
+
+/* Dialogs stay inside the viewport on all internal pages. */
+.app-shell .modal-backdrop,
+.app-shell [class*="modal-backdrop"],
+.app-shell [class*="dialog-backdrop"]{
+  box-sizing:border-box!important;
+  padding:20px!important;
+  overflow:auto!important;
+  overscroll-behavior:contain;
+}
+.app-shell .modal-backdrop>[role="dialog"],
+.app-shell [class*="modal-backdrop"]>[role="dialog"],
+.app-shell [class*="modal-backdrop"]>section,
+.app-shell [class*="dialog-backdrop"]>[role="dialog"],
+.app-shell [class*="modal-shell"],
+.app-shell [class*="modal-card"]{
+  width:min(960px,calc(100vw - 40px))!important;
+  max-width:calc(100vw - 40px)!important;
+  max-height:calc(100dvh - 40px)!important;
+  overflow:auto!important;
+  margin:auto!important;
+  box-sizing:border-box!important;
+}
+
+/* Route-specific containment for every requested Admin page. */
+.app-shell:is(
+.page-dashboard,.page-appointments,.page-patients,.page-dental-records,.page-treatments,
+.page-treatment-plans,.page-billing,.page-services,.page-dentists,.page-tasks,.page-recalls,
+.page-reports,.page-report-automation,.page-data-import,.page-inventory,.page-expenses,
+.page-communications,.page-notifications,.page-staff,.page-branches,.page-forms-consent,.page-settings
+) .content-area>*{width:100%!important;min-width:0!important;max-width:100%!important}
+
+/* Dense calendars/charts can scroll locally without breaking the shell. */
+.app-shell.page-appointments [class*="calendar"],
+.app-shell.page-reports [class*="chart"],
+.app-shell.page-dashboard [class*="chart"],
+.app-shell.page-inventory [class*="ledger"],
+.app-shell.page-expenses [class*="ledger"]{max-width:100%!important}
+
+@media(max-width:1180px){
+  .app-shell .content-area{padding:18px 16px 30px!important}
+  .app-shell [class*="insights-grid"],
+  .app-shell [class*="overview-grid"],
+  .app-shell [class*="analytics-grid"],
+  .app-shell [class*="main-grid"],
+  .app-shell [class*="secondary-grid"],
+  .app-shell [class*="lower-grid"],
+  .app-shell [class*="content-grid"]{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+}
+
+@media(max-width:900px){
+  .app-shell .content-area{padding:14px 12px 26px!important}
+  .app-shell .topbar{min-width:0!important;padding-inline:14px!important}
+  .app-shell .topbar-copy{min-width:0!important}
+  .app-shell .topbar-copy h1{overflow-wrap:anywhere}
+
+  .app-shell .page-header,
+  .app-shell [class*="page-header"],
+  .app-shell [class*="-header"]:has([class*="header-actions"]){
+    align-items:stretch!important;
+    flex-direction:column!important;
+  }
+  .app-shell [class*="header-actions"]{width:100%!important}
+  .app-shell [class*="header-actions"]>button,
+  .app-shell [class*="header-actions"]>a{flex:1 1 auto!important}
+
+  .app-shell [class*="insights-grid"],
+  .app-shell [class*="overview-grid"],
+  .app-shell [class*="analytics-grid"],
+  .app-shell [class*="main-grid"],
+  .app-shell [class*="secondary-grid"],
+  .app-shell [class*="lower-grid"],
+  .app-shell [class*="content-grid"]{grid-template-columns:1fr!important}
+
+  .app-shell [class*="form-grid"],
+  .app-shell [class*="field-grid"],
+  .app-shell [class*="details-grid"],
+  .app-shell [class*="detail-grid"]{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+
+  .app-shell .content-area table{
+    display:block!important;
+    width:100%!important;
+    max-width:100%!important;
+    overflow-x:auto!important;
+    white-space:nowrap;
+    -webkit-overflow-scrolling:touch;
+  }
+
+  .app-shell [class*="tab-list"],
+  .app-shell [class*="tabs"],
+  .app-shell [class*="view-switcher"]{
+    max-width:100%!important;
+    overflow-x:auto!important;
+    scrollbar-width:none;
+    flex-wrap:nowrap!important;
+  }
+  .app-shell [class*="tab-list"]>*,
+  .app-shell [class*="tabs"]>*,
+  .app-shell [class*="view-switcher"]>*{flex:0 0 auto!important}
+
+  .app-shell .modal-backdrop,
+  .app-shell [class*="modal-backdrop"],
+  .app-shell [class*="dialog-backdrop"]{padding:14px!important}
+  .app-shell .modal-backdrop>[role="dialog"],
+  .app-shell [class*="modal-backdrop"]>[role="dialog"],
+  .app-shell [class*="modal-backdrop"]>section,
+  .app-shell [class*="dialog-backdrop"]>[role="dialog"],
+  .app-shell [class*="modal-shell"],
+  .app-shell [class*="modal-card"]{
+    width:calc(100vw - 28px)!important;
+    max-width:calc(100vw - 28px)!important;
+    max-height:calc(100dvh - 28px)!important;
+  }
+}
+
+@media(max-width:640px){
+  .app-shell .content-area{padding:12px 10px 22px!important}
+  .app-shell .topbar{padding:10px!important;gap:9px!important}
+  .app-shell .topbar-account-pill{max-width:108px!important;overflow:hidden!important;text-overflow:ellipsis!important;white-space:nowrap!important}
+
+  .app-shell [class*="kpi-grid"],
+  .app-shell [class*="metric-grid"],
+  .app-shell [class*="metrics-grid"],
+  .app-shell [class*="stats-grid"],
+  .app-shell [class*="summary-grid"]{grid-template-columns:1fr!important}
+
+  .app-shell [class*="form-grid"],
+  .app-shell [class*="field-grid"],
+  .app-shell [class*="details-grid"],
+  .app-shell [class*="detail-grid"]{grid-template-columns:1fr!important}
+
+  .app-shell [class*="header-actions"],
+  .app-shell [class*="action-buttons"],
+  .app-shell [class*="modal-actions"]{
+    display:grid!important;
+    grid-template-columns:1fr!important;
+    width:100%!important;
+  }
+  .app-shell [class*="header-actions"]>*,
+  .app-shell [class*="action-buttons"]>*,
+  .app-shell [class*="modal-actions"]>*{width:100%!important;justify-content:center!important}
+
+  .app-shell .modal-backdrop,
+  .app-shell [class*="modal-backdrop"],
+  .app-shell [class*="dialog-backdrop"]{padding:0!important;align-items:flex-end!important}
+  .app-shell .modal-backdrop>[role="dialog"],
+  .app-shell [class*="modal-backdrop"]>[role="dialog"],
+  .app-shell [class*="modal-backdrop"]>section,
+  .app-shell [class*="dialog-backdrop"]>[role="dialog"],
+  .app-shell [class*="modal-shell"],
+  .app-shell [class*="modal-card"]{
+    width:100vw!important;
+    max-width:100vw!important;
+    max-height:92dvh!important;
+    margin:auto 0 0!important;
+    border-radius:20px 20px 0 0!important;
+  }
+}
+
+@media(max-width:430px){
+  .app-shell .content-area{padding-inline:8px!important}
+  .app-shell .topbar-copy h1{font-size:clamp(20px,7vw,25px)!important}
+  .app-shell .card,.app-shell .panel,.app-shell [class*="-card"],.app-shell [class*="-panel"]{border-radius:14px!important}
+}
+
+@media(prefers-reduced-motion:reduce){
+  .app-shell *,
+  .app-shell *::before,
+  .app-shell *::after{scroll-behavior:auto!important;transition-duration:.01ms!important;animation-duration:.01ms!important}
+}
