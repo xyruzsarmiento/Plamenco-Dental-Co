@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { AppRouter } from './app/AppRouter'
-import { AuthProvider, useAuth } from './features/auth/AuthContext'
+import { AuthProvider } from './features/auth/AuthProvider'
+import { useAuth } from './features/auth/AuthContext'
 import { OfflineStatusBanner } from './features/patientPortal/OfflineStatusBanner'
 import { ModalAccessibilityManager } from './components/ui/ModalAccessibilityManager'
 import { syncSupabaseToLocalStorage } from './lib/supabaseSync'
