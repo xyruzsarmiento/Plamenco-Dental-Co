@@ -1,0 +1,1180 @@
+.treatment-plans-v44 {
+  --tp78-ink: #0f172a;
+  --tp78-muted: #64748b;
+  --tp78-line: #e2e8f0;
+  --tp78-blue: #2563eb;
+  --tp78-blue-dark: #1d4ed8;
+  --tp78-blue-soft: #eff6ff;
+  --tp78-surface: #ffffff;
+  --tp78-canvas: #f8fafc;
+  --tp78-success: #15803d;
+  --tp78-warning: #b45309;
+  --tp78-danger: #b91c1c;
+  min-width: 0;
+}
+
+.treatment-plans-v44 > .premium-page-scaffold > .premium-page-header {
+  display: none !important;
+}
+
+.treatment-plans-v44 .premium-page-scaffold {
+  gap: 0 !important;
+}
+
+.treatment-plans-v44 .tp13-page {
+  display: grid !important;
+  gap: 16px !important;
+  width: 100% !important;
+  max-width: 1680px !important;
+  min-width: 0 !important;
+  margin: 0 auto !important;
+  padding: 8px 4px 30px !important;
+}
+
+/* Executive command bar */
+.treatment-plans-v44 .tp13-command-header {
+  position: relative !important;
+  isolation: isolate !important;
+  overflow: hidden !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 24px !important;
+  margin: 0 !important;
+  padding: 24px 26px !important;
+  border: 1px solid #dbe7f7 !important;
+  border-radius: 22px !important;
+  background:
+    radial-gradient(circle at 88% 18%, rgba(59, 130, 246, .14), transparent 24%),
+    linear-gradient(135deg, #ffffff 0%, #fbfdff 58%, #f2f7ff 100%) !important;
+  box-shadow: 0 14px 34px rgba(15, 23, 42, .055) !important;
+}
+
+.treatment-plans-v44 .tp13-command-header::before {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 4px;
+  background: linear-gradient(180deg, #60a5fa, #2563eb);
+}
+
+.treatment-plans-v44 .tp13-command-header::after {
+  content: "" !important;
+  position: absolute !important;
+  z-index: -1 !important;
+  right: -72px !important;
+  top: -112px !important;
+  width: 280px !important;
+  height: 280px !important;
+  border-radius: 50% !important;
+  background: radial-gradient(circle, rgba(37, 99, 235, .09), transparent 68%) !important;
+  pointer-events: none !important;
+}
+
+.treatment-plans-v44 .tp13-command-header > div {
+  max-width: 820px !important;
+  min-width: 0 !important;
+}
+
+.treatment-plans-v44 .tp13-kicker {
+  color: var(--tp78-blue) !important;
+  font-size: 9px !important;
+  font-weight: 900 !important;
+  letter-spacing: .13em !important;
+  text-transform: uppercase !important;
+}
+
+.treatment-plans-v44 .tp13-command-header h2 {
+  margin: 7px 0 6px !important;
+  color: var(--tp78-ink) !important;
+  font-size: clamp(1.7rem, 2.7vw, 2.55rem) !important;
+  line-height: 1.04 !important;
+  letter-spacing: -.045em !important;
+}
+
+.treatment-plans-v44 .tp13-command-header p {
+  max-width: 760px !important;
+  margin: 0 !important;
+  color: var(--tp78-muted) !important;
+  font-size: .78rem !important;
+  line-height: 1.6 !important;
+}
+
+.treatment-plans-v44 .tp13-command-header .btn {
+  flex: 0 0 auto !important;
+  min-height: 38px !important;
+  height: 38px !important;
+  padding: 0 13px !important;
+  border-radius: 10px !important;
+  font-size: 10px !important;
+  font-weight: 850 !important;
+  box-shadow: 0 7px 18px rgba(37, 99, 235, .16) !important;
+}
+
+.treatment-plans-v44 .tp13-command-header .btn svg {
+  width: 14px !important;
+  height: 14px !important;
+}
+
+/* Primary workspace: patient rail + care board */
+.treatment-plans-v44 .tp13-layout {
+  display: grid !important;
+  grid-template-columns: minmax(246px, 278px) minmax(0, 1fr) !important;
+  gap: 14px !important;
+  align-items: start !important;
+  min-width: 0 !important;
+}
+
+.treatment-plans-v44 .tp13-patient-rail {
+  position: sticky !important;
+  top: 82px !important;
+  overflow: hidden !important;
+  min-width: 0 !important;
+  border: 1px solid var(--tp78-line) !important;
+  border-radius: 18px !important;
+  background: rgba(255, 255, 255, .96) !important;
+  box-shadow: 0 9px 24px rgba(15, 23, 42, .04) !important;
+}
+
+.treatment-plans-v44 .tp13-rail-head {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 10px !important;
+  padding: 15px 15px 13px !important;
+  border-bottom: 1px solid #edf2f7 !important;
+  background: #fbfdff !important;
+}
+
+.treatment-plans-v44 .tp13-rail-head span {
+  display: block !important;
+  color: #8290a3 !important;
+  font-size: 8px !important;
+  font-weight: 900 !important;
+  letter-spacing: .1em !important;
+  text-transform: uppercase !important;
+}
+
+.treatment-plans-v44 .tp13-rail-head strong {
+  display: block !important;
+  margin-top: 3px !important;
+  color: var(--tp78-ink) !important;
+  font-size: .84rem !important;
+}
+
+.treatment-plans-v44 .tp13-rail-head svg {
+  width: 17px !important;
+  height: 17px !important;
+  color: var(--tp78-blue) !important;
+}
+
+.treatment-plans-v44 .tp13-search {
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  min-width: 0 !important;
+  min-height: 40px !important;
+  margin: 11px !important;
+  padding: 0 11px !important;
+  border: 1px solid #dce5ef !important;
+  border-radius: 11px !important;
+  background: #f8fafc !important;
+  color: #94a3b8 !important;
+  box-shadow: none !important;
+}
+
+.treatment-plans-v44 .tp13-search:focus-within {
+  border-color: #93c5fd !important;
+  background: #fff !important;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, .08) !important;
+}
+
+.treatment-plans-v44 .tp13-search input {
+  flex: 1 1 auto !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  height: 38px !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  outline: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  color: var(--tp78-ink) !important;
+  font-size: .72rem !important;
+}
+
+.treatment-plans-v44 .tp13-patient-list {
+  display: grid !important;
+  gap: 4px !important;
+  max-height: 640px !important;
+  overflow-y: auto !important;
+  padding: 0 8px 10px !important;
+  scrollbar-width: thin !important;
+}
+
+.treatment-plans-v44 .tp13-patient-list button {
+  display: grid !important;
+  grid-template-columns: 36px minmax(0, 1fr) auto !important;
+  align-items: center !important;
+  gap: 9px !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  min-height: 52px !important;
+  padding: 7px 9px !important;
+  border: 1px solid transparent !important;
+  border-radius: 11px !important;
+  background: transparent !important;
+  color: var(--tp78-ink) !important;
+  text-align: left !important;
+  cursor: pointer !important;
+  transition: .15s ease !important;
+}
+
+.treatment-plans-v44 .tp13-patient-list button:hover {
+  border-color: #e4ebf4 !important;
+  background: #f8fbff !important;
+}
+
+.treatment-plans-v44 .tp13-patient-list button.is-active {
+  border-color: #cfe0f7 !important;
+  background: linear-gradient(90deg, #eef5ff, #f8fbff) !important;
+  box-shadow: inset 3px 0 0 var(--tp78-blue) !important;
+}
+
+.treatment-plans-v44 .tp13-avatar {
+  display: grid !important;
+  place-items: center !important;
+  width: 36px !important;
+  height: 36px !important;
+  border: 1px solid #d8e7fb !important;
+  border-radius: 10px !important;
+  background: #eef5ff !important;
+  color: var(--tp78-blue-dark) !important;
+  font-size: .68rem !important;
+  font-weight: 900 !important;
+}
+
+.treatment-plans-v44 .tp13-patient-list button > span:nth-child(2) {
+  min-width: 0 !important;
+}
+
+.treatment-plans-v44 .tp13-patient-list strong,
+.treatment-plans-v44 .tp13-patient-list small {
+  display: block !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+
+.treatment-plans-v44 .tp13-patient-list strong {
+  font-size: .74rem !important;
+}
+
+.treatment-plans-v44 .tp13-patient-list small {
+  margin-top: 2px !important;
+  color: #8a97a8 !important;
+  font-size: .63rem !important;
+}
+
+.treatment-plans-v44 .tp13-patient-list button > svg {
+  width: 14px !important;
+  height: 14px !important;
+  color: #a5b1c1 !important;
+}
+
+.treatment-plans-v44 .tp13-main {
+  display: grid !important;
+  gap: 12px !important;
+  min-width: 0 !important;
+}
+
+/* Patient overview */
+.treatment-plans-v44 .tp13-patient-hero {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 16px !important;
+  min-width: 0 !important;
+  padding: 17px 18px !important;
+  border: 1px solid var(--tp78-line) !important;
+  border-radius: 17px !important;
+  background: var(--tp78-surface) !important;
+  box-shadow: 0 7px 20px rgba(15, 23, 42, .035) !important;
+}
+
+.treatment-plans-v44 .tp13-patient-identity {
+  display: flex !important;
+  align-items: center !important;
+  gap: 12px !important;
+  min-width: 0 !important;
+}
+
+.treatment-plans-v44 .tp13-avatar-lg {
+  width: 48px !important;
+  height: 48px !important;
+  border-radius: 14px !important;
+  font-size: .88rem !important;
+}
+
+.treatment-plans-v44 .tp13-patient-identity > div {
+  min-width: 0 !important;
+}
+
+.treatment-plans-v44 .tp13-patient-identity h2 {
+  margin: 3px 0 4px !important;
+  color: var(--tp78-ink) !important;
+  font-size: 1.15rem !important;
+  letter-spacing: -.028em !important;
+}
+
+.treatment-plans-v44 .tp13-patient-identity p {
+  overflow-wrap: anywhere !important;
+  margin: 0 !important;
+  color: var(--tp78-muted) !important;
+  font-size: .7rem !important;
+}
+
+.treatment-plans-v44 .tp13-patient-meta {
+  display: grid !important;
+  justify-items: end !important;
+  gap: 5px !important;
+}
+
+.treatment-plans-v44 .tp13-patient-meta span {
+  padding: 5px 9px !important;
+  border: 1px solid #bbf7d0 !important;
+  border-radius: 999px !important;
+  background: #f0fdf4 !important;
+  color: var(--tp78-success) !important;
+  font-size: .62rem !important;
+  font-weight: 900 !important;
+  text-transform: capitalize !important;
+}
+
+.treatment-plans-v44 .tp13-patient-meta small {
+  max-width: 210px !important;
+  color: #8794a5 !important;
+  font-size: .64rem !important;
+  text-align: right !important;
+}
+
+/* KPIs */
+.treatment-plans-v44 .tp13-metrics {
+  display: grid !important;
+  grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+  gap: 9px !important;
+}
+
+.treatment-plans-v44 .tp13-metrics article {
+  position: relative !important;
+  overflow: hidden !important;
+  display: grid !important;
+  min-width: 0 !important;
+  min-height: 104px !important;
+  padding: 14px !important;
+  border: 1px solid var(--tp78-line) !important;
+  border-radius: 15px !important;
+  background: #fff !important;
+  box-shadow: 0 6px 18px rgba(15, 23, 42, .03) !important;
+}
+
+.treatment-plans-v44 .tp13-metrics article::after {
+  content: "" !important;
+  position: absolute !important;
+  right: -24px !important;
+  top: -24px !important;
+  width: 72px !important;
+  height: 72px !important;
+  border-radius: 50% !important;
+  background: rgba(37, 99, 235, .045) !important;
+}
+
+.treatment-plans-v44 .tp13-metrics article > span {
+  display: flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  color: #78869a !important;
+  font-size: 8px !important;
+  font-weight: 900 !important;
+  letter-spacing: .075em !important;
+  text-transform: uppercase !important;
+}
+
+.treatment-plans-v44 .tp13-metrics article > span svg {
+  width: 14px !important;
+  height: 14px !important;
+  color: var(--tp78-blue) !important;
+}
+
+.treatment-plans-v44 .tp13-metrics strong {
+  display: block !important;
+  align-self: end !important;
+  margin: 8px 0 3px !important;
+  color: var(--tp78-ink) !important;
+  font-size: 1.22rem !important;
+  letter-spacing: -.035em !important;
+}
+
+.treatment-plans-v44 .tp13-metrics small {
+  color: #8b97a7 !important;
+  font-size: 9px !important;
+  line-height: 1.4 !important;
+}
+
+/* Decision/finance cards */
+.treatment-plans-v44 .tp13-insight-grid {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1.2fr) minmax(280px, .8fr) !important;
+  gap: 10px !important;
+}
+
+.treatment-plans-v44 .tp13-status-card,
+.treatment-plans-v44 .tp13-guidance-card,
+.treatment-plans-v44 .tp13-plans-section {
+  border: 1px solid var(--tp78-line) !important;
+  border-radius: 17px !important;
+  background: #fff !important;
+  box-shadow: 0 7px 20px rgba(15, 23, 42, .032) !important;
+}
+
+.treatment-plans-v44 .tp13-status-card,
+.treatment-plans-v44 .tp13-guidance-card {
+  padding: 16px !important;
+}
+
+.treatment-plans-v44 .tp13-section-head {
+  display: flex !important;
+  align-items: flex-start !important;
+  justify-content: space-between !important;
+  gap: 12px !important;
+}
+
+.treatment-plans-v44 .tp13-section-head h3 {
+  margin: 3px 0 0 !important;
+  color: var(--tp78-ink) !important;
+  font-size: .9rem !important;
+  letter-spacing: -.018em !important;
+}
+
+.treatment-plans-v44 .tp13-section-head svg {
+  width: 16px !important;
+  height: 16px !important;
+  color: var(--tp78-blue) !important;
+}
+
+.treatment-plans-v44 .tp13-status-bars {
+  display: grid !important;
+  gap: 9px !important;
+  margin-top: 14px !important;
+}
+
+.treatment-plans-v44 .tp13-status-bars > div {
+  display: grid !important;
+  grid-template-columns: 104px minmax(0, 1fr) 24px !important;
+  align-items: center !important;
+  gap: 9px !important;
+}
+
+.treatment-plans-v44 .tp13-status-bars > div > span {
+  color: #566477 !important;
+  font-size: .66rem !important;
+}
+
+.treatment-plans-v44 .tp13-status-bars > div > div {
+  overflow: hidden !important;
+  height: 6px !important;
+  border-radius: 999px !important;
+  background: #edf2f7 !important;
+}
+
+.treatment-plans-v44 .tp13-status-bars i {
+  display: block !important;
+  height: 100% !important;
+  border-radius: inherit !important;
+  background: linear-gradient(90deg, #60a5fa, #2563eb) !important;
+}
+
+.treatment-plans-v44 .tp13-status-bars strong {
+  color: #334155 !important;
+  font-size: .68rem !important;
+  text-align: right !important;
+}
+
+.treatment-plans-v44 .tp13-guidance-card p {
+  margin: 12px 0 !important;
+  color: var(--tp78-muted) !important;
+  font-size: .69rem !important;
+  line-height: 1.6 !important;
+}
+
+.treatment-plans-v44 .tp13-guidance-points {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  gap: 6px !important;
+}
+
+.treatment-plans-v44 .tp13-guidance-points span {
+  padding: 5px 8px !important;
+  border: 1px solid #dbeafe !important;
+  border-radius: 999px !important;
+  background: #f8fbff !important;
+  color: var(--tp78-blue-dark) !important;
+  font-size: .6rem !important;
+  font-weight: 800 !important;
+}
+
+/* Registry */
+.treatment-plans-v44 .tp13-plans-section {
+  padding: 17px !important;
+}
+
+.treatment-plans-v44 .tp13-plans-head {
+  align-items: center !important;
+  margin-bottom: 13px !important;
+}
+
+.treatment-plans-v44 .tp13-plans-head p {
+  margin: 4px 0 0 !important;
+  color: var(--tp78-muted) !important;
+  font-size: .68rem !important;
+}
+
+.treatment-plans-v44 .tp13-count-pill {
+  flex: 0 0 auto !important;
+  padding: 5px 9px !important;
+  border: 1px solid #d9e7fb !important;
+  border-radius: 999px !important;
+  background: #f2f7ff !important;
+  color: var(--tp78-blue-dark) !important;
+  font-size: .62rem !important;
+  font-weight: 900 !important;
+  white-space: nowrap !important;
+}
+
+.treatment-plans-v44 .tp13-plan-grid {
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  gap: 10px !important;
+}
+
+.treatment-plans-v44 .tp13-plan-card {
+  display: grid !important;
+  gap: 11px !important;
+  min-width: 0 !important;
+  padding: 15px !important;
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 15px !important;
+  background: linear-gradient(180deg, #fff, #fcfdff) !important;
+  box-shadow: none !important;
+  transition: border-color .15s ease, box-shadow .15s ease, transform .15s ease !important;
+}
+
+.treatment-plans-v44 .tp13-plan-card:hover {
+  border-color: #bfd5f3 !important;
+  box-shadow: 0 9px 22px rgba(37, 99, 235, .06) !important;
+  transform: translateY(-1px) !important;
+}
+
+.treatment-plans-v44 .tp13-plan-top {
+  display: flex !important;
+  align-items: flex-start !important;
+  justify-content: space-between !important;
+  gap: 11px !important;
+}
+
+.treatment-plans-v44 .tp13-plan-top > div {
+  min-width: 0 !important;
+}
+
+.treatment-plans-v44 .tp13-plan-top h3 {
+  margin: 4px 0 4px !important;
+  color: var(--tp78-ink) !important;
+  font-size: .94rem !important;
+  letter-spacing: -.02em !important;
+}
+
+.treatment-plans-v44 .tp13-plan-top p,
+.treatment-plans-v44 .tp13-plan-description {
+  margin: 0 !important;
+  color: #768397 !important;
+  font-size: .65rem !important;
+  line-height: 1.5 !important;
+  overflow-wrap: anywhere !important;
+}
+
+.treatment-plans-v44 .tp13-status {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  min-height: 24px !important;
+  padding: 0 8px !important;
+  border: 1px solid #dbe7f5 !important;
+  border-radius: 999px !important;
+  background: #f8fafc !important;
+  color: #526176 !important;
+  font-size: .57rem !important;
+  font-weight: 900 !important;
+  white-space: nowrap !important;
+}
+
+.treatment-plans-v44 .tp13-status.status-presented {
+  border-color: #bfdbfe !important;
+  background: #eff6ff !important;
+  color: #1d4ed8 !important;
+}
+
+.treatment-plans-v44 .tp13-status.status-accepted,
+.treatment-plans-v44 .tp13-status.status-partially_accepted {
+  border-color: #bbf7d0 !important;
+  background: #f0fdf4 !important;
+  color: #15803d !important;
+}
+
+.treatment-plans-v44 .tp13-status.status-declined,
+.treatment-plans-v44 .tp13-status.status-cancelled {
+  border-color: #fecaca !important;
+  background: #fef2f2 !important;
+  color: #b91c1c !important;
+}
+
+.treatment-plans-v44 .tp13-plan-metrics {
+  display: grid !important;
+  grid-template-columns: 1.35fr repeat(3, minmax(0, .75fr)) !important;
+  gap: 6px !important;
+}
+
+.treatment-plans-v44 .tp13-plan-metrics > div {
+  min-width: 0 !important;
+  padding: 8px 9px !important;
+  border: 1px solid #edf1f5 !important;
+  border-radius: 10px !important;
+  background: #fafcff !important;
+}
+
+.treatment-plans-v44 .tp13-plan-metrics span {
+  display: block !important;
+  color: #8b97a7 !important;
+  font-size: 7px !important;
+  font-weight: 900 !important;
+  letter-spacing: .06em !important;
+  text-transform: uppercase !important;
+}
+
+.treatment-plans-v44 .tp13-plan-metrics strong {
+  display: block !important;
+  margin-top: 3px !important;
+  color: var(--tp78-ink) !important;
+  font-size: .72rem !important;
+  overflow-wrap: anywhere !important;
+}
+
+.treatment-plans-v44 .tp13-procedure-preview {
+  display: grid !important;
+  gap: 5px !important;
+}
+
+.treatment-plans-v44 .tp13-procedure-preview > div {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) auto auto !important;
+  align-items: center !important;
+  gap: 8px !important;
+  min-width: 0 !important;
+  padding: 8px 9px !important;
+  border: 1px solid #edf2f7 !important;
+  border-radius: 9px !important;
+  background: #fff !important;
+}
+
+.treatment-plans-v44 .tp13-procedure-preview > div > span:first-child {
+  min-width: 0 !important;
+}
+
+.treatment-plans-v44 .tp13-procedure-preview strong,
+.treatment-plans-v44 .tp13-procedure-preview small {
+  display: block !important;
+}
+
+.treatment-plans-v44 .tp13-procedure-preview strong {
+  overflow: hidden !important;
+  color: #263246 !important;
+  font-size: .67rem !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+
+.treatment-plans-v44 .tp13-procedure-preview small,
+.treatment-plans-v44 .tp13-procedure-preview > div > span:nth-child(2) {
+  color: #8a97a8 !important;
+  font-size: .58rem !important;
+}
+
+.treatment-plans-v44 .tp13-procedure-preview em {
+  min-height: 21px !important;
+  padding: 0 7px !important;
+  border-radius: 999px !important;
+  background: #f1f5f9 !important;
+  color: #526176 !important;
+  font-size: .53rem !important;
+  font-style: normal !important;
+  font-weight: 900 !important;
+  line-height: 21px !important;
+  white-space: nowrap !important;
+}
+
+.treatment-plans-v44 .tp13-procedure-preview em.status-accepted,
+.treatment-plans-v44 .tp13-procedure-preview em.status-scheduled,
+.treatment-plans-v44 .tp13-procedure-preview em.status-completed {
+  background: #ecfdf3 !important;
+  color: #15803d !important;
+}
+
+.treatment-plans-v44 .tp13-more-items {
+  color: var(--tp78-blue-dark) !important;
+  font-size: .62rem !important;
+  font-weight: 800 !important;
+}
+
+.treatment-plans-v44 .tp13-plan-footer {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 9px !important;
+  padding-top: 2px !important;
+}
+
+.treatment-plans-v44 .tp13-plan-footer > button {
+  min-height: 30px !important;
+  padding: 0 10px !important;
+  border: 1px solid #d8e5f5 !important;
+  border-radius: 8px !important;
+  background: #f8fbff !important;
+  color: var(--tp78-blue-dark) !important;
+  font-size: .61rem !important;
+  font-weight: 850 !important;
+  cursor: pointer !important;
+}
+
+.treatment-plans-v44 .tp13-plan-footer > button:hover {
+  border-color: #bcd3f1 !important;
+  background: #eff6ff !important;
+}
+
+.treatment-plans-v44 .tp13-plan-footer > span {
+  color: #8b97a7 !important;
+  font-size: .58rem !important;
+}
+
+.treatment-plans-v44 .tp13-plan-footer .btn {
+  min-height: 30px !important;
+  height: 30px !important;
+  padding: 0 9px !important;
+  border-radius: 8px !important;
+  font-size: .61rem !important;
+}
+
+.treatment-plans-v44 .tp13-error,
+.treatment-plans-v44 .tp13-loading,
+.treatment-plans-v44 .tp13-empty,
+.treatment-plans-v44 .tp13-no-match {
+  border-radius: 12px !important;
+  font-size: .7rem !important;
+}
+
+.treatment-plans-v44 .tp13-error {
+  padding: 10px 12px !important;
+  border: 1px solid #fecaca !important;
+  background: #fff7f7 !important;
+  color: #b91c1c !important;
+}
+
+.treatment-plans-v44 .tp13-loading,
+.treatment-plans-v44 .tp13-empty {
+  padding: 32px 18px !important;
+  border: 1px dashed #d7e0ea !important;
+  background: #fbfdff !important;
+  color: #718096 !important;
+  text-align: center !important;
+}
+
+/* Create-plan modal */
+.treatment-plans-v44 .tp13-modal-backdrop,
+.treatment-plans-v44 .tp13-detail-backdrop {
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: 15000 !important;
+  background: rgba(15, 23, 42, .48) !important;
+  backdrop-filter: blur(7px) !important;
+}
+
+.treatment-plans-v44 .tp13-modal-backdrop {
+  display: grid !important;
+  place-items: center !important;
+  padding: 22px !important;
+}
+
+.treatment-plans-v44 .tp13-modal {
+  display: flex !important;
+  flex-direction: column !important;
+  width: min(900px, 100%) !important;
+  max-height: min(90vh, 880px) !important;
+  overflow: hidden !important;
+  border: 1px solid #dbe5f0 !important;
+  border-radius: 20px !important;
+  background: #fff !important;
+  box-shadow: 0 32px 80px rgba(15, 23, 42, .28) !important;
+}
+
+.treatment-plans-v44 .tp13-modal-head,
+.treatment-plans-v44 .tp13-detail-panel > header {
+  display: flex !important;
+  align-items: flex-start !important;
+  justify-content: space-between !important;
+  gap: 16px !important;
+  padding: 18px 20px !important;
+  border-bottom: 1px solid #e8edf4 !important;
+  background: linear-gradient(180deg, #fff, #fbfdff) !important;
+}
+
+.treatment-plans-v44 .tp13-modal-head h2,
+.treatment-plans-v44 .tp13-detail-panel > header h2 {
+  margin: 4px 0 !important;
+  color: var(--tp78-ink) !important;
+  font-size: 1.18rem !important;
+  letter-spacing: -.025em !important;
+}
+
+.treatment-plans-v44 .tp13-modal-head p,
+.treatment-plans-v44 .tp13-detail-panel > header p {
+  margin: 0 !important;
+  color: var(--tp78-muted) !important;
+  font-size: .68rem !important;
+}
+
+.treatment-plans-v44 .tp13-modal-head > button,
+.treatment-plans-v44 .tp13-detail-panel > header > button {
+  display: grid !important;
+  place-items: center !important;
+  flex: 0 0 34px !important;
+  width: 34px !important;
+  height: 34px !important;
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 10px !important;
+  background: #fff !important;
+  color: #64748b !important;
+  cursor: pointer !important;
+}
+
+.treatment-plans-v44 .tp13-modal-body {
+  overflow-y: auto !important;
+  padding: 16px 20px 20px !important;
+  background: #fbfcfe !important;
+}
+
+.treatment-plans-v44 .tp13-editor-section {
+  margin: 0 0 12px !important;
+  padding: 15px !important;
+  border: 1px solid #e3e9f1 !important;
+  border-radius: 14px !important;
+  background: #fff !important;
+}
+
+.treatment-plans-v44 .tp13-editor-heading {
+  display: flex !important;
+  align-items: flex-start !important;
+  gap: 10px !important;
+  margin-bottom: 12px !important;
+}
+
+.treatment-plans-v44 .tp13-editor-heading > span {
+  display: grid !important;
+  place-items: center !important;
+  flex: 0 0 28px !important;
+  width: 28px !important;
+  height: 28px !important;
+  border-radius: 8px !important;
+  background: #eaf2ff !important;
+  color: var(--tp78-blue-dark) !important;
+  font-size: .62rem !important;
+  font-weight: 900 !important;
+}
+
+.treatment-plans-v44 .tp13-editor-heading h3 {
+  margin: 0 !important;
+  color: var(--tp78-ink) !important;
+  font-size: .82rem !important;
+}
+
+.treatment-plans-v44 .tp13-editor-heading p {
+  margin: 3px 0 0 !important;
+  color: #8491a2 !important;
+  font-size: .62rem !important;
+}
+
+.treatment-plans-v44 .tp13-form-grid {
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  gap: 10px !important;
+}
+
+.treatment-plans-v44 .tp13-form-grid label,
+.treatment-plans-v44 .tp13-editor-section label {
+  display: grid !important;
+  gap: 5px !important;
+  min-width: 0 !important;
+  color: #526176 !important;
+  font-size: .62rem !important;
+  font-weight: 800 !important;
+}
+
+.treatment-plans-v44 .tp13-form-grid input,
+.treatment-plans-v44 .tp13-form-grid select,
+.treatment-plans-v44 .tp13-form-grid textarea,
+.treatment-plans-v44 .tp13-editor-section input,
+.treatment-plans-v44 .tp13-editor-section select,
+.treatment-plans-v44 .tp13-editor-section textarea {
+  width: 100% !important;
+  min-width: 0 !important;
+  box-sizing: border-box !important;
+  min-height: 39px !important;
+  padding: 8px 10px !important;
+  border: 1px solid #d8e1eb !important;
+  border-radius: 9px !important;
+  outline: none !important;
+  background: #fff !important;
+  color: var(--tp78-ink) !important;
+  font-size: .7rem !important;
+  font-weight: 500 !important;
+}
+
+.treatment-plans-v44 .tp13-form-grid textarea,
+.treatment-plans-v44 .tp13-editor-section textarea {
+  min-height: 76px !important;
+  resize: vertical !important;
+}
+
+.treatment-plans-v44 .tp13-form-grid input:focus,
+.treatment-plans-v44 .tp13-form-grid select:focus,
+.treatment-plans-v44 .tp13-form-grid textarea:focus,
+.treatment-plans-v44 .tp13-editor-section input:focus,
+.treatment-plans-v44 .tp13-editor-section select:focus,
+.treatment-plans-v44 .tp13-editor-section textarea:focus {
+  border-color: #93c5fd !important;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, .08) !important;
+}
+
+.treatment-plans-v44 .tp13-modal footer {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-end !important;
+  gap: 8px !important;
+  padding: 13px 20px !important;
+  border-top: 1px solid #e8edf4 !important;
+  background: #fff !important;
+}
+
+/* Detail drawer */
+.treatment-plans-v44 .tp13-detail-backdrop {
+  display: flex !important;
+  justify-content: flex-end !important;
+}
+
+.treatment-plans-v44 .tp13-detail-panel {
+  width: min(620px, 94vw) !important;
+  height: 100% !important;
+  overflow-y: auto !important;
+  border-left: 1px solid #dfe6ef !important;
+  background: #fff !important;
+  box-shadow: -20px 0 55px rgba(15, 23, 42, .18) !important;
+}
+
+.treatment-plans-v44 .tp13-detail-summary {
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  gap: 8px !important;
+  padding: 15px 18px !important;
+  background: #f8fafc !important;
+  border-bottom: 1px solid #e8edf4 !important;
+}
+
+.treatment-plans-v44 .tp13-detail-summary > div,
+.treatment-plans-v44 .tp13-detail-section {
+  border: 1px solid #e4eaf1 !important;
+  border-radius: 11px !important;
+  background: #fff !important;
+}
+
+.treatment-plans-v44 .tp13-detail-summary > div {
+  padding: 10px !important;
+}
+
+.treatment-plans-v44 .tp13-detail-summary span,
+.treatment-plans-v44 .tp13-detail-section > span {
+  display: block !important;
+  color: #8a97a8 !important;
+  font-size: 7px !important;
+  font-weight: 900 !important;
+  letter-spacing: .07em !important;
+  text-transform: uppercase !important;
+}
+
+.treatment-plans-v44 .tp13-detail-summary strong {
+  display: block !important;
+  margin-top: 3px !important;
+  color: var(--tp78-ink) !important;
+  font-size: .75rem !important;
+}
+
+.treatment-plans-v44 .tp13-detail-section {
+  margin: 12px 18px !important;
+  padding: 13px !important;
+}
+
+.treatment-plans-v44 .tp13-detail-section p {
+  margin: 5px 0 0 !important;
+  color: #5f6e82 !important;
+  font-size: .68rem !important;
+  line-height: 1.55 !important;
+}
+
+@media (max-width: 1180px) {
+  .treatment-plans-v44 .tp13-layout {
+    grid-template-columns: 235px minmax(0, 1fr) !important;
+  }
+
+  .treatment-plans-v44 .tp13-plan-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .treatment-plans-v44 .tp13-metrics {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+}
+
+@media (max-width: 920px) {
+  .treatment-plans-v44 .tp13-command-header {
+    align-items: flex-start !important;
+    flex-direction: column !important;
+  }
+
+  .treatment-plans-v44 .tp13-layout {
+    grid-template-columns: 1fr !important;
+  }
+
+  .treatment-plans-v44 .tp13-patient-rail {
+    position: static !important;
+  }
+
+  .treatment-plans-v44 .tp13-patient-list {
+    display: flex !important;
+    max-height: none !important;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    padding: 0 10px 11px !important;
+  }
+
+  .treatment-plans-v44 .tp13-patient-list button {
+    flex: 0 0 220px !important;
+  }
+
+  .treatment-plans-v44 .tp13-insight-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+@media (max-width: 680px) {
+  .treatment-plans-v44 .tp13-page {
+    gap: 12px !important;
+    padding: 4px 0 22px !important;
+  }
+
+  .treatment-plans-v44 .tp13-command-header {
+    padding: 19px !important;
+    border-radius: 17px !important;
+  }
+
+  .treatment-plans-v44 .tp13-command-header h2 {
+    font-size: 1.65rem !important;
+  }
+
+  .treatment-plans-v44 .tp13-command-header .btn {
+    width: 100% !important;
+    justify-content: center !important;
+  }
+
+  .treatment-plans-v44 .tp13-patient-hero {
+    align-items: flex-start !important;
+    flex-direction: column !important;
+  }
+
+  .treatment-plans-v44 .tp13-patient-meta {
+    justify-items: start !important;
+  }
+
+  .treatment-plans-v44 .tp13-patient-meta small {
+    text-align: left !important;
+  }
+
+  .treatment-plans-v44 .tp13-metrics {
+    grid-template-columns: 1fr 1fr !important;
+  }
+
+  .treatment-plans-v44 .tp13-plan-metrics {
+    grid-template-columns: 1fr 1fr !important;
+  }
+
+  .treatment-plans-v44 .tp13-procedure-preview > div {
+    grid-template-columns: minmax(0, 1fr) auto !important;
+  }
+
+  .treatment-plans-v44 .tp13-procedure-preview em {
+    grid-column: 1 / -1 !important;
+    justify-self: start !important;
+  }
+
+  .treatment-plans-v44 .tp13-form-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .treatment-plans-v44 .tp13-modal-backdrop {
+    align-items: end !important;
+    padding: 10px !important;
+  }
+
+  .treatment-plans-v44 .tp13-modal {
+    max-height: 94vh !important;
+    border-radius: 17px !important;
+  }
+
+  .treatment-plans-v44 .tp13-detail-panel {
+    width: 100% !important;
+  }
+}
+
+@media (max-width: 440px) {
+  .treatment-plans-v44 .tp13-metrics {
+    grid-template-columns: 1fr !important;
+  }
+
+  .treatment-plans-v44 .tp13-plan-top,
+  .treatment-plans-v44 .tp13-plans-head {
+    align-items: flex-start !important;
+    flex-direction: column !important;
+  }
+
+  .treatment-plans-v44 .tp13-detail-summary {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .treatment-plans-v44 .tp13-plan-card,
+  .treatment-plans-v44 .tp13-patient-list button,
+  .treatment-plans-v44 .tp13-command-header .btn {
+    transition: none !important;
+  }
+
+  .treatment-plans-v44 .tp13-plan-card:hover {
+    transform: none !important;
+  }
+}
