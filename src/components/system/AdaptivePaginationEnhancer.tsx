@@ -19,8 +19,8 @@ const configs: PageConfig[] = [
 
 const state = new WeakMap<Element, number>()
 
-function buildPager(container: HTMLElement, items: HTMLElement[], pageSize: number) {
-  const previous = container.parentElement?.querySelector<HTMLElement>(':scope > .app-auto-pagination')
+function buildPager(anchor: HTMLElement, items: HTMLElement[], pageSize: number) {
+  const previous = anchor.parentElement?.querySelector<HTMLElement>(':scope > .app-auto-pagination')
   previous?.remove()
   if (items.length <= pageSize) {
     items.forEach((item) => { item.style.display = '' })
@@ -28,8 +28,8 @@ function buildPager(container: HTMLElement, items: HTMLElement[], pageSize: numb
   }
 
   const pages = Math.ceil(items.length / pageSize)
-  const current = Math.min(state.get(container) ?? 0, pages - 1)
-  state.set(container, current)
+  const current = Math.min(state.get(anchor) ?? 0, pages - 1)
+  state.set(anchor, current)
   items.forEach((item, index) => {
     item.style.display = index >= current * pageSize && index < (current + 1) * pageSize ? '' : 'none'
   })
@@ -49,12 +49,12 @@ function buildPager(container: HTMLElement, items: HTMLElement[], pageSize: numb
     const button = (event.target as HTMLElement).closest<HTMLButtonElement>('button[data-page]')
     if (!button || button.disabled) return
     const next = button.dataset.page === 'next' ? current + 1 : current - 1
-    state.set(container, Math.max(0, Math.min(next, pages - 1)))
-    buildPager(container, items, pageSize)
-    container.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
+    state.set(anchor, Math.max(0, Math.min(next, pages - 1)))
+    buildPager(anchor, items, pageSize)
+    anchor.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
   })
 
-  container.insertAdjacentElement('afterend', nav)
+  anchor.insertAdjacentElement('afterend', nav)
 }
 
 function paginateConfiguredLists() {
@@ -69,13 +69,15 @@ function paginateConfiguredLists() {
 function paginateInternalTables() {
   document.querySelectorAll<HTMLTableSectionElement>('table tbody').forEach((tbody) => {
     if (tbody.closest('.pv3-shell')) return
+    const table = tbody.closest<HTMLTableElement>('table')
+    if (!table) return
     const rows = Array.from(tbody.querySelectorAll<HTMLTableRowElement>(':scope > tr'))
     if (rows.length <= 12) {
-      tbody.closest('table')?.parentElement?.querySelector(':scope > .app-auto-pagination')?.remove()
+      table.parentElement?.querySelector(':scope > .app-auto-pagination')?.remove()
       rows.forEach((row) => { row.style.display = '' })
       return
     }
-    buildPager(tbody, rows, 12)
+    buildPager(table, rows, 12)
   })
 }
 
