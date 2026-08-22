@@ -70,6 +70,8 @@ export function TreatmentsPageV43() {
   const [mode, setMode] = useState<'add' | 'edit'>('add')
   const [editingId, setEditingId] = useState<string | null>(null)
   const [formValues, setFormValues] = useState<TreatmentFormValues>(() => emptyTreatmentForm(patients[0]?.patientId ?? '', services[0]?.id ?? ''))
+  const [mutationError, setMutationError] = useState<string | null>(null)
+  const [isMutating, setIsMutating] = useState(false)
 
   const patientMap = useMemo(() => new Map(patients.map((patient) => [patient.patientId, patient])), [patients])
   const serviceMap = useMemo(() => new Map(services.map((service) => [service.id, service])), [services])
@@ -113,7 +115,8 @@ export function TreatmentsPageV43() {
   const performedTotal = treatmentRows.reduce((sum, row) => sum + row.performedCount, 0)
 
   function openCreate() {
-    if (!selectedPatient) return
+    if (!selectedPatient || isMutating) return
+    setMutationError(null)
     setMode('add')
     setEditingId(null)
     setFormValues(emptyTreatmentForm(selectedPatient.patientId, services[0]?.id ?? ''))
@@ -121,29 +124,62 @@ export function TreatmentsPageV43() {
   }
 
   function openEdit(treatment: Treatment) {
+    if (isMutating) return
+    setMutationError(null)
     setMode('edit')
     setEditingId(treatment.id)
     setFormValues({ ...treatment })
     setDrawerOpen(true)
   }
 
-  function submitTreatment(values: TreatmentFormValues) {
-    if (!selectedPatient) return
-    if (mode === 'add') createTreatment({ ...values, patientId: selectedPatient.patientId })
-    else if (editingId) updateTreatment(editingId, { ...values, patientId: selectedPatient.patientId })
-    setTreatments(getStoredTreatments())
-    setDrawerOpen(false)
-    setEditingId(null)
+  async function submitTreatment(values: TreatmentFormValues) {
+    if (!selectedPatient || isMutating) return
+    setIsMutating(true)
+    setMutationError(null)
+    try {
+      if (mode === 'add') await createTreatment({ ...values, patientId: selectedPatient.patientId })
+      else if (editingId) await updateTreatment(editingId, { ...values, patientId: selectedPatient.patientId })
+      setTreatments(getStoredTreatments())
+      setDrawerOpen(false)
+      setEditingId(null)
+    } catch (cause) {
+      const message = cause instanceof Error ? cause.message : 'Treatment could not be saved.'
+      setMutationError(message)
+      throw new Error(message)
+    } finally {
+      setIsMutating(false)
+    }
   }
 
-  function removeTreatment(id: string) {
-    deleteTreatment(id)
-    setTreatments(getStoredTreatments())
+  async function removeTreatment(id: string) {
+    if (isMutating) return
+    const treatment = treatments.find((entry) => entry.id === id)
+    if (!treatment) return
+    if (!window.confirm('Void this treatment record? The record will be preserved in clinical history.')) return
+    setIsMutating(true)
+    setMutationError(null)
+    try {
+      await deleteTreatment(id)
+      setTreatments(getStoredTreatments())
+    } catch (cause) {
+      setMutationError(cause instanceof Error ? cause.message : 'Treatment could not be voided.')
+    } finally {
+      setIsMutating(false)
+    }
   }
 
-  function changeStatus(treatment: Treatment, status: TreatmentStatus) {
-    updateTreatment(treatment.id, { ...treatment, status })
-    setTreatments(getStoredTreatments())
+  async function changeStatus(treatment: Treatment, status: TreatmentStatus) {
+    if (isMutating || treatment.status === status) return
+    setIsMutating(true)
+    setMutationError(null)
+    try {
+      await updateTreatment(treatment.id, { ...treatment, status })
+      setTreatments(getStoredTreatments())
+    } catch (cause) {
+      setMutationError(cause instanceof Error ? cause.message : 'Treatment status could not be changed.')
+    } finally {
+      setIsMutating(false)
+    }
   }
 
   return (
@@ -154,8 +190,10 @@ export function TreatmentsPageV43() {
           <h2>Treatment management</h2>
           <p>Coordinate procedures, monitor care progress, and review treatment value from one focused clinical workspace.</p>
         </div>
-        <Button onClick={openCreate} icon={<Plus size={17} />} disabled={!selectedPatient}>New treatment</Button>
+        <Button onClick={openCreate} icon={<Plus size={17} />} disabled={!selectedPatient || isMutating}>New treatment</Button>
       </header>
+
+      {mutationError && <div className="tx12-form-error" role="alert">{mutationError}</div>}
 
       <section className="tx43-analytics">
         <article className="tx43-insight tx43-insight-primary">
@@ -217,7 +255,7 @@ export function TreatmentsPageV43() {
             <section className="tx43-management">
               <div className="tx43-management-head">
                 <div><span className="tx43-eyebrow">Treatment management</span><h3>Patient treatment registry</h3><p>Review, filter, edit, and advance this patient's treatment records.</p></div>
-                <Button onClick={openCreate} icon={<Plus size={16} />}>Add treatment</Button>
+                <Button onClick={openCreate} icon={<Plus size={16} />} disabled={isMutating}>Add treatment</Button>
               </div>
 
               <div className="tx43-filterbar">
@@ -250,9 +288,9 @@ export function TreatmentsPageV43() {
                         </div>
                         {treatment.notes && <p className="tx43-card-notes">{treatment.notes}</p>}
                         <div className="tx43-card-actions">
-                          <button type="button" onClick={() => openEdit(treatment)}>Edit details</button>
-                          <select aria-label={`Change status for ${treatment.description || 'treatment'}`} value={treatment.status} onChange={(event) => changeStatus(treatment, event.target.value as TreatmentStatus)}>{statusOrder.map((status) => <option key={status} value={status}>{statusLabel(status)}</option>)}</select>
-                          <button type="button" className="danger" onClick={() => removeTreatment(treatment.id)}>Delete</button>
+                          <button type="button" disabled={isMutating || ['completed', 'voided'].includes(treatment.status)} onClick={() => openEdit(treatment)}>Edit details</button>
+                          <select disabled={isMutating || ['completed', 'voided'].includes(treatment.status)} aria-label={`Change status for ${treatment.description || 'treatment'}`} value={treatment.status} onChange={(event) => void changeStatus(treatment, event.target.value as TreatmentStatus)}>{statusOrder.map((status) => <option key={status} value={status}>{statusLabel(status)}</option>)}</select>
+                          <button type="button" disabled={isMutating || ['completed', 'voided'].includes(treatment.status)} className="danger" onClick={() => void removeTreatment(treatment.id)}>Void</button>
                         </div>
                       </article>
                     )
@@ -266,7 +304,7 @@ export function TreatmentsPageV43() {
         </main>
       </section>
 
-      {drawerOpen && selectedPatient && <TreatmentFormDrawerV12 mode={mode} patient={selectedPatient} services={services} branches={branches} providers={providers} initialValues={formValues} onClose={() => { setDrawerOpen(false); setEditingId(null) }} onSubmit={submitTreatment} />}
+      {drawerOpen && selectedPatient && <TreatmentFormDrawerV12 mode={mode} patient={selectedPatient} services={services} branches={branches} providers={providers} initialValues={formValues} onClose={() => { if (!isMutating) { setDrawerOpen(false); setEditingId(null) } }} onSubmit={submitTreatment} />}
     </section>
   )
 }
