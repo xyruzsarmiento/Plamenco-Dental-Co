@@ -9,6 +9,7 @@ import { loadBranchesFromSupabase } from './features/branches/branchStore'
 import { loadProviderFoundationFromSupabase } from './features/dentists/dentistStore'
 import { loadPatientsFromSupabase } from './features/patients/patientPersistence'
 import { OfflineStatusBanner } from './features/patientPortal/OfflineStatusBanner'
+import { PatientDocumentLinkInterceptor } from './features/patientPortal/PatientDocumentLinkInterceptor'
 import { hydratePatientPortalFromDatabase } from './features/patientPortal/patientPortalHydration'
 import { loadServicesFromSupabase } from './features/services/serviceStore'
 import { syncSupabaseToLocalStorage } from './lib/supabaseSync'
@@ -83,6 +84,7 @@ function App() {
           <ModalAccessibilityManager />
           <OfflineStatusBanner />
           <PersistenceStatusNotice />
+          <PatientDocumentLinkInterceptor />
           <AppRouter />
         </DataBootstrap>
       </AuthProvider>
