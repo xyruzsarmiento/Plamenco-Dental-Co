@@ -78,17 +78,22 @@ export type CreateTreatmentPlanInput = {
   }>
 }
 
+const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
+
 function requireSupabase() {
   if (!supabase) throw new Error('Treatment plans are unavailable because Supabase is not configured.')
   return supabase
 }
 
-async function resolvePatientDbId(patientId: string) {
+async function resolvePatient(patientRef: string) {
   const client = requireSupabase()
-  const { data, error } = await client.from('patients').select('id,patient_id').or(`patient_id.eq.${patientId},id.eq.${patientId}`).maybeSingle()
+  const query = client.from('patients').select('id,patient_id')
+  const { data, error } = UUID_PATTERN.test(patientRef)
+    ? await query.eq('id', patientRef).maybeSingle()
+    : await query.eq('patient_id', patientRef).maybeSingle()
   if (error) throw error
   if (!data?.id) throw new Error('Patient record could not be resolved.')
-  return String(data.id)
+  return { id: String(data.id), patientId: String(data.patient_id ?? patientRef) }
 }
 
 function mapItem(row: Record<string, any>): TreatmentPlanItem {
@@ -143,10 +148,10 @@ function mapPlan(row: Record<string, any>, patientPublicId: string, items: Treat
   }
 }
 
-export async function getTreatmentPlansByPatientId(patientId: string): Promise<TreatmentPlan[]> {
+export async function getTreatmentPlansByPatientId(patientRef: string): Promise<TreatmentPlan[]> {
   const client = requireSupabase()
-  const patientDbId = await resolvePatientDbId(patientId)
-  const { data: plans, error } = await client.from('treatment_plans').select('*').eq('patient_id', patientDbId).order('created_at', { ascending: false })
+  const patient = await resolvePatient(patientRef)
+  const { data: plans, error } = await client.from('treatment_plans').select('*').eq('patient_id', patient.id).order('created_at', { ascending: false })
   if (error) throw error
   if (!plans?.length) return []
 
@@ -159,13 +164,13 @@ export async function getTreatmentPlansByPatientId(patientId: string): Promise<T
     const mapped = mapItem(row)
     grouped.set(mapped.planId, [...(grouped.get(mapped.planId) ?? []), mapped])
   }
-  return plans.map((plan) => mapPlan(plan, patientId, grouped.get(plan.id) ?? []))
+  return plans.map((plan) => mapPlan(plan, patient.patientId, grouped.get(plan.id) ?? []))
 }
 
 export async function createTreatmentPlan(input: CreateTreatmentPlanInput): Promise<TreatmentPlan> {
   if (!input.items.length) throw new Error('Add at least one recommended procedure.')
   const client = requireSupabase()
-  const patientDbId = await resolvePatientDbId(input.patientId)
+  const patient = await resolvePatient(input.patientId)
 
   const pricedItems = input.items.map((item) => {
     const catalogueService = getServiceById(item.serviceId)
@@ -185,7 +190,7 @@ export async function createTreatmentPlan(input: CreateTreatmentPlanInput): Prom
 
   const subtotal = pricedItems.reduce((sum, item) => sum + Number(item.quotedPriceCents ?? 0) * Math.max(1, Number(item.quantity ?? 1)), 0)
   const { data: plan, error } = await client.from('treatment_plans').insert({
-    patient_id: patientDbId,
+    patient_id: patient.id,
     name: input.name.trim() || 'Treatment Plan',
     description: input.description?.trim() ?? '',
     treatments: [],
@@ -236,7 +241,7 @@ export async function createTreatmentPlan(input: CreateTreatmentPlanInput): Prom
     metadata: { plan_number: planNumber, item_count: itemRows.length },
   })
 
-  return mapPlan(numberedPlan, input.patientId, (createdItems ?? []).map(mapItem))
+  return mapPlan(numberedPlan, patient.patientId, (createdItems ?? []).map(mapItem))
 }
 
 export async function presentTreatmentPlan(planId: string) {
