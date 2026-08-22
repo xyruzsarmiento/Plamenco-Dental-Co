@@ -1,5 +1,6 @@
 import type { Appointment, AppointmentFormValues, AppointmentStatus, AppointmentStatusHistoryEntry, AppointmentWaitlistEntry, Operatory, ScheduleBlock } from './appointmentTypes'
 import { insertRemoteTableRow, updateRemoteTableRow } from '../../lib/supabaseSync'
+import { createUuid } from '../../lib/id'
 import { notifyAppointmentTransition, sendAppointmentCommunication } from '../communications/communicationService'
 import { getCommunicationLogsByAppointment } from '../communications/communicationStore'
 import { getStoredServices, servicePriceToCents } from '../services/serviceStore'
@@ -422,7 +423,7 @@ export function createAppointment(
 
   const appointments = getStoredAppointments()
   const now = new Date().toISOString()
-  const id = `appt-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+  const id = createUuid()
   const service = getStoredServices().find((entry) => entry.id === values.serviceId)
 
   const appointment: Appointment = {
