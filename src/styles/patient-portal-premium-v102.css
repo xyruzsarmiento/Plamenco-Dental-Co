@@ -1,0 +1,149 @@
+/* Patient Portal V102 — blue-only surfaces, semantic status chips, modal/sidebar fixes. */
+
+/* Decorative cards stay inside the blue/white/slate visual system. */
+.pv3-kpis>article,
+.pv3-appointment-stats>div,
+.pv3-record-overview>div,
+.pv4-billing-metrics>article{
+  background:linear-gradient(135deg,#ffffff 10%,#f4f8ff 100%)!important;
+  border-color:#d7e4f7!important;
+  color:#172033!important;
+}
+.pv3-kpis>article::after,
+.pv3-appointment-stats>div::after,
+.pv3-record-overview>div::after,
+.pv4-billing-metrics>article::after{background:#dbeafe!important;opacity:.48!important}
+.pv3-kpis>article>span,
+.pv3-record-overview>div>svg,
+.pv3-appointment-stats>div::before,
+.pv4-billing-metrics>article::before{
+  background:#eaf2ff!important;
+  color:#2563eb!important;
+  border-color:#d7e7ff!important;
+}
+
+/* Remove any old green/orange/violet decorative backgrounds from stat cards. */
+.pv3-kpis>article:nth-child(n),
+.pv3-appointment-stats>div:nth-child(n),
+.pv3-record-overview>div:nth-child(n),
+.pv4-billing-metrics>article:nth-child(n){background:linear-gradient(135deg,#fff,#f4f8ff)!important;border-color:#d7e4f7!important}
+.pv3-kpis>article:nth-child(n)>span{background:#eaf2ff!important;color:#2563eb!important}
+.pv3-appointment-stats>div:nth-child(n)::before,.pv4-billing-metrics>article:nth-child(n)::before{background:#eaf2ff!important;color:#2563eb!important}
+
+/* Invoice balance uses brand blue, not warning orange. */
+.pv3-invoice-money .is-due,
+.pv3-invoice-money .is-due span,
+.pv3-invoice-money .is-due strong,
+.pv3-invoice-list .is-due,
+.pv3-invoice-list .is-due strong{color:#2563eb!important}
+
+/* Semantic status tokens. */
+.pv-semantic-success,
+.pv3-plan-summary .pv-semantic-success,
+.pv3-treatment-hero .pv-semantic-success,
+.pv5-upcoming-card>em.pv-semantic-success{
+  background:#eaf8ef!important;color:#15803d!important;border:1px solid #ccebd8!important;
+}
+.pv-semantic-warning,
+.pv3-plan-summary .pv-semantic-warning,
+.pv3-treatment-hero .pv-semantic-warning,
+.pv5-upcoming-card>em.pv-semantic-warning{
+  background:#fff8e6!important;color:#a16207!important;border:1px solid #f6dda0!important;
+}
+.pv-semantic-danger,
+.pv3-plan-summary .pv-semantic-danger,
+.pv3-treatment-hero .pv-semantic-danger,
+.pv5-upcoming-card>em.pv-semantic-danger{
+  background:#fff0f0!important;color:#b42318!important;border:1px solid #f5c8c5!important;
+}
+.pv-semantic-info,
+.pv3-plan-summary .pv-semantic-info,
+.pv3-treatment-hero .pv-semantic-info,
+.pv5-upcoming-card>em.pv-semantic-info{
+  background:#eef5ff!important;color:#2563eb!important;border:1px solid #d7e7ff!important;
+}
+
+/* Upcoming appointment cards: more breathing room and status-aware chip. */
+.pv3-next-panel{padding:18px!important;overflow:hidden!important}
+.pv5-upcoming-list{padding:0!important;margin-top:14px!important;gap:10px!important}
+.pv5-upcoming-card{margin:0!important;max-width:100%!important;box-sizing:border-box!important;padding:12px 13px!important;grid-template-columns:48px minmax(0,1fr) auto!important}
+.pv5-upcoming-card>em{justify-self:end!important;align-self:start!important}
+
+/* Appointment detail / dental record / treatment detail modals. */
+.pv3-modal-backdrop,.pv4-detail-backdrop{
+  position:fixed!important;inset:0!important;display:flex!important;align-items:center!important;justify-content:center!important;
+  padding:24px!important;overflow:auto!important;
+}
+.pv3-detail-modal,.pv4-detail-modal{
+  width:min(720px,calc(100vw - 48px))!important;
+  max-width:720px!important;
+  max-height:calc(100dvh - 48px)!important;
+  overflow:auto!important;
+  border-radius:22px!important;
+  margin:auto!important;
+}
+.pv3-detail-modal>header,.pv4-detail-modal>header{position:sticky!important;top:0!important;z-index:4!important}
+.pv3-detail-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:10px!important}
+.pv3-detail-grid>div{min-width:0!important}
+.pv3-detail-grid strong,.pv3-detail-note p{overflow-wrap:anywhere!important}
+.pv3-detail-modal>footer,.pv4-detail-modal>footer{position:sticky!important;bottom:0!important;z-index:4!important}
+
+/* Notification center: desktop floating panel; never trapped below the sidebar. */
+.pv5-notification-panel{
+  position:fixed!important;
+  left:286px!important;
+  top:116px!important;
+  right:auto!important;
+  bottom:auto!important;
+  transform:none!important;
+  width:min(390px,calc(100vw - 318px))!important;
+  max-height:min(620px,calc(100dvh - 140px))!important;
+  border-radius:20px!important;
+  box-shadow:0 30px 86px rgba(15,23,42,.22)!important;
+}
+.pv5-notification-list{max-height:calc(min(620px,100dvh - 140px) - 78px)!important;overflow:auto!important}
+
+/* Only the actual current route can be blue. Remove persistent focus fill from Documents or any other non-active item. */
+.pv3-nav button:not(.is-active),
+.pv3-nav button:not(.is-active):focus,
+.pv3-nav button:not(.is-active):focus-visible,
+.pv3-nav button:not(.is-active):active{
+  background:transparent!important;
+  color:#526077!important;
+  box-shadow:none!important;
+}
+.pv3-nav button:not(.is-active):hover{background:#f6f9ff!important;color:#1d4ed8!important}
+.pv3-nav button.is-active{background:#eaf2ff!important;color:#1d4ed8!important;box-shadow:inset 3px 0 0 #2563eb!important}
+
+@media(max-width:900px){
+  .pv3-modal-backdrop,.pv4-detail-backdrop{padding:16px!important}
+  .pv3-detail-modal,.pv4-detail-modal{width:min(680px,100%)!important;max-height:calc(100dvh - 32px)!important}
+  .pv5-notification-panel{
+    left:50%!important;top:auto!important;bottom:16px!important;right:auto!important;
+    transform:translateX(-50%)!important;width:min(520px,calc(100vw - 32px))!important;max-height:72dvh!important;
+  }
+  .pv5-notification-list{max-height:calc(72dvh - 78px)!important}
+}
+
+@media(max-width:700px){
+  .pv3-modal-backdrop,.pv4-detail-backdrop{padding:0!important;align-items:flex-end!important;overflow:hidden!important}
+  .pv3-detail-modal,.pv4-detail-modal{
+    width:100%!important;max-width:none!important;max-height:92dvh!important;margin:0!important;
+    border-radius:22px 22px 0 0!important;overflow:auto!important;
+  }
+  .pv3-detail-modal>header,.pv4-detail-modal>header{padding:16px!important}
+  .pv3-detail-status{padding:10px 16px!important}
+  .pv3-detail-grid{grid-template-columns:1fr!important;padding:14px 16px!important;gap:8px!important}
+  .pv3-detail-grid>div{padding:11px 12px!important}
+  .pv3-detail-note{margin:0 16px 14px!important}
+  .pv3-detail-modal>footer,.pv4-detail-modal>footer{padding:12px 16px calc(12px + env(safe-area-inset-bottom))!important}
+  .pv3-detail-modal>footer button,.pv4-detail-modal>footer button{width:100%!important}
+
+  .pv5-upcoming-card{grid-template-columns:44px minmax(0,1fr)!important}
+  .pv5-upcoming-card>em{grid-column:2!important;justify-self:start!important;margin-top:2px!important}
+}
+
+@media(max-width:430px){
+  .pv5-notification-panel{left:0!important;right:0!important;bottom:0!important;transform:none!important;width:100%!important;max-height:84dvh!important;border-radius:22px 22px 0 0!important}
+  .pv5-notification-list{max-height:calc(84dvh - 78px)!important}
+}
