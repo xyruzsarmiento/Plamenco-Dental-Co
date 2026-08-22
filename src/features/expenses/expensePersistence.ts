@@ -1,17 +1,31 @@
 import { supabase } from '../../lib/supabase'
 import { createUuid } from '../../lib/id'
-import { getExpensePayments, getExpenses, type Expense, type ExpensePayment, type ExpenseScope, type ExpenseSourceType } from './expenseStore'
+import {
+  getExpensePayments,
+  getExpenses,
+  getExpenseVendors,
+  getRecurringExpenseTemplates,
+  type Expense,
+  type ExpensePayment,
+  type ExpenseScope,
+  type ExpenseSourceType,
+  type ExpenseVendor,
+  type RecurringExpenseTemplate,
+  type RecurringFrequency,
+} from './expenseStore'
 import type { PaymentMethod } from '../billing/billingStore'
 
 const EXPENSE_KEY = 'plamenco.expenses'
 const PAYMENT_KEY = 'plamenco.expense.payments'
+const VENDOR_KEY = 'plamenco.expense.vendors'
+const RECURRING_KEY = 'plamenco.expense.recurringTemplates'
 
 function requireDatabase() {
   if (!supabase) throw new Error('Clinic database is not configured. Expenses cannot be saved safely.')
   return supabase
 }
 
-function mapExpense(row: Record<string, any>): Expense {
+export function mapExpense(row: Record<string, any>): Expense {
   return {
     id: String(row.id),
     expenseNumber: String(row.expense_number ?? ''),
@@ -62,6 +76,43 @@ function mapPayment(row: Record<string, any>): ExpensePayment {
   }
 }
 
+function mapVendor(row: Record<string, any>): ExpenseVendor {
+  return {
+    id: String(row.id),
+    vendorNumber: String(row.vendor_number ?? ''),
+    name: String(row.name ?? ''),
+    contactPerson: String(row.contact_person ?? ''),
+    phone: String(row.phone ?? ''),
+    email: String(row.email ?? ''),
+    address: String(row.address ?? ''),
+    notes: String(row.notes ?? ''),
+    linkedSupplierId: row.linked_supplier_id ?? undefined,
+    status: row.status ?? 'active',
+    createdAt: row.created_at ?? new Date().toISOString(),
+    updatedAt: row.updated_at ?? row.created_at ?? new Date().toISOString(),
+  }
+}
+
+function mapRecurring(row: Record<string, any>): RecurringExpenseTemplate {
+  return {
+    id: String(row.id),
+    name: String(row.name ?? ''),
+    scope: (row.scope ?? 'branch') as ExpenseScope,
+    branchId: row.branch_id ?? undefined,
+    categoryId: String(row.category_id ?? ''),
+    vendorId: row.vendor_id ?? undefined,
+    payeeName: String(row.payee_name ?? ''),
+    frequency: row.frequency as RecurringFrequency,
+    defaultAmountCents: row.default_amount_cents == null ? undefined : Number(row.default_amount_cents),
+    nextDueDate: String(row.next_due_date ?? ''),
+    autoCreate: Boolean(row.auto_create),
+    status: row.status ?? 'active',
+    createdBy: String(row.created_by ?? ''),
+    createdAt: row.created_at ?? new Date().toISOString(),
+    updatedAt: row.updated_at ?? row.created_at ?? new Date().toISOString(),
+  }
+}
+
 function cacheExpense(expense: Expense) {
   if (typeof window === 'undefined') return
   window.localStorage.setItem(EXPENSE_KEY, JSON.stringify([expense, ...getExpenses().filter((entry) => entry.id !== expense.id)]))
@@ -70,6 +121,16 @@ function cacheExpense(expense: Expense) {
 function cachePayment(payment: ExpensePayment) {
   if (typeof window === 'undefined') return
   window.localStorage.setItem(PAYMENT_KEY, JSON.stringify([payment, ...getExpensePayments().filter((entry) => entry.id !== payment.id)]))
+}
+
+function cacheVendor(vendor: ExpenseVendor) {
+  if (typeof window === 'undefined') return
+  window.localStorage.setItem(VENDOR_KEY, JSON.stringify([vendor, ...getExpenseVendors().filter((entry) => entry.id !== vendor.id)]))
+}
+
+function cacheRecurring(template: RecurringExpenseTemplate) {
+  if (typeof window === 'undefined') return
+  window.localStorage.setItem(RECURRING_KEY, JSON.stringify([template, ...getRecurringExpenseTemplates().filter((entry) => entry.id !== template.id)]))
 }
 
 export async function createExpensePersisted(input: {
@@ -111,6 +172,105 @@ export async function createExpensePersisted(input: {
     if (import.meta.env.DEV && error?.message) console.error('[expense persistence]', error)
     throw new Error('Expense could not be saved. No financial record was committed.')
   }
+  const expense = mapExpense(data as Record<string, any>)
+  cacheExpense(expense)
+  return expense
+}
+
+export async function createExpenseVendorPersisted(input: {
+  name: string
+  contactPerson?: string
+  phone?: string
+  email?: string
+  address?: string
+  notes?: string
+}): Promise<ExpenseVendor> {
+  const db = requireDatabase()
+  const { data, error } = await db.rpc('create_expense_vendor', {
+    p_name: input.name,
+    p_contact_person: input.contactPerson ?? '',
+    p_phone: input.phone ?? '',
+    p_email: input.email ?? '',
+    p_address: input.address ?? '',
+    p_notes: input.notes ?? '',
+  })
+  if (error || !data) throw new Error('Vendor could not be saved. No vendor record was committed.')
+  const vendor = mapVendor(data as Record<string, any>)
+  cacheVendor(vendor)
+  return vendor
+}
+
+export async function createRecurringExpenseTemplatePersisted(input: {
+  name: string
+  scope: ExpenseScope
+  branchId?: string
+  categoryId: string
+  vendorId?: string
+  payeeName: string
+  frequency: RecurringFrequency
+  defaultAmountCents?: number
+  nextDueDate: string
+  autoCreate: boolean
+}): Promise<RecurringExpenseTemplate> {
+  const db = requireDatabase()
+  const { data, error } = await db.rpc('create_expense_recurring_template', {
+    p_name: input.name,
+    p_scope: input.scope,
+    p_branch_id: input.branchId ?? null,
+    p_category_id: input.categoryId,
+    p_vendor_id: input.vendorId ?? null,
+    p_payee_name: input.payeeName,
+    p_frequency: input.frequency,
+    p_default_amount_cents: input.defaultAmountCents ?? null,
+    p_next_due_date: input.nextDueDate,
+    p_auto_create: input.autoCreate,
+  })
+  if (error || !data) throw new Error('Recurring expense template could not be saved.')
+  const template = mapRecurring(data as Record<string, any>)
+  cacheRecurring(template)
+  return template
+}
+
+export async function reviseExpensePersisted(expenseId: string, patch: {
+  scope: ExpenseScope
+  branchId?: string
+  categoryId: string
+  vendorId?: string
+  payeeName: string
+  description: string
+  expenseDate: string
+  dueDate?: string
+  subtotalCents: number
+  taxCents: number
+  referenceNumber?: string
+  notes: string
+}): Promise<Expense> {
+  const db = requireDatabase()
+  const { data, error } = await db.rpc('revise_expense_record', {
+    p_expense_id: expenseId,
+    p_scope: patch.scope,
+    p_branch_id: patch.branchId ?? null,
+    p_category_id: patch.categoryId,
+    p_vendor_id: patch.vendorId ?? null,
+    p_payee_name: patch.payeeName,
+    p_description: patch.description,
+    p_expense_date: patch.expenseDate,
+    p_due_date: patch.dueDate ?? null,
+    p_subtotal_cents: patch.subtotalCents,
+    p_tax_cents: patch.taxCents,
+    p_reference_number: patch.referenceNumber ?? '',
+    p_notes: patch.notes,
+  })
+  if (error || !data) throw new Error(error?.message || 'Expense correction was not saved.')
+  const expense = mapExpense(data as Record<string, any>)
+  cacheExpense(expense)
+  return expense
+}
+
+export async function voidExpensePersisted(expenseId: string, reason: string): Promise<Expense> {
+  const db = requireDatabase()
+  const { data, error } = await db.rpc('void_expense_record', { p_expense_id: expenseId, p_reason: reason })
+  if (error || !data) throw new Error(error?.message || 'Expense was not voided.')
   const expense = mapExpense(data as Record<string, any>)
   cacheExpense(expense)
   return expense
