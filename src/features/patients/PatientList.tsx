@@ -3,6 +3,7 @@ import { ChevronDown, ChevronUp, Edit, Trash2 } from 'lucide-react'
 import { Button } from '../../components/ui/Button'
 import { Input } from '../../components/ui/Input'
 import { Select } from '../../components/ui/Select'
+import { StatusBadge } from '../../components/ui/Badge'
 import type { Patient } from './patientTypes'
 import {
   filterPatients,
@@ -181,9 +182,7 @@ export function PatientList({
                       <td>{getAge(patient.dateOfBirth)}</td>
                       <td>{patient.phone}</td>
                       <td>
-                        <span className={`status-badge status-${patient.status}`}>
-                          {patient.status.charAt(0).toUpperCase() + patient.status.slice(1)}
-                        </span>
+                        <StatusBadge status={patient.status} variant="compact" />
                       </td>
                       <td>
                         <div

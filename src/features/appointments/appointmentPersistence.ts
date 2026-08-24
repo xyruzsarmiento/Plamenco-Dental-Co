@@ -289,6 +289,71 @@ export async function transitionAppointmentStatusPersisted(
   return confirmed
 }
 
+export async function rescheduleAppointmentPersisted(
+  id: string,
+  values: Pick<AppointmentFormValues, 'branchId' | 'providerId' | 'date' | 'startTime' | 'endTime'>,
+  context: { actor: string; reason?: string; notes?: string; expectedUpdatedAt?: string },
+): Promise<Appointment> {
+  if (!supabase) throw new Error('Clinic database is not configured. Appointment changes cannot be saved safely.')
+
+  const current = getStoredAppointments().find((appointment) => appointment.id === id)
+  if (!current) throw new Error('Appointment was not found.')
+  if (!allowedAppointmentTransitions[current.status]?.includes('rescheduled')) {
+    throw new Error(`This appointment cannot move from ${current.status.replaceAll('_', ' ')} to rescheduled.`)
+  }
+
+  let request = supabase
+    .from('appointments')
+    .update({
+      appointment_date: values.date,
+      start_time: values.startTime,
+      end_time: values.endTime,
+      branch_id: values.branchId || null,
+      provider_id: values.providerId || null,
+      status: 'rescheduled',
+      ...operationalFields('rescheduled', context.actor),
+    })
+    .eq('id', id)
+    .eq('status', current.status)
+
+  if (context.expectedUpdatedAt) request = request.eq('updated_at', context.expectedUpdatedAt)
+
+  const { data, error } = await request.select('*').maybeSingle()
+  if (error) throw mutationError('The appointment could not be rescheduled.', error)
+  if (!data) throw new Error('This appointment has already changed. Refresh and try again.')
+
+  const confirmed = mapAppointmentRow(data as Record<string, any>)
+  replaceCachedAppointment(confirmed)
+  await appendHistoryAfterPersistence({
+    appointment: confirmed,
+    eventType: 'rescheduled',
+    actor: context.actor,
+    fromStatus: current.status,
+    toStatus: 'rescheduled',
+    reason: context.reason,
+    notes: context.notes,
+  })
+  recordAuditEntry({
+    user: context.actor,
+    action: 'appointment_status_changed',
+    entity: 'appointment',
+    entityId: confirmed.appointmentNumber ?? confirmed.id,
+    metadata: {
+      appointmentId: confirmed.id,
+      oldDate: current.date,
+      oldStartTime: current.startTime,
+      oldEndTime: current.endTime,
+      oldProviderId: current.providerId,
+      newDate: confirmed.date,
+      newStartTime: confirmed.startTime,
+      newEndTime: confirmed.endTime,
+      newProviderId: confirmed.providerId,
+      reason: context.reason,
+    },
+  })
+  return confirmed
+}
+
 export async function updateAppointmentPersisted(id: string, values: Partial<Appointment>): Promise<Appointment> {
   if (!supabase) throw new Error('Clinic database is not configured. Appointment changes cannot be saved safely.')
 

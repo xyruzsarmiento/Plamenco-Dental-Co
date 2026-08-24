@@ -93,7 +93,7 @@ export function StaffPage() {
   const selectedStaff = staff.find((member) => member.id === selectedStaffId) ?? filteredStaff[0] ?? staff[0] ?? null
   const activeStaff = staff.filter((member) => member.status === 'active').length
   const clinicalUsers = staff.filter((member) => member.role === 'dentist' || member.role === 'associate_dentist').length
-  const managedUsers = staff.filter((member) => member.role === 'super_admin' || member.role === 'admin').length
+  const managedUsers = staff.filter((member) => member.role === 'super_admin').length
   const today = new Date().toISOString().slice(0, 10)
   const branches = getStoredBranches()
   const providers = useMemo(() => {
@@ -360,7 +360,7 @@ export function StaffPage() {
         <article className="stat-card">
           <span>Management</span>
           <strong>{managedUsers}</strong>
-          <small>Super Admin and Admin roles</small>
+          <small>Super Admin accounts</small>
         </article>
         <article className="stat-card">
           <span>Clinical users</span>
@@ -411,7 +411,6 @@ export function StaffPage() {
           options={[
             { label: 'All roles', value: 'all' },
             { label: 'Super Admin', value: 'super_admin' },
-            { label: 'Admin', value: 'admin' },
             { label: 'Dentist', value: 'dentist' },
             { label: 'Associate Dentist', value: 'associate_dentist' },
             { label: 'Staff', value: 'staff' },

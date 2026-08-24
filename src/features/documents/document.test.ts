@@ -42,7 +42,7 @@ test('document creation stores metadata and validates file type', () => {
 
 test('patient file access is restricted to authorized roles', () => {
   assert.equal(canAccessPatientFiles('staff'), true)
-  assert.equal(canAccessPatientFiles('admin'), true)
+  assert.equal(canAccessPatientFiles('super_admin'), true)
   assert.equal(canAccessPatientFiles(undefined), false)
 })
 

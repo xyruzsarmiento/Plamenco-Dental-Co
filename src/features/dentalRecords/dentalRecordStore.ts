@@ -1,4 +1,3 @@
-import type { Patient } from '../patients/patientTypes'
 import { getStoredPatients } from '../patients/patientStore'
 import { recordAuditEntry } from '../security/auditLogStore'
 import { getCurrentSessionUserName } from '../security/security'
@@ -9,6 +8,7 @@ import type { ClinicalRecordAmendment, ClinicalRecordAmendmentFormValues, Dental
 import type { Appointment } from '../appointments/appointmentTypes'
 import { getStoredBranches } from '../branches/branchStore'
 import { getStoredProviders } from '../dentists/dentistStore'
+import { createClinicalFollowUpRecallFromRecord } from '../recalls/recallStore'
 
 const DENTAL_RECORD_STORAGE_KEY = 'plamenco.dentalRecords'
 const CLINICAL_AMENDMENT_STORAGE_KEY = 'plamenco.clinicalRecordAmendments'
@@ -174,6 +174,7 @@ export function getDentalRecordsByPatientId(patientId: string): DentalRecord[] {
 
 export async function createDentalRecord(values: DentalRecordFormValues): Promise<DentalRecord> {
   if (!supabase) throw new Error('Clinic database is not configured. Clinical records cannot be saved safely.')
+  if (['finalized', 'amended'].includes(values.status) && values.followUpRequired && !values.followUpDate?.trim()) throw new Error('A follow-up date is required before finalizing this clinical recommendation.')
 
   const now = new Date().toISOString()
   const draft: DentalRecord = {
@@ -191,6 +192,17 @@ export async function createDentalRecord(values: DentalRecordFormValues): Promis
   if (error || !data) throw persistenceError('Clinical record could not be saved. Your changes were not submitted.', error)
 
   const confirmed = mapSupabaseDentalRecordRow(data as Record<string, any>)
+  if (['finalized', 'amended'].includes(confirmed.status) && (confirmed.followUpRequired || confirmed.followUpDate) && confirmed.followUpDate) {
+    await createClinicalFollowUpRecallFromRecord({
+      patientId: confirmed.patientId,
+      clinicalVisitId: confirmed.id,
+      dueDate: confirmed.followUpDate,
+      reason: confirmed.followUpNotes || confirmed.recommendations || confirmed.patientVisibleSummary || confirmed.chiefComplaint || 'Clinical follow-up recommended',
+      branchId: confirmed.branchId,
+      providerId: confirmed.providerId,
+      providerName: confirmed.providerNameSnapshot || confirmed.historicalProviderText,
+    })
+  }
   replaceCachedDentalRecord(confirmed)
   recordAuditEntry({
     user: getCurrentSessionUserName(),
@@ -291,6 +303,9 @@ export async function createClinicalVisitFromAppointment(appointment: Appointmen
 export async function finalizeDentalRecord(id: string, actor: string): Promise<DentalRecord> {
   if (!supabase) throw new Error('Clinic database is not configured. Clinical records cannot be finalized safely.')
 
+  const current = getStoredDentalRecords().find((record) => record.id === id)
+  if (current?.followUpRequired && !current.followUpDate?.trim()) throw new Error('A follow-up date is required before finalizing this clinical recommendation.')
+
   const { data, error } = await supabase
     .from('dental_records')
     .update({
@@ -308,6 +323,17 @@ export async function finalizeDentalRecord(id: string, actor: string): Promise<D
   if (!data) throw new Error('This clinical record was already finalized or changed. Refresh before trying again.')
 
   const confirmed = mapSupabaseDentalRecordRow(data as Record<string, any>)
+  if ((confirmed.followUpRequired || confirmed.followUpDate) && confirmed.followUpDate) {
+    await createClinicalFollowUpRecallFromRecord({
+      patientId: confirmed.patientId,
+      clinicalVisitId: confirmed.id,
+      dueDate: confirmed.followUpDate,
+      reason: confirmed.followUpNotes || confirmed.recommendations || confirmed.patientVisibleSummary || confirmed.chiefComplaint || 'Clinical follow-up recommended',
+      branchId: confirmed.branchId,
+      providerId: confirmed.providerId,
+      providerName: confirmed.providerNameSnapshot || confirmed.historicalProviderText,
+    })
+  }
   replaceCachedDentalRecord(confirmed)
   recordAuditEntry({
     user: actor,

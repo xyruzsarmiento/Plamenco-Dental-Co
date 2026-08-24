@@ -4,7 +4,7 @@ import { Button } from '../../components/ui/Button'
 import { Input } from '../../components/ui/Input'
 import { Select } from '../../components/ui/Select'
 import { Textarea } from '../../components/ui/Textarea'
-import { Badge } from '../../components/ui/Badge'
+import { StatusBadge } from '../../components/ui/Badge'
 import {
   getStoredInvoices,
   createInvoice,
@@ -282,17 +282,7 @@ export function InvoiceManagement() {
                       <span className="invoice-total">
                         {formatCurrency(invoice.totalCents)}
                       </span>
-                      <Badge
-                        tone={
-                          invoice.status === 'paid'
-                            ? 'success'
-                            : invoice.status === 'partially_paid'
-                              ? 'warning'
-                              : 'danger'
-                        }
-                      >
-                        {invoice.status.replace('_', ' ')}
-                      </Badge>
+                      <StatusBadge status={invoice.status} variant="compact" />
                     </div>
                     <ChevronDown
                       size={16}

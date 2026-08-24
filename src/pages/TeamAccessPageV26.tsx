@@ -18,8 +18,9 @@ import {
   UsersRound,
   X,
 } from 'lucide-react'
-import { Badge } from '../components/ui/Badge'
+import { StatusBadge } from '../components/ui/Badge'
 import { Button } from '../components/ui/Button'
+import { Pagination } from '../components/ui/DesignSystem'
 import { PageScaffold } from '../components/ui/PageScaffold'
 import { getStoredStaff, saveStoredStaff } from '../features/auth/staffStore'
 import { updateInternalAccountStatus } from '../features/admin/systemAdminStore'
@@ -40,6 +41,12 @@ import { isSupabaseConfigured, supabase } from '../lib/supabase'
 
 type InternalRole = Exclude<UserRole, 'patient'>
 type TeamTab = 'directory' | 'attendance' | 'providers' | 'compensation'
+const TEAM_PAGE_SIZE = 10
+const TEAM_CARD_PAGE_SIZE = 12
+
+function pageItems<T>(items: T[], page: number, pageSize: number) {
+  return items.slice((Math.max(1, page) - 1) * pageSize, Math.max(1, page) * pageSize)
+}
 
 type InviteState = {
   name: string
@@ -56,7 +63,6 @@ type InviteResponse = {
 
 const roleOptions: Array<{ value: InternalRole; label: string }> = [
   { value: 'super_admin', label: 'Super Admin' },
-  { value: 'admin', label: 'Admin' },
   { value: 'dentist', label: 'Dentist' },
   { value: 'associate_dentist', label: 'Associate Dentist' },
   { value: 'staff', label: 'Staff' },
@@ -208,6 +214,10 @@ export function TeamAccessPageV26() {
   const [editMember, setEditMember] = useState<StaffMember | null>(null)
   const [editError, setEditError] = useState<string | null>(null)
   const [message, setMessage] = useState<string | null>(null)
+  const [directoryPage, setDirectoryPage] = useState(1)
+  const [attendancePage, setAttendancePage] = useState(1)
+  const [providerPage, setProviderPage] = useState(1)
+  const [payoutPage, setPayoutPage] = useState(1)
 
   const today = manilaDateKey()
   const branches = useMemo(() => getStoredBranches(), [refreshKey])
@@ -226,10 +236,29 @@ export function TeamAccessPageV26() {
       return searchMatch && (roleFilter === 'all' || member.role === roleFilter) && (statusFilter === 'all' || member.status === statusFilter)
     })
   }, [query, roleFilter, staff, statusFilter])
+  const directoryPageCount = Math.max(1, Math.ceil(filteredStaff.length / TEAM_PAGE_SIZE))
+  const attendancePageCount = Math.max(1, Math.ceil(attendance.length / TEAM_CARD_PAGE_SIZE))
+  const providerPageCount = Math.max(1, Math.ceil(providers.length / TEAM_CARD_PAGE_SIZE))
+  const payoutPageCount = Math.max(1, Math.ceil(payouts.length / TEAM_CARD_PAGE_SIZE))
+  const visibleStaff = pageItems(filteredStaff, Math.min(directoryPage, directoryPageCount), TEAM_PAGE_SIZE)
+  const visibleAttendance = pageItems(attendance, Math.min(attendancePage, attendancePageCount), TEAM_CARD_PAGE_SIZE)
+  const visibleProviders = pageItems(providers, Math.min(providerPage, providerPageCount), TEAM_CARD_PAGE_SIZE)
+  const visiblePayouts = pageItems(payouts, Math.min(payoutPage, payoutPageCount), TEAM_CARD_PAGE_SIZE)
+
+  useEffect(() => {
+    setDirectoryPage(1)
+  }, [query, roleFilter, statusFilter])
+
+  useEffect(() => {
+    setDirectoryPage((page) => Math.min(page, directoryPageCount))
+    setAttendancePage((page) => Math.min(page, attendancePageCount))
+    setProviderPage((page) => Math.min(page, providerPageCount))
+    setPayoutPage((page) => Math.min(page, payoutPageCount))
+  }, [attendancePageCount, directoryPageCount, payoutPageCount, providerPageCount])
 
   const selected = staff.find((member) => member.id === selectedId) ?? filteredStaff[0] ?? staff[0] ?? null
   const activeCount = staff.filter((member) => member.status === 'active').length
-  const managementCount = staff.filter((member) => member.role === 'super_admin' || member.role === 'admin').length
+  const managementCount = staff.filter((member) => member.role === 'super_admin').length
   const clinicalCount = staff.filter((member) => member.role === 'dentist' || member.role === 'associate_dentist').length
 
   function branchName(id?: string) { return branches.find((branch) => branch.id === id)?.name ?? id ?? 'No branch assigned' }
@@ -290,7 +319,7 @@ export function TeamAccessPageV26() {
   const selectedProvider = selected ? providers.find((provider) => provider.email?.toLowerCase() === selected.email.toLowerCase()) : undefined
   const selectedProviderBranches = selectedProvider ? assignments.filter((assignment) => assignment.providerId === selectedProvider.id && assignment.status === 'active') : []
   const selectedTodayAttendance = selected ? attendance.find((entry) => entry.staffId === selected.id && entry.workDate === today) : undefined
-  const selectedUpcomingShifts = selected ? shifts.filter((entry) => entry.staffId === selected.id && entry.status === 'planned').slice(0, 3) : []
+  const selectedUpcomingShifts = selected ? shifts.filter((entry) => entry.staffId === selected.id && entry.status === 'planned') : []
 
   return (
     <PageScaffold title="Team & Access" description="Manage clinic accounts, roles, workforce visibility, providers and compensation.">
@@ -307,7 +336,7 @@ export function TeamAccessPageV26() {
 
         <section className="team-v26-metrics">
           <article><i><UsersRound size={18} /></i><span>Total accounts</span><strong>{staff.length}</strong><small>{activeCount} active internal accounts</small></article>
-          <article><i><ShieldCheck size={18} /></i><span>Management</span><strong>{managementCount}</strong><small>Super Admin and Admin</small></article>
+          <article><i><ShieldCheck size={18} /></i><span>Management</span><strong>{managementCount}</strong><small>Super Admin accounts</small></article>
           <article><i><Stethoscope size={18} /></i><span>Clinical users</span><strong>{clinicalCount}</strong><small>Dentist-linked roles</small></article>
           <article><i><Clock3 size={18} /></i><span>Working today</span><strong>{workforce.clockedIn}</strong><small>{workforce.scheduledToday} scheduled shifts</small></article>
           <article><i><BadgeCheck size={18} /></i><span>Providers available</span><strong>{workforce.providersAvailable}</strong><small>{workforce.activeProviderAssignments} active branch assignments</small></article>
@@ -328,12 +357,13 @@ export function TeamAccessPageV26() {
           <div className="team-v26-workspace">
             <section className="team-v26-directory">
               <header><div><span>Internal directory</span><h3>{filteredStaff.length} accounts</h3></div><small>Authenticated role foundation</small></header>
-              {filteredStaff.length === 0 ? <div className="team-v26-empty"><UsersRound size={30} /><h3>No matching team members</h3><p>Adjust the filters or invite an internal account.</p></div> : <div className="team-v26-list">{filteredStaff.map((member) => <button key={member.id} type="button" className={`team-v26-row ${selected?.id === member.id ? 'is-selected' : ''}`} onClick={() => setSelectedId(member.id)}><span className="team-v26-avatar">{initials(member.name)}</span><span className="team-v26-row-copy"><strong>{member.name}</strong><span>{member.email}</span><small>{member.position || roleLabel(member.role)} · {member.phone || 'No phone on directory profile'}</small></span><span className="team-v26-row-meta"><Badge tone={member.status === 'active' ? 'success' : 'neutral'}>{member.status}</Badge><strong>{roleLabel(member.role)}</strong><ChevronRight size={16} /></span></button>)}</div>}
+              {filteredStaff.length === 0 ? <div className="team-v26-empty"><UsersRound size={30} /><h3>No matching team members</h3><p>Adjust the filters or invite an internal account.</p></div> : <div className="team-v26-list">{visibleStaff.map((member) => <button key={member.id} type="button" className={`team-v26-row ${selected?.id === member.id ? 'is-selected' : ''}`} onClick={() => setSelectedId(member.id)}><span className="team-v26-avatar">{initials(member.name)}</span><span className="team-v26-row-copy"><strong>{member.name}</strong><span>{member.email}</span><small>{member.position || roleLabel(member.role)} · {member.phone || 'No phone on directory profile'}</small></span><span className="team-v26-row-meta"><StatusBadge status={member.status} variant="compact" /><strong>{roleLabel(member.role)}</strong><ChevronRight size={16} /></span></button>)}</div>}
+              <Pagination page={directoryPage} pageCount={directoryPageCount} totalItems={filteredStaff.length} pageSize={TEAM_PAGE_SIZE} onPageChange={setDirectoryPage} label="Internal directory pages" />
             </section>
 
             <aside className="team-v26-detail">
               {!selected ? <div className="team-v26-empty"><UserRoundCheck size={30} /><h3>Select a team member</h3><p>Choose an internal account to review access and workforce context.</p></div> : <div className="team-v26-detail-stack">
-                <header className="team-v26-profile-head"><span className="team-v26-avatar is-large">{initials(selected.name)}</span><div><span>Internal account</span><h3>{selected.name}</h3><p>{selected.position || roleLabel(selected.role)}</p></div><Badge tone={selected.status === 'active' ? 'success' : 'neutral'}>{selected.status}</Badge></header>
+                <header className="team-v26-profile-head"><span className="team-v26-avatar is-large">{initials(selected.name)}</span><div><span>Internal account</span><h3>{selected.name}</h3><p>{selected.position || roleLabel(selected.role)}</p></div><StatusBadge status={selected.status} /></header>
                 <section className="team-v26-access-card"><div><ShieldCheck size={18} /><span><strong>{roleLabel(selected.role)}</strong><small>Role-based access</small></span></div><div><Mail size={18} /><span><strong>{selected.email}</strong><small>Login identity</small></span></div><div><MapPin size={18} /><span><strong>{selectedProviderBranches.length ? selectedProviderBranches.map((entry) => branchName(entry.branchId)).join(', ') : 'No visible branch assignment'}</strong><small>{selectedProvider ? 'Provider branch linkage' : 'Staff branch assignments are managed server-side'}</small></span></div></section>
                 <section className="team-v26-context-grid"><article><span>Today</span><strong>{selectedTodayAttendance ? selectedTodayAttendance.status.replaceAll('_', ' ') : 'No attendance record'}</strong><small>{selectedTodayAttendance?.timeIn ? `In ${selectedTodayAttendance.timeIn}${selectedTodayAttendance.timeOut ? ` · Out ${selectedTodayAttendance.timeOut}` : ''}` : 'No clock-in recorded'}</small></article><article><span>Provider linkage</span><strong>{selectedProvider?.displayName ?? 'Not linked'}</strong><small>{selectedProvider ? `${selectedProviderBranches.length} branch assignment(s)` : 'No matching provider profile in current client data'}</small></article></section>
                 <section className="team-v26-shifts"><header><div><span>Workforce context</span><h4>Upcoming shifts</h4></div><b>{selectedUpcomingShifts.length}</b></header>{selectedUpcomingShifts.length ? selectedUpcomingShifts.map((shift) => <div key={shift.id}><CalendarClock size={16} /><span><strong>{formatDate(shift.workDate)} · {shift.startTime}–{shift.endTime}</strong><small>{branchName(shift.branchId)}</small></span></div>) : <p>No planned shifts in the current workforce store.</p>}</section>
@@ -343,11 +373,11 @@ export function TeamAccessPageV26() {
           </div>
         </>}
 
-        {activeTab === 'attendance' && <section className="team-v26-section"><header><div><span>Workforce attendance</span><h3>Attendance & shift records</h3><p>Recorded attendance and planned shifts from the existing workforce store.</p></div></header><div className="team-v26-card-grid">{attendance.length ? attendance.slice(0, 24).map((record) => <article key={record.id}><div className="team-v26-card-icon"><Clock3 size={17} /></div><div><strong>{staffName(record.staffId)}</strong><span>{formatDate(record.workDate)} · {branchName(record.branchId)}</span><small>{record.status.replaceAll('_', ' ')}{record.timeIn ? ` · ${record.timeIn}${record.timeOut ? `–${record.timeOut}` : ''}` : ''}</small></div><Badge tone={record.status === 'present' ? 'success' : record.status === 'late' ? 'warning' : 'neutral'}>{record.status.replaceAll('_', ' ')}</Badge></article>) : <div className="team-v26-empty team-v26-span-all"><CalendarClock size={30} /><h3>No attendance records</h3><p>Attendance activity will appear here when it exists.</p></div>}</div></section>}
+        {activeTab === 'attendance' && <section className="team-v26-section"><header><div><span>Workforce attendance</span><h3>Attendance & shift records</h3><p>Recorded attendance and planned shifts from the existing workforce store.</p></div></header><div className="team-v26-card-grid">{attendance.length ? visibleAttendance.map((record) => <article key={record.id}><div className="team-v26-card-icon"><Clock3 size={17} /></div><div><strong>{staffName(record.staffId)}</strong><span>{formatDate(record.workDate)} · {branchName(record.branchId)}</span><small>{record.status.replaceAll('_', ' ')}{record.timeIn ? ` · ${record.timeIn}${record.timeOut ? `–${record.timeOut}` : ''}` : ''}</small></div><StatusBadge status={record.status} variant="compact" /></article>) : <div className="team-v26-empty team-v26-span-all"><CalendarClock size={30} /><h3>No attendance records</h3><p>Attendance activity will appear here when it exists.</p></div>}</div><Pagination page={attendancePage} pageCount={attendancePageCount} totalItems={attendance.length} pageSize={TEAM_CARD_PAGE_SIZE} onPageChange={setAttendancePage} label="Operational schedule pages" /></section>}
 
-        {activeTab === 'providers' && <section className="team-v26-section"><header><div><span>Clinical workforce</span><h3>Provider access foundation</h3><p>Provider profiles and their active branch assignments.</p></div></header><div className="team-v26-card-grid">{providers.length ? providers.map((provider) => { const providerAssignments = assignments.filter((entry) => entry.providerId === provider.id && entry.status === 'active'); return <article key={provider.id}><span className="team-v26-avatar">{initials(provider.displayName)}</span><div><strong>{provider.displayName}</strong><span>{provider.role.replaceAll('_', ' ')} · {provider.specialization || 'General dentistry'}</span><small>{providerAssignments.length ? providerAssignments.map((entry) => branchName(entry.branchId)).join(', ') : 'No active branch assignment'}</small></div><Badge tone={provider.status === 'active' ? 'success' : 'neutral'}>{provider.status}</Badge></article> }) : <div className="team-v26-empty team-v26-span-all"><Stethoscope size={30} /><h3>No provider profiles</h3><p>Invite a Dentist or Associate Dentist to provision a provider profile through the secure invitation workflow.</p></div>}</div></section>}
+        {activeTab === 'providers' && <section className="team-v26-section"><header><div><span>Clinical workforce</span><h3>Provider access foundation</h3><p>Provider profiles and their active branch assignments.</p></div></header><div className="team-v26-card-grid">{providers.length ? visibleProviders.map((provider) => { const providerAssignments = assignments.filter((entry) => entry.providerId === provider.id && entry.status === 'active'); return <article key={provider.id}><span className="team-v26-avatar">{initials(provider.displayName)}</span><div><strong>{provider.displayName}</strong><span>{provider.role.replaceAll('_', ' ')} · {provider.specialization || 'General dentistry'}</span><small>{providerAssignments.length ? providerAssignments.map((entry) => branchName(entry.branchId)).join(', ') : 'No active branch assignment'}</small></div><StatusBadge status={provider.status} variant="compact" /></article> }) : <div className="team-v26-empty team-v26-span-all"><Stethoscope size={30} /><h3>No provider profiles</h3><p>Invite a Dentist or Associate Dentist to provision a provider profile through the secure invitation workflow.</p></div>}</div><Pagination page={providerPage} pageCount={providerPageCount} totalItems={providers.length} pageSize={TEAM_CARD_PAGE_SIZE} onPageChange={setProviderPage} label="Provider directory pages" /></section>}
 
-        {activeTab === 'compensation' && <section className="team-v26-section"><header><div><span>Provider compensation</span><h3>Payout & rule visibility</h3><p>Existing compensation rules and recorded provider payouts. No payout is inferred from treatment value alone.</p></div></header><div className="team-v26-comp-summary"><article><span>Rules</span><strong>{rules.length}</strong></article><article><span>Payout records</span><strong>{payouts.length}</strong></article><article><span>Pending amount</span><strong>{formatMoney(workforce.pendingPayoutsCents)}</strong></article></div><div className="team-v26-card-grid">{payouts.length ? payouts.slice(0, 24).map((payout) => <article key={payout.id}><div className="team-v26-card-icon"><Banknote size={17} /></div><div><strong>{payout.payoutNumber} · {providerName(payout.providerId)}</strong><span>{formatDate(payout.periodStart)} – {formatDate(payout.periodEnd)}</span><small>{branchName(payout.branchId)} · {formatMoney(payout.payoutAmountCents)}</small></div><Badge tone={payout.status === 'processed' ? 'success' : payout.status === 'approved' ? 'info' : 'warning'}>{payout.status}</Badge></article>) : <div className="team-v26-empty team-v26-span-all"><Banknote size={30} /><h3>No provider payouts</h3><p>Compensation records will appear here when they are created by the existing workflow.</p></div>}</div></section>}
+        {activeTab === 'compensation' && <section className="team-v26-section"><header><div><span>Provider compensation</span><h3>Payout & rule visibility</h3><p>Existing compensation rules and recorded provider payouts. No payout is inferred from treatment value alone.</p></div></header><div className="team-v26-comp-summary"><article><span>Rules</span><strong>{rules.length}</strong></article><article><span>Payout records</span><strong>{payouts.length}</strong></article><article><span>Pending amount</span><strong>{formatMoney(workforce.pendingPayoutsCents)}</strong></article></div><div className="team-v26-card-grid">{payouts.length ? visiblePayouts.map((payout) => <article key={payout.id}><div className="team-v26-card-icon"><Banknote size={17} /></div><div><strong>{payout.payoutNumber} · {providerName(payout.providerId)}</strong><span>{formatDate(payout.periodStart)} – {formatDate(payout.periodEnd)}</span><small>{branchName(payout.branchId)} · {formatMoney(payout.payoutAmountCents)}</small></div><StatusBadge status={payout.status} variant="compact" /></article>) : <div className="team-v26-empty team-v26-span-all"><Banknote size={30} /><h3>No provider payouts</h3><p>Compensation records will appear here when they are created by the existing workflow.</p></div>}</div><Pagination page={payoutPage} pageCount={payoutPageCount} totalItems={payouts.length} pageSize={TEAM_CARD_PAGE_SIZE} onPageChange={setPayoutPage} label="Provider payout pages" /></section>}
       </div>
 
       {inviteOpen && <InviteAccountModal branches={branches} onClose={() => setInviteOpen(false)} onSuccess={handleInviteSuccess} />}

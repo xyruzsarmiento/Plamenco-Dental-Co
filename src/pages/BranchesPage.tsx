@@ -1,6 +1,6 @@
 import { Building2, Clock3, MapPin, PencilLine, Phone, Save } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
-import { Badge } from '../components/ui/Badge'
+import { Badge, StatusBadge } from '../components/ui/Badge'
 import { Button } from '../components/ui/Button'
 import { EmptyState } from '../components/ui/EmptyState'
 import { Input } from '../components/ui/Input'
@@ -110,7 +110,7 @@ export function BranchesPage() {
                   <strong>{branch.name}</strong>
                   <small>{branch.city}, {branch.province}</small>
                 </span>
-                <Badge tone={branch.status === 'active' ? 'success' : 'neutral'}>{branch.status}</Badge>
+                <StatusBadge status={branch.status} variant="compact" />
               </button>
             ))}
           </div>
@@ -122,7 +122,7 @@ export function BranchesPage() {
                   <p className="eyebrow">Branch workspace</p>
                   <h3>{selectedBranch.name}</h3>
                 </div>
-                <Badge tone={selectedBranch.status === 'active' ? 'success' : 'neutral'}>{selectedBranch.status}</Badge>
+                <StatusBadge status={selectedBranch.status} />
               </div>
 
               {!isEditing ? (

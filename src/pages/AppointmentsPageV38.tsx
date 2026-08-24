@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { ArrowRight, Building2, CalendarDays, Check, CheckCircle2, Clock3, MapPin, ShieldCheck, Stethoscope, UserRound, X } from 'lucide-react'
 import { Button } from '../components/ui/Button'
+import { Skeleton, SkeletonAvatar, SkeletonCard, SkeletonText } from '../components/ui/DesignSystem'
 import { loadAppointmentsFromSupabase } from '../features/appointments/appointmentPersistence'
 import { APPOINTMENT_STORAGE_KEY, getStoredAppointments } from '../features/appointments/appointmentStore'
 import type { Appointment } from '../features/appointments/appointmentTypes'
@@ -69,7 +70,9 @@ function setReactInputValue(input: HTMLInputElement, value: string) {
 function focusConfirmedAppointment(appointment: Appointment) {
   window.setTimeout(() => {
     if (appointment.date === manilaToday()) {
-      clickWorkspaceTab("Today's flow") || clickWorkspaceTab('Today’s flow')
+      if (!clickWorkspaceTab("Today's flow")) {
+        clickWorkspaceTab('Today’s flow')
+      }
       window.setTimeout(() => {
         document.querySelector('.sa-appointments-flow-board')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
       }, 80)
@@ -171,6 +174,73 @@ function AppointmentSuccessModal({
             <ArrowRight size={15} />
           </Button>
         </div>
+      </section>
+    </div>
+  )
+}
+
+function AppointmentsPageSkeleton() {
+  const stages = ['Upcoming', 'Checked In', 'Waiting', 'Treatment', 'Completed', 'No Show']
+
+  return (
+    <div className="appointments-v40 appointment-bootstrap-state appointment-bootstrap-state-v3">
+      <section className="appointment-skeleton-workspace-v3" aria-busy="true" aria-label="Loading appointments workspace">
+        <SkeletonCard className="appointment-skeleton-hero-v3">
+          <div>
+            <Skeleton width={142} height={12} radius={999} />
+            <Skeleton width="min(420px, 78vw)" height={40} radius={13} />
+            <SkeletonText lines={2} widths={['min(680px, 92%)', 'min(520px, 74%)']} />
+          </div>
+          <div className="appointment-skeleton-hero-actions-v3">
+            <Skeleton width={138} height={44} radius={13} />
+            <Skeleton width={138} height={44} radius={13} />
+          </div>
+        </SkeletonCard>
+
+        <div className="appointment-skeleton-tabs-v3">
+          <Skeleton width={156} height={42} radius={13} />
+          <Skeleton width={126} height={42} radius={13} />
+          <Skeleton width={136} height={42} radius={13} />
+        </div>
+
+        <section className="appointment-skeleton-board-v3">
+          <div className="appointment-skeleton-board-header-v3">
+            <div>
+              <Skeleton width={176} height={12} radius={999} />
+              <Skeleton width="min(360px, 78vw)" height={26} radius={11} />
+              <Skeleton width="min(520px, 86vw)" height={13} radius={999} />
+            </div>
+            <div className="appointment-skeleton-flow-metrics-v3">
+              <Skeleton width={106} height={30} radius={999} />
+              <Skeleton width={92} height={30} radius={999} />
+              <Skeleton width={102} height={30} radius={999} />
+            </div>
+          </div>
+
+          <div className="appointment-skeleton-stage-grid-v3">
+            {stages.map((stage, stageIndex) => (
+              <SkeletonCard key={stage} className="appointment-skeleton-stage-v3">
+                <div className="appointment-skeleton-stage-head-v3">
+                  <Skeleton width={stageIndex === 3 ? 96 : 82} height={16} radius={8} />
+                  <Skeleton width={26} height={24} radius={999} />
+                </div>
+                {Array.from({ length: stageIndex === 0 ? 2 : 1 }, (_, cardIndex) => (
+                  <div className="appointment-skeleton-journey-card-v3" key={`${stage}-${cardIndex}`}>
+                    <div className="appointment-skeleton-journey-main-v3">
+                      <SkeletonAvatar size={42} radius={14} />
+                      <SkeletonText lines={2} widths={['118px', '76px']} />
+                      <SkeletonText lines={2} widths={['112px', '92px']} />
+                    </div>
+                    <div className="appointment-skeleton-actions-v3">
+                      <Skeleton width={74} height={30} radius={9} />
+                      <Skeleton width={64} height={30} radius={9} />
+                    </div>
+                  </div>
+                ))}
+              </SkeletonCard>
+            ))}
+          </div>
+        </section>
       </section>
     </div>
   )
@@ -288,15 +358,7 @@ export function AppointmentsPageV38() {
   }
 
   if (!ready) {
-    return (
-      <div className="appointments-v40 appointment-bootstrap-state">
-        <div className="appointment-bootstrap-card">
-          <span className="appointment-bootstrap-spinner" />
-          <strong>Loading appointments</strong>
-          <p>Syncing the latest clinic schedule from Supabase.</p>
-        </div>
-      </div>
-    )
+    return <AppointmentsPageSkeleton />
   }
 
   return (

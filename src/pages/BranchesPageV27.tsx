@@ -15,11 +15,13 @@ import {
   X,
 } from 'lucide-react'
 import { Button } from '../components/ui/Button'
+import { Skeleton, SkeletonAvatar, SkeletonCard, SkeletonList } from '../components/ui/DesignSystem'
 import { getStoredAppointments } from '../features/appointments/appointmentStore'
 import { usePermissions } from '../features/auth/permissions'
 import { loadBranchesFromSupabase, updateBranch } from '../features/branches/branchStore'
 import type { Branch, BranchFormValues } from '../features/branches/branchTypes'
 import { getProviderBranchAssignments, getStoredProviders } from '../features/dentists/dentistStore'
+import { getPatientDisplayName, getStoredPatients } from '../features/patients/patientStore'
 import { recordAuditEntry } from '../features/security/auditLogStore'
 import { getCurrentSessionUserName } from '../features/security/security'
 
@@ -213,9 +215,12 @@ export function BranchesPageV27() {
   }, [])
 
   const providers = useMemo(() => getStoredProviders(), [branches])
+  const patients = useMemo(() => getStoredPatients(), [])
   const assignments = useMemo(() => getProviderBranchAssignments(), [branches])
   const appointments = useMemo(() => getStoredAppointments(), [branches])
   const today = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Manila' })
+  const patientMap = useMemo(() => new Map(patients.map((patient) => [patient.patientId, patient])), [patients])
+  const providerMap = useMemo(() => new Map(providers.map((provider) => [provider.id, provider])), [providers])
 
   const filteredBranches = useMemo(() => {
     const needle = query.trim().toLowerCase()
@@ -238,7 +243,7 @@ export function BranchesPageV27() {
   const selectedAssignments = selectedBranch ? activeAssignments.filter((assignment) => assignment.branchId === selectedBranch.id) : []
   const selectedProviders = selectedAssignments.map((assignment) => providers.find((provider) => provider.id === assignment.providerId)).filter((provider): provider is NonNullable<typeof provider> => Boolean(provider))
   const selectedTodayAppointments = selectedBranch ? appointments.filter((appointment) => appointment.branchId === selectedBranch.id && appointment.date === today && !['cancelled', 'rejected', 'rescheduled'].includes(appointment.status)) : []
-  const upcomingAppointments = selectedBranch ? appointments.filter((appointment) => appointment.branchId === selectedBranch.id && appointment.date >= today && !['cancelled', 'rejected', 'rescheduled'].includes(appointment.status)).sort((a, b) => `${a.date}${a.startTime}`.localeCompare(`${b.date}${b.startTime}`)).slice(0, 4) : []
+  const upcomingAppointments = selectedBranch ? appointments.filter((appointment) => appointment.branchId === selectedBranch.id && appointment.date >= today && !['cancelled', 'rejected', 'rescheduled'].includes(appointment.status)).sort((a, b) => `${a.date}${a.startTime}`.localeCompare(`${b.date}${b.startTime}`)) : []
 
   function onBranchSaved(updated: Branch) {
     setBranches((current) => current.map((branch) => branch.id === updated.id ? updated : branch))
@@ -271,7 +276,18 @@ export function BranchesPageV27() {
       {loadError && <div className="branches-v27-error" role="alert">{loadError}</div>}
 
       {loading ? (
-        <section className="branches-v27-loading"><i /><i /><i /></section>
+        <section className="branches-v27-loading">
+          <SkeletonList items={6} withAvatar />
+          <SkeletonCard>
+            <div className="ui-skeleton-profile-hero">
+              <SkeletonAvatar size={54} radius={16} />
+              <div><Skeleton width={130} height={12} /><Skeleton width="58%" height={28} radius={12} /><Skeleton width="72%" height={12} /></div>
+              <Skeleton width={118} height={38} radius={12} />
+            </div>
+            <div className="ui-skeleton-stat-grid"><SkeletonCard compact /><SkeletonCard compact /><SkeletonCard compact /></div>
+            <SkeletonList items={4} withAvatar />
+          </SkeletonCard>
+        </section>
       ) : branches.length === 0 ? (
         <section className="branches-v27-empty"><Building2 size={30} /><h3>No branches configured</h3><p>Clinic branches will appear here after branch records are available.</p></section>
       ) : (
@@ -322,7 +338,7 @@ export function BranchesPageV27() {
 
               <section className="branches-v27-card branches-v27-schedule-card">
                 <header><div><span>Operational schedule</span><h4>Upcoming branch appointments</h4></div><CalendarDays size={18} /></header>
-                {upcomingAppointments.length === 0 ? <div className="branches-v27-card-empty is-horizontal"><CalendarDays size={22} /><div><strong>No upcoming appointments</strong><span>No non-cancelled appointment records are currently scheduled for this branch.</span></div></div> : <div className="branches-v27-appointments">{upcomingAppointments.map((appointment) => <div key={appointment.id}><span className="branches-v27-date"><strong>{new Date(`${appointment.date}T00:00:00`).toLocaleDateString('en-PH', { month: 'short', day: 'numeric' })}</strong><small>{formatTime(appointment.startTime)}</small></span><div><strong>{appointment.appointmentNumber || appointment.id}</strong><small>{appointment.reasonForVisit || 'Scheduled dental visit'}</small></div><em>{appointment.status.replaceAll('_', ' ')}</em></div>)}</div>}
+                {upcomingAppointments.length === 0 ? <div className="branches-v27-card-empty is-horizontal"><CalendarDays size={22} /><div><strong>No upcoming appointments</strong><span>No non-cancelled appointment records are currently scheduled for this branch.</span></div></div> : <div className="branches-v27-appointments" aria-label="Upcoming branch appointments" tabIndex={0}>{upcomingAppointments.map((appointment) => { const patient = patientMap.get(appointment.patientId); const provider = providerMap.get(appointment.providerId ?? ''); return <div key={appointment.id}><span className="branches-v27-date"><strong>{new Date(`${appointment.date}T00:00:00`).toLocaleDateString('en-PH', { month: 'short', day: 'numeric' })}</strong><small>{formatTime(appointment.startTime)}</small></span><div><strong>{patient ? getPatientDisplayName(patient) : appointment.patientId}</strong><small>{appointment.appointmentNumber || appointment.id} - {provider?.displayName || 'Dentist not assigned'} - {selectedBranch.name}</small><small>{appointment.reasonForVisit || 'Scheduled dental visit'}</small></div><em>{appointment.status.replaceAll('_', ' ')}</em></div> })}</div>}
               </section>
             </main>
           )}

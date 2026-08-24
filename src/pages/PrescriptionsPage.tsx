@@ -1,6 +1,6 @@
 import { FileText, Pill, Search, Stethoscope } from 'lucide-react'
 import { useMemo, useState } from 'react'
-import { Badge } from '../components/ui/Badge'
+import { StatusBadge } from '../components/ui/Badge'
 import { getStoredPatients } from '../features/patients/patientStore'
 import { getStoredPrescriptions } from '../features/prescriptions/prescriptionStore'
 import '../styles/prescriptions-workspace-v96.css'
@@ -57,7 +57,7 @@ export function PrescriptionsPage() {
               <article key={rx.id} className="prescription-admin-card">
                 <header>
                   <span><Pill size={18} /></span>
-                  <Badge tone={rx.status === 'active' ? 'success' : rx.status === 'voided' ? 'danger' : 'info'}>{rx.status}</Badge>
+                  <StatusBadge status={rx.status} variant="compact" />
                 </header>
                 <small>{formatDate(rx.prescriptionDate)}</small>
                 <h3>{patientName}</h3>

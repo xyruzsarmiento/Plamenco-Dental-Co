@@ -1,6 +1,7 @@
 import { AlertTriangle, Boxes, CircleDollarSign, Package, PackageCheck, PackageX, PencilLine, Trash2 } from 'lucide-react'
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Button } from '../components/ui/Button'
+import { Pagination } from '../components/ui/DesignSystem'
 import { ReportRankedBarsV54 } from '../components/ui/ReportsAnalyticsV54'
 import { getStoredBranches } from '../features/branches/branchStore'
 import { InventoryActionModal, type InventoryDialog } from '../features/inventory/InventoryActionModal'
@@ -13,9 +14,14 @@ function unitLabel(unitId: string) {
   return unit?.abbreviation ?? unitId
 }
 
+const CATALOG_PAGE_SIZE = 6
+const CHART_PAGE_SIZE = 8
+
 export function InventoryPageV56() {
   const [refreshKey, setRefreshKey] = useState(0)
   const [dialog, setDialog] = useState<InventoryDialog | null>(null)
+  const [catalogPage, setCatalogPage] = useState(1)
+  const [valuationPage, setValuationPage] = useState(1)
   const snapshot = useMemo(() => { void refreshKey; return buildEnterpriseReportSnapshot({ filters: { preset: 'this_month' } }) }, [refreshKey])
   const items = useMemo(() => { void refreshKey; return getInventoryItems().filter((item) => item.status === 'active') }, [refreshKey])
   const stocks = useMemo(() => { void refreshKey; return getBranchInventory() }, [refreshKey])
@@ -41,12 +47,21 @@ export function InventoryPageV56() {
     displayValue: formatReportCurrency(row.totalCents),
     meta: `${row.receipts} receipt${row.receipts === 1 ? '' : 's'}`,
   }))
-  const valuationRows = [...snapshot.inventory.stockRows].sort((a, b) => b.valuationCents - a.valuationCents).slice(0, 8).map((row) => ({
+  const valuationSource = [...snapshot.inventory.stockRows].sort((a, b) => b.valuationCents - a.valuationCents)
+  const catalogPageCount = Math.max(1, Math.ceil(items.length / CATALOG_PAGE_SIZE))
+  const valuationPageCount = Math.max(1, Math.ceil(valuationSource.length / CHART_PAGE_SIZE))
+  const visibleCatalogItems = items.slice((Math.min(catalogPage, catalogPageCount) - 1) * CATALOG_PAGE_SIZE, Math.min(catalogPage, catalogPageCount) * CATALOG_PAGE_SIZE)
+  const valuationRows = valuationSource.slice((Math.min(valuationPage, valuationPageCount) - 1) * CHART_PAGE_SIZE, Math.min(valuationPage, valuationPageCount) * CHART_PAGE_SIZE).map((row) => ({
     label: row.itemName,
     value: row.valuationCents,
     displayValue: formatReportCurrency(row.valuationCents),
-    meta: `${row.quantityOnHand} on hand · ${row.branchName}`,
+    meta: `${row.quantityOnHand} on hand - ${row.branchName}`,
   }))
+
+  useEffect(() => {
+    setCatalogPage((page) => Math.min(page, catalogPageCount))
+    setValuationPage((page) => Math.min(page, valuationPageCount))
+  }, [catalogPageCount, valuationPageCount])
 
   function refresh() {
     setRefreshKey((current) => current + 1)
@@ -60,7 +75,7 @@ export function InventoryPageV56() {
         <div><span>Catalog controls</span><h2>Edit or remove inventory items</h2><p>Correct catalog mistakes without changing quantities directly. Quantity changes should continue through Stock In, Stock Out, Adjust, receiving, transfers, or stock counts so the ledger stays auditable.</p></div>
         <div className="inventory56-head-count"><Package size={18}/><strong>{items.length}</strong><span>active items</span></div>
       </header>
-      {items.length ? <div className="inventory56-maintenance-grid">{items.map((item) => {
+      {items.length ? <><div className="inventory56-maintenance-grid">{visibleCatalogItems.map((item) => {
         const onHand = stocks.filter((stock) => stock.itemId === item.id).reduce((sum, stock) => sum + stock.quantityOnHand, 0)
         const supplier = suppliers.find((entry) => entry.id === item.defaultSupplierId)
         return <article key={item.id} className="inventory56-maintenance-card">
@@ -68,7 +83,7 @@ export function InventoryPageV56() {
           <div className="inventory56-maintenance-copy"><span>{item.itemCode}</span><h3>{item.name}</h3><p>{item.sku ? `Stock code ${item.sku}` : 'No optional stock code'} · {item.brand || 'No brand'}</p><div><span><strong>{onHand.toLocaleString('en-PH')}</strong> {unitLabel(item.unitId)} on hand</span><span>{supplier?.name || 'No default supplier'}</span></div></div>
           <div className="inventory56-maintenance-actions"><Button size="sm" variant="secondary" icon={<PencilLine size={14}/>} onClick={() => setDialog({ type: 'edit_item', item })}>Edit</Button><Button size="sm" variant="ghost" icon={<Trash2 size={14}/>} onClick={() => setDialog({ type: 'remove_item', item })}>Remove</Button></div>
         </article>
-      })}</div> : <div className="inventory56-empty"><Package size={24}/><strong>No active inventory items</strong><span>Add an item from the Inventory Control Center to start tracking supplies.</span></div>}
+      })}</div><Pagination page={catalogPage} pageCount={catalogPageCount} totalItems={items.length} pageSize={CATALOG_PAGE_SIZE} onPageChange={setCatalogPage} label="Catalog control pages" /></> : <div className="inventory56-empty"><Package size={24}/><strong>No active inventory items</strong><span>Add an item from the Inventory Control Center to start tracking supplies.</span></div>}
     </section>
 
     <section className="inventory56-intelligence" aria-label="Inventory intelligence">
@@ -82,7 +97,7 @@ export function InventoryPageV56() {
       <div className="inventory56-chart-grid">
         <article className="inventory56-chart-card"><header><span>Usage intelligence</span><h3>Most consumed items</h3><p>Actual stock-out consumption from recorded inventory movements.</p></header><ReportRankedBarsV54 rows={consumptionRows} valueLabel="Consumed" totalLabel="Total consumed" totalDisplay={consumptionRows.reduce((sum, row) => sum + row.value, 0).toLocaleString('en-PH')} emptyLabel="No recorded inventory consumption this month." ariaLabel="Most consumed inventory items" /></article>
         <article className="inventory56-chart-card"><header><span>Purchasing</span><h3>Supplier purchasing</h3><p>Recorded purchase value grouped by supplier this month.</p></header><ReportRankedBarsV54 rows={supplierRows} valueLabel="Purchases" totalLabel="Purchase total" totalDisplay={formatReportCurrency(snapshot.inventory.purchaseTotalCents)} emptyLabel="No recorded supplier purchases this month." ariaLabel="Purchases by supplier" /></article>
-        <article className="inventory56-chart-card is-wide"><header><span>Inventory valuation</span><h3>Highest-value stock positions</h3><p>Recorded on-hand value by item and branch.</p></header><ReportRankedBarsV54 rows={valuationRows} valueLabel="Value" totalLabel="Inventory value" totalDisplay={formatReportCurrency(snapshot.inventory.inventoryValuationCents)} emptyLabel="No inventory valuation is available yet." ariaLabel="Highest value inventory positions" /></article>
+        <article className="inventory56-chart-card is-wide"><header><span>Inventory valuation</span><h3>Highest-value stock positions</h3><p>Recorded on-hand value by item and branch.</p></header><ReportRankedBarsV54 rows={valuationRows} valueLabel="Value" totalLabel="Inventory value" totalDisplay={formatReportCurrency(snapshot.inventory.inventoryValuationCents)} emptyLabel="No inventory valuation is available yet." ariaLabel="Highest value inventory positions" /><Pagination page={valuationPage} pageCount={valuationPageCount} totalItems={valuationSource.length} pageSize={CHART_PAGE_SIZE} onPageChange={setValuationPage} label="Inventory valuation pages" /></article>
       </div>
     </section>
 

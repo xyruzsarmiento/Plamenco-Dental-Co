@@ -176,12 +176,14 @@ function queueMutation<T>(operation: () => Promise<T>) {
 
 async function nextUniqueHumanNumber(table: 'expenses' | 'expense_vendors') {
   if (!supabase) return null
+  const db = supabase
   const config = table === 'expenses'
     ? { column: 'expense_number', prefix: 'EXP' }
     : { column: 'vendor_number', prefix: 'VND' }
-  const { data, error } = await supabase.from(table).select(config.column)
+  const { data, error } = await db.from(table).select(config.column)
   if (error) return null
-  const highest = (data ?? []).reduce((max, row: Record<string, unknown>) => {
+  const rows = (data ?? []) as unknown as Array<Record<string, unknown>>
+  const highest = rows.reduce((max, row) => {
     const match = String(row[config.column] ?? '').match(new RegExp(`^${config.prefix}-(\\d+)$`))
     return match ? Math.max(max, Number(match[1])) : max
   }, 0)
@@ -858,10 +860,11 @@ export async function syncSupabaseToLocalStorage() {
 
 export async function upsertRemoteTableRows(table: string, rows: Record<string, unknown>[]) {
   if (!isSupabaseConfigured || !supabase || !rows.length) return null
+  const db = supabase
 
   return queueMutation(async () => {
     const normalizedRows = await Promise.all(rows.map((row) => prepareRemoteRow(table, row)))
-    const { data, error } = await supabase.from(table).upsert(normalizedRows).select()
+    const { data, error } = await db.from(table).upsert(normalizedRows).select()
     if (error) {
       reportPersistenceError('upsert', table, error)
       return null
@@ -872,12 +875,13 @@ export async function upsertRemoteTableRows(table: string, rows: Record<string, 
 
 export async function insertRemoteTableRow(table: string, row: Record<string, unknown>) {
   if (!isSupabaseConfigured || !supabase) return null
+  const db = supabase
 
   return queueMutation(async () => {
     let normalizedRow = await prepareRemoteRow(table, row)
 
     for (let attempt = 0; attempt < 3; attempt += 1) {
-      const { data, error } = await supabase.from(table).insert([normalizedRow]).select()
+      const { data, error } = await db.from(table).insert([normalizedRow]).select()
       if (!error) return data?.[0] ?? null
 
       const duplicateHumanNumber = String(error.code ?? '') === '23505'
@@ -905,11 +909,12 @@ export async function insertRemoteTableRow(table: string, row: Record<string, un
 
 export async function updateRemoteTableRow(table: string, id: string, row: Record<string, unknown>) {
   if (!isSupabaseConfigured || !supabase) return null
+  const db = supabase
 
   return queueMutation(async () => {
     const normalizedId = normalizeLegacyUuid(id) as string
     const normalizedRow = await prepareRemoteRow(table, row)
-    const { data, error } = await supabase.from(table).update(normalizedRow).eq('id', normalizedId).select()
+    const { data, error } = await db.from(table).update(normalizedRow).eq('id', normalizedId).select()
     if (error) {
       reportPersistenceError('update', table, error)
       return null
@@ -920,10 +925,11 @@ export async function updateRemoteTableRow(table: string, id: string, row: Recor
 
 export async function deleteRemoteTableRow(table: string, id: string) {
   if (!isSupabaseConfigured || !supabase) return false
+  const db = supabase
 
   return queueMutation(async () => {
     const normalizedId = normalizeLegacyUuid(id) as string
-    const { error } = await supabase.from(table).delete().eq('id', normalizedId)
+    const { error } = await db.from(table).delete().eq('id', normalizedId)
     if (error) {
       reportPersistenceError('delete', table, error)
       return false

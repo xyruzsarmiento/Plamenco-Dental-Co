@@ -18,6 +18,7 @@ export type PatientDocument = {
   description?: string
   storagePath?: string
   patientVisible?: boolean
+  archivedAt?: string
   content: string
   sizeBytes: number
   createdAt: string
@@ -38,7 +39,7 @@ export type DentalImage = {
   updatedAt: string
 }
 
-export type DocumentAccessRole = 'admin' | 'staff'
+export type DocumentAccessRole = 'super_admin' | 'staff'
 
 export type CreateDocumentInput = {
   patientId: string
@@ -129,9 +130,9 @@ async function dataUrlToBlob(content: string, fileType: string) {
   return blob.type ? blob : new Blob([blob], { type: fileType })
 }
 
-async function signedDocumentUrl(storagePath: string) {
+export async function createPatientDocumentSignedUrl(storagePath: string, expiresIn = 300) {
   if (!supabase || !storagePath) return ''
-  const { data, error } = await supabase.storage.from(PATIENT_DOCUMENT_BUCKET).createSignedUrl(storagePath, 3600)
+  const { data, error } = await supabase.storage.from(PATIENT_DOCUMENT_BUCKET).createSignedUrl(storagePath, expiresIn)
   if (error) return ''
   return data?.signedUrl ?? ''
 }
@@ -151,6 +152,7 @@ function mapDocumentRow(row: Record<string, any>, content = ''): PatientDocument
     description: row.description ?? undefined,
     storagePath: row.storage_path ?? undefined,
     patientVisible: Boolean(row.patient_visible),
+    archivedAt: row.archived_at ?? undefined,
     content,
     sizeBytes: Number(row.size_bytes ?? 0),
     createdAt,
@@ -159,12 +161,12 @@ function mapDocumentRow(row: Record<string, any>, content = ''): PatientDocument
 }
 
 export function canAccessPatientFiles(userRole: DocumentAccessRole | undefined): boolean {
-  return userRole === 'admin' || userRole === 'staff'
+  return userRole === 'super_admin' || userRole === 'staff'
 }
 
 export function getStoredDocuments(): PatientDocument[] {
   const stored = safeParse<PatientDocument[]>(getStorage().getItem(DOCUMENT_STORAGE_KEY))
-  if (stored?.length) return stored
+  if (stored?.length) return stored.filter((document) => !document.archivedAt)
   getStorage().setItem(DOCUMENT_STORAGE_KEY, JSON.stringify([]))
   return []
 }
@@ -180,16 +182,16 @@ export function saveStoredDocuments(documents: PatientDocument[]) { getStorage()
 export function saveStoredDentalImages(images: DentalImage[]) { getStorage().setItem(DENTAL_IMAGE_STORAGE_KEY, JSON.stringify(images)) }
 
 export function getDocumentsByPatient(patientId: string): PatientDocument[] {
-  return getStoredDocuments().filter((document) => document.patientId === patientId).sort((a, b) => new Date(b.uploadDate).getTime() - new Date(a.uploadDate).getTime())
+  return getStoredDocuments().filter((document) => document.patientId === patientId && !document.archivedAt).sort((a, b) => new Date(b.uploadDate).getTime() - new Date(a.uploadDate).getTime())
 }
 
 export async function loadDocumentsFromSupabase(): Promise<PatientDocument[]> {
   if (!supabase) return getStoredDocuments()
-  const { data, error } = await supabase.from('documents').select('*').order('created_at', { ascending: false })
+  const { data, error } = await supabase.from('documents').select('*').is('archived_at', null).order('created_at', { ascending: false })
   if (error) throw new Error('Unable to load patient documents from the clinic database.')
   const mapped = await Promise.all((data ?? []).map(async (row) => {
     const storagePath = String((row as Record<string, any>).storage_path ?? '')
-    return mapDocumentRow(row as Record<string, any>, storagePath ? await signedDocumentUrl(storagePath) : String((row as Record<string, any>).file_url ?? ''))
+    return mapDocumentRow(row as Record<string, any>, storagePath ? await createPatientDocumentSignedUrl(storagePath, 300) : String((row as Record<string, any>).file_url ?? ''))
   }))
   saveStoredDocuments(mapped)
   return mapped
@@ -239,7 +241,7 @@ export async function createDocumentPersisted(input: CreateDocumentInput): Promi
     })
     if (error || !data) throw error ?? new Error('Document metadata was not returned.')
 
-    const content = await signedDocumentUrl(storagePath)
+    const content = await createPatientDocumentSignedUrl(storagePath, 300)
     const confirmed = mapDocumentRow(data as Record<string, any>, content)
     saveStoredDocuments([confirmed, ...getStoredDocuments().filter((entry) => entry.id !== confirmed.id)])
     return confirmed
@@ -265,6 +267,36 @@ export function createDocument({ patientId, clinicalVisitId, treatmentId, fileNa
   const document: PatientDocument = { id: `doc-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`, patientId, clinicalVisitId, treatmentId, fileName, fileType, category, uploadDate: now.slice(0, 10), uploadedBy, description, storagePath, patientVisible, content, sizeBytes: getContentSize(content), createdAt: now, updatedAt: now }
   saveStoredDocuments([...getStoredDocuments(), document])
   return document
+}
+
+export async function updateDocumentVisibilityPersisted(documentId: string, patientVisible: boolean): Promise<PatientDocument> {
+  if (!supabase) throw new Error('Clinic database is not configured. Document sharing cannot be changed safely.')
+  const { data, error } = await supabase
+    .from('documents')
+    .update({ patient_visible: patientVisible })
+    .eq('id', documentId)
+    .select('*')
+    .single()
+  if (error || !data) throw new Error(error?.message || 'Document visibility could not be updated.')
+  const row = data as Record<string, any>
+  const storagePath = String(row.storage_path ?? '')
+  const confirmed = mapDocumentRow(row, storagePath ? await createPatientDocumentSignedUrl(storagePath, 300) : '')
+  saveStoredDocuments(getStoredDocuments().map((document) => document.id === confirmed.id ? confirmed : document))
+  return confirmed
+}
+
+export async function archiveDocumentPersisted(documentId: string): Promise<PatientDocument> {
+  if (!supabase) throw new Error('Clinic database is not configured. Documents cannot be archived safely.')
+  const current = getStoredDocuments().find((document) => document.id === documentId)
+  const { data, error } = await supabase.rpc('archive_patient_document', { p_document_id: documentId })
+  if (error || !data) throw new Error(error?.message || 'Document could not be archived.')
+  const archived = mapDocumentRow(data as Record<string, any>)
+  saveStoredDocuments(getStoredDocuments().filter((document) => document.id !== documentId))
+  if (current?.storagePath) {
+    const { error: cleanupError } = await supabase.storage.from(PATIENT_DOCUMENT_BUCKET).remove([current.storagePath])
+    if (cleanupError && import.meta.env.DEV) console.error('[document storage cleanup]', cleanupError)
+  }
+  return archived
 }
 
 export function createDentalImage({ patientId, treatmentId, fileName, fileType, kind, content, uploadedBy }: CreateDentalImageInput): DentalImage {

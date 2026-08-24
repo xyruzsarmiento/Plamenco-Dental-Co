@@ -1,0 +1,204 @@
+.inventory-v22-recent-movement{
+  min-width:0;
+}
+
+.inventory-v22-recent-movement .inventory-v22-movement-feed{
+  display:grid!important;
+  gap:0!important;
+  max-height:430px;
+  padding:8px!important;
+  overflow-y:auto;
+  overscroll-behavior:contain;
+  scrollbar-width:thin;
+  background:#fbfdff;
+}
+
+.inventory-v22-recent-movement .inventory-v22-movement-row{
+  display:grid!important;
+  grid-template-columns:40px minmax(0,1fr);
+  gap:11px!important;
+  align-items:start;
+  padding:12px!important;
+  border:1px solid transparent!important;
+  border-bottom:1px solid #edf2f7!important;
+  background:#fff;
+}
+
+.inventory-v22-recent-movement .inventory-v22-movement-row:first-child{
+  border-top-left-radius:13px;
+  border-top-right-radius:13px;
+}
+
+.inventory-v22-recent-movement .inventory-v22-movement-row:last-child{
+  border-bottom:1px solid transparent!important;
+  border-bottom-left-radius:13px;
+  border-bottom-right-radius:13px;
+}
+
+.inventory-v22-movement-icon{
+  display:grid;
+  place-items:center;
+  width:38px;
+  height:38px;
+  border:1px solid #dbeafe;
+  border-radius:12px;
+  color:#2563eb;
+  background:#eff6ff;
+}
+
+.inventory-v22-movement-row.tone-positive .inventory-v22-movement-icon{
+  border-color:#bbf7d0;
+  color:#15803d;
+  background:#f0fdf4;
+}
+
+.inventory-v22-movement-row.tone-negative .inventory-v22-movement-icon{
+  border-color:#fecaca;
+  color:#b91c1c;
+  background:#fef2f2;
+}
+
+.inventory-v22-movement-row.tone-warning .inventory-v22-movement-icon{
+  border-color:#fde68a;
+  color:#854d0e;
+  background:#fffbeb;
+}
+
+.inventory-v22-movement-main{
+  display:grid;
+  gap:6px;
+  min-width:0;
+}
+
+.inventory-v22-movement-title{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:12px;
+  min-width:0;
+}
+
+.inventory-v22-movement-title>div{
+  display:grid;
+  gap:2px;
+  min-width:0;
+}
+
+.inventory-v22-movement-title strong{
+  color:#172033;
+  font-size:13px;
+  line-height:1.25;
+}
+
+.inventory-v22-movement-title span,
+.inventory-v22-movement-main p,
+.inventory-v22-movement-main small{
+  min-width:0;
+  margin:0;
+  overflow-wrap:anywhere;
+  color:#64748b;
+  font-size:11px;
+  line-height:1.45;
+}
+
+.inventory-v22-movement-qty{
+  flex:0 0 auto;
+  display:inline-flex;
+  align-items:center;
+  gap:5px;
+  max-width:48%;
+  padding:6px 8px;
+  border:1px solid #dbeafe;
+  border-radius:999px;
+  color:#1d4ed8;
+  background:#f8fbff;
+  font-size:11px;
+  line-height:1;
+  white-space:normal;
+}
+
+.inventory-v22-movement-qty span{
+  color:#94a3b8;
+  font-size:10px;
+  font-weight:900;
+  text-transform:uppercase;
+}
+
+.inventory-v22-movement-row.tone-positive .inventory-v22-movement-qty{
+  border-color:#bbf7d0;
+  color:#15803d;
+  background:#f0fdf4;
+}
+
+.inventory-v22-movement-row.tone-negative .inventory-v22-movement-qty{
+  border-color:#fecaca;
+  color:#b91c1c;
+  background:#fef2f2;
+}
+
+.inventory-v22-movement-row.tone-warning .inventory-v22-movement-qty{
+  border-color:#fde68a;
+  color:#854d0e;
+  background:#fffbeb;
+}
+
+.inventory-v22-movement-meta{
+  display:flex;
+  flex-wrap:wrap;
+  gap:6px 10px;
+  min-width:0;
+}
+
+.inventory-v22-movement-meta span{
+  display:inline-flex!important;
+  align-items:center;
+  gap:5px!important;
+  min-width:0;
+  color:#7b8794;
+  font-size:10px;
+  line-height:1.3;
+}
+
+.inventory-v22-movement-meta svg{
+  flex:0 0 auto;
+  color:#94a3b8;
+}
+
+@media(max-width:560px){
+  .inventory-v22-recent-movement .inventory-v22-movement-feed{
+    max-height:390px;
+    padding:7px!important;
+  }
+
+  .inventory-v22-recent-movement .inventory-v22-movement-row{
+    grid-template-columns:34px minmax(0,1fr);
+    gap:9px!important;
+    padding:11px!important;
+  }
+
+  .inventory-v22-movement-icon{
+    width:32px;
+    height:32px;
+    border-radius:10px;
+  }
+
+  .inventory-v22-movement-title{
+    display:grid;
+    gap:7px;
+  }
+
+  .inventory-v22-movement-qty{
+    max-width:100%;
+    width:max-content;
+  }
+}
+
+@media(max-width:380px){
+  .inventory-v22-recent-movement .inventory-v22-movement-row{
+    grid-template-columns:1fr;
+  }
+
+  .inventory-v22-movement-icon{
+    display:none;
+  }
+}

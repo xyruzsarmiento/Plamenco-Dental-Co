@@ -1,0 +1,154 @@
+.pv3-payments-summary-v6 article.is-receipt-action {
+  border-color: rgba(37, 99, 235, 0.22);
+  background: linear-gradient(135deg, #ffffff, #f8fbff);
+}
+
+.pv3-payments-summary-v6 article.is-receipt-action > span {
+  color: #2563eb;
+  background: #eff6ff;
+}
+
+.pv3-payments-summary-v6 article.is-receipt-action button,
+.pv3-payment-filter-v7 button,
+.pv3-payment-history-v6 article.has-receipt > div button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 30px;
+  width: max-content;
+  padding: 0 10px;
+  border: 1px solid rgba(37, 99, 235, 0.24);
+  border-radius: 8px;
+  color: #1d4ed8;
+  background: #ffffff;
+  font-size: 0.7rem;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.pv3-payments-summary-v6 article.is-receipt-action button:hover,
+.pv3-payment-filter-v7 button:hover,
+.pv3-payment-history-v6 article.has-receipt > div button:hover {
+  border-color: rgba(37, 99, 235, 0.48);
+  background: #eff6ff;
+}
+
+.pv3-payment-filter-v7 {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: -4px 0 12px;
+}
+
+.pv3-payment-filter-v7 button.is-active {
+  color: #ffffff;
+  border-color: #2563eb;
+  background: #2563eb;
+}
+
+.pv3-payment-history-v6 article.has-receipt {
+  border-color: rgba(37, 99, 235, 0.25);
+  background: linear-gradient(135deg, #ffffff, #f8fbff);
+}
+
+.pv3-payment-history-v6 article.has-receipt .pv3-pay-icon {
+  color: #2563eb;
+  background: #eff6ff;
+}
+
+.pv3-payment-history-v6 article.has-receipt small {
+  color: #1d4ed8;
+  font-weight: 850;
+}
+
+.pv3-payment-history-v6 article:not(.has-receipt) .pv3-pay-icon {
+  color: #64748b;
+  background: #f1f5f9;
+}
+
+.pv3-receipts-v6 {
+  width: 100%;
+  cursor: pointer;
+}
+
+.pv3-receipts-v6 strong {
+  margin-left: auto;
+  color: #14532d;
+  font-size: 0.72rem;
+}
+
+.pv3-payment-modal-v6.is-official-receipt {
+  border-top: 4px solid #2563eb;
+}
+
+.pv3-receipt-items-v7 {
+  margin-top: 16px;
+  overflow-x: auto;
+}
+
+.pv3-receipt-items-v7 > span {
+  display: block;
+  margin-bottom: 8px;
+  color: #64748b;
+  font-size: 0.7rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.pv3-receipt-items-v7 table {
+  width: 100%;
+  min-width: 520px;
+  border-collapse: collapse;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.pv3-receipt-items-v7 th,
+.pv3-receipt-items-v7 td {
+  padding: 11px 12px;
+  border-bottom: 1px solid #e2e8f0;
+  text-align: left;
+  vertical-align: top;
+}
+
+.pv3-receipt-items-v7 th {
+  color: #64748b;
+  background: #f8fafc;
+  font-size: 0.68rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.pv3-receipt-items-v7 td:last-child,
+.pv3-receipt-items-v7 th:last-child {
+  text-align: right;
+}
+
+.pv3-receipt-items-v7 tfoot td {
+  color: #0f172a;
+  background: #f8fafc;
+  font-weight: 900;
+}
+
+.pv3-payment-modal-v6 footer {
+  flex-wrap: wrap;
+}
+
+@media (max-width: 640px) {
+  .pv3-payments-summary-v6 article.is-receipt-action button,
+  .pv3-payment-filter-v7 button,
+  .pv3-payment-history-v6 article.has-receipt > div button {
+    width: 100%;
+  }
+
+  .pv3-receipts-v6 {
+    align-items: flex-start;
+    flex-wrap: wrap;
+  }
+
+  .pv3-receipts-v6 strong {
+    margin-left: 0;
+    width: 100%;
+  }
+}

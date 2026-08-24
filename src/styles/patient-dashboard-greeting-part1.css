@@ -1,0 +1,207 @@
+.pv3-dashboard-v2 > .dashboard-greeting-patient {
+  display: grid !important;
+  grid-template-columns: auto minmax(0, 1fr) minmax(280px, auto) !important;
+  align-items: center !important;
+  gap: 18px !important;
+  width: 100% !important;
+  min-height: 132px !important;
+  padding: 20px 22px !important;
+  border: 1px solid #dbe5f5 !important;
+  border-radius: 18px !important;
+  background: linear-gradient(135deg, #ffffff 0%, #fbfdff 68%, #f1f6ff 100%) !important;
+  box-shadow: 0 10px 30px rgba(23, 32, 51, .045) !important;
+  overflow: hidden !important;
+}
+
+.pv3-dashboard-v2 > .dashboard-greeting-patient .dashboard-greeting-v2-icon {
+  display: grid !important;
+  place-items: center !important;
+  width: 42px !important;
+  height: 42px !important;
+  border: 1px solid #dce8fb !important;
+  border-radius: 13px !important;
+  background: #ffffff !important;
+  color: #2563eb !important;
+  box-shadow: 0 8px 20px rgba(37, 99, 235, .07) !important;
+}
+
+.pv3-dashboard-v2 > .dashboard-greeting-patient .dashboard-greeting-v2-icon svg {
+  width: 22px !important;
+  height: 22px !important;
+}
+
+.pv3-dashboard-v2 > .dashboard-greeting-patient .dashboard-greeting-v2-copy {
+  display: grid !important;
+  min-width: 0 !important;
+  gap: 2px !important;
+}
+
+.pv3-dashboard-v2 > .dashboard-greeting-patient .dashboard-greeting-eyebrow {
+  color: #7c8799 !important;
+  font-size: .76rem !important;
+  font-weight: 800 !important;
+  letter-spacing: 0 !important;
+  text-transform: none !important;
+}
+
+.pv3-dashboard-v2 > .dashboard-greeting-patient h1 {
+  margin: 0 !important;
+  color: #172033 !important;
+  font-size: clamp(1.35rem, 2.1vw, 1.9rem) !important;
+  line-height: 1.14 !important;
+  letter-spacing: 0 !important;
+  overflow-wrap: anywhere !important;
+}
+
+.pv3-dashboard-v2 > .dashboard-greeting-patient h1 span {
+  color: #2563eb !important;
+}
+
+.pv3-dashboard-v2 > .dashboard-greeting-patient p {
+  max-width: 760px !important;
+  margin: 2px 0 0 !important;
+  color: #667085 !important;
+  font-size: .82rem !important;
+  line-height: 1.55 !important;
+}
+
+.pv3-dashboard-v2 > .dashboard-greeting-patient .dashboard-greeting-v2-context {
+  display: grid !important;
+  justify-items: end !important;
+  gap: 10px !important;
+  min-width: 0 !important;
+}
+
+.pv3-dashboard-v2 > .dashboard-greeting-patient .dashboard-greeting-v2-context > div,
+.pv3-dashboard-v2 > .dashboard-greeting-patient .dashboard-greeting-v2-actions {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-end !important;
+  flex-wrap: wrap !important;
+  gap: 8px !important;
+}
+
+.pv3-dashboard-v2 > .dashboard-greeting-patient .dashboard-greeting-v2-context span,
+.pv3-dashboard-v2 > .dashboard-greeting-patient .dashboard-greeting-v2-context time {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 7px !important;
+  min-height: 32px !important;
+  max-width: 100% !important;
+  padding: 0 11px !important;
+  border: 1px solid #dbeafe !important;
+  border-radius: 999px !important;
+  background: #f8fbff !important;
+  color: #334155 !important;
+  font-size: .74rem !important;
+  font-weight: 760 !important;
+  text-align: center !important;
+  white-space: nowrap !important;
+}
+
+.pv3-dashboard-v2 > .dashboard-greeting-patient .dashboard-greeting-v2-context span {
+  color: #1d4ed8 !important;
+}
+
+.pv3-dashboard-v2 > .dashboard-greeting-patient .dashboard-greeting-v2-context span svg {
+  width: 16px !important;
+  height: 16px !important;
+}
+
+.pv3-dashboard-v2 > .dashboard-greeting-patient .dashboard-greeting-v2-context time {
+  border-color: #e5e7eb !important;
+  background: #ffffff !important;
+  color: #64748b !important;
+}
+
+.pv3-dashboard-v2 > .dashboard-greeting-patient .dashboard-greeting-v2-actions button {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 7px !important;
+  min-height: 35px !important;
+  padding: 0 12px !important;
+  border: 1px solid #2563eb !important;
+  border-radius: 9px !important;
+  background: #2563eb !important;
+  color: #ffffff !important;
+  font: inherit !important;
+  font-size: .75rem !important;
+  font-weight: 800 !important;
+  cursor: pointer !important;
+  box-shadow: 0 8px 20px rgba(37, 99, 235, .13) !important;
+}
+
+.pv3-dashboard-v2 > .dashboard-greeting-patient .dashboard-greeting-v2-actions button.is-secondary {
+  border-color: #dbe5f4 !important;
+  background: #ffffff !important;
+  color: #344054 !important;
+  box-shadow: none !important;
+}
+
+.pv3-dashboard-v2 > .dashboard-greeting-patient .dashboard-greeting-v2-actions button:hover {
+  transform: translateY(-1px) !important;
+}
+
+.pv3-dashboard-v2 > .dashboard-greeting-patient .dashboard-greeting-v2-actions button:focus-visible {
+  outline: none !important;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, .18) !important;
+}
+
+@media (max-width: 980px) {
+  .pv3-dashboard-v2 > .dashboard-greeting-patient {
+    grid-template-columns: auto minmax(0, 1fr) !important;
+    align-items: start !important;
+    min-height: 0 !important;
+  }
+
+  .pv3-dashboard-v2 > .dashboard-greeting-patient .dashboard-greeting-v2-context {
+    grid-column: 1 / -1 !important;
+    justify-items: start !important;
+  }
+
+  .pv3-dashboard-v2 > .dashboard-greeting-patient .dashboard-greeting-v2-context > div,
+  .pv3-dashboard-v2 > .dashboard-greeting-patient .dashboard-greeting-v2-actions {
+    justify-content: flex-start !important;
+  }
+}
+
+@media (max-width: 640px) {
+  .pv3-dashboard-v2 > .dashboard-greeting-patient {
+    grid-template-columns: 1fr !important;
+    gap: 14px !important;
+    padding: 18px !important;
+  }
+
+  .pv3-dashboard-v2 > .dashboard-greeting-patient .dashboard-greeting-v2-icon {
+    width: 46px !important;
+    height: 46px !important;
+  }
+
+  .pv3-dashboard-v2 > .dashboard-greeting-patient h1 {
+    font-size: 1.6rem !important;
+  }
+
+  .pv3-dashboard-v2 > .dashboard-greeting-patient .dashboard-greeting-v2-context,
+  .pv3-dashboard-v2 > .dashboard-greeting-patient .dashboard-greeting-v2-context > div,
+  .pv3-dashboard-v2 > .dashboard-greeting-patient .dashboard-greeting-v2-actions {
+    width: 100% !important;
+    justify-items: stretch !important;
+  }
+
+  .pv3-dashboard-v2 > .dashboard-greeting-patient .dashboard-greeting-v2-context span,
+  .pv3-dashboard-v2 > .dashboard-greeting-patient .dashboard-greeting-v2-context time {
+    min-width: 0 !important;
+    white-space: normal !important;
+  }
+
+  .pv3-dashboard-v2 > .dashboard-greeting-patient .dashboard-greeting-v2-actions {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+  }
+
+  .pv3-dashboard-v2 > .dashboard-greeting-patient .dashboard-greeting-v2-actions button {
+    width: 100% !important;
+  }
+}

@@ -1,0 +1,589 @@
+/* Part 1 portal shell refresh: shared premium sidebar language for patient and internal portals. */
+
+.pv3-shell,
+.app-shell {
+  --portal-shell-blue: #2563eb;
+  --portal-shell-blue-deep: #1d4ed8;
+  --portal-shell-blue-soft: #eaf2ff;
+  --portal-shell-blue-pale: #f6f9ff;
+  --portal-shell-ink: #172033;
+  --portal-shell-muted: #667085;
+  --portal-shell-border: #dfe8f4;
+  --portal-shell-border-soft: #edf2f8;
+  --portal-shell-bg: #f6f9fd;
+  color: var(--portal-shell-ink);
+}
+
+body.pv3-nav-lock {
+  overflow: hidden;
+}
+
+.pv3-shell {
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: 268px minmax(0, 1fr);
+  background:
+    linear-gradient(180deg, #f9fbff 0, var(--portal-shell-bg) 360px, #f4f7fb 100%);
+  overflow-x: clip;
+}
+
+.pv3-sidebar,
+.app-shell > .sidebar {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: #fff !important;
+  border-right: 1px solid var(--portal-shell-border-soft) !important;
+  box-shadow: 10px 0 28px rgba(15, 23, 42, .035) !important;
+  color: var(--portal-shell-ink) !important;
+  z-index: 45;
+}
+
+.pv3-sidebar {
+  width: 268px;
+}
+
+.pv3-brand,
+.app-shell > .sidebar .sidebar-header {
+  min-height: 86px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 20px 18px;
+  border-bottom: 1px solid var(--portal-shell-border-soft) !important;
+  background: #fff !important;
+}
+
+.pv3-brand > span,
+.app-shell > .sidebar .brand-symbol {
+  width: 42px !important;
+  height: 42px !important;
+  flex: 0 0 42px;
+  display: grid;
+  place-items: center;
+  border-radius: 12px !important;
+  background: var(--portal-shell-blue) !important;
+  color: #fff !important;
+  font-weight: 850;
+  box-shadow: 0 9px 22px rgba(37, 99, 235, .18) !important;
+}
+
+.pv3-brand > div,
+.app-shell > .sidebar .brand-lockup span {
+  min-width: 0;
+}
+
+.pv3-brand strong,
+.app-shell > .sidebar .brand-lockup strong {
+  display: block;
+  color: var(--portal-shell-ink) !important;
+  font-size: .9rem;
+  line-height: 1.15;
+  letter-spacing: 0 !important;
+}
+
+.pv3-brand small,
+.app-shell > .sidebar .brand-lockup small {
+  display: block;
+  margin-top: 3px;
+  color: #8a97aa !important;
+  font-size: .7rem;
+  font-weight: 750;
+  text-transform: uppercase;
+  letter-spacing: .045em;
+}
+
+.pv3-brand > button,
+.app-shell > .sidebar .icon-button.mobile-only {
+  margin-left: auto;
+  width: 38px;
+  height: 38px;
+  display: none;
+  place-items: center;
+  border: 1px solid #dbe5f1;
+  border-radius: 10px;
+  background: #fff;
+  color: #344054;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(15, 23, 42, .06);
+}
+
+.pv3-brand > button:hover,
+.app-shell > .sidebar .icon-button.mobile-only:hover {
+  background: var(--portal-shell-blue-pale);
+  color: var(--portal-shell-blue-deep);
+  border-color: #cfe0f7;
+}
+
+.pv3-brand > button:focus-visible,
+.app-shell > .sidebar .icon-button.mobile-only:focus-visible,
+.pv3-nav button:focus-visible,
+.app-shell > .sidebar .sidebar-nav a:focus-visible,
+.pv3-signout:focus-visible,
+.app-shell > .sidebar .sidebar-footer .btn:focus-visible,
+.pv3-menu:focus-visible {
+  outline: 3px solid rgba(37, 99, 235, .24) !important;
+  outline-offset: 2px !important;
+}
+
+.pv3-nav,
+.app-shell > .sidebar .sidebar-nav {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 16px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  scrollbar-color: #9dbff5 #eef4fb;
+  scrollbar-width: thin;
+}
+
+.pv3-nav::-webkit-scrollbar,
+.app-shell > .sidebar .sidebar-nav::-webkit-scrollbar {
+  width: 10px;
+}
+
+.pv3-nav::-webkit-scrollbar-track,
+.app-shell > .sidebar .sidebar-nav::-webkit-scrollbar-track {
+  background: #eef4fb;
+  border-radius: 999px;
+}
+
+.pv3-nav::-webkit-scrollbar-thumb,
+.app-shell > .sidebar .sidebar-nav::-webkit-scrollbar-thumb {
+  background: #9dbff5;
+  border: 2px solid #eef4fb;
+  border-radius: 999px;
+}
+
+.pv3-nav-section,
+.app-shell > .sidebar .nav-section {
+  display: grid !important;
+  gap: 5px !important;
+}
+
+.pv3-nav-section + .pv3-nav-section,
+.app-shell > .sidebar .nav-section + .nav-section {
+  padding-top: 12px !important;
+  border-top: 1px solid var(--portal-shell-border-soft) !important;
+}
+
+.pv3-nav p,
+.app-shell > .sidebar .nav-section-label {
+  margin: 0 10px 6px !important;
+  color: #98a2b3 !important;
+  font-size: .66rem !important;
+  font-weight: 850 !important;
+  letter-spacing: .07em !important;
+  line-height: 1.25 !important;
+  text-transform: uppercase !important;
+}
+
+.pv3-nav button,
+.app-shell > .sidebar .sidebar-nav a {
+  width: 100%;
+  min-height: 42px !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 11px !important;
+  padding: 9px 11px !important;
+  border: 1px solid transparent !important;
+  border-radius: 11px !important;
+  background: transparent !important;
+  color: #526077 !important;
+  box-shadow: none !important;
+  font: inherit;
+  font-size: .82rem !important;
+  font-weight: 750 !important;
+  letter-spacing: 0 !important;
+  line-height: 1.2 !important;
+  text-align: left;
+  text-decoration: none !important;
+  cursor: pointer;
+  transition: background .16s ease, border-color .16s ease, color .16s ease, box-shadow .16s ease;
+}
+
+.pv3-nav button svg,
+.app-shell > .sidebar .sidebar-nav a svg {
+  flex: 0 0 auto;
+  color: #667085;
+}
+
+.pv3-nav button:hover,
+.app-shell > .sidebar .sidebar-nav a:hover {
+  background: var(--portal-shell-blue-pale) !important;
+  border-color: #dfeaff !important;
+  color: var(--portal-shell-blue-deep) !important;
+  transform: none !important;
+}
+
+.pv3-nav button:hover svg,
+.app-shell > .sidebar .sidebar-nav a:hover svg {
+  color: var(--portal-shell-blue) !important;
+}
+
+.pv3-nav button.is-active,
+.app-shell > .sidebar .sidebar-nav a.active,
+.app-shell > .sidebar .sidebar-nav a[aria-current="page"] {
+  background: var(--portal-shell-blue-soft) !important;
+  border-color: #cfe0f7 !important;
+  color: var(--portal-shell-blue-deep) !important;
+  box-shadow: inset 3px 0 0 var(--portal-shell-blue) !important;
+}
+
+.pv3-nav button.is-active svg,
+.app-shell > .sidebar .sidebar-nav a.active svg,
+.app-shell > .sidebar .sidebar-nav a[aria-current="page"] svg {
+  color: var(--portal-shell-blue) !important;
+}
+
+.pv3-sidebar-footer,
+.app-shell > .sidebar .sidebar-footer {
+  padding: 14px !important;
+  display: grid !important;
+  gap: 9px !important;
+  border-top: 1px solid var(--portal-shell-border-soft) !important;
+  background: #fbfdff !important;
+}
+
+.pv3-account,
+.app-shell > .sidebar .user-card {
+  min-width: 0;
+  display: grid !important;
+  grid-template-columns: 42px minmax(0, 1fr) !important;
+  align-items: center !important;
+  gap: 10px !important;
+  margin: 0 !important;
+  padding: 10px !important;
+  border: 1px solid var(--portal-shell-border) !important;
+  border-radius: 12px !important;
+  background: #fff !important;
+  box-shadow: 0 8px 22px rgba(15, 23, 42, .035) !important;
+}
+
+.pv3-avatar,
+.app-shell > .sidebar .avatar {
+  width: 42px !important;
+  height: 42px !important;
+  display: grid !important;
+  place-items: center !important;
+  flex: 0 0 42px !important;
+  border: 1px solid #d7e6ff !important;
+  border-radius: 12px !important;
+  background-color: var(--portal-shell-blue-soft) !important;
+  background-size: cover;
+  background-position: center;
+  color: var(--portal-shell-blue-deep) !important;
+  font-size: .78rem !important;
+  font-weight: 850 !important;
+}
+
+.pv3-account > div,
+.app-shell > .sidebar .user-card > span {
+  min-width: 0;
+  display: grid;
+  gap: 2px;
+}
+
+.pv3-account strong,
+.app-shell > .sidebar .user-card strong {
+  display: block;
+  min-width: 0;
+  overflow: hidden;
+  color: var(--portal-shell-ink) !important;
+  font-size: .8rem !important;
+  font-weight: 850 !important;
+  line-height: 1.2;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pv3-account small,
+.app-shell > .sidebar .user-card small {
+  display: block;
+  min-width: 0;
+  overflow: hidden;
+  color: #77849a !important;
+  font-size: .68rem !important;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pv3-secure {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: 28px minmax(0, 1fr);
+  align-items: center;
+  gap: 9px;
+  padding: 9px 10px;
+  border: 1px solid #dfeaff;
+  border-radius: 11px;
+  background: var(--portal-shell-blue-pale);
+  color: var(--portal-shell-blue-deep);
+}
+
+.pv3-secure svg {
+  width: 28px;
+  height: 28px;
+  padding: 6px;
+  border-radius: 9px;
+  background: #fff;
+}
+
+.pv3-secure span {
+  min-width: 0;
+  display: grid;
+  gap: 1px;
+}
+
+.pv3-secure strong {
+  color: var(--portal-shell-ink);
+  font-size: .7rem;
+  line-height: 1.2;
+}
+
+.pv3-secure small {
+  color: #667085;
+  font-size: .64rem;
+  line-height: 1.2;
+}
+
+.pv3-signout,
+.app-shell > .sidebar .sidebar-footer .btn {
+  min-height: 38px !important;
+  width: 100% !important;
+  justify-content: center !important;
+  gap: 8px !important;
+  border: 1px solid #d8e2ee !important;
+  border-radius: 10px !important;
+  background: #fff !important;
+  color: #344054 !important;
+  font-size: .76rem !important;
+  font-weight: 800 !important;
+  box-shadow: none !important;
+  cursor: pointer;
+}
+
+.pv3-signout:hover,
+.app-shell > .sidebar .sidebar-footer .btn:hover {
+  background: #f5f8fc !important;
+  border-color: #cfd9e6 !important;
+  color: var(--portal-shell-ink) !important;
+}
+
+.pv3-main,
+.app-shell > .main-shell {
+  min-width: 0 !important;
+}
+
+.pv3-topbar,
+.app-shell .topbar {
+  min-height: 76px !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 14px !important;
+  padding: 13px clamp(16px, 2.2vw, 30px) !important;
+  background: rgba(255, 255, 255, .96) !important;
+  border-bottom: 1px solid var(--portal-shell-border-soft) !important;
+  box-shadow: 0 1px 0 rgba(15, 23, 42, .03) !important;
+  backdrop-filter: blur(12px);
+}
+
+.pv3-menu,
+.app-shell .topbar .icon-button.mobile-only {
+  width: 40px !important;
+  height: 40px !important;
+  place-items: center !important;
+  border: 1px solid #dbe5f1 !important;
+  border-radius: 11px !important;
+  background: #fff !important;
+  color: #344054 !important;
+  box-shadow: 0 4px 14px rgba(15, 23, 42, .055) !important;
+  cursor: pointer;
+}
+
+.pv3-menu:hover,
+.app-shell .topbar .icon-button.mobile-only:hover {
+  background: var(--portal-shell-blue-pale) !important;
+  color: var(--portal-shell-blue-deep) !important;
+}
+
+.pv3-topbar-copy {
+  min-width: 0;
+  flex: 1;
+}
+
+.pv3-topbar-copy > span,
+.app-shell .topbar-copy .eyebrow {
+  color: var(--portal-shell-blue) !important;
+  font-size: .68rem !important;
+  font-weight: 850 !important;
+  letter-spacing: .07em !important;
+  text-transform: uppercase;
+}
+
+.pv3-topbar-copy h1,
+.app-shell .topbar-copy h1 {
+  margin: 2px 0 1px !important;
+  color: var(--portal-shell-ink) !important;
+  font-size: 1.12rem !important;
+  line-height: 1.2 !important;
+  letter-spacing: 0 !important;
+}
+
+.pv3-topbar-copy p {
+  margin: 0;
+  color: var(--portal-shell-muted);
+  font-size: .74rem;
+  line-height: 1.35;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pv3-top-book,
+.app-shell .topbar-account-pill {
+  min-height: 38px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 8px !important;
+  border: 1px solid #cfe0f7 !important;
+  border-radius: 11px !important;
+  background: var(--portal-shell-blue-soft) !important;
+  color: var(--portal-shell-blue-deep) !important;
+  font-size: .76rem !important;
+  font-weight: 850 !important;
+  box-shadow: none !important;
+}
+
+.pv3-top-book:hover {
+  background: #dfeaff !important;
+}
+
+.pv3-content,
+.app-shell .content-area {
+  min-width: 0 !important;
+}
+
+@media (max-width: 1180px) and (min-width: 901px) {
+  .pv3-shell {
+    grid-template-columns: 248px minmax(0, 1fr);
+  }
+
+  .pv3-sidebar {
+    width: 248px;
+  }
+}
+
+@media (max-width: 900px) {
+  .pv3-shell {
+    display: block !important;
+    min-width: 0;
+  }
+
+  .pv3-sidebar,
+  .app-shell > .sidebar {
+    position: fixed !important;
+    inset: 0 auto 0 0 !important;
+    width: min(302px, 88vw) !important;
+    max-width: min(302px, 88vw) !important;
+    min-width: 0 !important;
+    height: 100dvh !important;
+    transform: translateX(-105%) !important;
+    transition: transform .2s ease !important;
+    z-index: 1000 !important;
+    box-shadow: 22px 0 52px rgba(15, 23, 42, .18) !important;
+  }
+
+  .pv3-sidebar.is-open,
+  .app-shell > .sidebar.is-open {
+    transform: translateX(0) !important;
+  }
+
+  .pv3-brand > button,
+  .app-shell > .sidebar .icon-button.mobile-only {
+    display: grid !important;
+  }
+
+  .pv3-backdrop,
+  .app-shell .nav-backdrop {
+    position: fixed !important;
+    inset: 0 !important;
+    display: block !important;
+    border: 0 !important;
+    background: rgba(15, 23, 42, .38) !important;
+    backdrop-filter: blur(2px);
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity .18s ease, visibility .18s ease;
+    z-index: 900 !important;
+  }
+
+  .pv3-backdrop.is-open,
+  .app-shell .nav-backdrop {
+    opacity: 1 !important;
+    visibility: visible !important;
+  }
+
+  .pv3-topbar,
+  .app-shell .topbar {
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 70 !important;
+    min-height: 66px !important;
+    padding: 10px 14px !important;
+  }
+
+  .pv3-menu,
+  .app-shell .topbar .icon-button.mobile-only {
+    display: grid !important;
+    flex: 0 0 40px;
+  }
+
+  .pv3-content {
+    padding: 18px 14px 32px !important;
+  }
+}
+
+@media (max-width: 640px) {
+  .pv3-topbar-copy > span,
+  .app-shell .topbar-copy .eyebrow {
+    display: none !important;
+  }
+
+  .pv3-topbar-copy h1,
+  .app-shell .topbar-copy h1 {
+    font-size: 1rem !important;
+  }
+
+  .pv3-topbar-copy p {
+    display: none;
+  }
+
+  .pv3-top-book {
+    width: 40px !important;
+    padding: 0 !important;
+  }
+
+  .pv3-top-book span {
+    display: none;
+  }
+
+  .pv3-content {
+    padding: 14px 10px 26px !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pv3-sidebar,
+  .app-shell > .sidebar,
+  .pv3-backdrop,
+  .app-shell .nav-backdrop {
+    transition: none !important;
+  }
+}

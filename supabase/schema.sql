@@ -12,7 +12,7 @@ create table if not exists public.staff (
   email text not null unique,
   phone text,
   position text,
-  role text not null check (role in ('admin', 'staff')) default 'staff',
+  role text not null check (role in ('super_admin', 'staff')) default 'staff',
   status text not null check (status in ('active', 'inactive')) default 'active',
   password text not null,
   created_at timestamptz not null default now(),

@@ -1,5 +1,5 @@
 import { useMemo, useState, type FormEvent } from 'react'
-import { AlertCircle, ArrowRight, CheckCircle2, Eye, EyeOff, MailCheck } from 'lucide-react'
+import { AlertCircle, ArrowRight, Eye, EyeOff, MailCheck } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { Button } from '../../components/ui/Button'
 import { useAuth } from './AuthContext'

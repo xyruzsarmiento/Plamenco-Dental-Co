@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import {
   AlertTriangle,
   ArrowRight,
@@ -16,11 +16,12 @@ import { Badge } from '../components/ui/Badge'
 import { Button } from '../components/ui/Button'
 import {
   analyzeImportSheet,
-  confirmPatientImport,
+  confirmPatientImportPersisted,
   createSuggestedPatientMapping,
   generatePatientImportReport,
   getDestinationFieldGuide,
   getStoredPatientImportBatches,
+  loadPatientImportBatchesFromSupabase,
   parsePatientWorkbook,
   patientImportFieldOptions,
   rollbackPatientImportBatch,
@@ -32,6 +33,7 @@ import {
   type ValidatedImportRow,
 } from '../features/patients/patientImportStore'
 import { usePermissions } from '../features/auth/permissions'
+import { loadPatientsFromSupabase } from '../features/patients/patientPersistence'
 
 const importTypeOptions: Array<{ value: ImportType; label: string; description: string; available: boolean }> = [
   { value: 'patients', label: 'Patients', description: 'Historical patient records with duplicate review and portal-safe account handling.', available: true },
@@ -89,6 +91,7 @@ export function DataImportPageV21() {
   const [result, setResult] = useState<string | null>(null)
   const [batches, setBatches] = useState(() => getStoredPatientImportBatches())
   const [isParsing, setIsParsing] = useState(false)
+  const [isImporting, setIsImporting] = useState(false)
   const [showImportConfirm, setShowImportConfirm] = useState(false)
   const [rollbackBatchId, setRollbackBatchId] = useState<string | null>(null)
   const [rollbackReason, setRollbackReason] = useState('')
@@ -119,6 +122,11 @@ export function DataImportPageV21() {
 
   const currentStep = rows.length ? 4 : selectedSheet ? 3 : workbook ? 2 : 1
 
+  useEffect(() => {
+    if (!canImport) return
+    void loadPatientImportBatchesFromSupabase({ strict: false }).then(setBatches)
+  }, [canImport])
+
   async function handleFile(file?: File) {
     if (!file) return
     setError(null)
@@ -136,6 +144,7 @@ export function DataImportPageV21() {
       setError(cause instanceof Error ? cause.message : 'Unable to read this workbook.')
     } finally {
       setIsParsing(false)
+      if (inputRef.current) inputRef.current.value = ''
     }
   }
 
@@ -146,6 +155,13 @@ export function DataImportPageV21() {
     setMapping(createSuggestedPatientMapping(sheet.headers))
     setRows([])
     setResult(null)
+  }
+
+  function updateMapping(header: string, value: PatientImportMapping[string]) {
+    setMapping((current) => ({ ...current, [header]: value }))
+    setRows([])
+    setResult(null)
+    setError(null)
   }
 
   function validateRows() {
@@ -159,16 +175,25 @@ export function DataImportPageV21() {
     setRows((current) => current.map((row) => row.rowNumber === rowNumber ? { ...row, ...updates } : row))
   }
 
-  function performImport() {
+  async function performImport() {
     if (!workbook || !selectedSheet || rows.length === 0 || !dryRun.canImport) return
+    setIsImporting(true)
+    setError(null)
     try {
-      const batch = confirmPatientImport(workbook.fileName, selectedSheet.name, rows, { mapping, sheetProfile: sheetProfile ?? undefined, fileSizeBytes: workbook.fileSizeBytes })
-      setBatches(getStoredPatientImportBatches())
-      setResult(`Import batch ${batch.id} completed: ${batch.importedRows} imported, ${batch.skippedRows} skipped.`)
+      const { batch, stagingErrors } = await confirmPatientImportPersisted(workbook.fileName, selectedSheet.name, rows, { mapping, sheetProfile: sheetProfile ?? undefined, fileSizeBytes: workbook.fileSizeBytes })
+      await loadPatientsFromSupabase({ strict: true })
+      setBatches(await loadPatientImportBatchesFromSupabase({ strict: false }))
+      const baseSummary = `Import batch ${batch.id} ${batch.status.replaceAll('_', ' ')}: ${batch.importedRows} imported, ${batch.matchedRows} matched, ${batch.skippedRows} skipped, ${batch.failedRows} failed.`
+      setResult(stagingErrors.length ? `${baseSummary} Staging warning: ${stagingErrors.join(' ')}` : baseSummary)
       setShowImportConfirm(false)
+      if (batch.failedRows > 0) {
+        setError('Some rows were not imported. Download the full report or review the migration history before running another batch.')
+      }
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : 'The import could not be completed.')
       setShowImportConfirm(false)
+    } finally {
+      setIsImporting(false)
     }
   }
 
@@ -218,7 +243,7 @@ export function DataImportPageV21() {
           <header><div><span>Step 1</span><h3>Choose migration source</h3></div><Upload size={18}/></header>
           <label className="data-import-v21-label">Import type<select value={importType} onChange={(event) => { setImportType(event.target.value as ImportType); setRows([]); setResult(null) }}>{importTypeOptions.map((option) => <option key={option.value} value={option.value} disabled={!option.available}>{option.label}{!option.available ? ' — coming later' : ''}</option>)}</select></label>
           <p className="data-import-v21-muted">{importTypeOptions.find((option) => option.value === importType)?.description}</p>
-          <button type="button" className="data-import-v21-dropzone" disabled={!canImport || importType !== 'patients' || isParsing} onClick={() => inputRef.current?.click()}>
+          <button type="button" className="data-import-v21-dropzone" disabled={!canImport || importType !== 'patients' || isParsing || isImporting} onClick={() => inputRef.current?.click()}>
             <span className="data-import-v21-file-icon"><FileSpreadsheet size={24}/></span>
             <strong>{workbook?.fileName ?? (isParsing ? 'Reading workbook…' : 'Upload workbook')}</strong>
             <span>.xlsx or .csv · maximum 10 MB</span>
@@ -239,8 +264,8 @@ export function DataImportPageV21() {
 
       {selectedSheet && <section className="data-import-v21-card mapping-card">
         <header><div><span>Step 3</span><h3>Map source columns</h3><p>Review the suggested mapping before validating rows.</p></div><FileSpreadsheet size={18}/></header>
-        <div className="data-import-v21-mapping-grid">{selectedSheet.headers.map((header) => <div key={header} className="data-import-v21-map-row"><div><strong>{header}</strong><small>{sheetProfile?.columns.find((column) => column.header === header)?.sampleValues.join(' · ') || 'No sample value'}</small></div><ArrowRight size={15}/><select value={mapping[header] ?? 'ignore'} onChange={(event) => setMapping({ ...mapping, [header]: event.target.value as PatientImportMapping[string] })}>{patientImportFieldOptions.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}</select></div>)}</div>
-        <footer><span>{sheetProfile?.mappedColumns ?? 0} mapped · {sheetProfile?.ignoredColumns ?? 0} ignored</span><Button onClick={validateRows} disabled={!canImport}>Validate & dry run</Button></footer>
+        <div className="data-import-v21-mapping-grid">{selectedSheet.headers.map((header) => <div key={header} className="data-import-v21-map-row"><div><strong>{header}</strong><small>{sheetProfile?.columns.find((column) => column.header === header)?.sampleValues.join(' · ') || 'No sample value'}</small></div><ArrowRight size={15}/><select value={mapping[header] ?? 'ignore'} onChange={(event) => updateMapping(header, event.target.value as PatientImportMapping[string])}>{patientImportFieldOptions.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}</select></div>)}</div>
+        <footer><span>{sheetProfile?.mappedColumns ?? 0} mapped · {sheetProfile?.ignoredColumns ?? 0} ignored</span><Button onClick={validateRows} disabled={!canImport || isImporting}>Validate & dry run</Button></footer>
       </section>}
 
       {rows.length > 0 && <>
@@ -261,7 +286,7 @@ export function DataImportPageV21() {
             {row.messages.length > 0 && <ul>{row.messages.slice(0,4).map((message) => <li key={message}>{message}</li>)}</ul>}
             <div className="data-import-v21-row-actions"><label>Decision<select value={row.decision} onChange={(event) => updateRow(row.rowNumber, { decision: event.target.value as ValidatedImportRow['decision'] })}><option value="create_new">Create new patient</option><option value="use_existing">Use existing patient</option><option value="skip">Skip row</option><option value="review_later">Review later</option></select></label>{row.decision === 'use_existing' && <label>Existing patient<select value={row.selectedExistingPatientId ?? ''} onChange={(event) => updateRow(row.rowNumber, { selectedExistingPatientId: event.target.value })}><option value="">Select patient</option>{row.duplicates.map((duplicate) => <option key={duplicate.patientId} value={duplicate.patientId}>{duplicate.patientId} — {duplicate.name}</option>)}</select></label>}</div>
           </article>)}</div>
-          <footer className="data-import-v21-review-footer"><div><Button variant="secondary" onClick={downloadErrorReport}>Download review report</Button><Button variant="secondary" onClick={downloadResultReport}>Download full report</Button></div><div className="data-import-v21-dryrun"><span>Create <b>{dryRun.createRows}</b></span><span>Match <b>{dryRun.matchedRows}</b></span><span>Skip <b>{dryRun.skippedRows}</b></span><span>Unresolved <b>{dryRun.unresolvedRows}</b></span></div><Button disabled={!dryRun.canImport || !canImport} onClick={() => setShowImportConfirm(true)}>Review & commit</Button></footer>
+          <footer className="data-import-v21-review-footer"><div><Button variant="secondary" onClick={downloadErrorReport}>Download review report</Button><Button variant="secondary" onClick={downloadResultReport}>Download full report</Button></div><div className="data-import-v21-dryrun"><span>Create <b>{dryRun.createRows}</b></span><span>Match <b>{dryRun.matchedRows}</b></span><span>Skip <b>{dryRun.skippedRows}</b></span><span>Unresolved <b>{dryRun.unresolvedRows}</b></span></div><Button disabled={!dryRun.canImport || !canImport || isImporting} onClick={() => setShowImportConfirm(true)}>{isImporting ? 'Importing…' : 'Review & commit'}</Button></footer>
         </section>
       </>}
 
@@ -269,7 +294,7 @@ export function DataImportPageV21() {
 
       <section className="data-import-v21-card history-card"><header><div><span>Migration history</span><h3>Import batches</h3><p>Completed and rolled-back batches remain visible for operational traceability.</p></div><History size={18}/></header>{batches.length === 0 ? <div className="data-import-v21-empty"><History size={26}/><strong>No import batches yet</strong><span>Committed migrations will appear here.</span></div> : <div className="data-import-v21-batches">{batches.map((batch) => <article key={batch.id}><div><span>{batch.filename}</span><h4>{batch.sheetName}</h4><small>{batch.createdAt ? new Date(batch.createdAt).toLocaleString('en-PH', { timeZone: 'Asia/Manila' }) : 'Date unavailable'}</small></div><div className="data-import-v21-batch-stats"><span>Total <b>{batch.totalRows}</b></span><span>Imported <b>{batch.importedRows}</b></span><span>Matched <b>{batch.matchedRows}</b></span><span>Skipped <b>{batch.skippedRows}</b></span></div><Badge tone={batch.status === 'completed' ? 'success' : batch.status === 'rolled_back' ? 'neutral' : batch.status === 'failed' ? 'danger' : 'warning'}>{labelize(batch.status)}</Badge>{batch.status !== 'rolled_back' && batch.importedRows > 0 && <Button variant="secondary" onClick={() => { setRollbackBatchId(batch.id); setRollbackReason('') }}><RotateCcw size={14}/>Rollback</Button>}</article>)}</div>}</section>
 
-      {showImportConfirm && <div className="data-import-v21-modal-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setShowImportConfirm(false) }}><div className="data-import-v21-modal" role="dialog" aria-modal="true" aria-labelledby="import-confirm-title"><header><div><span>Final migration check</span><h3 id="import-confirm-title">Commit patient import?</h3></div><button type="button" onClick={() => setShowImportConfirm(false)} aria-label="Close"><X size={18}/></button></header><div className="data-import-v21-confirm-grid"><div><span>Create new</span><strong>{dryRun.createRows}</strong></div><div><span>Match existing</span><strong>{dryRun.matchedRows}</strong></div><div><span>Skip</span><strong>{dryRun.skippedRows}</strong></div><div><span>Unresolved</span><strong>{dryRun.unresolvedRows}</strong></div></div><div className="data-import-v21-confirm-note"><ShieldCheck size={18}/><p>This commits the reviewed migration using the existing import engine. It does not create patient portal accounts.</p></div><footer><Button variant="secondary" onClick={() => setShowImportConfirm(false)}>Cancel</Button><Button onClick={performImport} disabled={!dryRun.canImport}>Commit import</Button></footer></div></div>}
+      {showImportConfirm && <div className="data-import-v21-modal-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget && !isImporting) setShowImportConfirm(false) }}><div className="data-import-v21-modal" role="dialog" aria-modal="true" aria-labelledby="import-confirm-title"><header><div><span>Final migration check</span><h3 id="import-confirm-title">Commit patient import?</h3></div><button type="button" onClick={() => setShowImportConfirm(false)} aria-label="Close" disabled={isImporting}><X size={18}/></button></header><div className="data-import-v21-confirm-grid"><div><span>Create new</span><strong>{dryRun.createRows}</strong></div><div><span>Match existing</span><strong>{dryRun.matchedRows}</strong></div><div><span>Skip</span><strong>{dryRun.skippedRows}</strong></div><div><span>Unresolved</span><strong>{dryRun.unresolvedRows}</strong></div></div><div className="data-import-v21-confirm-note"><ShieldCheck size={18}/><p>This commits the reviewed migration to PostgreSQL using patient import permissions. It does not create patient portal accounts.</p></div><footer><Button variant="secondary" onClick={() => setShowImportConfirm(false)} disabled={isImporting}>Cancel</Button><Button onClick={() => void performImport()} disabled={!dryRun.canImport || isImporting}>{isImporting ? 'Importing…' : 'Commit import'}</Button></footer></div></div>}
 
       {rollbackBatchId && <div className="data-import-v21-modal-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setRollbackBatchId(null) }}><div className="data-import-v21-modal compact" role="dialog" aria-modal="true" aria-labelledby="rollback-title"><header><div><span>Controlled rollback</span><h3 id="rollback-title">Rollback imported patients?</h3></div><button type="button" onClick={() => setRollbackBatchId(null)} aria-label="Close"><X size={18}/></button></header><p className="data-import-v21-muted">Rollback removes patient records created by this import batch while preserving the batch history.</p><label className="data-import-v21-label">Reason<textarea value={rollbackReason} onChange={(event) => setRollbackReason(event.target.value)} placeholder="Document why this batch is being rolled back"/></label><footer><Button variant="secondary" onClick={() => setRollbackBatchId(null)}>Cancel</Button><Button onClick={performRollback} disabled={!rollbackReason.trim()}>Confirm rollback</Button></footer></div></div>}
     </section>

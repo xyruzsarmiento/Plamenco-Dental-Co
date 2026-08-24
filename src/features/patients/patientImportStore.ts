@@ -1,4 +1,5 @@
 import readXlsxFile from 'read-excel-file/browser'
+import { supabase } from '../../lib/supabase'
 import { insertRemoteTableRow } from '../../lib/supabaseSync'
 import { getStoredAppointments } from '../appointments/appointmentStore'
 import { getInvoicesByPatient } from '../billing/billingStore'
@@ -9,6 +10,7 @@ import { getCurrentSessionUserName } from '../security/security'
 import { recordAuditEntry } from '../security/auditLogStore'
 import { getTreatmentsByPatient } from '../treatments/treatmentStore'
 import { createPatient, findPotentialPatientDuplicates, getPatientDisplayName, getStoredPatients } from './patientStore'
+import { createPatientPersisted } from './patientPersistence'
 import type { PatientFormValues } from './patientTypes'
 
 export type ImportType = 'patients' | 'appointments' | 'treatments' | 'payments' | 'inventory'
@@ -106,6 +108,33 @@ export type PatientImportBatch = {
   fileSizeBytes?: number
 }
 
+export type PatientImportStoredRow = {
+  id: string
+  batchId: string
+  sourceRowNumber: number
+  status: ImportRowStatus
+  decision: ImportRowDecision
+  matchConfidence: ImportMatchConfidence
+  messages: string[]
+  duplicatePatients: Array<{ patientId: string; name: string; signals: string[] }>
+  workbookDuplicateRows: number[]
+  selectedExistingPatientId: string
+  importedPatientId: string
+  importedPatientNumber: string
+  sourceData: Record<string, string>
+  normalizedValues: Record<string, string>
+  preservedHistoricalData: Record<string, string>
+  failedReason: string
+  importedAt?: string
+  createdAt: string
+}
+
+export type PatientImportCommitResult = {
+  batch: PatientImportBatch
+  rows: PatientImportStoredRow[]
+  stagingErrors: string[]
+}
+
 const IMPORT_BATCH_STORAGE_KEY = 'plamenco.patientImportBatches'
 const IMPORT_ROW_STORAGE_KEY = 'plamenco.patientImportRows'
 const MAX_IMPORT_FILE_SIZE_BYTES = 10 * 1024 * 1024
@@ -188,7 +217,8 @@ export async function parsePatientWorkbook(file: File): Promise<ParsedPatientWor
 
   if (isCsv) {
     const matrix = parseCsvMatrix(await readAsText(file))
-    return { fileName: file.name, fileSizeBytes: file.size, sheets: [matrixToSheet(file.name.replace(/\.csv$/i, '') || 'CSV Import', matrix)] }
+    const sheet = matrixToSheet(file.name.replace(/\.csv$/i, '') || 'CSV Import', matrix)
+    return { fileName: file.name, fileSizeBytes: file.size, sheets: sheet.headers.length ? [sheet] : [] }
   }
 
   const workbook = await readXlsxFile(file)
@@ -312,6 +342,15 @@ export function getDestinationFieldGuide() {
 
 function parseDate(value: string) {
   if (!value) return ''
+  const isoDate = value.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/)
+  if (isoDate) {
+    const year = Number(isoDate[1])
+    const month = Number(isoDate[2])
+    const day = Number(isoDate[3])
+    const parsed = new Date(Date.UTC(year, month - 1, day))
+    if (parsed.getUTCFullYear() !== year || parsed.getUTCMonth() !== month - 1 || parsed.getUTCDate() !== day) return ''
+    return parsed.toISOString().slice(0, 10)
+  }
   if (/^\d+(\.\d+)?$/.test(value)) {
     const serial = Number(value)
     if (serial > 1 && serial < 100000) {
@@ -328,6 +367,7 @@ function parseDate(value: string) {
     const month = first > 12 ? second : first
     const day = first > 12 ? first : second
     const parsed = new Date(Date.UTC(year, month - 1, day))
+    if (parsed.getUTCFullYear() !== year || parsed.getUTCMonth() !== month - 1 || parsed.getUTCDate() !== day) return ''
     return Number.isNaN(parsed.getTime()) ? '' : parsed.toISOString().slice(0, 10)
   }
   const parsed = new Date(value)
@@ -385,10 +425,20 @@ function getMappedValue(source: Record<string, string>, mapping: PatientImportMa
   return column ? source[column] ?? '' : ''
 }
 
+function splitImportedName(fullName: string) {
+  const parts = fullName.trim().split(/\s+/).filter(Boolean)
+  return {
+    firstName: parts[0] ?? '',
+    middleName: parts.length > 2 ? parts.slice(1, -1).join(' ') : '',
+    lastName: parts.length > 1 ? parts[parts.length - 1] : '',
+  }
+}
+
 export function validatePatientImportRows(sheet: ParsedImportSheet, mapping: PatientImportMapping): ValidatedImportRow[] {
   const existing = getStoredPatients()
   const existingNumbers = new Set(existing.map((patient) => patient.patientId.toLowerCase()))
   const workbookKeys = new Map<string, number[]>()
+  const workbookPatientNumbers = new Map<string, number[]>()
 
   sheet.rows.forEach((source, index) => {
     const fullName = getMappedValue(source, mapping, 'fullName')
@@ -396,10 +446,15 @@ export function validatePatientImportRows(sheet: ParsedImportSheet, mapping: Pat
     const lastName = getMappedValue(source, mapping, 'lastName')
     const phone = normalizeImportedPhone(getMappedValue(source, mapping, 'phone'))
     const email = getMappedValue(source, mapping, 'email').trim().toLowerCase()
+    const patientNumber = getMappedValue(source, mapping, 'patientNumber').trim()
     const dateOfBirth = parseDate(getMappedValue(source, mapping, 'dateOfBirth'))
     const key = [email, phone, fullName || `${firstName} ${lastName}`.trim(), dateOfBirth].filter(Boolean).join('|').toLowerCase()
     if (!key) return
     workbookKeys.set(key, [...(workbookKeys.get(key) ?? []), index + 2])
+    if (patientNumber) {
+      const numberKey = patientNumber.toLowerCase()
+      workbookPatientNumbers.set(numberKey, [...(workbookPatientNumbers.get(numberKey) ?? []), index + 2])
+    }
   })
 
   return sheet.rows.map((source, index) => {
@@ -411,20 +466,27 @@ export function validatePatientImportRows(sheet: ParsedImportSheet, mapping: Pat
     const lastName = getMappedValue(source, mapping, 'lastName')
     const rawDateOfBirth = getMappedValue(source, mapping, 'dateOfBirth')
     const dateOfBirth = parseDate(rawDateOfBirth)
-    const email = getMappedValue(source, mapping, 'email').toLowerCase()
+    const email = getMappedValue(source, mapping, 'email').trim().toLowerCase()
     const phone = normalizeImportedPhone(getMappedValue(source, mapping, 'phone'))
-    const patientNumber = getMappedValue(source, mapping, 'patientNumber')
+    const patientNumber = getMappedValue(source, mapping, 'patientNumber').trim()
     const preferredBranch = getMappedValue(source, mapping, 'preferredBranch')
     const historicalDentist = getMappedValue(source, mapping, 'dentist')
     const historicalProcedure = getMappedValue(source, mapping, 'procedure')
     const workbookKey = [email, phone, fullName || `${firstName} ${lastName}`.trim(), dateOfBirth].filter(Boolean).join('|').toLowerCase()
     const workbookDuplicateRows = workbookKey ? (workbookKeys.get(workbookKey) ?? []).filter((candidate) => candidate !== rowNumber) : []
+    const duplicatePatientNumberRows = patientNumber ? (workbookPatientNumbers.get(patientNumber.toLowerCase()) ?? []).filter((candidate) => candidate !== rowNumber) : []
+    const splitName = splitImportedName(fullName)
+    const importedFirstName = firstName.trim() || splitName.firstName
+    const importedMiddleName = middleName.trim() || splitName.middleName
+    const importedLastName = lastName.trim() || splitName.lastName
 
     if (!fullName && (!firstName || !lastName)) messages.push('Missing patient name')
+    if (fullName && (!importedFirstName || !importedLastName)) messages.push('Full name must include at least first and last name')
     if (rawDateOfBirth && isAmbiguousSlashDate(rawDateOfBirth)) messages.push('Ambiguous birth date. Confirm whether the source date is MM/DD/YYYY or DD/MM/YYYY before import.')
     if (getMappedValue(source, mapping, 'dateOfBirth') && !dateOfBirth) messages.push('Invalid date of birth')
     if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) messages.push('Invalid email')
     if (patientNumber && existingNumbers.has(patientNumber.toLowerCase())) messages.push('Duplicate patient number')
+    if (duplicatePatientNumberRows.length > 0) messages.push(`Duplicate patient number inside workbook: row ${duplicatePatientNumberRows.join(', ')}`)
     if (phone && !/^(\+639\d{9}|09\d{9}|9\d{9})$/.test(phone)) messages.push('Invalid or ambiguous Philippine mobile number')
     if (preferredBranch && !mapBranchId(preferredBranch)) messages.push('Unknown branch. Map this source value before importing.')
     if (historicalDentist && !hasProviderMatch(historicalDentist)) messages.push('Unknown historical dentist. Confirm provider mapping or preserve as historical text.')
@@ -433,10 +495,10 @@ export function validatePatientImportRows(sheet: ParsedImportSheet, mapping: Pat
 
     const values: PatientFormValues = {
       authUserId: undefined,
-      fullName,
-      firstName,
-      middleName,
-      lastName,
+      fullName: fullName.trim() || [importedFirstName, importedMiddleName, importedLastName].filter(Boolean).join(' '),
+      firstName: importedFirstName,
+      middleName: importedMiddleName,
+      lastName: importedLastName,
       dateOfBirth,
       sex: normalizeSex(getMappedValue(source, mapping, 'sex')),
       phone,
@@ -480,7 +542,7 @@ export function validatePatientImportRows(sheet: ParsedImportSheet, mapping: Pat
     const matchConfidence: ImportMatchConfidence = hasExactMatch ? 'exact_match' : hasLikelyMatch ? 'likely_match' : duplicateSummaries.length > 0 || workbookDuplicateRows.length > 0 ? 'possible_match' : 'no_match'
 
     let status: ImportRowStatus = 'ready'
-    if (messages.some((message) => message.includes('Missing') || message.includes('Invalid') || message.includes('Ambiguous') || message.includes('Duplicate patient number'))) status = 'error'
+    if (messages.some((message) => message.includes('Missing') || message.includes('Invalid') || message.includes('Ambiguous') || message.includes('Duplicate patient number') || message.includes('Full name must'))) status = 'error'
     else if (matchConfidence === 'exact_match' || matchConfidence === 'likely_match') status = 'duplicate'
     else if (matchConfidence === 'possible_match') status = 'possible_match'
     else if (!email || !phone || !dateOfBirth) status = 'warning'
@@ -521,6 +583,252 @@ export function getStoredPatientImportRows() {
 
 function saveStoredPatientImportBatches(batches: PatientImportBatch[]) {
   window.localStorage.setItem(IMPORT_BATCH_STORAGE_KEY, JSON.stringify(batches))
+}
+
+function buildPatientImportBatch(
+  filename: string,
+  sheetName: string,
+  rows: ValidatedImportRow[],
+  status: PatientImportBatch['status'],
+  options: { mapping?: PatientImportMapping; sheetProfile?: ImportSheetProfile; fileSizeBytes?: number } = {},
+): PatientImportBatch {
+  return {
+    id: makeImportId(),
+    importType: 'patients',
+    filename,
+    sheetName,
+    uploadedBy: getCurrentSessionUserName(),
+    createdAt: new Date().toISOString(),
+    status,
+    totalRows: rows.length,
+    validRows: rows.filter((row) => row.status === 'ready' || row.status === 'warning').length,
+    invalidRows: rows.filter((row) => row.status === 'error').length,
+    duplicateRows: rows.filter((row) => row.status === 'duplicate' || row.status === 'possible_match').length,
+    importedRows: 0,
+    matchedRows: 0,
+    skippedRows: 0,
+    failedRows: 0,
+    mapping: options.mapping,
+    dryRunSummary: runPatientImportDryRun(rows),
+    sheetProfile: options.sheetProfile,
+    fileSizeBytes: options.fileSizeBytes,
+  }
+}
+
+function batchRemoteRow(batch: PatientImportBatch, completedAt?: string | null) {
+  return {
+    id: batch.id,
+    filename: batch.filename,
+    sheet_name: batch.sheetName,
+    uploaded_by: batch.uploadedBy,
+    status: batch.status,
+    import_type: batch.importType,
+    total_rows: batch.totalRows,
+    valid_rows: batch.validRows,
+    invalid_rows: batch.invalidRows,
+    duplicate_rows: batch.duplicateRows,
+    imported_rows: batch.importedRows,
+    matched_rows: batch.matchedRows,
+    skipped_rows: batch.skippedRows,
+    failed_rows: batch.failedRows,
+    mapping: batch.mapping ?? {},
+    dry_run_summary: batch.dryRunSummary ?? {},
+    file_size_bytes: batch.fileSizeBytes ?? null,
+    sheet_profile: batch.sheetProfile ?? {},
+    completed_at: completedAt ?? null,
+  }
+}
+
+function importRowRemoteRow(row: PatientImportStoredRow, sourceRows: ValidatedImportRow[]) {
+  return {
+    id: row.id,
+    batch_id: row.batchId,
+    source_row_number: row.sourceRowNumber,
+    status: row.status,
+    decision: row.decision,
+    match_confidence: row.matchConfidence,
+    messages: row.messages,
+    duplicate_patients: row.duplicatePatients,
+    workbook_duplicate_rows: row.workbookDuplicateRows,
+    selected_existing_patient_id: row.selectedExistingPatientId,
+    patient_id: row.importedPatientId || null,
+    legacy_patient_number: sourceRows.find((candidate) => candidate.rowNumber === row.sourceRowNumber)?.legacyPatientNumber ?? '',
+    imported_patient_number: row.importedPatientNumber,
+    outcome: row.status === 'imported' ? 'created_patient' : row.status === 'mapped_to_existing' ? 'mapped_existing' : row.status === 'failed' ? 'failed' : row.status === 'skipped' ? 'skipped' : '',
+    source_data: row.sourceData,
+    normalized_values: row.normalizedValues,
+    preserved_historical_data: row.preservedHistoricalData,
+    failed_reason: row.failedReason,
+    imported_at: row.importedAt ?? null,
+  }
+}
+
+function remoteBatchToLocal(row: Record<string, any>): PatientImportBatch {
+  return {
+    id: row.id,
+    importType: row.import_type ?? 'patients',
+    filename: row.filename ?? '',
+    sheetName: row.sheet_name ?? '',
+    uploadedBy: row.uploaded_by ?? '',
+    createdAt: row.created_at ?? new Date().toISOString(),
+    status: row.status ?? 'completed',
+    totalRows: row.total_rows ?? 0,
+    validRows: row.valid_rows ?? 0,
+    invalidRows: row.invalid_rows ?? row.error_rows ?? 0,
+    duplicateRows: row.duplicate_rows ?? 0,
+    importedRows: row.imported_rows ?? 0,
+    matchedRows: row.matched_rows ?? 0,
+    skippedRows: row.skipped_rows ?? 0,
+    failedRows: row.failed_rows ?? 0,
+    rollbackAt: row.rollback_at ?? undefined,
+    rollbackBy: row.rollback_by ?? undefined,
+    rollbackReason: row.rollback_reason ?? undefined,
+    mapping: row.mapping ?? {},
+    dryRunSummary: row.dry_run_summary ?? undefined,
+    sheetProfile: row.sheet_profile ?? undefined,
+    fileSizeBytes: row.file_size_bytes ?? undefined,
+  }
+}
+
+export async function loadPatientImportBatchesFromSupabase(options: { strict?: boolean } = {}) {
+  if (!supabase) {
+    if (options.strict) throw new Error('Clinic database is not configured. Unable to load import history.')
+    return getStoredPatientImportBatches()
+  }
+
+  const { data, error } = await supabase
+    .from('patient_import_batches')
+    .select('*')
+    .eq('import_type', 'patients')
+    .order('created_at', { ascending: false })
+
+  if (error) {
+    if (options.strict) throw new Error('Unable to load patient import history from the clinic database.')
+    return getStoredPatientImportBatches()
+  }
+
+  const batches = (data ?? []).map((row) => remoteBatchToLocal(row as Record<string, any>))
+  saveStoredPatientImportBatches(batches)
+  return batches
+}
+
+function saveCompletedImportLocally(batch: PatientImportBatch, importRows: PatientImportStoredRow[]) {
+  saveStoredPatientImportBatches([batch, ...getStoredPatientImportBatches().filter((entry) => entry.id !== batch.id)])
+  const existingRows = safeParseList<Record<string, unknown>>(window.localStorage.getItem(IMPORT_ROW_STORAGE_KEY))
+  window.localStorage.setItem(IMPORT_ROW_STORAGE_KEY, JSON.stringify([...importRows, ...existingRows]))
+}
+
+export async function confirmPatientImportPersisted(
+  filename: string,
+  sheetName: string,
+  rows: ValidatedImportRow[],
+  options: { mapping?: PatientImportMapping; sheetProfile?: ImportSheetProfile; fileSizeBytes?: number } = {},
+): Promise<PatientImportCommitResult> {
+  if (!supabase) throw new Error('Clinic database is not configured. Patient imports must be committed to PostgreSQL.')
+
+  const dryRunSummary = runPatientImportDryRun(rows)
+  if (!dryRunSummary.canImport) throw new Error('Resolve, skip, or review unresolved rows before confirming this import.')
+
+  const batch = buildPatientImportBatch(filename, sheetName, rows, 'importing', options)
+  const { error: batchError } = await supabase.from('patient_import_batches').insert(batchRemoteRow(batch, null))
+  if (batchError) throw new Error('Unable to stage the import batch in PostgreSQL. No patient rows were imported.')
+
+  const importRows: PatientImportStoredRow[] = []
+  const now = new Date().toISOString()
+
+  for (const row of rows) {
+    let outcomeStatus: ImportRowStatus = row.status
+    let importedPatientId = ''
+    let importedPatientNumber = ''
+    let failedReason = ''
+
+    if (row.decision === 'create_new' && (row.status === 'ready' || row.status === 'warning')) {
+      try {
+        const patient = await createPatientPersisted({
+          ...row.values,
+          patientId: row.legacyPatientNumber,
+          importBatchId: batch.id,
+          importSourceRow: row.rowNumber,
+        })
+        importedPatientId = patient.id
+        importedPatientNumber = patient.patientId
+        outcomeStatus = 'imported'
+        batch.importedRows += 1
+      } catch (cause) {
+        outcomeStatus = 'failed'
+        failedReason = cause instanceof Error ? cause.message : 'Patient row could not be inserted.'
+        batch.failedRows += 1
+      }
+    } else if (row.decision === 'use_existing' && row.selectedExistingPatientId) {
+      outcomeStatus = 'mapped_to_existing'
+      batch.matchedRows += 1
+    } else {
+      outcomeStatus = 'skipped'
+      failedReason = row.decision === 'review_later' ? 'Row left for review.' : ''
+      batch.skippedRows += 1
+    }
+
+    importRows.push({
+      id: makeImportId(),
+      batchId: batch.id,
+      sourceRowNumber: row.rowNumber,
+      status: outcomeStatus,
+      decision: row.decision,
+      matchConfidence: row.matchConfidence,
+      messages: failedReason ? [...row.messages, failedReason] : row.messages,
+      duplicatePatients: row.duplicates,
+      workbookDuplicateRows: row.workbookDuplicateRows,
+      selectedExistingPatientId: row.selectedExistingPatientId ?? '',
+      importedPatientId,
+      importedPatientNumber,
+      sourceData: row.source,
+      normalizedValues: row.normalizedValues,
+      preservedHistoricalData: row.preservedHistoricalData,
+      failedReason,
+      importedAt: outcomeStatus === 'imported' || outcomeStatus === 'mapped_to_existing' ? now : undefined,
+      createdAt: now,
+    })
+  }
+
+  batch.status = batch.failedRows > 0
+    ? (batch.importedRows + batch.matchedRows > 0 ? 'partially_completed' : 'failed')
+    : 'completed'
+
+  const stagingErrors: string[] = []
+  for (let index = 0; index < importRows.length; index += 100) {
+    const chunk = importRows.slice(index, index + 100).map((row) => importRowRemoteRow(row, rows))
+    const { error } = await supabase.from('patient_import_rows').insert(chunk)
+    if (error) stagingErrors.push(`Rows ${index + 1}-${index + chunk.length}: ${error.message}`)
+  }
+
+  const completedAt = new Date().toISOString()
+  const { error: updateError } = await supabase
+    .from('patient_import_batches')
+    .update(batchRemoteRow(batch, completedAt))
+    .eq('id', batch.id)
+
+  if (updateError) stagingErrors.push(`Batch summary update: ${updateError.message}`)
+
+  saveCompletedImportLocally(batch, importRows)
+
+  recordAuditEntry({
+    user: batch.uploadedBy,
+    action: 'patient_import_completed',
+    entity: 'patient_import_batch',
+    entityId: batch.id,
+    metadata: {
+      filename: batch.filename,
+      importedRows: batch.importedRows,
+      matchedRows: batch.matchedRows,
+      skippedRows: batch.skippedRows,
+      failedRows: batch.failedRows,
+      invalidRows: batch.invalidRows,
+      duplicateRows: batch.duplicateRows,
+      stagingErrors: stagingErrors.join(' | '),
+    },
+  })
+
+  return { batch, rows: importRows, stagingErrors }
 }
 
 export function confirmPatientImport(filename: string, sheetName: string, rows: ValidatedImportRow[], options: { mapping?: PatientImportMapping; sheetProfile?: ImportSheetProfile; fileSizeBytes?: number } = {}) {

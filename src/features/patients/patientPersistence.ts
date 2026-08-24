@@ -224,7 +224,7 @@ export async function archivePatientPersisted(id: string): Promise<Patient> {
     action: 'patient_archived',
     entity: 'patient',
     entityId: confirmed.patientId,
-    metadata: { patientId: confirmed.patientId, archivedAt: (data as Record<string, unknown>).archived_at ?? confirmed.updatedAt },
+    metadata: { patientId: confirmed.patientId, archivedAt: String((data as Record<string, unknown>).archived_at ?? confirmed.updatedAt) },
   })
 
   return confirmed

@@ -1,4 +1,5 @@
 import { insertRemoteTableRow, updateRemoteTableRow } from '../../lib/supabaseSync'
+import { isSupabaseConfigured } from '../../lib/supabase'
 import type {
   CommunicationDeliveryLog,
   CommunicationOutboxEntry,
@@ -115,6 +116,29 @@ export function createCommunicationDeliveryLog(
   return log
 }
 
+export async function createCommunicationDeliveryLogPersisted(
+  input: Omit<CommunicationDeliveryLog, 'id' | 'attemptCount' | 'createdAt' | 'updatedAt'> & { attemptCount?: number },
+) {
+  const now = nowIso()
+  const existing = findCommunicationLogByIdempotencyKey(input.idempotencyKey)
+  if (existing) return existing
+
+  const log: CommunicationDeliveryLog = {
+    id: `comm-log-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+    attemptCount: input.attemptCount ?? 0,
+    maxAttempts: input.maxAttempts ?? getCommunicationSettings().maxRetryAttempts,
+    dispatchMode: input.dispatchMode ?? 'automated',
+    createdAt: now,
+    updatedAt: now,
+    ...input,
+  }
+
+  const remote = await insertRemoteTableRow('communication_delivery_logs', mapDeliveryLogToRemoteRow(log))
+  if (isSupabaseConfigured && !remote) throw new Error('Communication log could not be saved to Supabase.')
+  saveCommunicationDeliveryLogs([log, ...getCommunicationDeliveryLogs()])
+  return log
+}
+
 export function updateCommunicationDeliveryLog(id: string, updates: Partial<CommunicationDeliveryLog>) {
   const logs = getCommunicationDeliveryLogs()
   const index = logs.findIndex((log) => log.id === id)
@@ -160,6 +184,34 @@ export function createCommunicationOutboxEntry(input: Omit<CommunicationOutboxEn
     max_attempts: entry.maxAttempts ?? null,
     next_attempt_at: entry.nextAttemptAt,
   })
+  return entry
+}
+
+export async function createCommunicationOutboxEntryPersisted(input: Omit<CommunicationOutboxEntry, 'id' | 'attempts' | 'createdAt' | 'updatedAt'>) {
+  const now = nowIso()
+  const entry: CommunicationOutboxEntry = {
+    id: `comm-outbox-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+    attempts: 0,
+    maxAttempts: input.maxAttempts ?? getCommunicationSettings().maxRetryAttempts,
+    createdAt: now,
+    updatedAt: now,
+    ...input,
+  }
+  const remote = await insertRemoteTableRow('communication_outbox', {
+    id: entry.id,
+    delivery_log_id: entry.deliveryLogId,
+    channel: entry.channel,
+    provider: entry.provider,
+    patient_id: entry.patientId ?? null,
+    branch_id: entry.branchId ?? null,
+    payload: entry.payload,
+    status: entry.status,
+    attempts: entry.attempts,
+    max_attempts: entry.maxAttempts ?? null,
+    next_attempt_at: entry.nextAttemptAt,
+  })
+  if (isSupabaseConfigured && !remote) throw new Error('Communication outbox job could not be saved to Supabase.')
+  saveCommunicationOutbox([entry, ...getCommunicationOutbox()])
   return entry
 }
 

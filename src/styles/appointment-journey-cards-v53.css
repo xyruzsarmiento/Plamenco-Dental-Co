@@ -1,0 +1,215 @@
+.appointments-v40 .sa-appointments-flow-card {
+  display: grid !important;
+  gap: 11px !important;
+  padding: 12px !important;
+  border: 1px solid #e1e8f0 !important;
+  border-radius: 15px !important;
+  background: #ffffff !important;
+  cursor: pointer !important;
+  outline: none !important;
+  box-shadow: 0 5px 16px rgba(15, 23, 42, 0.035) !important;
+  transition: border-color 0.16s ease, box-shadow 0.16s ease, transform 0.16s ease, background 0.16s ease !important;
+}
+
+.appointments-v40 .sa-appointments-flow-card:hover {
+  border-color: #bfdbfe !important;
+  background: linear-gradient(135deg, #ffffff 0%, #f8fbff 100%) !important;
+  box-shadow: 0 11px 26px rgba(37, 99, 235, 0.09) !important;
+  transform: translateY(-1px) !important;
+}
+
+.appointments-v40 .sa-appointments-flow-card:focus-visible {
+  border-color: #2563eb !important;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.16), 0 10px 24px rgba(37, 99, 235, 0.08) !important;
+}
+
+.appointments-v40 .journey-card-main {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.appointments-v40 .journey-patient-block {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.appointments-v40 .journey-avatar {
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  width: 42px;
+  height: 42px;
+  border: 1px solid #cfe0ff;
+  border-radius: 14px;
+  background: #eaf2ff center / cover no-repeat;
+  color: #1d4ed8;
+  font-size: 0.78rem;
+  font-weight: 900;
+  letter-spacing: 0;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.65);
+}
+
+.appointments-v40 .journey-patient-copy,
+.appointments-v40 .journey-care-block,
+.appointments-v40 .journey-schedule-block {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+
+.appointments-v40 .journey-patient-copy strong,
+.appointments-v40 .journey-care-block strong,
+.appointments-v40 .journey-schedule-block strong {
+  overflow: hidden;
+  color: #172033;
+  font-size: 0.86rem;
+  line-height: 1.2;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.appointments-v40 .journey-patient-copy small,
+.appointments-v40 .journey-care-block span,
+.appointments-v40 .journey-schedule-block span {
+  overflow: hidden;
+  color: #64748b;
+  font-size: 0.72rem;
+  line-height: 1.3;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.appointments-v40 .journey-care-block span {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  min-width: 0;
+}
+
+.appointments-v40 .journey-care-block span svg {
+  flex: 0 0 auto;
+  color: #2563eb;
+}
+
+.appointments-v40 .journey-care-block em {
+  justify-self: start;
+  padding: 3px 7px;
+  border: 1px solid #fde68a;
+  border-radius: 999px;
+  background: #fffbeb;
+  color: #92400e;
+  font-size: 0.66rem;
+  font-style: normal;
+  font-weight: 850;
+}
+
+.appointments-v40 .journey-schedule-block {
+  justify-items: end;
+  text-align: right;
+}
+
+.appointments-v40 .journey-schedule-block strong {
+  font-size: 0.9rem;
+}
+
+.appointments-v40 .journey-schedule-block span {
+  max-width: 112px;
+  padding: 3px 7px;
+  border: 1px solid #e2e8f0;
+  border-radius: 999px;
+  background: #f8fafc;
+  color: #475569;
+  font-size: 0.64rem;
+  font-weight: 800;
+}
+
+.appointments-v40 .operations-card-actions {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  align-items: center !important;
+  justify-content: flex-end !important;
+  gap: 7px !important;
+  padding-top: 8px !important;
+  border-top: 1px solid #edf2f7 !important;
+}
+
+.appointments-v40 .operations-card-actions:empty {
+  display: none !important;
+}
+
+.appointments-v40 .operations-card-action {
+  min-height: 30px !important;
+  padding: 0 10px !important;
+  border: 1px solid #dbe7ff !important;
+  border-radius: 9px !important;
+  background: #eff6ff !important;
+  color: #1d4ed8 !important;
+  font-size: 0.7rem !important;
+  font-weight: 850 !important;
+  text-decoration: none !important;
+}
+
+.appointments-v40 .operations-card-action:hover:not(:disabled),
+.appointments-v40 .operations-card-action:focus-visible {
+  border-color: #93c5fd !important;
+  background: #dbeafe !important;
+  outline: none !important;
+}
+
+.appointments-v40 .operations-card-action-danger {
+  border-color: #fecaca !important;
+  background: #fff1f2 !important;
+  color: #b91c1c !important;
+}
+
+.appointments-v40 .operations-card-action-danger:hover:not(:disabled),
+.appointments-v40 .operations-card-action-danger:focus-visible {
+  border-color: #fca5a5 !important;
+  background: #fee2e2 !important;
+}
+
+@media (max-width: 1280px) {
+  .appointments-v40 .journey-card-main {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  .appointments-v40 .journey-care-block {
+    grid-column: 1 / -1;
+    padding-left: 52px;
+  }
+}
+
+@media (max-width: 520px) {
+  .appointments-v40 .journey-card-main {
+    grid-template-columns: 1fr;
+    align-items: start;
+  }
+
+  .appointments-v40 .journey-care-block {
+    padding-left: 0;
+  }
+
+  .appointments-v40 .journey-schedule-block {
+    justify-items: start;
+    text-align: left;
+  }
+
+  .appointments-v40 .operations-card-actions {
+    justify-content: stretch !important;
+  }
+
+  .appointments-v40 .operations-card-action {
+    flex: 1 1 auto;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .appointments-v40 .sa-appointments-flow-card {
+    transition: none !important;
+  }
+}

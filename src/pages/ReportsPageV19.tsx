@@ -52,7 +52,7 @@ function StatusDonut({ snapshot }: { snapshot: EnterpriseReportSnapshot }) {
 
 export function ReportsPageV19() {
   const { user } = useAuth()
-  const canExport = user?.role === 'admin' || user?.role === 'super_admin' || user?.permissions?.some((p) => p.startsWith('reports.export'))
+  const canExport = user?.role === 'super_admin' || user?.permissions?.some((p) => p.startsWith('reports.export'))
   const initial = getReportingDatePresetRange('this_month')
   const [refreshKey,setRefreshKey] = useState(0)
   const [advanced,setAdvanced] = useState(false)

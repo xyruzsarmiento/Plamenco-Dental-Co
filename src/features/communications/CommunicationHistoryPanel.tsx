@@ -1,5 +1,5 @@
 import { Mail, MessageCircle, Phone, Smartphone } from 'lucide-react'
-import { Badge } from '../../components/ui/Badge'
+import { StatusBadge } from '../../components/ui/Badge'
 import type { CommunicationChannel, CommunicationDeliveryLog } from './communicationTypes'
 
 type CommunicationHistoryPanelProps = {
@@ -12,13 +12,6 @@ const channelIcons: Record<CommunicationChannel, typeof Phone> = {
   email: Mail,
   messenger: MessageCircle,
   in_app: Smartphone,
-}
-
-function getStatusTone(status: CommunicationDeliveryLog['status']) {
-  if (status === 'sent' || status === 'delivered') return 'success'
-  if (status === 'failed') return 'danger'
-  if (status === 'queued' || status === 'sending') return 'warning'
-  return 'neutral'
 }
 
 export function CommunicationHistoryPanel({ logs, emptyMessage = 'No communication history recorded.' }: CommunicationHistoryPanelProps) {
@@ -41,7 +34,7 @@ export function CommunicationHistoryPanel({ logs, emptyMessage = 'No communicati
               <p>{log.message}</p>
               {log.failureReason && <small>{log.failureReason}</small>}
             </div>
-            <Badge tone={getStatusTone(log.status)}>{log.status}</Badge>
+            <StatusBadge status={log.status} variant="compact" />
           </article>
         )
       })}

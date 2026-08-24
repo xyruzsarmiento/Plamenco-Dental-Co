@@ -1,4 +1,5 @@
 import { Navigate, useLocation, useParams } from 'react-router-dom'
+import { PortalSkeleton } from '../../components/ui/DesignSystem'
 import { useAuth } from './AuthContext'
 
 export function RequirePatientAuth({ children }: { children: React.ReactNode }) {
@@ -7,11 +8,7 @@ export function RequirePatientAuth({ children }: { children: React.ReactNode }) 
   const { user, isAuthenticated, isLoading } = useAuth()
 
   if (isLoading) {
-    return (
-      <main className="auth-page">
-        <div className="loading-state">Loading your patient account...</div>
-      </main>
-    )
+    return <PortalSkeleton variant="patient" message="Loading your patient account" />
   }
 
   if (!isAuthenticated || user?.role !== 'patient') {

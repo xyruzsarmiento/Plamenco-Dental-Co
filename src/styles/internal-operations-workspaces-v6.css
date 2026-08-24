@@ -1,8 +1,6 @@
 /* Operations, reports and import workspaces v6 — page-content only */
-.page-tasks,
 .page-recalls,
 .page-reports,
-.page-report-automation,
 .page-data-import {
   --ox-blue:#2563eb;
   --ox-blue-deep:#1d4ed8;
@@ -18,19 +16,15 @@
   --ox-danger:#dc2626;
 }
 
-.page-tasks .content-area,
 .page-recalls .content-area,
 .page-reports .content-area,
-.page-report-automation .content-area,
 .page-data-import .content-area {
   max-width:1840px;
   padding:clamp(20px,2.4vw,38px);
   background:var(--ox-bg);
 }
 
-.page-tasks .premium-page-heading h2,
-.page-recalls .premium-page-heading h2,
-.page-report-automation .premium-page-heading h2 {
+.page-recalls .premium-page-heading h2 {
   margin:4px 0 7px;
   color:var(--ox-text);
   font-size:clamp(1.65rem,2.2vw,2.35rem);
@@ -39,7 +33,6 @@
 }
 
 /* Tasks: priority work inbox */
-.page-tasks .recall-followup-page > .panel:first-child,
 .page-recalls .recall-followup-page > .panel:first-child {
   padding:16px 18px !important;
   border:1px solid var(--ox-border-soft)!important;
@@ -47,7 +40,6 @@
   background:#fff!important;
   box-shadow:0 5px 18px rgba(15,23,42,.035)!important;
 }
-.page-tasks .recall-tab-row,
 .page-recalls .recall-tab-row {
   display:flex;
   gap:5px;
@@ -58,7 +50,6 @@
   border-radius:11px;
   background:#f8fafc;
 }
-.page-tasks .recall-tab-row button,
 .page-recalls .recall-tab-row button {
   flex:0 0 auto;
   min-height:34px;
@@ -70,21 +61,13 @@
   font-size:.74rem;
   font-weight:700;
 }
-.page-tasks .recall-tab-row button.active,
 .page-recalls .recall-tab-row button.active { background:#fff;color:var(--ox-blue-deep);box-shadow:0 1px 4px rgba(15,23,42,.08); }
-.page-tasks .treatment-filter-grid,
 .page-recalls .treatment-filter-grid { display:grid;grid-template-columns:minmax(260px,1fr) repeat(2,minmax(170px,220px));gap:9px; }
-.page-tasks .recall-workspace-grid,
 .page-recalls .recall-workspace-grid { display:grid;grid-template-columns:minmax(0,1.08fr) minmax(380px,.92fr);gap:16px;align-items:start; }
-.page-tasks .recall-queue-panel,
 .page-recalls .recall-queue-panel,
-.page-tasks .recall-detail-panel,
 .page-recalls .recall-detail-panel { border:1px solid var(--ox-border-soft)!important;border-radius:17px!important;background:#fff!important;box-shadow:0 5px 18px rgba(15,23,42,.035)!important; }
-.page-tasks .recall-detail-panel,
 .page-recalls .recall-detail-panel { position:sticky;top:96px;max-height:calc(100vh - 124px);overflow:auto; }
-.page-tasks .recall-queue-list,
 .page-recalls .recall-queue-list { display:grid;gap:6px; }
-.page-tasks .recall-queue-row,
 .page-recalls .recall-queue-row {
   display:grid;
   grid-template-columns:minmax(0,1.35fr) minmax(150px,.75fr) minmax(150px,.75fr);
@@ -96,15 +79,10 @@
   background:#fff;
   text-align:left;
 }
-.page-tasks .recall-queue-row:hover,
 .page-recalls .recall-queue-row:hover { background:#f8fbff;border-color:#e2ebf8; }
-.page-tasks .recall-queue-row.active,
 .page-recalls .recall-queue-row.active { background:var(--ox-blue-soft);border-color:#d7e6ff; }
-.page-tasks .recall-queue-row span,
 .page-recalls .recall-queue-row span { display:block;margin-top:3px;color:var(--ox-muted);font-size:.72rem; }
-.page-tasks .recall-action-card,
 .page-recalls .recall-action-card { padding:14px;border:1px solid #edf1f6;border-radius:12px;background:#fbfcfe; }
-.page-tasks .recall-action-card h3,
 .page-recalls .recall-action-card h3 { display:flex;align-items:center;gap:7px;margin:0 0 10px;color:#344054;font-size:.88rem; }
 
 /* Reports: BI canvas */
@@ -140,19 +118,6 @@
 .page-reports .trend-chart { min-height:260px; }
 .page-reports .table-scroll { overflow:auto;border:1px solid var(--ox-border-soft);border-radius:12px; }
 .page-reports .table { min-width:840px; }
-
-/* Management automation: schedule control center */
-.page-report-automation .dashboard-stat-grid { display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:11px; }
-.page-report-automation .dashboard-stat-grid .stat-card { display:grid;grid-template-columns:34px 1fr;grid-template-areas:'icon label' 'icon value';column-gap:10px;align-items:center;min-height:94px;padding:14px 15px!important;border:1px solid var(--ox-border-soft)!important;border-radius:14px!important;background:#fff!important;box-shadow:none!important; }
-.page-report-automation .dashboard-stat-grid .stat-card svg { grid-area:icon;width:34px;height:34px;padding:8px;border-radius:10px;background:var(--ox-blue-soft);color:var(--ox-blue); }
-.page-report-automation .dashboard-stat-grid .stat-card span { grid-area:label;color:var(--ox-muted);font-size:.71rem;font-weight:700; }
-.page-report-automation .dashboard-stat-grid .stat-card strong { grid-area:value;color:var(--ox-text)!important;font-size:1.42rem!important; }
-.page-report-automation .panel { padding:18px!important;border:1px solid var(--ox-border-soft)!important;border-radius:16px!important;background:#fff!important;box-shadow:0 4px 16px rgba(15,23,42,.03)!important; }
-.page-report-automation .treatment-filter-grid { display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px; }
-.page-report-automation .table-wrap { overflow:auto;border:1px solid var(--ox-border-soft);border-radius:12px; }
-.page-report-automation table { width:100%;min-width:860px;border-collapse:separate;border-spacing:0; }
-.page-report-automation th { position:sticky;top:0;padding:11px 12px;background:#f8fafc;color:#667085;font-size:.68rem;font-weight:800;text-transform:uppercase;letter-spacing:.045em; }
-.page-report-automation td { padding:12px;border-top:1px solid #f0f2f5;color:#344054; }
 
 /* Data import: explicit 5-step migration journey */
 .page-data-import .premium-section-header { align-items:flex-end; }
@@ -196,26 +161,25 @@
   .page-data-import .import-review-summary{grid-template-columns:repeat(3,minmax(0,1fr));}
 }
 @media (max-width:1020px){
-  .page-tasks .recall-workspace-grid,.page-recalls .recall-workspace-grid{grid-template-columns:1fr;}
-  .page-tasks .recall-detail-panel,.page-recalls .recall-detail-panel{position:static;max-height:none;}
+  .page-recalls .recall-workspace-grid{grid-template-columns:1fr;}
+  .page-recalls .recall-detail-panel{position:static;max-height:none;}
   .page-reports .analytics-grid{grid-template-columns:1fr;}
-  .page-report-automation .dashboard-stat-grid{grid-template-columns:repeat(2,minmax(0,1fr));}
   .page-data-import .analytics-grid{grid-template-columns:1fr;}
 }
 @media (max-width:760px){
-  .page-tasks .content-area,.page-recalls .content-area,.page-reports .content-area,.page-report-automation .content-area,.page-data-import .content-area{padding:16px;}
-  .page-tasks .treatment-filter-grid,.page-recalls .treatment-filter-grid,.page-report-automation .treatment-filter-grid{grid-template-columns:1fr;}
-  .page-tasks .recall-queue-row,.page-recalls .recall-queue-row{grid-template-columns:1fr;gap:7px;}
+  .page-recalls .content-area,.page-reports .content-area,.page-data-import .content-area{padding:16px;}
+  .page-recalls .treatment-filter-grid{grid-template-columns:1fr;}
+  .page-recalls .recall-queue-row{grid-template-columns:1fr;gap:7px;}
   .page-reports .reports-filter-panel{position:static;}
   .page-reports .reports-filter-grid{grid-template-columns:repeat(2,minmax(0,1fr));}
   .page-reports .report-summary-grid{grid-template-columns:repeat(2,minmax(0,1fr));}
   .page-data-import .import-mapping-grid{grid-template-columns:1fr;}
 }
 @media (max-width:430px){
-  .page-tasks .content-area,.page-recalls .content-area,.page-reports .content-area,.page-report-automation .content-area,.page-data-import .content-area{padding:14px;}
-  .page-reports .reports-filter-grid,.page-reports .report-summary-grid,.page-report-automation .dashboard-stat-grid,.page-data-import .import-review-summary{grid-template-columns:1fr;}
+  .page-recalls .content-area,.page-reports .content-area,.page-data-import .content-area{padding:14px;}
+  .page-reports .reports-filter-grid,.page-reports .report-summary-grid,.page-data-import .import-review-summary{grid-template-columns:1fr;}
   .page-data-import .import-mapping-row{grid-template-columns:1fr;}
 }
 @media (prefers-reduced-motion:reduce){
-  .page-tasks *,.page-recalls *,.page-reports *,.page-report-automation *,.page-data-import *{transition-duration:.01ms!important;animation-duration:.01ms!important;scroll-behavior:auto!important;}
+  .page-recalls *,.page-reports *,.page-data-import *{transition-duration:.01ms!important;animation-duration:.01ms!important;scroll-behavior:auto!important;}
 }

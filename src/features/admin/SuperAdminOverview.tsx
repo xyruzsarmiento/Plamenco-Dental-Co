@@ -7,7 +7,6 @@ import {
   CalendarClock,
   CheckCircle2,
   CircleDollarSign,
-  ClipboardCheck,
   Settings,
   ShieldCheck,
   UserRoundCog,
@@ -16,7 +15,7 @@ import {
 } from 'lucide-react'
 import { useMemo } from 'react'
 import { Link } from 'react-router-dom'
-import { Badge } from '../../components/ui/Badge'
+import { StatusBadge } from '../../components/ui/Badge'
 import { Button } from '../../components/ui/Button'
 import { getStoredAppointments } from '../appointments/appointmentStore'
 import { getStoredStaff } from '../auth/staffStore'
@@ -255,7 +254,7 @@ export function SuperAdminOverview() {
                 <div className="sa-branch-stat"><span>Providers</span><strong>{row.providers}</strong></div>
                 <div className="sa-branch-stat"><span>Waiting</span><strong>{row.waiting}</strong></div>
                 <div className="sa-branch-stat"><span>In treatment</span><strong>{row.active}</strong></div>
-                <Badge tone={row.branch.status === 'active' ? 'success' : 'neutral'}>{row.branch.status}</Badge>
+                <StatusBadge status={row.branch.status} variant="compact" />
               </article>
             ))}
             {!branchRows.length && <div className="sa-empty-state"><Building2 size={22} /><strong>No active branches</strong><span>Branch activity will appear when branch records are available.</span></div>}
@@ -266,7 +265,7 @@ export function SuperAdminOverview() {
           <div className="sa-card-header"><div><span className="sa-kicker">Governance</span><h3>Operational attention</h3><p>Only actual diagnostic states are shown.</p></div></div>
           <div className="sa-governance-list">
             {warnings.slice(0, 6).map((item) => (
-              <div key={item.id} className="sa-governance-row"><span className="sa-governance-icon"><Activity size={15} /></span><div><strong>{item.label}</strong><small>{item.detail}</small></div><Badge tone={item.status === 'warning' ? 'warning' : 'danger'}>{item.status}</Badge></div>
+              <div key={item.id} className="sa-governance-row"><span className="sa-governance-icon"><Activity size={15} /></span><div><strong>{item.label}</strong><small>{item.detail}</small></div><StatusBadge status={item.status} variant="compact" /></div>
             ))}
             {!warnings.length && <div className="sa-governance-clear"><CheckCircle2 size={20} /><div><strong>No diagnostic attention items</strong><span>Configured diagnostics currently report healthy states.</span></div></div>}
           </div>
@@ -278,9 +277,7 @@ export function SuperAdminOverview() {
         <div className="sa-section-heading"><div><span className="sa-kicker">Executive workspace</span><h3>Management shortcuts</h3></div><span className="sa-workforce-note">{activeStaff.length} active internal staff records</span></div>
         <div className="sa-action-grid">
           <Link to="/app/reports"><span className="sa-action-icon"><BarChart3 size={18} /></span><div><strong>Management reports</strong><small>Financial, operational, branch and clinical analytics.</small></div><ArrowUpRight size={15} /></Link>
-          <Link to="/app/report-automation"><span className="sa-action-icon"><CalendarClock size={18} /></span><div><strong>Automation</strong><small>Schedules, runs and recorded delivery states.</small></div><ArrowUpRight size={15} /></Link>
           <Link to="/app/staff"><span className="sa-action-icon"><UserRoundCog size={18} /></span><div><strong>Team & Access</strong><small>Accounts, roles, attendance and workforce controls.</small></div><ArrowUpRight size={15} /></Link>
-          <Link to="/app/tasks"><span className="sa-action-icon"><ClipboardCheck size={18} /></span><div><strong>Operational tasks</strong><small>Review unresolved work across clinic operations.</small></div><ArrowUpRight size={15} /></Link>
           <Link to="/app/system-admin"><span className="sa-action-icon"><ShieldCheck size={18} /></span><div><strong>Security & administration</strong><small>Access, diagnostics, integrations and audit controls.</small></div><ArrowUpRight size={15} /></Link>
           <Link to="/app/settings"><span className="sa-action-icon"><Settings size={18} /></span><div><strong>Configuration</strong><small>Clinic profile, audit activity and session controls.</small></div><ArrowUpRight size={15} /></Link>
           <Link to="/app/branches"><span className="sa-action-icon"><Building2 size={18} /></span><div><strong>Branch management</strong><small>Location details and operational configuration.</small></div><ArrowUpRight size={15} /></Link>

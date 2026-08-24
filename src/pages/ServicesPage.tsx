@@ -3,6 +3,7 @@ import { ArrowRight, BriefcaseBusiness, CheckCircle2, Clock3, DollarSign, Filter
 import { PageScaffold } from '../components/ui/PageScaffold'
 import { Select } from '../components/ui/Select'
 import { Button } from '../components/ui/Button'
+import { StatusBadge } from '../components/ui/Badge'
 import { ServiceList } from '../features/services/ServiceList'
 import { ServiceFormModal } from '../features/services/ServiceFormModal'
 import type { Service, ServiceFormValues, ServiceStatus } from '../features/services/serviceTypes'
@@ -306,9 +307,7 @@ export function ServicesPage() {
               <div className="service-detail-body">
                 <div className="service-detail-topline">
                   <span className="service-category-tag">{detailService.category}</span>
-                  <span className={`status-badge status-${detailService.status}`}>
-                    {detailService.status === 'active' ? 'Active' : 'Inactive'}
-                  </span>
+                  <StatusBadge status={detailService.status} variant="compact" />
                 </div>
 
                 <p className="service-detail-description">{detailService.description || 'No description available for this service.'}</p>

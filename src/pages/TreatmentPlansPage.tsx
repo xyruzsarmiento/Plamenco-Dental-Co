@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from 'react'
-import { CheckCircle2, ClipboardList, Plus, Send, XCircle } from 'lucide-react'
+import { CheckCircle2, ClipboardList, Plus, Send, X, XCircle } from 'lucide-react'
 import { Button } from '../components/ui/Button'
 import { PageScaffold } from '../components/ui/PageScaffold'
+import { StatusBadge } from '../components/ui/Badge'
 import { usePermissions } from '../features/auth/permissions'
 import { getStoredBranches } from '../features/branches/branchStore'
 import { getStoredProviders } from '../features/dentists/dentistStore'
@@ -14,10 +15,6 @@ import {
   presentTreatmentPlan,
   type TreatmentPlan,
 } from '../features/treatmentPlans/treatmentPlanStore'
-
-function humanize(value: string) {
-  return value.replaceAll('_', ' ').replace(/\b\w/g, (char) => char.toUpperCase())
-}
 
 export function TreatmentPlansPage() {
   const { can } = usePermissions()
@@ -163,7 +160,7 @@ export function TreatmentPlansPage() {
                   <h3>{plan.name}</h3>
                   <p>{plan.providerNameSnapshot || 'Unknown / Unmapped Provider'} · {branches.find((branch) => branch.id === plan.branchId)?.name || 'Unknown / Unmapped Branch'}</p>
                 </div>
-                <span className={`status-badge status-${plan.status}`}>{humanize(plan.status)}</span>
+                <StatusBadge status={plan.status} />
               </div>
               {plan.description && <p>{plan.description}</p>}
               <div className="metric-grid compact">
@@ -180,7 +177,7 @@ export function TreatmentPlansPage() {
                       <span>{item.phase || 'No phase'} · Qty {item.quantity}</span>
                     </div>
                     <span>{formatTreatmentPlanCurrency(item.quotedPriceCents)}</span>
-                    <span className={`status-badge status-${item.status}`}>{humanize(item.status)}</span>
+                    <StatusBadge status={item.status} variant="compact" />
                   </div>
                 ))}
               </div>
@@ -201,7 +198,7 @@ export function TreatmentPlansPage() {
           <section className="modal" role="dialog" aria-modal="true" aria-labelledby="create-treatment-plan-title">
             <div className="modal-header">
               <div><p className="eyebrow">{selectedPatient.patientId}</p><h2 id="create-treatment-plan-title">Create Treatment Plan</h2></div>
-              <button className="icon-button" type="button" aria-label="Close" onClick={() => setShowCreate(false)}>×</button>
+              <button className="icon-button" type="button" aria-label="Close treatment plan dialog" onClick={() => setShowCreate(false)}><X size={19} /></button>
             </div>
             <div className="form-grid">
               <label><span>Plan name</span><input value={name} onChange={(event) => setName(event.target.value)} /></label>

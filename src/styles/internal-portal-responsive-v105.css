@@ -129,8 +129,8 @@
 /* Route-specific containment for every requested Admin page. */
 .app-shell:is(
 .page-dashboard,.page-appointments,.page-patients,.page-dental-records,.page-treatments,
-.page-treatment-plans,.page-billing,.page-services,.page-dentists,.page-tasks,.page-recalls,
-.page-reports,.page-report-automation,.page-data-import,.page-inventory,.page-expenses,
+.page-treatment-plans,.page-billing,.page-services,.page-dentists,.page-recalls,
+.page-reports,.page-data-import,.page-inventory,.page-expenses,
 .page-communications,.page-notifications,.page-staff,.page-branches,.page-forms-consent,.page-settings
 ) .content-area>*{width:100%!important;min-width:0!important;max-width:100%!important}
 

@@ -44,12 +44,16 @@ function cacheUser(user: AuthUser) {
 function isUserRole(value: unknown): value is UserRole {
   return (
     value === 'super_admin' ||
-    value === 'admin' ||
     value === 'dentist' ||
     value === 'associate_dentist' ||
     value === 'staff' ||
     value === 'patient'
   )
+}
+
+function normalizeProfileRole(value: unknown): UserRole | null {
+  if (value === 'admin') return 'staff'
+  return isUserRole(value) ? value : null
 }
 
 function isAccountStatus(value: unknown): value is AccountStatus {
@@ -96,7 +100,8 @@ async function getSupabaseProfileForSession(sessionUser: SessionUser): Promise<P
 }
 
 function buildProfileUserFromSupabase(sessionUser: SessionUser, profile: ProfileRow | null): AuthUser | null {
-  if (!sessionUser.email || !profile || !isUserRole(profile.role)) return null
+  const normalizedRole = normalizeProfileRole(profile?.role)
+  if (!sessionUser.email || !profile || !normalizedRole) return null
 
   const status = isAccountStatus(profile.status) ? profile.status : 'active'
   const metadata = sessionUser.user_metadata ?? {}
@@ -109,12 +114,12 @@ function buildProfileUserFromSupabase(sessionUser: SessionUser, profile: Profile
     id: sessionUser.id,
     name,
     email: sessionUser.email.toLowerCase(),
-    role: profile.role,
+    role: normalizedRole,
     status,
     permissions:
       Array.isArray(profile.permissions) && profile.permissions.length > 0
         ? profile.permissions
-        : getRolePermissions(profile.role),
+        : getRolePermissions(normalizedRole),
   }
 }
 

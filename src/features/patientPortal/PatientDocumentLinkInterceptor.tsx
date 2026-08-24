@@ -30,9 +30,12 @@ export function PatientDocumentLinkInterceptor() {
       if (!link) return
       const card = link.closest('.portal-premium-card')
       const fileName = card?.querySelector('strong')?.textContent?.trim()
-      if (!fileName) return
+      const documentId = link.dataset.patientDocumentId
+      if (!fileName && !documentId) return
 
-      const document = cachedDocuments().find((entry) => entry.fileName === fileName && entry.patientVisible !== false)
+      const document = cachedDocuments().find((entry) => (
+        documentId ? entry.id === documentId : entry.fileName === fileName
+      ) && entry.patientVisible !== false)
       if (!document?.storagePath || !supabase) return
 
       event.preventDefault()

@@ -28,11 +28,25 @@ export type Treatment = {
 export type TreatmentPlan = {
   id: string
   patientId: string
+  planNumber?: string
+  branchId?: string
+  providerId?: string
+  providerNameSnapshot?: string
+  clinicalVisitId?: string
   name: string
   description: string
   treatments: string[]
   overallCost: number
   amountPaid: number
+  versionNumber?: number
+  patientNotes?: string
+  internalNotes?: string
+  quotedSubtotalCents?: number
+  discountCents?: number
+  quotedTotalCents?: number
+  presentedAt?: string
+  decisionAt?: string
+  decisionSource?: string
   status: TreatmentStatus
   createdAt: string
   updatedAt: string

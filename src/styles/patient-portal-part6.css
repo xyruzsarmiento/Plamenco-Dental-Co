@@ -1,0 +1,122 @@
+.pv3-treatment-panel-v4,
+.pv3-prescriptions-v4,
+.pv3-treatment-cards-v4,
+.pv3-rx-cards-v4 {
+  min-width: 0;
+}
+
+.pv3-treatment-cards-v4 article,
+.pv3-rx-cards-v4 > button {
+  min-width: 0;
+}
+
+.pv3-treatment-cards-v4 article > section,
+.pv3-rx-cards-v4 > button > * {
+  min-width: 0;
+}
+
+.pv3-treatment-cards-v4 h3,
+.pv3-treatment-cards-v4 p,
+.pv3-treatment-cards-v4 dd,
+.pv3-rx-cards-v4 h3,
+.pv3-rx-cards-v4 p,
+.pv3-rx-cards-v4 dd {
+  overflow-wrap: anywhere;
+}
+
+.pv3-treatment-cards-v4 dl,
+.pv3-rx-cards-v4 dl {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.pv3-treatment-cards-v4 dd,
+.pv3-rx-cards-v4 dd {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pv3-treatment-pagination-v6 {
+  display: grid;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.pv3-treatment-pagination-v6 > span {
+  justify-self: start;
+  color: #64748b;
+  font-size: 0.73rem;
+  font-weight: 800;
+}
+
+.pv3-treatment-pagination-v6 .ui-pagination {
+  margin-top: 0;
+}
+
+.pv3-prescriptions-v4 .pv3-rx-cards-v4 {
+  width: 100%;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr));
+}
+
+.pv3-prescriptions-v4 .pv3-rx-cards-v4 > .pv3-empty {
+  grid-column: 1 / -1;
+  width: min(520px, 100%);
+  min-height: 220px;
+  margin: 18px auto;
+  padding: 34px 24px;
+  border: 1px solid #dce6f4;
+  border-radius: 18px;
+  background: linear-gradient(180deg, #ffffff, #f9fbff);
+  box-shadow: 0 12px 34px rgba(23, 32, 51, 0.04);
+  align-content: center;
+  justify-items: center;
+}
+
+@media (max-width: 760px) {
+  .pv3-treatment-cards-v4 article {
+    grid-template-columns: 34px minmax(0, 1fr);
+  }
+
+  .pv3-treatment-cards-v4 dl,
+  .pv3-rx-cards-v4 dl {
+    grid-template-columns: 1fr;
+  }
+
+  .pv3-treatment-cards-v4 dd,
+  .pv3-rx-cards-v4 dd {
+    white-space: normal;
+  }
+
+  .pv3-treatment-pagination-v6 .ui-pagination {
+    align-items: stretch;
+  }
+
+  .pv3-treatment-pagination-v6 .ui-pagination > .btn {
+    flex: 1 1 132px;
+    justify-content: center;
+  }
+}
+
+@media (max-width: 520px) {
+  .pv3-treatment-cards-v4 article {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .pv3-treatment-marker {
+    justify-self: start;
+  }
+
+  .pv3-treatment-cards-v4 section > div,
+  .pv3-rx-cards-v4 header,
+  .pv3-rx-cards-v4 footer {
+    align-items: flex-start;
+    flex-wrap: wrap;
+  }
+
+  .pv3-prescriptions-v4 .pv3-rx-cards-v4 > .pv3-empty {
+    min-height: 190px;
+    padding: 28px 18px;
+  }
+}

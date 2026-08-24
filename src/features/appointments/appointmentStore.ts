@@ -1,7 +1,7 @@
 import type { Appointment, AppointmentFormValues, AppointmentStatus, AppointmentStatusHistoryEntry, AppointmentWaitlistEntry, Operatory, ScheduleBlock } from './appointmentTypes'
 import { insertRemoteTableRow, updateRemoteTableRow } from '../../lib/supabaseSync'
 import { createUuid } from '../../lib/id'
-import { notifyAppointmentTransition, sendAppointmentCommunication } from '../communications/communicationService'
+import { notifyAppointmentTransition, sendAppointmentCommunication, sendAppointmentCommunicationPersisted } from '../communications/communicationService'
 import { getCommunicationLogsByAppointment } from '../communications/communicationStore'
 import { getStoredServices, servicePriceToCents } from '../services/serviceStore'
 import { recordAuditEntry } from '../security/auditLogStore'
@@ -672,6 +672,24 @@ export function resendAppointmentCommunication(
     return { error: 'This message was already sent or recorded in the last 2 minutes.' }
   }
   const logs = sendAppointmentCommunication({ appointment, templateKey, actor, manual: true })
+  return { logs }
+}
+
+export async function resendAppointmentCommunicationPersisted(
+  id: string,
+  templateKey: 'appointment_confirmed' | 'appointment_reminder' | 'appointment_rescheduled',
+  actor: string,
+) {
+  const appointment = getAppointmentById(id)
+  if (!appointment) return { error: 'Appointment was not found.' }
+  const recentSameMessage = getCommunicationLogsByAppointment(id).find((log) => {
+    if (log.templateKey !== templateKey) return false
+    return Date.now() - new Date(log.createdAt).getTime() < 2 * 60 * 1000
+  })
+  if (recentSameMessage) {
+    return { error: 'This message was already sent or recorded in the last 2 minutes.' }
+  }
+  const logs = await sendAppointmentCommunicationPersisted({ appointment, templateKey, actor, manual: true })
   return { logs }
 }
 

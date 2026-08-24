@@ -1,5 +1,6 @@
 import { supabase } from '../../lib/supabase'
 
+export const PATIENT_RECALLS_STORAGE_KEY = 'plamenco.patientRecalls'
 export type RecallKind = 'recall' | 'follow_up'
 export type RecallStatus = 'open' | 'contacted' | 'waiting_patient' | 'booked' | 'needs_rescheduling' | 'completed' | 'dismissed' | 'cancelled'
 export type RecallSource = 'clinical_recommendation' | 'completed_treatment' | 'service_rule' | 'manual' | 'historical_import' | 'treatment_plan' | 'other_configured_rule'
@@ -41,7 +42,7 @@ export type RecallContactAttempt = {
 }
 
 function client() {
-  if (!supabase) throw new Error('Recall & Follow-Up is unavailable because the database connection is not configured.')
+  if (!supabase) throw new Error('Clinical follow-up data is unavailable because the database connection is not configured.')
   return supabase
 }
 
@@ -52,6 +53,27 @@ function manilaBusinessDate() {
     month: '2-digit',
     day: '2-digit',
   }).format(new Date())
+}
+
+function safeParseRecalls(value: string | null): RecallQueueItem[] {
+  if (!value) return []
+  try {
+    const parsed = JSON.parse(value) as RecallQueueItem[]
+    return Array.isArray(parsed) ? parsed : []
+  } catch {
+    return []
+  }
+}
+
+export function saveStoredPatientRecalls(recalls: RecallQueueItem[]) {
+  if (typeof window !== 'undefined') window.localStorage.setItem(PATIENT_RECALLS_STORAGE_KEY, JSON.stringify(recalls))
+}
+
+export function getStoredPatientRecalls(patientId?: string) {
+  const recalls = typeof window === 'undefined' ? [] : safeParseRecalls(window.localStorage.getItem(PATIENT_RECALLS_STORAGE_KEY))
+  return recalls
+    .filter((recall) => !patientId || recall.patientId === patientId)
+    .sort((a, b) => String(a.dueDate ?? '').localeCompare(String(b.dueDate ?? '')))
 }
 
 export function getRecallDueBucket(recall: Pick<RecallQueueItem, 'status' | 'dueDate'>) {
@@ -131,7 +153,9 @@ export async function listPatientRecalls(patientId: string) {
     .eq('patient_id', patientId)
     .order('due_date', { ascending: false, nullsFirst: false })
   if (error) throw error
-  return (data ?? []).map((row) => mapRecall(row))
+  const recalls = (data ?? []).map((row) => mapRecall(row))
+  saveStoredPatientRecalls(recalls)
+  return recalls
 }
 
 export async function getRecallContactAttempts(recallId: string) {
@@ -166,6 +190,7 @@ export async function createManualRecall(input: {
   patientMessage?: string
 }) {
   if (!input.reason.trim()) throw new Error('A recall or follow-up reason is required.')
+  if (!input.dueDate?.trim()) throw new Error('A real due date is required.')
   const db = client()
   const { data: authData, error: authError } = await db.auth.getUser()
   if (authError) throw authError
@@ -193,6 +218,30 @@ export async function createManualRecall(input: {
     throw error
   }
   return mapRecall(data)
+}
+
+export async function createClinicalFollowUpRecallFromRecord(input: {
+  patientId: string
+  clinicalVisitId: string
+  dueDate: string
+  reason: string
+  branchId?: string
+  providerId?: string
+  providerName?: string
+}) {
+  if (!input.dueDate.trim()) throw new Error('A real follow-up due date is required.')
+  if (!input.reason.trim()) throw new Error('A follow-up reason is required.')
+  const { data, error } = await client().rpc('create_clinical_follow_up_recall', {
+    p_patient_id: input.patientId,
+    p_clinical_visit_id: input.clinicalVisitId,
+    p_due_date: input.dueDate,
+    p_reason: input.reason.trim(),
+    p_branch_id: input.branchId || null,
+    p_provider_id: input.providerId || null,
+    p_provider_name_snapshot: input.providerName?.trim() || '',
+  })
+  if (error) throw error
+  return String(data)
 }
 
 export async function recordManualRecallContact(input: {

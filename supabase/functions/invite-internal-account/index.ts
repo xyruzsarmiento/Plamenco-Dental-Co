@@ -1,6 +1,6 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
-type InternalRole = 'super_admin' | 'admin' | 'dentist' | 'associate_dentist' | 'staff'
+type InternalRole = 'super_admin' | 'dentist' | 'associate_dentist' | 'staff'
 
 type InvitePayload = {
   email?: string
@@ -15,7 +15,7 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
-const supportedRoles: InternalRole[] = ['super_admin', 'admin', 'dentist', 'associate_dentist', 'staff']
+const supportedRoles: InternalRole[] = ['super_admin', 'dentist', 'associate_dentist', 'staff']
 
 function json(body: Record<string, unknown>, status = 200) {
   return Response.json(body, { status, headers: corsHeaders })

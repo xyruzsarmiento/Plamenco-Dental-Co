@@ -569,32 +569,6 @@
 /* --------------------------------------------------
    TASKS / WORK QUEUE — operations board
    -------------------------------------------------- */
-.page-tasks .content-area .task-board,
-.page-tasks .content-area .work-queue-grid,
-.page-tasks .content-area .task-columns {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(260px, 1fr));
-  gap: 14px;
-  align-items: start;
-}
-
-.page-tasks .content-area .task-column,
-.page-tasks .content-area .work-queue-column {
-  padding: 12px;
-  border: 1px solid var(--ip-border);
-  border-radius: 15px;
-  background: #f8fafc;
-}
-
-.page-tasks .content-area .task-card,
-.page-tasks .content-area .work-item {
-  margin-bottom: 10px;
-  border: 1px solid #e5eaf1 !important;
-  border-radius: 13px !important;
-  background: #fff !important;
-  box-shadow: 0 2px 8px rgba(15,23,42,.03) !important;
-}
-
 /* --------------------------------------------------
    RECALLS — follow-up pipeline
    -------------------------------------------------- */
@@ -644,20 +618,6 @@
 /* --------------------------------------------------
    MANAGEMENT AUTOMATION — schedule timeline
    -------------------------------------------------- */
-.page-report-automation .content-area .automation-grid,
-.page-report-automation .content-area .schedule-grid {
-  display: grid;
-  grid-template-columns: minmax(300px, .8fr) minmax(0, 1.4fr);
-  gap: 18px;
-}
-
-.page-report-automation .content-area .schedule-card,
-.page-report-automation .content-area .automation-card {
-  border: 1px solid var(--ip-border) !important;
-  border-radius: 16px !important;
-  background: #fff !important;
-}
-
 /* --------------------------------------------------
    DATA IMPORT — controlled onboarding wizard
    -------------------------------------------------- */
@@ -932,8 +892,6 @@
   .page-dental-records .content-area .clinical-workspace,
   .page-dental-records .content-area .records-layout,
   .page-dental-records .content-area .dental-records-layout,
-  .page-report-automation .content-area .automation-grid,
-  .page-report-automation .content-area .schedule-grid,
   .page-data-import .content-area .import-layout,
   .page-data-import .content-area .data-import-grid,
   .page-communications .content-area .communications-layout,
@@ -990,9 +948,6 @@
   .page-dentists .content-area .dentist-grid,
   .page-dentists .content-area .provider-grid,
   .page-dentists .content-area .providers-grid,
-  .page-tasks .content-area .task-board,
-  .page-tasks .content-area .work-queue-grid,
-  .page-tasks .content-area .task-columns,
   .page-recalls .content-area .recall-grid,
   .page-recalls .content-area .follow-up-grid,
   .page-notifications .content-area .notifications-grid,

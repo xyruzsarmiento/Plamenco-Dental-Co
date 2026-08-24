@@ -110,7 +110,7 @@ function printSnapshot(snapshot: ReturnType<typeof buildEnterpriseReportSnapshot
 
 export function ReportsPage() {
   const { user } = useAuth()
-  const canExport = user?.role === 'admin' || user?.role === 'super_admin' || user?.permissions?.some((permission) => permission.startsWith('reports.export'))
+  const canExport = user?.role === 'super_admin' || user?.permissions?.some((permission) => permission.startsWith('reports.export'))
   const defaultRange = getReportingDatePresetRange('this_month')
   const [refreshKey, setRefreshKey] = useState(0)
   const [preset, setPreset] = useState<DateRangePreset>('this_month')

@@ -1,0 +1,49 @@
+:root {
+  --modal-layer-base: 1000;
+  --modal-layer-workspace: 1200;
+  --modal-layer-child: 1300;
+}
+
+.appointment-details-backdrop-v40 {
+  z-index: var(--modal-layer-workspace) !important;
+}
+
+.appointment-details-v40-actions-card {
+  position: static !important;
+  top: auto !important;
+}
+
+.modal-layer-child {
+  z-index: var(--modal-layer-child) !important;
+}
+
+.operation-action-backdrop {
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: rgba(15, 23, 42, 0.62);
+  backdrop-filter: blur(10px);
+}
+
+.operation-action-modal {
+  width: min(460px, calc(100vw - 32px));
+  max-height: min(86dvh, 680px);
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.72);
+  border-radius: 20px;
+  background: #ffffff;
+  box-shadow: 0 32px 90px rgba(15, 23, 42, 0.34);
+}
+
+@media (max-width: 560px) {
+  .operation-action-backdrop {
+    align-items: end;
+    padding: 0;
+  }
+
+  .operation-action-modal {
+    width: 100%;
+    max-height: 92dvh;
+    border-radius: 20px 20px 0 0;
+  }
+}

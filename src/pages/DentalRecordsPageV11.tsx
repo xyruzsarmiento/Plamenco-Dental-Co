@@ -12,10 +12,12 @@ import {
   Search,
   ShieldAlert,
   UserRound,
+  X,
 } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { Button } from '../components/ui/Button'
 import { PageScaffold } from '../components/ui/PageScaffold'
+import { StatusBadge } from '../components/ui/Badge'
 import { DentalRecordFormModal } from '../features/dentalRecords/DentalRecordFormModal'
 import {
   createDentalRecord,
@@ -317,7 +319,7 @@ export function DentalRecordsPageV11() {
                 </div>
               </div>
               <div className="dr11-patient-status">
-                <span className={`dr11-status ${selectedPatient.status === 'active' ? 'is-active' : ''}`}>{selectedPatient.status}</span>
+                <StatusBadge status={selectedPatient.status} variant="compact" />
                 <small>{selectedPatient.preferredBranchId ? 'Preferred branch configured' : 'No preferred branch'}</small>
               </div>
             </section>
@@ -388,7 +390,7 @@ export function DentalRecordsPageV11() {
                         <div className="dr11-event-body">
                           <div className="dr11-event-top">
                             <div><span className="dr11-kicker">{entry.kind === 'record' ? 'Clinical record' : entry.kind}</span><h4>{entry.heading}</h4></div>
-                            <span className={`dr11-event-status status-${entry.status}`}>{entry.status}</span>
+                            <StatusBadge status={entry.status} variant="compact" />
                           </div>
                           <strong className="dr11-event-summary">{entry.summary}</strong>
                           <p>{entry.description}</p>
@@ -421,9 +423,9 @@ export function DentalRecordsPageV11() {
             <aside className="dr11-detail-panel" role="dialog" aria-modal="true" aria-labelledby="dr11-record-title" onClick={(event) => event.stopPropagation()}>
               <div className="dr11-detail-head">
                 <div><span className="dr11-kicker">Clinical record detail</span><h2 id="dr11-record-title">{selectedRecord.chiefComplaint}</h2><p>{formatDate(selectedRecord.recordDate)} · {selectedRecord.createdBy || 'Clinical team'}</p></div>
-                <button type="button" aria-label="Close record details" onClick={() => setSelectedRecord(null)}>×</button>
+                <button type="button" aria-label="Close record details" onClick={() => setSelectedRecord(null)}><X size={19} /></button>
               </div>
-              <div className="dr11-detail-status"><span>{selectedRecord.visitType.replaceAll('_', ' ')}</span><span>{selectedRecord.status}</span></div>
+              <div className="dr11-detail-status"><span>{selectedRecord.visitType.replaceAll('_', ' ')}</span><StatusBadge status={selectedRecord.status} variant="compact" /></div>
               <div className="dr11-detail-sections">
                 <section><span>Diagnosis</span><p>{selectedRecord.diagnosis || 'Not provided'}</p></section>
                 <section><span>Clinical findings</span><p>{selectedRecord.clinicalFindings || selectedRecord.findings || 'Not provided'}</p></section>

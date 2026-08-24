@@ -1,4 +1,5 @@
 import { CreditCard } from 'lucide-react'
+import { StatusBadge } from '../../components/ui/Badge'
 import type { Treatment } from './treatmentTypes'
 import { getServiceById } from './treatmentStore'
 import { getPatientName } from '../dentalRecords/dentalRecordStore'
@@ -25,9 +26,7 @@ export function TreatmentList({ treatments }: TreatmentListProps) {
                 <p className="eyebrow">{treatment.status.replace('_', ' ')}</p>
                 <h3>{treatment.description}</h3>
               </div>
-              <span className={`status-badge status-${treatment.status}`}>
-                {treatment.status.replace('_', ' ')}
-              </span>
+              <StatusBadge status={treatment.status} variant="compact" />
             </div>
 
             <div className="treatment-meta-grid">
@@ -63,7 +62,7 @@ export function TreatmentList({ treatments }: TreatmentListProps) {
                 <span>₱{treatment.cost.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
               </div>
               <div className="detail-item status-detail">
-                <strong className={`status-label status-${treatment.status}`}>{treatment.status.toUpperCase().replace('_', ' ')}</strong>
+                <StatusBadge status={treatment.status} variant="compact" />
               </div>
             </div>
 

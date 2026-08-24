@@ -1,0 +1,497 @@
+/* Part 9 patient portal consistency audit: final visual and responsive polish. */
+
+.pv3-shell {
+  --pv3-radius-sm: 10px;
+  --pv3-radius-md: 14px;
+  --pv3-radius-lg: 18px;
+  --pv3-radius-xl: 22px;
+  --pv3-blue: #2563eb;
+  --pv3-blue-deep: #1d4ed8;
+  --pv3-blue-soft: #eaf2ff;
+  --pv3-border: #dfe8f4;
+  --pv3-border-soft: #edf2f8;
+  --pv3-ink: #172033;
+  --pv3-muted: #667085;
+  --pv3-surface: #ffffff;
+  --pv3-surface-soft: #fbfdff;
+}
+
+.pv3-content {
+  display: grid;
+  gap: 16px;
+  max-width: 1480px;
+  margin: 0 auto;
+  padding: 22px clamp(16px, 2.2vw, 30px) 36px !important;
+}
+
+.pv3-page,
+.pv3-dashboard-v2 {
+  min-width: 0;
+}
+
+.pv3-page-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 18px;
+  min-width: 0;
+  padding: 2px 2px 4px;
+}
+
+.pv3-page-head > div {
+  min-width: 0;
+}
+
+.pv3-page-head span,
+.pv3-step-title span,
+.pv3-panel-head span,
+.pv3-detail-modal header span,
+.pv3-pay-modal header span {
+  color: var(--pv3-blue) !important;
+  font-size: .68rem !important;
+  font-weight: 900 !important;
+  letter-spacing: .08em !important;
+  line-height: 1.2 !important;
+  text-transform: uppercase !important;
+}
+
+.pv3-page-head h2 {
+  margin: 4px 0 4px;
+  color: var(--pv3-ink);
+  font-size: clamp(1.45rem, 2.6vw, 2rem);
+  line-height: 1.08;
+  letter-spacing: 0;
+}
+
+.pv3-page-head p {
+  max-width: 760px;
+  margin: 0;
+  color: var(--pv3-muted);
+  font-size: .88rem;
+  line-height: 1.5;
+}
+
+.pv3-care-card,
+.pv3-book-stage,
+.pv3-book-summary-v3,
+.pv3-appointment-tabs,
+.pv3-history-summary article,
+.pv3-history-panel,
+.pv3-treatment-overview-v4,
+.pv3-treatment-panel-v4,
+.pv3-rx-cards-v4 > button,
+.pv3-recall-summary-v5 article,
+.pv3-recall-card-v5,
+.pv3-payments-summary-v6 article,
+.pv3-payments-panel-v6,
+.pv3-invoice-list-v6 article,
+.pv3-payment-history-v6 article,
+.pv3-document-summary-v7 article,
+.pv3-document-list-v7 > article,
+.unified-profile-panel {
+  border-color: var(--pv3-border) !important;
+  border-radius: var(--pv3-radius-lg) !important;
+  background: var(--pv3-surface) !important;
+  box-shadow: 0 10px 28px rgba(15, 23, 42, .045) !important;
+}
+
+.pv3-care-card:hover,
+.pv3-rx-cards-v4 > button:hover,
+.pv3-recall-card-v5:hover,
+.pv3-payment-history-v6 article:hover,
+.pv3-document-list-v7 > article:hover,
+.pv3-appointment-card-v3:hover {
+  border-color: #c8daf7 !important;
+  box-shadow: 0 14px 34px rgba(37, 99, 235, .075) !important;
+}
+
+.pv3-care-card-head > span,
+.pv3-history-summary svg,
+.pv3-history-dot,
+.pv3-rx-cards-v4 header > span,
+.pv3-recall-icon-v5,
+.pv3-payments-summary-v6 article > span,
+.pv3-invoice-list-v6 header > div > span,
+.pv3-payment-history-v6 .pv3-pay-icon,
+.pv3-document-icon-v7,
+.pv3-document-summary-v7 svg,
+.pv3-recall-detail-hero-v5 > span,
+.pv3-payment-receipt-hero-v6 > span,
+.unified-profile-panel > header > span {
+  border: 1px solid #d7e6ff !important;
+  border-radius: 13px !important;
+  background: var(--pv3-blue-soft) !important;
+  color: var(--pv3-blue) !important;
+}
+
+.pv3-balance-card .pv3-care-card-head > span,
+.pv3-payments-summary-v6 article.is-due > span {
+  border-color: #fecaca !important;
+  background: #fef2f2 !important;
+  color: #dc2626 !important;
+}
+
+.pv3-invoice-money .is-due {
+  background: #fef2f2 !important;
+}
+
+.pv3-invoice-money .is-due strong {
+  color: #b91c1c !important;
+}
+
+.pv3-payments-summary-v6 article.is-clear > span {
+  border-color: #bbf7d0 !important;
+  background: #f0fdf4 !important;
+  color: #15803d !important;
+}
+
+.pv3-dashboard-actions button,
+.pv3-dashboard-link,
+.pv3-soft-empty button,
+.pv3-load-more,
+.pv3-recall-card-v5 aside button,
+.pv3-invoice-list-v6 footer button,
+.pv3-document-list-v7 aside button,
+.pv3-document-filters-v7 button,
+.pv3-appointment-tabs button {
+  border-radius: var(--pv3-radius-sm) !important;
+  letter-spacing: 0 !important;
+}
+
+.pv3-dashboard-actions button:first-child,
+.pv3-soft-empty button,
+.pv3-invoice-list-v6 footer button.is-online,
+.pv3-document-list-v7 aside button {
+  border-color: var(--pv3-blue) !important;
+  background: var(--pv3-blue) !important;
+  color: #fff !important;
+  box-shadow: 0 12px 24px rgba(37, 99, 235, .18) !important;
+}
+
+.pv3-dashboard-actions button:first-child:hover,
+.pv3-soft-empty button:hover,
+.pv3-invoice-list-v6 footer button.is-online:hover,
+.pv3-document-list-v7 aside button:hover {
+  border-color: var(--pv3-blue-deep) !important;
+  background: var(--pv3-blue-deep) !important;
+}
+
+.pv3-dashboard-link,
+.pv3-load-more,
+.pv3-recall-card-v5 aside button,
+.pv3-invoice-list-v6 footer button:not(.is-online) {
+  border-color: #cfe0f7 !important;
+  background: var(--pv3-blue-soft) !important;
+  color: var(--pv3-blue-deep) !important;
+}
+
+.pv3-empty,
+.pv3-soft-empty,
+.pv3-compact-empty {
+  border-color: var(--pv3-border) !important;
+  border-radius: var(--pv3-radius-lg) !important;
+  background: var(--pv3-surface-soft) !important;
+}
+
+.pv3-empty {
+  min-height: 220px;
+  padding: 28px;
+}
+
+.pv3-empty > span {
+  border-radius: 15px !important;
+  background: var(--pv3-blue-soft) !important;
+  color: var(--pv3-blue) !important;
+}
+
+.pv3-detail-modal,
+.pv3-pay-modal {
+  width: min(760px, calc(100vw - 28px));
+  max-height: min(860px, calc(100dvh - 28px));
+  overflow-x: hidden;
+  overflow-y: auto;
+  border: 1px solid rgba(255, 255, 255, .72) !important;
+  border-radius: var(--pv3-radius-xl) !important;
+  background: #fff !important;
+  box-shadow: 0 28px 80px rgba(15, 23, 42, .24) !important;
+}
+
+.pv3-detail-modal header,
+.pv3-pay-modal header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 20px 22px !important;
+  border-bottom: 1px solid var(--pv3-border-soft) !important;
+  background: #fbfdff !important;
+}
+
+.pv3-detail-modal header h2,
+.pv3-pay-modal header h2 {
+  margin: 4px 0 3px !important;
+  color: var(--pv3-ink) !important;
+  font-size: clamp(1.2rem, 2.5vw, 1.55rem) !important;
+  line-height: 1.15 !important;
+  letter-spacing: 0 !important;
+  overflow-wrap: anywhere;
+}
+
+.pv3-detail-modal header p,
+.pv3-pay-modal header p {
+  margin: 0 !important;
+  color: var(--pv3-muted) !important;
+  font-size: .82rem !important;
+  line-height: 1.4 !important;
+}
+
+.pv3-detail-modal header button,
+.pv3-pay-modal header button {
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  width: 40px;
+  height: 40px;
+  border: 1px solid #dbe3ee;
+  border-radius: 12px;
+  background: #fff;
+  color: #334155;
+  cursor: pointer;
+  box-shadow: 0 8px 20px rgba(15, 23, 42, .08);
+}
+
+.pv3-detail-modal header button:hover,
+.pv3-pay-modal header button:hover {
+  border-color: #c8daf7;
+  background: #f6f9ff;
+  color: var(--pv3-blue-deep);
+}
+
+.pv3-detail-modal header button:focus-visible,
+.pv3-pay-modal header button:focus-visible {
+  outline: 3px solid rgba(37, 99, 235, .24);
+  outline-offset: 2px;
+}
+
+.pv3-detail-status,
+.pv3-detail-grid,
+.pv3-detail-note,
+.pv3-record-privacy,
+.pv3-rx-detail-list,
+.pv3-detail-modal footer,
+.pv3-pay-modal footer {
+  margin-inline: 22px !important;
+}
+
+.pv3-detail-status {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  padding-top: 16px;
+}
+
+.pv3-detail-status > span:not(.badge) {
+  color: var(--pv3-muted);
+  font-size: .82rem;
+  font-weight: 750;
+}
+
+.pv3-detail-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  padding: 0 0 16px;
+}
+
+.pv3-detail-grid > div,
+.pv3-detail-note,
+.pv3-record-privacy,
+.pv3-rx-detail-list section,
+.pv3-recall-detail-hero-v5,
+.pv3-payment-receipt-hero-v6 {
+  border-color: var(--pv3-border) !important;
+  border-radius: var(--pv3-radius-md) !important;
+  background: var(--pv3-surface-soft) !important;
+}
+
+.pv3-detail-grid > div {
+  min-width: 0;
+  padding: 12px;
+}
+
+.pv3-detail-grid span,
+.pv3-detail-note span {
+  color: #7c8797;
+  font-size: .64rem;
+  font-weight: 900;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+}
+
+.pv3-detail-grid strong {
+  display: block;
+  margin-top: 4px;
+  color: var(--pv3-ink);
+  font-size: .86rem;
+  line-height: 1.3;
+  overflow-wrap: anywhere;
+}
+
+.pv3-detail-note,
+.pv3-record-privacy {
+  padding: 14px;
+}
+
+.pv3-detail-note p,
+.pv3-record-privacy span {
+  margin: 5px 0 0;
+  color: var(--pv3-muted);
+  line-height: 1.5;
+}
+
+.pv3-detail-modal footer,
+.pv3-pay-modal footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 16px 0 20px !important;
+  border-top: 1px solid var(--pv3-border-soft);
+}
+
+.pv3-alert {
+  border: 1px solid #bfdbfe !important;
+  border-radius: var(--pv3-radius-md) !important;
+  background: #eff6ff !important;
+  color: #1e3a8a !important;
+}
+
+.pv3-alert.is-success {
+  border-color: #bbf7d0 !important;
+  background: #f0fdf4 !important;
+  color: #166534 !important;
+}
+
+.pv3-alert.is-error {
+  border-color: #fecaca !important;
+  background: #fef2f2 !important;
+  color: #b91c1c !important;
+}
+
+.pv3-recall-card-v5 p,
+.pv3-invoice-list-v6 p,
+.pv3-document-list-v7 p,
+.pv3-treatment-cards-v4 p,
+.pv3-rx-cards-v4 p {
+  font-size: .82rem;
+}
+
+.pv3-recall-card-v5 dl div,
+.pv3-invoice-services-v6 span,
+.pv3-document-list-v7 dl div,
+.pv3-treatment-cards-v4 dl > div,
+.pv3-rx-cards-v4 dl > div {
+  border-radius: var(--pv3-radius-sm) !important;
+  background: var(--pv3-surface-soft) !important;
+}
+
+@media (max-width: 900px) {
+  .pv3-content {
+    padding: 18px 14px 32px !important;
+  }
+
+  .pv3-page-head {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}
+
+@media (max-width: 640px) {
+  .pv3-content {
+    padding: 14px 10px 28px !important;
+  }
+
+  .pv3-page-head h2 {
+    font-size: 1.32rem;
+  }
+
+  .pv3-page-head p {
+    font-size: .82rem;
+  }
+
+  .pv3-dashboard-actions button,
+  .pv3-dashboard-link,
+  .pv3-load-more,
+  .pv3-invoice-list-v6 footer button,
+  .pv3-document-list-v7 aside button {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .pv3-detail-modal,
+  .pv3-pay-modal {
+    width: 100%;
+    max-height: 94dvh;
+    border-radius: 22px 22px 0 0 !important;
+  }
+
+  .pv3-modal-backdrop {
+    align-items: end !important;
+    padding: 0 !important;
+  }
+
+  .pv3-detail-status,
+  .pv3-detail-grid,
+  .pv3-detail-note,
+  .pv3-record-privacy,
+  .pv3-rx-detail-list,
+  .pv3-detail-modal footer,
+  .pv3-pay-modal footer {
+    margin-inline: 16px !important;
+  }
+
+  .pv3-detail-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .pv3-detail-modal footer,
+  .pv3-pay-modal footer {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .pv3-detail-modal footer .btn,
+  .pv3-pay-modal footer .btn {
+    width: 100%;
+  }
+}
+
+@media (max-width: 430px) {
+  .pv3-dashboard-avatar,
+  .pv3-avatar {
+    font-size: .72rem !important;
+  }
+
+  .pv3-dashboard-identity {
+    display: grid;
+    grid-template-columns: 50px minmax(0, 1fr);
+  }
+
+  .pv3-recall-card-v5,
+  .pv3-document-list-v7 > article,
+  .pv3-payment-history-v6 article {
+    padding: 14px !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pv3-care-card,
+  .pv3-rx-cards-v4 > button,
+  .pv3-recall-card-v5,
+  .pv3-payment-history-v6 article,
+  .pv3-document-list-v7 > article,
+  .pv3-appointment-card-v3 {
+    transition: none !important;
+    transform: none !important;
+  }
+}

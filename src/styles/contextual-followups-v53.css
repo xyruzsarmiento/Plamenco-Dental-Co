@@ -1,0 +1,150 @@
+.contextual-followup-actions small {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: #667085;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.followup-recommendation-backdrop-v7 {
+  z-index: 90;
+  background: rgba(15, 23, 42, 0.46);
+  backdrop-filter: blur(6px);
+}
+
+.followup-recommendation-modal-v7 {
+  width: min(560px, calc(100vw - 32px));
+  overflow: hidden;
+  border: 1px solid #dbeafe;
+  border-radius: 22px;
+  background: #ffffff;
+  box-shadow: 0 28px 80px rgba(15, 23, 42, 0.28);
+}
+
+.followup-recommendation-modal-v7 > header {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 18px 20px;
+  border-bottom: 1px solid #edf1f5;
+  background: #f8fbff;
+}
+
+.followup-recommendation-modal-v7 > header > span {
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  flex: 0 0 42px;
+  border: 1px solid #dbeafe;
+  border-radius: 14px;
+  background: #eff6ff;
+  color: #2563eb;
+}
+
+.followup-recommendation-modal-v7 > header > div {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.followup-recommendation-modal-v7 h2 {
+  margin: 2px 0 4px;
+  color: #172033;
+  font-size: 1.25rem;
+}
+
+.followup-recommendation-modal-v7 header p:not(.eyebrow) {
+  margin: 0;
+  color: #667085;
+  font-size: 12px;
+}
+
+.followup-recommendation-modal-v7 header button {
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  flex: 0 0 38px;
+  border: 1px solid #d7e0ec;
+  border-radius: 12px;
+  background: #ffffff;
+  color: #344054;
+  cursor: pointer;
+}
+
+.followup-recommendation-modal-v7 header button:hover,
+.followup-recommendation-modal-v7 header button:focus-visible {
+  border-color: #93c5fd;
+  background: #eff6ff;
+  color: #1d4ed8;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+  outline: 0;
+}
+
+.followup-recommendation-body-v7 {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  padding: 18px 20px;
+}
+
+.followup-recommendation-body-v7 > div,
+.followup-recommendation-body-v7 > section {
+  min-width: 0;
+  padding: 12px;
+  border: 1px solid #e4eaf2;
+  border-radius: 14px;
+  background: #ffffff;
+}
+
+.followup-recommendation-body-v7 > section {
+  grid-column: 1 / -1;
+}
+
+.followup-recommendation-body-v7 span {
+  display: block;
+  margin-bottom: 4px;
+  color: #2563eb;
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 0;
+  text-transform: uppercase;
+}
+
+.followup-recommendation-body-v7 strong {
+  color: #172033;
+  font-size: 13px;
+  text-transform: capitalize;
+}
+
+.followup-recommendation-body-v7 p {
+  margin: 0;
+  color: #344054;
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.followup-recommendation-modal-v7 > footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 14px 20px 18px;
+  border-top: 1px solid #edf1f5;
+  background: #fbfdff;
+}
+
+@media (max-width: 640px) {
+  .followup-recommendation-body-v7 {
+    grid-template-columns: 1fr;
+  }
+
+  .followup-recommendation-modal-v7 > footer {
+    flex-direction: column;
+  }
+
+  .followup-recommendation-modal-v7 > footer .btn {
+    width: 100%;
+    justify-content: center;
+  }
+}

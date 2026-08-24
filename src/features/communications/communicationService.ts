@@ -9,7 +9,9 @@ import { getStoredServices } from '../services/serviceStore'
 import { recordAuditEntry } from '../security/auditLogStore'
 import {
   createCommunicationDeliveryLog,
+  createCommunicationDeliveryLogPersisted,
   createCommunicationOutboxEntry,
+  createCommunicationOutboxEntryPersisted,
   getCommunicationSettings,
 } from './communicationStore'
 import {
@@ -149,6 +151,32 @@ function queueServerSideDelivery(params: {
   })
 }
 
+function queueServerSideDeliveryPersisted(params: {
+  channel: CommunicationChannel
+  provider: string
+  patientId?: string
+  branchId?: string
+  recipient: string
+  subject?: string
+  message: string
+  deliveryLogId: string
+}) {
+  return createCommunicationOutboxEntryPersisted({
+    deliveryLogId: params.deliveryLogId,
+    channel: params.channel,
+    provider: params.provider,
+    patientId: params.patientId,
+    branchId: params.branchId,
+    payload: {
+      recipient: params.recipient,
+      subject: params.subject,
+      message: params.message,
+    },
+    status: 'queued',
+    nextAttemptAt: new Date().toISOString(),
+  })
+}
+
 export function sendAppointmentCommunication(event: AppointmentCommunicationEvent) {
   const patient = getStoredPatients().find((entry) => entry.patientId === event.appointment.patientId)
   if (!patient) return []
@@ -266,6 +294,148 @@ export function sendAppointmentCommunication(event: AppointmentCommunicationEven
       idempotencyKey,
     })
     queueServerSideDelivery({
+      channel,
+      provider,
+      patientId: patient.patientId,
+      branchId: event.appointment.branchId,
+      recipient: channelAvailability.recipient,
+      subject: rendered.subject,
+      message: rendered.body,
+      deliveryLogId: log.id,
+    })
+    logs.push(log)
+  }
+
+  if (event.manual) {
+    recordAuditEntry({
+      user: event.actor,
+      action: 'communication_manual_resend',
+      entity: 'appointment',
+      entityId: event.appointment.appointmentNumber ?? event.appointment.id,
+      metadata: { templateKey: event.templateKey, appointmentId: event.appointment.id },
+    })
+  }
+
+  return logs
+}
+
+export async function sendAppointmentCommunicationPersisted(event: AppointmentCommunicationEvent) {
+  const patient = getStoredPatients().find((entry) => entry.patientId === event.appointment.patientId)
+  if (!patient) return []
+
+  const settings = getCommunicationSettings()
+  const preference = getCommunicationPreference(patient.patientId)
+  const availability = getChannelAvailability(patient, preference)
+  const variables = getAppointmentTemplateVariables(event, patient)
+  const logs = []
+
+  for (const channel of getOrderedChannels(preference, settings.defaultChannels)) {
+    const channelAvailability = availability.find((entry) => entry.channel === channel)
+    const template = getCommunicationTemplate(event.templateKey, channel)
+    if (!template) continue
+
+    const rendered = renderCommunicationTemplate(template, variables)
+    const idempotencyKey = createIdempotencyKey(event, channel)
+    const provider = getProviderName(channel)
+
+    if (!channelAvailability?.available) {
+      logs.push(await createCommunicationDeliveryLogPersisted({
+        patientId: patient.patientId,
+        branchId: event.appointment.branchId,
+        appointmentId: event.appointment.id,
+        relatedType: 'appointment',
+        relatedId: event.appointment.id,
+        channel,
+        templateKey: event.templateKey,
+        recipient: channelAvailability?.recipient ?? '',
+        subject: rendered.subject,
+        message: rendered.body,
+        status: 'skipped',
+        provider,
+        dispatchMode: event.manual ? 'manual' : 'automated',
+        sentBy: event.manual ? event.actor : undefined,
+        businessEvent: event.templateKey,
+        failureReason: channelAvailability?.reason ?? 'Channel is unavailable',
+        idempotencyKey,
+      }))
+      continue
+    }
+
+    if (channel === 'in_app') {
+      createNotification({
+        userId: getPatientNotificationUserId(patient),
+        kind: 'appointment',
+        action: notificationActionByTemplate[event.templateKey],
+        title: rendered.title,
+        message: rendered.body,
+        priority: event.templateKey === 'appointment_reminder' ? 'normal' : 'high',
+        relatedId: event.appointment.id,
+      })
+      logs.push(await createCommunicationDeliveryLogPersisted({
+        patientId: patient.patientId,
+        branchId: event.appointment.branchId,
+        appointmentId: event.appointment.id,
+        relatedType: 'appointment',
+        relatedId: event.appointment.id,
+        channel,
+        templateKey: event.templateKey,
+        recipient: getPatientNotificationUserId(patient),
+        subject: rendered.title,
+        message: rendered.body,
+        status: 'sent',
+        provider,
+        sentAt: new Date().toISOString(),
+        dispatchMode: event.manual ? 'manual' : 'automated',
+        sentBy: event.manual ? event.actor : undefined,
+        businessEvent: event.templateKey,
+        idempotencyKey,
+      }))
+      continue
+    }
+
+    if (!isProviderConfigured(channel)) {
+      logs.push(await createCommunicationDeliveryLogPersisted({
+        patientId: patient.patientId,
+        branchId: event.appointment.branchId,
+        appointmentId: event.appointment.id,
+        relatedType: 'appointment',
+        relatedId: event.appointment.id,
+        channel,
+        templateKey: event.templateKey,
+        recipient: channelAvailability.recipient,
+        subject: rendered.subject,
+        message: rendered.body,
+        status: 'skipped',
+        provider,
+        dispatchMode: event.manual ? 'manual' : 'automated',
+        sentBy: event.manual ? event.actor : undefined,
+        businessEvent: event.templateKey,
+        failureReason: `${channelAvailability.label} provider is not configured server-side.`,
+        idempotencyKey,
+      }))
+      continue
+    }
+
+    const log = await createCommunicationDeliveryLogPersisted({
+      patientId: patient.patientId,
+      branchId: event.appointment.branchId,
+      appointmentId: event.appointment.id,
+      relatedType: 'appointment',
+      relatedId: event.appointment.id,
+      channel,
+      templateKey: event.templateKey,
+      recipient: channelAvailability.recipient,
+      subject: rendered.subject,
+      message: rendered.body,
+      status: 'queued',
+      provider,
+      queuedAt: new Date().toISOString(),
+      dispatchMode: event.manual ? 'manual' : 'automated',
+      sentBy: event.manual ? event.actor : undefined,
+      businessEvent: event.templateKey,
+      idempotencyKey,
+    })
+    await queueServerSideDeliveryPersisted({
       channel,
       provider,
       patientId: patient.patientId,

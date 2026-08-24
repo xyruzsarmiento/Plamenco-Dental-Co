@@ -1,0 +1,467 @@
+/* Part 2 patient dashboard: focused care overview, not an analytics workspace. */
+
+.pv3-dashboard-v2 {
+  display: grid;
+  gap: 16px;
+  min-width: 0;
+}
+
+.pv3-dashboard-hero {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 22px;
+  border: 1px solid #dbe7f7;
+  border-radius: 18px;
+  background: #fff;
+  box-shadow: 0 12px 34px rgba(37, 99, 235, .055);
+}
+
+.pv3-dashboard-identity {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.pv3-dashboard-avatar {
+  width: 58px;
+  height: 58px;
+  flex: 0 0 58px;
+  display: grid;
+  place-items: center;
+  border: 1px solid #cfe0f7;
+  border-radius: 999px;
+  background-color: #eaf2ff;
+  background-position: center;
+  background-size: cover;
+  color: #1d4ed8;
+  font-size: 1rem;
+  font-weight: 850;
+  box-shadow: 0 10px 24px rgba(37, 99, 235, .1);
+}
+
+.pv3-dashboard-identity p,
+.pv3-dashboard-identity h2,
+.pv3-dashboard-identity span {
+  margin: 0;
+}
+
+.pv3-dashboard-identity p {
+  color: #667085;
+  font-size: .78rem;
+  font-weight: 700;
+}
+
+.pv3-dashboard-identity h2 {
+  margin-top: 4px;
+  color: #172033;
+  font-size: 1.55rem;
+  line-height: 1.15;
+  letter-spacing: 0;
+}
+
+.pv3-dashboard-identity h2 em {
+  color: #2563eb;
+  font-style: normal;
+}
+
+.pv3-dashboard-identity span {
+  display: block;
+  margin-top: 5px;
+  color: #526077;
+  font-size: .9rem;
+}
+
+.pv3-dashboard-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.pv3-dashboard-actions button,
+.pv3-dashboard-link,
+.pv3-soft-empty button {
+  min-height: 38px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border-radius: 10px;
+  border: 1px solid #cfe0f7;
+  background: #eaf2ff;
+  color: #1d4ed8;
+  font: inherit;
+  font-size: .78rem;
+  font-weight: 850;
+  cursor: pointer;
+}
+
+.pv3-dashboard-actions button:first-child,
+.pv3-soft-empty button {
+  border-color: #2563eb;
+  background: #2563eb;
+  color: #fff;
+  box-shadow: 0 9px 20px rgba(37, 99, 235, .16);
+}
+
+.pv3-dashboard-actions button:hover,
+.pv3-dashboard-link:hover,
+.pv3-soft-empty button:hover {
+  border-color: #bcd2f4;
+  background: #dfeaff;
+}
+
+.pv3-dashboard-actions button:first-child:hover,
+.pv3-soft-empty button:hover {
+  border-color: #1d4ed8;
+  background: #1d4ed8;
+}
+
+.pv3-dashboard-actions button:focus-visible,
+.pv3-dashboard-link:focus-visible,
+.pv3-soft-empty button:focus-visible {
+  outline: 3px solid rgba(37, 99, 235, .24);
+  outline-offset: 2px;
+}
+
+.pv3-dashboard-priority,
+.pv3-dashboard-care-grid,
+.pv3-dashboard-secondary {
+  display: grid;
+  gap: 14px;
+  min-width: 0;
+}
+
+.pv3-dashboard-priority {
+  grid-template-columns: minmax(0, 1.45fr) minmax(280px, .55fr);
+}
+
+.pv3-dashboard-care-grid,
+.pv3-dashboard-secondary {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.pv3-dashboard-priority:not(:has(.pv3-balance-card)) {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.pv3-care-card {
+  min-width: 0;
+  display: grid;
+  align-content: start;
+  gap: 13px;
+  padding: 18px;
+  border: 1px solid #dfe8f4;
+  border-radius: 16px;
+  background: #fff;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, .045);
+}
+
+.pv3-next-visit {
+  border-color: #cfe0f7;
+  box-shadow: 0 12px 32px rgba(37, 99, 235, .075);
+}
+
+.pv3-balance-card {
+  border-color: #fee2e2;
+  background: #fff;
+}
+
+.pv3-care-card-head {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: 42px minmax(0, 1fr);
+  align-items: center;
+  gap: 11px;
+}
+
+.pv3-care-card-head > span {
+  width: 42px;
+  height: 42px;
+  display: grid;
+  place-items: center;
+  border: 1px solid #d7e6ff;
+  border-radius: 12px;
+  background: #eaf2ff;
+  color: #2563eb;
+}
+
+.pv3-balance-card .pv3-care-card-head > span {
+  border-color: #fecaca;
+  background: #fef2f2;
+  color: #dc2626;
+}
+
+.pv3-care-card-head small {
+  display: block;
+  color: #667085;
+  font-size: .64rem;
+  font-weight: 850;
+  letter-spacing: .07em;
+}
+
+.pv3-care-card-head h3 {
+  margin: 4px 0 0;
+  color: #172033;
+  font-size: 1.02rem;
+  line-height: 1.2;
+  letter-spacing: 0;
+  overflow-wrap: anywhere;
+}
+
+.pv3-appointment-focus {
+  display: grid;
+  grid-template-columns: 62px minmax(0, 1fr);
+  gap: 14px;
+  padding: 15px;
+  border: 1px solid #e3ebf6;
+  border-radius: 14px;
+  background: #fbfdff;
+}
+
+.pv3-appointment-focus h4 {
+  margin: 8px 0 10px;
+  color: #172033;
+  font-size: 1.08rem;
+  line-height: 1.25;
+}
+
+.pv3-appointment-focus dl {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin: 0;
+}
+
+.pv3-appointment-focus dt {
+  margin-bottom: 4px;
+  color: #8a97aa;
+  font-size: .62rem;
+  font-weight: 850;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+}
+
+.pv3-appointment-focus dd {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  color: #344054;
+  font-size: .78rem;
+  font-weight: 750;
+  overflow-wrap: anywhere;
+}
+
+.pv3-appointment-focus dd svg {
+  flex: 0 0 auto;
+  color: #2563eb;
+}
+
+.pv3-dashboard-link {
+  width: fit-content;
+  padding: 0 12px;
+  background: #fff;
+  text-decoration: none;
+}
+
+.pv3-care-summary {
+  display: grid;
+  gap: 10px;
+}
+
+.pv3-care-summary p,
+.pv3-balance-card p {
+  margin: 0;
+  color: #526077;
+  font-size: .86rem;
+  line-height: 1.45;
+}
+
+.pv3-care-summary small {
+  color: #667085;
+  font-size: .76rem;
+  line-height: 1.35;
+}
+
+.pv3-treatment-status {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.pv3-treatment-status strong {
+  color: #172033;
+  font-size: 1rem;
+}
+
+.pv3-dashboard-list {
+  display: grid;
+  gap: 8px;
+}
+
+.pv3-dashboard-list article {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  padding: 10px;
+  border: 1px solid #e5ecf5;
+  border-radius: 12px;
+  background: #fbfdff;
+}
+
+.pv3-dashboard-list article > span {
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  border-radius: 10px;
+  background: #eaf2ff;
+  color: #2563eb;
+}
+
+.pv3-dashboard-list strong {
+  display: block;
+  color: #172033;
+  font-size: .82rem;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+
+.pv3-dashboard-list p {
+  margin: 3px 0 0;
+  color: #667085;
+  font-size: .72rem;
+  line-height: 1.3;
+}
+
+.pv3-dashboard-list .portal-link {
+  color: #1d4ed8;
+  font-size: .76rem;
+  font-weight: 850;
+  text-decoration: none;
+}
+
+.pv3-soft-empty,
+.pv3-compact-empty {
+  min-width: 0;
+  border: 1px solid #e5ecf5;
+  border-radius: 13px;
+  background: #fbfdff;
+  color: #526077;
+}
+
+.pv3-soft-empty {
+  display: grid;
+  grid-template-columns: 42px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  padding: 13px;
+}
+
+.pv3-soft-empty > svg {
+  width: 42px;
+  height: 42px;
+  padding: 10px;
+  border-radius: 12px;
+  background: #eaf2ff;
+  color: #2563eb;
+}
+
+.pv3-soft-empty strong {
+  color: #172033;
+  font-size: .9rem;
+}
+
+.pv3-soft-empty p {
+  margin: 3px 0 0;
+  color: #667085;
+  font-size: .78rem;
+  line-height: 1.35;
+}
+
+.pv3-compact-empty {
+  padding: 13px;
+  font-size: .82rem;
+  line-height: 1.45;
+}
+
+@media (max-width: 1100px) {
+  .pv3-dashboard-priority,
+  .pv3-dashboard-care-grid,
+  .pv3-dashboard-secondary {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 760px) {
+  .pv3-dashboard-hero {
+    align-items: flex-start;
+    flex-direction: column;
+    padding: 18px;
+  }
+
+  .pv3-dashboard-actions {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .pv3-dashboard-actions button {
+    flex: 1;
+  }
+
+  .pv3-appointment-focus dl {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 560px) {
+  .pv3-dashboard-identity {
+    align-items: flex-start;
+  }
+
+  .pv3-dashboard-avatar {
+    width: 50px;
+    height: 50px;
+    flex-basis: 50px;
+  }
+
+  .pv3-dashboard-identity h2 {
+    font-size: 1.28rem;
+  }
+
+  .pv3-dashboard-actions,
+  .pv3-soft-empty {
+    grid-template-columns: 1fr;
+  }
+
+  .pv3-dashboard-actions {
+    display: grid;
+  }
+
+  .pv3-care-card {
+    padding: 14px;
+  }
+
+  .pv3-appointment-focus {
+    grid-template-columns: 50px minmax(0, 1fr);
+    padding: 12px;
+  }
+
+  .pv3-dashboard-list article {
+    grid-template-columns: 34px minmax(0, 1fr);
+  }
+
+  .pv3-dashboard-list article .badge,
+  .pv3-dashboard-list article .portal-link {
+    grid-column: 2;
+    justify-self: start;
+  }
+}

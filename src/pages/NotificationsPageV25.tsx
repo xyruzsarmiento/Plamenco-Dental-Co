@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import {
   Bell,
   CalendarClock,
@@ -15,6 +15,7 @@ import {
 } from 'lucide-react'
 import { Badge } from '../components/ui/Badge'
 import { Button } from '../components/ui/Button'
+import { Pagination } from '../components/ui/DesignSystem'
 import { useAuth } from '../features/auth/AuthContext'
 import { usePermissions } from '../features/auth/permissions'
 import {
@@ -38,6 +39,7 @@ const kindConfig: Record<NotificationKind, { label: string; icon: typeof Bell }>
 }
 
 type NotificationFilter = 'all' | 'unread' | NotificationKind
+const INBOX_PAGE_SIZE = 10
 
 function labelize(value: string) {
   return value.replaceAll('_', ' ').replace(/\b\w/g, (letter) => letter.toUpperCase())
@@ -70,6 +72,7 @@ export function NotificationsPageV25() {
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [isQueueing, setIsQueueing] = useState(false)
   const [queueFeedback, setQueueFeedback] = useState<{ tone: 'success' | 'warning' | 'danger' | 'info'; message: string } | null>(null)
+  const [inboxPage, setInboxPage] = useState(1)
 
   const notifications = useMemo(() => {
     void refreshKey
@@ -107,7 +110,17 @@ export function NotificationsPageV25() {
     if (filter === 'unread') return !notification.isRead
     return notification.kind === filter
   })
+  const inboxPageCount = Math.max(1, Math.ceil(filtered.length / INBOX_PAGE_SIZE))
+  const visibleNotifications = filtered.slice((Math.min(inboxPage, inboxPageCount) - 1) * INBOX_PAGE_SIZE, Math.min(inboxPage, inboxPageCount) * INBOX_PAGE_SIZE)
   const selected = notifications.find((notification) => notification.id === selectedId) ?? filtered[0] ?? null
+
+  useEffect(() => {
+    setInboxPage(1)
+  }, [filter])
+
+  useEffect(() => {
+    setInboxPage((page) => Math.min(page, inboxPageCount))
+  }, [inboxPageCount])
 
   function refresh() {
     setRefreshKey((key) => key + 1)
@@ -202,7 +215,7 @@ export function NotificationsPageV25() {
             <div className="notifications-v25-empty"><Sparkles size={28} /><h3>You're all caught up</h3><p>No notifications match this view.</p></div>
           ) : (
             <div className="notifications-v25-list">
-              {filtered.map((notification) => {
+              {visibleNotifications.map((notification) => {
                 const meta = kindConfig[notification.kind]
                 const Icon = meta?.icon ?? Bell
                 return (
@@ -215,6 +228,7 @@ export function NotificationsPageV25() {
               })}
             </div>
           )}
+          <Pagination page={inboxPage} pageCount={inboxPageCount} totalItems={filtered.length} pageSize={INBOX_PAGE_SIZE} onPageChange={setInboxPage} label="Inbox notification pages" />
         </section>
 
         <aside className="notifications-v25-detail">
@@ -250,7 +264,7 @@ export function NotificationsPageV25() {
         <div className="notifications-v25-ops-grid">
           <article className="notifications-v25-reminder-card"><div><span>Reminder scan</span><h4>{dueReminders.length} due now</h4><p>{upcomingReminders.length} upcoming reminder window{upcomingReminders.length === 1 ? '' : 's'}. Only eligible confirmed appointments are considered.</p></div><Button disabled={!canQueueReminders || isQueueing || dueReminders.length === 0} onClick={() => void queueDueReminders()}><Send size={15} /> {isQueueing ? 'Queueing…' : 'Queue due reminders'}</Button></article>
           <article className="notifications-v25-reminder-card"><div><span>Provider outbox</span><h4>{outbox.length} queued jobs</h4><p>Outbox state is not equivalent to sent or delivered status.</p></div><Badge tone={outbox.length ? 'warning' : 'neutral'}>{outbox.length ? 'Pending provider work' : 'No queued work'}</Badge></article>
-          <article className="notifications-v25-reminder-card"><div><span>Delivery failures</span><h4>{failedLogs.length} failures</h4><p>Failures remain visible for operational review and retry from the Communications Hub.</p></div><Badge tone={failedLogs.length ? 'danger' : 'success'}>{failedLogs.length ? 'Review required' : 'No failures'}</Badge></article>
+          <article className="notifications-v25-reminder-card"><div><span>Delivery failures</span><h4>{failedLogs.length} failures</h4><p>Failures remain visible in appointment messaging history and delivery operations.</p></div><Badge tone={failedLogs.length ? 'danger' : 'success'}>{failedLogs.length ? 'Review required' : 'No failures'}</Badge></article>
         </div>
         {!canQueueReminders && <div className="notifications-v25-feedback is-warning">Your role can view reminder state but cannot queue patient communications.</div>}
         {queueFeedback && <div className={`notifications-v25-feedback is-${queueFeedback.tone}`}>{queueFeedback.message}</div>}

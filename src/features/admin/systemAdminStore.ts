@@ -347,7 +347,7 @@ export function getSystemAdminSnapshot(): SystemAdminSnapshot {
   return {
     activeUsers: activeStaff.length + patients.filter((patient) => patient.authUserId && patient.status === 'active').length,
     activeDentists: providers.filter((provider) => provider.status === 'active').length,
-    activeStaff: activeStaff.filter((member) => member.role === 'staff' || member.role === 'admin' || member.role === 'super_admin').length,
+    activeStaff: activeStaff.filter((member) => member.role === 'staff' || member.role === 'super_admin').length,
     patientAccounts: patients.filter((patient) => patient.authUserId).length,
     activeBranches: branches.filter((branch) => branch.status === 'active').length,
     activeServices: services.filter((service) => service.status === 'active').length,

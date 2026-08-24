@@ -3,6 +3,7 @@ import { X } from 'lucide-react'
 import { Button } from '../../components/ui/Button'
 import { Input } from '../../components/ui/Input'
 import { Select } from '../../components/ui/Select'
+import { StatusBadge } from '../../components/ui/Badge'
 import { Textarea } from '../../components/ui/Textarea'
 import { getStoredTreatmentPlans, getStoredTreatments } from '../treatments/treatmentStore'
 import { DENTAL_CONDITION_META, type DentalCondition, type DentalToothEntry, type DentalToothStatus } from './dentalChartTypes'
@@ -491,7 +492,7 @@ export function DentalChart({ patientId, isEditable = false }: DentalChartProps)
                         <div key={treatment.id} className="history-item">
                           <div className="history-row">
                             <strong>{new Date(treatment.treatmentDate).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}</strong>
-                            <span className={`status-badge status-${treatment.status}`}>{treatment.status}</span>
+                            <StatusBadge status={treatment.status} variant="compact" />
                           </div>
                           <p>{treatment.description || 'Treatment recorded'}</p>
                           <small>{treatment.notes || 'No treatment notes recorded.'}</small>
@@ -519,7 +520,7 @@ export function DentalChart({ patientId, isEditable = false }: DentalChartProps)
                         <div key={entry.id} className="history-item">
                           <div className="history-row">
                             <strong>{new Date(entry.date).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}</strong>
-                            <span className={`status-badge status-${entry.status}`}>{entry.status}</span>
+                            <StatusBadge status={entry.status} variant="compact" />
                           </div>
                           <p>{entry.treatment || 'No treatment recorded'}</p>
                           <small>{entry.notes || 'No notes recorded.'}</small>

@@ -143,7 +143,7 @@ export function SettingsPage() {
                           <tr key={log.id}>
                             <td>{formatDateTime(log.timestamp)}</td>
                             <td><strong>{staffMap.get(log.user) ?? log.user}</strong></td>
-                            <td><Badge tone={action.tone}>{action.label}</Badge></td>
+                            <td><Badge tone="info">{action.label}</Badge></td>
                             <td>{log.entity}</td>
                             <td><code>{log.entityId}</code></td>
                           </tr>

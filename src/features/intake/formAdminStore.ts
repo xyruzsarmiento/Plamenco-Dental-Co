@@ -54,6 +54,13 @@ export type FormAssignmentSummary = {
   completedAt?: string
 }
 
+export type FormVersionUsageSummary = {
+  versionId: string
+  assignmentCount: number
+  signedSubmissionCount: number
+  finalSubmissionCount: number
+}
+
 function requireSupabase() {
   if (!supabase) throw new Error('Forms & Consent is unavailable because the database connection is not configured.')
   return supabase
@@ -190,9 +197,32 @@ export async function createNextDraftVersion(templateId: string) {
   return { versionId: row.version_id as string, versionNumber: Number(row.version_number) }
 }
 
+export async function createDraftVersionFromVersion(versionId: string) {
+  const client = requireSupabase()
+  const { data, error } = await client.rpc('create_form_version_draft_from_version', { p_source_version_id: versionId })
+  if (error) throw error
+  const row = Array.isArray(data) ? data[0] : data
+  if (!row?.version_id) throw new Error('New draft version was not created.')
+  return { versionId: row.version_id as string, versionNumber: Number(row.version_number), templateId: row.template_id as string }
+}
+
 export async function publishVersion(versionId: string) {
   const client = requireSupabase()
   const { data, error } = await client.rpc('publish_form_version', { p_version_id: versionId })
+  if (error) throw error
+  return data as string
+}
+
+export async function deleteDraftVersion(versionId: string) {
+  const client = requireSupabase()
+  const { data, error } = await client.rpc('delete_form_template_draft_version', { p_version_id: versionId })
+  if (error) throw error
+  return data as string
+}
+
+export async function archiveVersion(versionId: string) {
+  const client = requireSupabase()
+  const { data, error } = await client.rpc('archive_form_template_version', { p_version_id: versionId })
   if (error) throw error
   return data as string
 }
@@ -202,6 +232,19 @@ export async function archiveTemplate(templateId: string) {
   const { data, error } = await client.rpc('archive_form_template', { p_template_id: templateId })
   if (error) throw error
   return data as string
+}
+
+export async function listFormVersionUsage(versionIds: string[]): Promise<FormVersionUsageSummary[]> {
+  if (versionIds.length === 0) return []
+  const client = requireSupabase()
+  const { data, error } = await client.rpc('form_version_usage_summary', { p_version_ids: versionIds })
+  if (error) throw error
+  return (data ?? []).map((row: Record<string, any>) => ({
+    versionId: row.version_id,
+    assignmentCount: Number(row.assignment_count ?? 0),
+    signedSubmissionCount: Number(row.signed_submission_count ?? 0),
+    finalSubmissionCount: Number(row.final_submission_count ?? 0),
+  }))
 }
 
 export async function assignPublishedForm(input: {

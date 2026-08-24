@@ -1,12 +1,14 @@
 import '../../styles/internal-portal-blue-unification-v103.css'
-import '../../styles/admin-super-parity-v104.css'
 import '../../styles/internal-portal-responsive-v105.css'
 import '../../styles/internal-portal-shell-fix-v106.css'
-import { Camera, Menu, X } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import '../../styles/portal-shell-premium-v1.css'
+import { Menu, X } from 'lucide-react'
+import { useEffect, useState, type CSSProperties } from 'react'
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../features/auth/AuthContext'
 import { roleLabels, usePermissions } from '../../features/auth/permissions'
+import { TopbarNotificationBell } from '../../features/notifications/TopbarNotificationBell'
+import { getAvatarDisplayUrl, getInitials } from '../../features/profiles/profileStore'
 import { supabase } from '../../lib/supabase'
 import { Button } from '../ui/Button'
 import { navigationGroups, navigationItems } from './navigation'
@@ -19,8 +21,9 @@ function getPageClass(pathname: string) {
 
 export function AppLayout() {
   const [isMobileNavOpen, setIsMobileNavOpen] = useState(false)
-  const [avatarUrl, setAvatarUrl] = useState('')
-  const [avatarStatus, setAvatarStatus] = useState('')
+  const [avatarPath, setAvatarPath] = useState('')
+  const [avatarUpdatedAt, setAvatarUpdatedAt] = useState('')
+  const [profileName, setProfileName] = useState('')
   const { user, signOut } = useAuth()
   const { canAny } = usePermissions()
   const location = useLocation()
@@ -28,15 +31,33 @@ export function AppLayout() {
 
   useEffect(() => {
     let active = true
-    if (!supabase || !user?.id || user.role === 'patient') {
-      setAvatarUrl('')
-      return () => { active = false }
+    const refreshProfileChrome = () => {
+      if (!supabase || !user?.id || user.role === 'patient') {
+        setAvatarPath('')
+        setAvatarUpdatedAt('')
+        setProfileName('')
+        return
+      }
+      void supabase.from('profiles').select('avatar_url, full_name, updated_at').eq('id', user.id).maybeSingle().then(({ data }) => {
+        if (!active) return
+        setAvatarPath(String(data?.avatar_url ?? ''))
+        setAvatarUpdatedAt(String(data?.updated_at ?? ''))
+        setProfileName(String(data?.full_name ?? ''))
+      })
     }
-    void supabase.from('profiles').select('avatar_url').eq('id', user.id).maybeSingle().then(({ data }) => {
-      if (active) setAvatarUrl(String(data?.avatar_url ?? ''))
-    })
-    return () => { active = false }
-  }, [user?.id, user?.role])
+
+    refreshProfileChrome()
+    window.addEventListener('plamenco-profile-updated', refreshProfileChrome)
+    return () => {
+      active = false
+      window.removeEventListener('plamenco-profile-updated', refreshProfileChrome)
+    }
+  }, [location.pathname, user?.id, user?.role])
+
+  useEffect(() => {
+    document.body.classList.toggle('pv3-nav-lock', isMobileNavOpen)
+    return () => document.body.classList.remove('pv3-nav-lock')
+  }, [isMobileNavOpen])
 
   const currentPage =
     navigationItems.find(
@@ -44,13 +65,12 @@ export function AppLayout() {
         location.pathname === item.path ||
         (item.path !== '/app' && location.pathname.startsWith(`${item.path}/`)) ||
         (item.path === '/app' && (location.pathname === '/app' || location.pathname === '/app/')),
-    )?.label ?? 'Workspace'
+    )?.label ?? (location.pathname.startsWith('/app/notifications') ? 'Notifications' : 'Workspace')
 
   const visibleGroups = navigationGroups
     .map((group) => ({
       ...group,
       items: group.items.filter((item) => {
-        if (user?.role === 'admin' && item.path === '/app/system-admin') return false
         return !item.anyOf || canAny(item.anyOf)
       }),
     }))
@@ -61,42 +81,16 @@ export function AppLayout() {
       ? 'Front desk operations'
       : user?.role === 'dentist' || user?.role === 'associate_dentist'
         ? 'Clinical workspace'
-        : user?.role === 'admin'
-          ? 'Clinic operations'
-          : user?.role === 'super_admin'
-            ? 'Executive administration'
-            : 'Clinic workspace'
+        : user?.role === 'super_admin'
+          ? 'Executive administration'
+          : 'Clinic workspace'
 
-  async function uploadAvatar(file?: File) {
-    if (!file || !user || !supabase || user.role === 'patient') return
-    if (!file.type.startsWith('image/')) {
-      setAvatarStatus('Choose an image file.')
-      return
-    }
-    if (file.size > 2 * 1024 * 1024) {
-      setAvatarStatus('Image must be 2 MB or smaller.')
-      return
-    }
-    setAvatarStatus('Saving…')
-    const dataUrl = await new Promise<string>((resolve, reject) => {
-      const reader = new FileReader()
-      reader.onload = () => resolve(String(reader.result ?? ''))
-      reader.onerror = () => reject(new Error('Unable to read the selected image.'))
-      reader.readAsDataURL(file)
-    }).catch(() => '')
-    if (!dataUrl) {
-      setAvatarStatus('Unable to read the selected image.')
-      return
-    }
-    const { error } = await supabase.from('profiles').update({ avatar_url: dataUrl }).eq('id', user.id)
-    if (error) {
-      setAvatarStatus('Unable to save profile photo.')
-      return
-    }
-    setAvatarUrl(dataUrl)
-    setAvatarStatus('Photo updated')
-    window.setTimeout(() => setAvatarStatus(''), 2500)
-  }
+  const rawAvatarUrl = getAvatarDisplayUrl(avatarPath)
+  const avatarUrl = rawAvatarUrl && avatarUpdatedAt
+    ? `${rawAvatarUrl}${rawAvatarUrl.includes('?') ? '&' : '?'}v=${encodeURIComponent(avatarUpdatedAt)}`
+    : rawAvatarUrl
+  const avatarStyle = avatarUrl ? ({ '--profile-avatar-image': `url(${avatarUrl})` } as CSSProperties) : undefined
+  const initials = getInitials(profileName || user?.name || '', user?.email ?? '')
 
   return (
     <div className={`app-shell role-${user?.role ?? 'guest'} ${getPageClass(location.pathname)}`}>
@@ -143,16 +137,14 @@ export function AppLayout() {
 
         <div className="sidebar-footer">
           <div className="user-card">
-            <label className="internal-avatar-upload" title="Change profile photo">
-              <span className="avatar" style={avatarUrl ? { backgroundImage: `url(${avatarUrl})` } : undefined}>
-                {!avatarUrl && (user?.name?.charAt(0)?.toUpperCase() ?? 'U')}
+            <NavLink className="internal-avatar-upload" title="Open profile" to="/app/profile">
+              <span className="avatar" style={avatarStyle}>
+                {!avatarUrl && initials}
               </span>
-              <span className="internal-avatar-camera"><Camera size={11} /></span>
-              <input type="file" accept="image/jpeg,image/png,image/webp" onChange={(event) => void uploadAvatar(event.target.files?.[0])} />
-            </label>
+            </NavLink>
             <span>
-              <strong>{user?.name || user?.email || 'Signed in user'}</strong>
-              <small>{avatarStatus || (user?.role ? roleLabels[user.role] : 'User')}</small>
+              <strong>{profileName || user?.name || user?.email || 'Signed in user'}</strong>
+              <small>{user?.role ? roleLabels[user.role] : 'User'}</small>
             </span>
           </div>
           <Button
@@ -191,8 +183,11 @@ export function AppLayout() {
             <p className="eyebrow">{workspaceEyebrow}</p>
             <h1>{currentPage}</h1>
           </div>
-          <div className="topbar-account-pill" aria-label="Current account role">
-            {user?.role ? roleLabels[user.role] : 'User'}
+          <div className="topbar-actions">
+            <TopbarNotificationBell />
+            <div className="topbar-account-pill" aria-label="Current account role">
+              {user?.role ? roleLabels[user.role] : 'User'}
+            </div>
           </div>
         </header>
 

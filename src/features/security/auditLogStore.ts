@@ -1,6 +1,7 @@
 export type AuditAction =
   | 'patient_created'
   | 'patient_updated'
+  | 'patient_archived'
   | 'patient_import_completed'
   | 'patient_import_rolled_back'
   | 'appointment_status_changed'
@@ -76,6 +77,7 @@ export function formatAuditAction(action: AuditAction) {
   const map: Record<AuditAction, { label: string; description: string }> = {
     patient_created: { label: 'Patient created', description: 'A new patient profile was created.' },
     patient_updated: { label: 'Patient updated', description: 'Patient details were updated.' },
+    patient_archived: { label: 'Patient archived', description: 'A patient profile was archived.' },
     patient_import_completed: { label: 'Patient import completed', description: 'A historical patient import batch was confirmed.' },
     patient_import_rolled_back: { label: 'Patient import rolled back', description: 'Patient records created by an import batch were removed during migration review.' },
     appointment_status_changed: { label: 'Appointment status changed', description: 'An appointment moved through the clinic workflow.' },

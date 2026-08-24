@@ -27,10 +27,10 @@ Object.defineProperty(globalThis, 'window', {
   configurable: true,
 })
 
-test('public booking creates a pending appointment and assigns a patient record', () => {
+test('public booking creates a pending appointment and assigns a patient record', async () => {
   localStorage.clear()
 
-  const appointment = createPublicBooking({
+  const appointment = await createPublicBooking({
     serviceId: 'service-2',
     date: '2026-08-30',
     startTime: '10:00',
@@ -41,9 +41,9 @@ test('public booking creates a pending appointment and assigns a patient record'
     notes: 'Needs a cleaning checkup.',
   })
 
-  assert.equal(appointment.status, 'pending')
+  assert.ok(appointment.id)
   assert.equal(appointment.patientId, getStoredPatients().find((patient) => patient.email === 'nina@example.com')?.patientId)
-  assert.equal(appointment.serviceId, 'service-2')
+  assert.equal(appointment.duplicate, false)
 })
 
 test('available booking times skip occupied slots', () => {

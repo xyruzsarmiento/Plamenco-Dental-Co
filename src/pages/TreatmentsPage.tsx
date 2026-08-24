@@ -2,6 +2,7 @@ import { useMemo, useState, useEffect } from 'react'
 import { Filter, Plus } from 'lucide-react'
 import { Button } from '../components/ui/Button'
 import { PageScaffold } from '../components/ui/PageScaffold'
+import { StatusBadge } from '../components/ui/Badge'
 import { getStoredPatients } from '../features/patients/patientStore'
 import { PatientSelector } from '../features/treatments/PatientSelector'
 import { PatientHeader } from '../features/treatments/PatientHeader'
@@ -253,7 +254,7 @@ export function TreatmentsPage() {
                           <span>{treatment.providerNameSnapshot || providerMap.get(treatment.providerId ?? '')?.displayName || treatment.performedBy}</span>
                           <span>{branchMap.get(treatment.branchId ?? '')?.name || 'No branch'}</span>
                           <span>{treatment.appointmentNumber || 'No appointment'}</span>
-                          <span className={`status-badge status-${treatment.status}`}>{treatment.status.replaceAll('_', ' ')}</span>
+                          <StatusBadge status={treatment.status} variant="compact" />
                         </article>
                       )
                     })}

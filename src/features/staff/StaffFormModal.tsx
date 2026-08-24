@@ -73,7 +73,6 @@ export function StaffFormModal({
               onChange={(event) => onChange({ ...values, role: event.target.value as StaffFormValues['role'] })}
               options={[
                 { label: 'Super Admin', value: 'super_admin' },
-                { label: 'Admin', value: 'admin' },
                 { label: 'Dentist', value: 'dentist' },
                 { label: 'Associate Dentist', value: 'associate_dentist' },
                 { label: 'Staff', value: 'staff' },

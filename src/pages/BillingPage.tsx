@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
 import { Ban, CheckCircle2, CreditCard, Printer, RotateCcw, Search, XCircle } from 'lucide-react'
 import { PageScaffold } from '../components/ui/PageScaffold'
-import { Badge } from '../components/ui/Badge'
+import { StatusBadge } from '../components/ui/Badge'
 import { Button } from '../components/ui/Button'
 import { Select } from '../components/ui/Select'
 import { PaymentRecorderButton } from '../features/billing/PaymentRecorder'
@@ -48,13 +48,6 @@ function patientName(patientId: string) {
 function branchName(branchId?: string) {
   if (!branchId) return 'Unassigned branch'
   return getStoredBranches().find((entry) => entry.id === branchId)?.name ?? branchId
-}
-
-function statusTone(status: string): 'success' | 'warning' | 'danger' | 'info' {
-  if (status === 'paid' || status === 'completed') return 'success'
-  if (status === 'partially_paid' || status === 'pending_verification' || status === 'processing') return 'warning'
-  if (status === 'void' || status === 'voided' || status === 'refunded' || status === 'rejected' || status === 'failed') return 'danger'
-  return 'info'
 }
 
 function printReceipt(payment: Payment) {
@@ -192,7 +185,7 @@ export function BillingPage() {
                       <small>Paid {formatCurrency(invoice.amountPaidCents)} of {formatCurrency(invoice.totalCents)}</small>
                     </div>
                     <div style={{ textAlign: 'right' }}>
-                      <Badge tone={statusTone(invoice.status)}>{invoice.status.replaceAll('_', ' ')}</Badge>
+                      <StatusBadge status={invoice.status} variant="compact" />
                       <strong>{formatCurrency(invoice.balanceCents)}</strong>
                     </div>
                   </button>
@@ -206,7 +199,7 @@ export function BillingPage() {
                 <>
                   <div className="section-header">
                     <div><h3>{selectedInvoice.invoiceNumber}</h3><p>{patientName(selectedInvoice.patientId)}</p></div>
-                    <Badge tone={statusTone(selectedInvoice.status)}>{selectedInvoice.status.replaceAll('_', ' ')}</Badge>
+                    <StatusBadge status={selectedInvoice.status} />
                   </div>
                   <div className="detail-grid detail-grid-mini">
                     <div className="detail-item"><span>Branch</span><strong>{branchName(selectedInvoice.branchId)}</strong></div>
@@ -255,7 +248,7 @@ export function BillingPage() {
                     <small>{payment.referenceNumber || 'No reference'} - {payment.recordedBy}</small>
                   </div>
                   <div className="toolbar-row">
-                    <Badge tone={statusTone(payment.status)}>{payment.status.replaceAll('_', ' ')}</Badge>
+                    <StatusBadge status={payment.status} variant="compact" />
                     <strong>{formatCurrency(payment.amountCents)}</strong>
                     {data.receipts.some((receipt) => receipt.paymentId === payment.id) && <Button variant="ghost" size="sm" icon={<Printer size={14} />} onClick={() => printReceipt(payment)}>Receipt</Button>}
                     {permissions.can('payments.refund') && payment.refundableCents > 0 && <Button variant="secondary" size="sm" icon={<RotateCcw size={14} />} onClick={() => handleRefund(payment)}>Refund</Button>}
@@ -308,7 +301,7 @@ export function BillingPage() {
               {data.refunds.map((refund) => (
                 <div key={refund.id} className="workspace-row">
                   <div><strong>{refund.refundNumber} - {patientName(refund.patientId)}</strong><span>{branchName(refund.branchId)} - {formatDate(refund.processedAt)}</span><small>{refund.reason}</small></div>
-                  <div><Badge tone={statusTone(refund.status)}>{refund.status}</Badge><strong>{formatCurrency(refund.amountCents)}</strong></div>
+                  <div><StatusBadge status={refund.status} variant="compact" /><strong>{formatCurrency(refund.amountCents)}</strong></div>
                 </div>
               ))}
               {data.refunds.length === 0 && <div className="empty-state-panel">No refunds recorded.</div>}

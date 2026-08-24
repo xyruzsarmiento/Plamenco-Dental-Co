@@ -66,7 +66,6 @@ export function TreatmentsPageV12() {
   const [editingId, setEditingId] = useState<string | null>(null)
   const [formValues, setFormValues] = useState<TreatmentFormValues>(() => emptyTreatmentForm(patients[0]?.patientId ?? '', services[0]?.id ?? ''))
 
-  const patientMap = useMemo(() => new Map(patients.map((patient) => [patient.patientId, patient])), [patients])
   const serviceMap = useMemo(() => new Map(services.map((service) => [service.id, service])), [services])
   const branchMap = useMemo(() => new Map(branches.map((branch) => [branch.id, branch])), [branches])
   const providerMap = useMemo(() => new Map(providers.map((provider) => [provider.id, provider])), [providers])

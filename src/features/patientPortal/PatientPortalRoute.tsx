@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { PortalSkeleton } from '../../components/ui/DesignSystem'
 import { loadBranchesFromSupabase } from '../branches/branchStore'
 import { loadProviderFoundationFromSupabase } from '../dentists/dentistStore'
 import { loadServicesFromSupabase } from '../services/serviceStore'
@@ -33,7 +34,7 @@ export function PatientPortalRoute() {
   }, [])
 
   if (state === 'loading') {
-    return <div className="portal-empty">Preparing your patient portal...</div>
+    return <PortalSkeleton variant="patient" message="Preparing your patient portal" />
   }
 
   return <PatientPortalPage />

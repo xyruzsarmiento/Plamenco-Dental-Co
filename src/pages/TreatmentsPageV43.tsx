@@ -1,6 +1,7 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Activity, CalendarDays, ChevronRight, CircleDollarSign, Filter, Plus, Search, Sparkles, Stethoscope, UserRound } from 'lucide-react'
 import { Button } from '../components/ui/Button'
+import { Pagination } from '../components/ui/DesignSystem'
 import { MostPerformedTreatmentsV45, PlannedVsPerformedV45 } from '../components/ui/TreatmentAnalyticsV45'
 import { TreatmentFormDrawerV12 } from '../features/treatments/TreatmentFormDrawerV12'
 import { getStoredPatients } from '../features/patients/patientStore'
@@ -12,6 +13,7 @@ import type { Treatment, TreatmentFormValues, TreatmentStatus } from '../feature
 import { buildEnterpriseReportSnapshot, formatReportCurrency } from '../features/reports/reportStore'
 
 const statusOrder: TreatmentStatus[] = ['planned', 'scheduled', 'in_progress', 'completed', 'cancelled', 'voided']
+const TREATMENT_PAGE_SIZE_OPTIONS = [10, 20, 50]
 
 const emptyTreatmentForm = (patientId: string, serviceId: string): TreatmentFormValues => ({
   patientId,
@@ -72,6 +74,8 @@ export function TreatmentsPageV43() {
   const [formValues, setFormValues] = useState<TreatmentFormValues>(() => emptyTreatmentForm(patients[0]?.patientId ?? '', services[0]?.id ?? ''))
   const [mutationError, setMutationError] = useState<string | null>(null)
   const [isMutating, setIsMutating] = useState(false)
+  const [treatmentPage, setTreatmentPage] = useState(1)
+  const [treatmentPageSize, setTreatmentPageSize] = useState(10)
 
   const patientMap = useMemo(() => new Map(patients.map((patient) => [patient.patientId, patient])), [patients])
   const serviceMap = useMemo(() => new Map(services.map((service) => [service.id, service])), [services])
@@ -103,6 +107,21 @@ export function TreatmentsPageV43() {
     })
   }, [branchFilter, patientTreatments, providerFilter, serviceFilter, serviceMap, statusFilter, workspaceSearch])
 
+  const treatmentPageCount = Math.max(1, Math.ceil(filteredTreatments.length / treatmentPageSize))
+  const effectiveTreatmentPage = Math.min(treatmentPage, treatmentPageCount)
+  const visibleTreatments = useMemo(() => {
+    const start = (effectiveTreatmentPage - 1) * treatmentPageSize
+    return filteredTreatments.slice(start, start + treatmentPageSize)
+  }, [effectiveTreatmentPage, filteredTreatments, treatmentPageSize])
+
+  useEffect(() => {
+    setTreatmentPage(1)
+  }, [branchFilter, providerFilter, selectedPatientId, serviceFilter, statusFilter, treatmentPageSize, workspaceSearch])
+
+  useEffect(() => {
+    setTreatmentPage((current) => Math.min(current, treatmentPageCount))
+  }, [treatmentPageCount])
+
   const snapshot = useMemo(() => buildEnterpriseReportSnapshot({ filters: { preset: 'this_month' } }), [treatments])
   const treatmentRows = useMemo(() => [...snapshot.treatments].sort((a, b) => b.performedCount - a.performedCount).slice(0, 7), [snapshot])
   const analyticsRows = useMemo(() => treatmentRows.map((row) => ({
@@ -111,7 +130,6 @@ export function TreatmentsPageV43() {
     planned: row.plannedCount,
     billedLabel: formatReportCurrency(row.billedRevenueCents),
   })), [treatmentRows])
-  const plannedTotal = treatmentRows.reduce((sum, row) => sum + row.plannedCount, 0)
   const performedTotal = treatmentRows.reduce((sum, row) => sum + row.performedCount, 0)
 
   function openCreate() {
@@ -267,35 +285,47 @@ export function TreatmentsPageV43() {
               </div>
 
               {filteredTreatments.length ? (
-                <div className="tx43-treatment-list">
-                  {filteredTreatments.map((treatment) => {
-                    const service = serviceMap.get(treatment.serviceId)
-                    const branch = branchMap.get(treatment.branchId ?? '')
-                    const provider = providerMap.get(treatment.providerId ?? '')
-                    return (
-                      <article key={treatment.id} className="tx43-treatment-card">
-                        <div className="tx43-card-top">
-                          <div className="tx43-card-service"><span>{service?.name || treatment.serviceNameSnapshot || 'Treatment'}</span><h4>{treatment.description || 'Treatment record'}</h4></div>
-                          <span className={`tx43-status status-${treatment.status}`}>{statusLabel(treatment.status)}</span>
-                        </div>
-                        <div className="tx43-card-details">
-                          <div><span>Date</span><strong>{formatDate(treatment.treatmentDate)}</strong></div>
-                          <div><span>Tooth</span><strong>{treatment.toothNumber ? `#${treatment.toothNumber}` : 'General'}</strong></div>
-                          <div><span>Dentist</span><strong>{provider?.displayName || treatment.providerNameSnapshot || treatment.performedBy}</strong></div>
-                          <div><span>Branch</span><strong>{branch?.name || 'No branch'}</strong></div>
-                          <div><span>Appointment</span><strong>{treatment.appointmentNumber || 'Not linked'}</strong></div>
-                          <div><span>Value</span><strong>{formatMoney(treatment.priceSnapshotCents * Math.max(1, treatment.quantity))}</strong></div>
-                        </div>
-                        {treatment.notes && <p className="tx43-card-notes">{treatment.notes}</p>}
-                        <div className="tx43-card-actions">
-                          <button type="button" disabled={isMutating || ['completed', 'voided'].includes(treatment.status)} onClick={() => openEdit(treatment)}>Edit details</button>
-                          <select disabled={isMutating || ['completed', 'voided'].includes(treatment.status)} aria-label={`Change status for ${treatment.description || 'treatment'}`} value={treatment.status} onChange={(event) => void changeStatus(treatment, event.target.value as TreatmentStatus)}>{statusOrder.map((status) => <option key={status} value={status}>{statusLabel(status)}</option>)}</select>
-                          <button type="button" disabled={isMutating || ['completed', 'voided'].includes(treatment.status)} className="danger" onClick={() => void removeTreatment(treatment.id)}>Void</button>
-                        </div>
-                      </article>
-                    )
-                  })}
-                </div>
+                <>
+                  <div className="tx43-treatment-list">
+                    {visibleTreatments.map((treatment) => {
+                      const service = serviceMap.get(treatment.serviceId)
+                      const branch = branchMap.get(treatment.branchId ?? '')
+                      const provider = providerMap.get(treatment.providerId ?? '')
+                      return (
+                        <article key={treatment.id} className="tx43-treatment-card">
+                          <div className="tx43-card-top">
+                            <div className="tx43-card-service"><span>{service?.name || treatment.serviceNameSnapshot || 'Treatment'}</span><h4>{treatment.description || 'Treatment record'}</h4></div>
+                            <span className={`tx43-status status-${treatment.status}`}>{statusLabel(treatment.status)}</span>
+                          </div>
+                          <div className="tx43-card-details">
+                            <div><span>Date</span><strong>{formatDate(treatment.treatmentDate)}</strong></div>
+                            <div><span>Tooth</span><strong>{treatment.toothNumber ? `#${treatment.toothNumber}` : 'General'}</strong></div>
+                            <div><span>Dentist</span><strong>{provider?.displayName || treatment.providerNameSnapshot || treatment.performedBy}</strong></div>
+                            <div><span>Branch</span><strong>{branch?.name || 'No branch'}</strong></div>
+                            <div><span>Appointment</span><strong>{treatment.appointmentNumber || 'Not linked'}</strong></div>
+                            <div><span>Value</span><strong>{formatMoney(treatment.priceSnapshotCents * Math.max(1, treatment.quantity))}</strong></div>
+                          </div>
+                          {treatment.notes && <p className="tx43-card-notes">{treatment.notes}</p>}
+                          <div className="tx43-card-actions">
+                            <button type="button" disabled={isMutating || ['completed', 'voided'].includes(treatment.status)} onClick={() => openEdit(treatment)}>Edit details</button>
+                            <select disabled={isMutating || ['completed', 'voided'].includes(treatment.status)} aria-label={`Change status for ${treatment.description || 'treatment'}`} value={treatment.status} onChange={(event) => void changeStatus(treatment, event.target.value as TreatmentStatus)}>{statusOrder.map((status) => <option key={status} value={status}>{statusLabel(status)}</option>)}</select>
+                            <button type="button" disabled={isMutating || ['completed', 'voided'].includes(treatment.status)} className="danger" onClick={() => void removeTreatment(treatment.id)}>Void</button>
+                          </div>
+                        </article>
+                      )
+                    })}
+                  </div>
+                  <Pagination
+                    page={effectiveTreatmentPage}
+                    pageCount={treatmentPageCount}
+                    totalItems={filteredTreatments.length}
+                    pageSize={treatmentPageSize}
+                    pageSizeOptions={TREATMENT_PAGE_SIZE_OPTIONS}
+                    onPageChange={setTreatmentPage}
+                    onPageSizeChange={setTreatmentPageSize}
+                    label="Patient treatment registry pages"
+                  />
+                </>
               ) : (
                 <div className="tx43-empty"><Filter size={24} /><h3>No treatments match</h3><p>Adjust the filters or add the patient's first treatment.</p><Button onClick={openCreate} icon={<Plus size={16} />}>Add treatment</Button></div>
               )}

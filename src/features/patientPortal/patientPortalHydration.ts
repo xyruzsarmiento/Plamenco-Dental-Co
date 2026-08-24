@@ -1,5 +1,6 @@
 import { supabase } from '../../lib/supabase'
 import { loadPatientVisibleDentalRecords } from '../dentalRecords/patientVisibleDentalRecordPersistence'
+import { saveStoredPatientRecalls } from '../recalls/recallStore'
 
 const keys = {
   appointments: 'plamenco.appointments',
@@ -37,7 +38,7 @@ export async function hydratePatientPortalFromDatabase() {
   const patientDbId = String(patientRow.id)
   const patientPublicId = String(patientRow.patient_id)
 
-  const [appointments, treatments, treatmentPlans, prescriptions, invoices, payments, receipts, documents] = await Promise.all([
+  const [appointments, treatments, treatmentPlans, prescriptions, invoices, payments, receipts, documents, recalls] = await Promise.all([
     db.from('appointments')
       .select('id,appointment_number,patient_id,branch_id,provider_id,service_id,operatory_id,appointment_date,start_time,end_time,duration_minutes,estimated_amount_cents,payment_status,deposit_status,deposit_required_cents,deposit_paid_cents,reason_for_visit,patient_notes,booking_source,status,created_at,updated_at')
       .eq('patient_id', patientDbId)
@@ -67,13 +68,20 @@ export async function hydratePatientPortalFromDatabase() {
       .eq('patient_id', patientDbId)
       .order('issued_at', { ascending: false }),
     db.from('documents')
-      .select('id,patient_id,name,category,uploaded_by,created_at,clinical_visit_id,treatment_id,description,storage_path,file_type,size_bytes,patient_visible')
+      .select('id,patient_id,name,category,uploaded_by,created_at,clinical_visit_id,treatment_id,description,storage_path,file_type,size_bytes,patient_visible,archived_at')
       .eq('patient_id', patientDbId)
       .eq('patient_visible', true)
+      .is('archived_at', null)
       .order('created_at', { ascending: false }),
+    db.from('patient_recalls')
+      .select('id,patient_id,kind,source_type,source_id,branch_id,provider_id,provider_name_snapshot,historical_provider_text,service_id,due_date,reason,patient_message,status,linked_appointment_id,last_contact_at,created_at,updated_at')
+      .eq('patient_id', patientPublicId)
+      .neq('status', 'dismissed')
+      .neq('status', 'cancelled')
+      .order('due_date', { ascending: true, nullsFirst: false }),
   ])
 
-  const results = [appointments, treatments, treatmentPlans, prescriptions, invoices, payments, receipts, documents]
+  const results = [appointments, treatments, treatmentPlans, prescriptions, invoices, payments, receipts, documents, recalls]
   const failed = results.find((result) => result.error)
   if (failed?.error) throw new Error(`Patient portal data could not be refreshed: ${failed.error.message}`)
 
@@ -145,7 +153,31 @@ export async function hydratePatientPortalFromDatabase() {
     id: String(row.id), patientId: patientPublicId, clinicalVisitId: row.clinical_visit_id ?? undefined, treatmentId: row.treatment_id ?? undefined,
     fileName: row.name ?? '', fileType: row.file_type ?? 'application/octet-stream', category: row.category ?? 'other', uploadDate: String(row.created_at ?? '').slice(0, 10),
     uploadedBy: row.uploaded_by ?? '', description: row.description ?? undefined, storagePath: row.storage_path ?? undefined, patientVisible: true,
+    archivedAt: row.archived_at ?? undefined,
     content: '', sizeBytes: Number(row.size_bytes ?? 0), createdAt: row.created_at ?? new Date().toISOString(), updatedAt: row.created_at ?? new Date().toISOString(),
+  })))
+
+  saveStoredPatientRecalls((recalls.data ?? []).map((row: any) => ({
+    id: String(row.id),
+    patientId: patientPublicId,
+    patientName: patientPublicId,
+    phone: '',
+    email: '',
+    kind: row.kind ?? 'recall',
+    sourceType: row.source_type ?? 'manual',
+    sourceId: row.source_id ?? undefined,
+    branchId: row.branch_id ?? undefined,
+    providerId: row.provider_id ?? undefined,
+    providerName: row.provider_name_snapshot || row.historical_provider_text || 'Dental care team',
+    serviceId: row.service_id ?? undefined,
+    dueDate: row.due_date ?? undefined,
+    reason: row.reason ?? '',
+    patientMessage: row.patient_message ?? '',
+    status: row.status ?? 'open',
+    linkedAppointmentId: row.linked_appointment_id ?? undefined,
+    lastContactAt: row.last_contact_at ?? undefined,
+    createdAt: row.created_at ?? new Date().toISOString(),
+    updatedAt: row.updated_at ?? row.created_at ?? new Date().toISOString(),
   })))
 
   await loadPatientVisibleDentalRecords()

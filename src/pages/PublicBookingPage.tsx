@@ -14,6 +14,7 @@ import {
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Button } from '../components/ui/Button'
+import { PortalSkeleton } from '../components/ui/DesignSystem'
 import { Input } from '../components/ui/Input'
 import { Textarea } from '../components/ui/Textarea'
 import { getEligibleProviders } from '../features/appointments/availabilityEngine'
@@ -205,7 +206,7 @@ export function PublicBookingPage() {
 
   const portalHref = user?.role === 'patient' && user.patientId ? `/portal/${user.patientId}` : '/login'
 
-  if (authLoading) return <div className="auth-page"><div className="loading-state">Loading your account...</div></div>
+  if (authLoading) return <PortalSkeleton variant="booking" message="Loading your account" />
 
   if (serviceLoadState === 'error') {
     return (
@@ -233,7 +234,7 @@ export function PublicBookingPage() {
     )
   }
 
-  if (serviceLoadState === 'loading') return <div className="auth-page"><div className="loading-state">Preparing your booking...</div></div>
+  if (serviceLoadState === 'loading') return <PortalSkeleton variant="booking" message="Preparing your booking" />
 
   return (
     <div className="public-booking-page">

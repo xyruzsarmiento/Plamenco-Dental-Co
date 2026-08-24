@@ -1,4 +1,4 @@
-export type UserRole = 'super_admin' | 'admin' | 'dentist' | 'associate_dentist' | 'staff' | 'patient'
+export type UserRole = 'super_admin' | 'dentist' | 'associate_dentist' | 'staff' | 'patient'
 
 export type AccountStatus = 'active' | 'inactive' | 'suspended'
 

@@ -1,0 +1,406 @@
+/* Part 3 patient booking and appointments refresh. */
+
+.pv3-booking-v3,
+.pv3-appointments-v3 {
+  display: grid;
+  gap: 16px;
+  min-width: 0;
+}
+
+.pv3-booking-shell-v3 {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 320px;
+  gap: 16px;
+  align-items: start;
+}
+
+.pv3-book-stage,
+.pv3-book-summary-v3 {
+  min-width: 0;
+  border: 1px solid #dfe8f4;
+  border-radius: 18px;
+  background: #fff;
+  box-shadow: 0 10px 28px rgba(15, 23, 42, .045);
+  overflow: hidden;
+}
+
+.pv3-book-progress-v3 {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 8px;
+  padding: 14px;
+  border-bottom: 1px solid #edf2f8;
+  background: #fbfdff;
+}
+
+.pv3-book-progress-v3 > div {
+  min-width: 0;
+  display: grid;
+  justify-items: center;
+  gap: 6px;
+  color: #98a2b3;
+  text-align: center;
+  position: relative;
+}
+
+.pv3-book-progress-v3 > div::after {
+  content: "";
+  position: absolute;
+  top: 15px;
+  left: calc(50% + 20px);
+  right: calc(-50% + 20px);
+  height: 2px;
+  border-radius: 999px;
+  background: #e6edf6;
+}
+
+.pv3-book-progress-v3 > div:last-child::after {
+  display: none;
+}
+
+.pv3-book-progress-v3 span {
+  width: 31px;
+  height: 31px;
+  display: grid;
+  place-items: center;
+  border: 1px solid #dfe8f4;
+  border-radius: 999px;
+  background: #fff;
+  color: #667085;
+  font-size: .7rem;
+  font-weight: 850;
+  z-index: 1;
+}
+
+.pv3-book-progress-v3 small {
+  max-width: 86px;
+  color: inherit;
+  font-size: .66rem;
+  font-weight: 800;
+  line-height: 1.2;
+}
+
+.pv3-book-progress-v3 .is-current,
+.pv3-book-progress-v3 .is-complete {
+  color: #1d4ed8;
+}
+
+.pv3-book-progress-v3 .is-current span,
+.pv3-book-progress-v3 .is-complete span {
+  border-color: #2563eb;
+  background: #2563eb;
+  color: #fff;
+  box-shadow: 0 7px 16px rgba(37, 99, 235, .18);
+}
+
+.pv3-book-step-card {
+  padding: 20px;
+}
+
+.pv3-booking-v3 .pv3-step-title {
+  margin-bottom: 18px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid #edf2f8;
+}
+
+.pv3-booking-v3 .pv3-step-title > span {
+  border: 1px solid #d7e6ff;
+  background: #eaf2ff;
+  color: #2563eb;
+}
+
+.pv3-picker-grid > button,
+.pv3-booking-v3 .pv3-slot-grid > button {
+  border-color: #dfe8f4 !important;
+  border-radius: 14px !important;
+  background: #fff !important;
+  box-shadow: 0 6px 16px rgba(15, 23, 42, .035);
+  transition: border-color .16s ease, background .16s ease, box-shadow .16s ease, transform .16s ease;
+}
+
+.pv3-picker-grid > button:hover,
+.pv3-booking-v3 .pv3-slot-grid > button:hover {
+  border-color: #c8daf7 !important;
+  background: #f6f9ff !important;
+  box-shadow: 0 10px 22px rgba(37, 99, 235, .06);
+  transform: translateY(-1px);
+}
+
+.pv3-picker-grid > button.is-selected,
+.pv3-booking-v3 .pv3-slot-grid > button.is-selected {
+  border-color: #2563eb !important;
+  background: #eaf2ff !important;
+  box-shadow: inset 0 0 0 1px #2563eb, 0 10px 22px rgba(37, 99, 235, .08);
+}
+
+.pv3-picker-grid > button:focus-visible,
+.pv3-booking-v3 .pv3-slot-grid > button:focus-visible,
+.pv3-appointment-tabs button:focus-visible,
+.pv3-appointment-card-v3:focus-visible {
+  outline: 3px solid rgba(37, 99, 235, .24);
+  outline-offset: 2px;
+}
+
+.pv3-schedule-picker {
+  display: grid;
+  gap: 14px;
+}
+
+.pv3-booking-v3 .pv3-date-field {
+  max-width: 330px;
+  margin: 0;
+}
+
+.pv3-booking-v3 .pv3-slot-grid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.pv3-review-v3 {
+  margin-bottom: 14px;
+  border-color: #dfe8f4;
+  border-radius: 14px;
+}
+
+.pv3-book-actions-v3 {
+  position: sticky;
+  bottom: 0;
+  z-index: 2;
+  padding: 14px 18px !important;
+  background: rgba(255, 255, 255, .96);
+  backdrop-filter: blur(10px);
+}
+
+.pv3-book-summary-v3 {
+  position: sticky;
+  top: 92px;
+  display: grid;
+  gap: 14px;
+  padding: 18px;
+}
+
+.pv3-book-summary-v3 > span {
+  color: #2563eb;
+  font-size: .65rem;
+  font-weight: 850;
+  letter-spacing: .07em;
+}
+
+.pv3-book-summary-v3 h3 {
+  margin: -8px 0 0;
+  color: #172033;
+  font-size: 1.06rem;
+  line-height: 1.25;
+}
+
+.pv3-book-summary-v3 p,
+.pv3-book-summary-v3 small {
+  margin: 0;
+  color: #667085;
+  font-size: .76rem;
+  line-height: 1.5;
+}
+
+.pv3-book-summary-v3 dl {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+}
+
+.pv3-book-summary-v3 dl > div {
+  padding: 10px;
+  border: 1px solid #e5ecf5;
+  border-radius: 12px;
+  background: #fbfdff;
+}
+
+.pv3-book-summary-v3 dt {
+  color: #98a2b3;
+  font-size: .62rem;
+  font-weight: 850;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+}
+
+.pv3-book-summary-v3 dd {
+  margin: 4px 0 0;
+  color: #172033;
+  font-size: .8rem;
+  font-weight: 800;
+  overflow-wrap: anywhere;
+}
+
+.pv3-appointment-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 8px;
+  border: 1px solid #dfe8f4;
+  border-radius: 14px;
+  background: #fff;
+  box-shadow: 0 8px 22px rgba(15, 23, 42, .035);
+}
+
+.pv3-appointment-tabs button {
+  min-height: 42px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 13px;
+  border: 1px solid transparent;
+  border-radius: 11px;
+  background: transparent;
+  color: #526077;
+  font: inherit;
+  font-size: .8rem;
+  font-weight: 850;
+  cursor: pointer;
+}
+
+.pv3-appointment-tabs button strong {
+  min-width: 24px;
+  height: 24px;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  background: #f1f5f9;
+  color: #667085;
+  font-size: .7rem;
+}
+
+.pv3-appointment-tabs button:hover,
+.pv3-appointment-tabs button.is-active {
+  border-color: #cfe0f7;
+  background: #eaf2ff;
+  color: #1d4ed8;
+}
+
+.pv3-appointment-tabs button.is-active strong {
+  background: #2563eb;
+  color: #fff;
+}
+
+.pv3-appointment-list-v3 {
+  gap: 10px !important;
+}
+
+.pv3-appointment-card-v3 {
+  grid-template-columns: 58px minmax(0, 1fr) auto !important;
+  align-items: center;
+  padding: 14px !important;
+  border-color: #dfe8f4 !important;
+  border-radius: 16px !important;
+  box-shadow: 0 8px 22px rgba(15, 23, 42, .04) !important;
+}
+
+.pv3-appointment-card-v3:hover {
+  border-color: #c8daf7 !important;
+  background: #fbfdff !important;
+  box-shadow: 0 12px 28px rgba(37, 99, 235, .07) !important;
+}
+
+.pv3-appointment-card-v3 h3 {
+  font-size: .94rem !important;
+}
+
+.pv3-appointment-card-v3 section p + p {
+  margin-top: 5px;
+}
+
+.pv3-appointment-card-v3 > aside {
+  display: inline-flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.pv3-appointment-card-v3 > aside span {
+  max-width: 120px;
+  color: #667085;
+  font-size: .72rem;
+  font-weight: 800;
+  text-align: right;
+}
+
+@media (max-width: 980px) {
+  .pv3-booking-shell-v3 {
+    grid-template-columns: 1fr;
+  }
+
+  .pv3-book-summary-v3 {
+    position: static;
+  }
+
+  .pv3-booking-v3 .pv3-slot-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 700px) {
+  .pv3-book-progress-v3 {
+    display: flex;
+    overflow-x: auto;
+    gap: 14px;
+    scrollbar-width: none;
+  }
+
+  .pv3-book-progress-v3::-webkit-scrollbar {
+    display: none;
+  }
+
+  .pv3-book-progress-v3 > div {
+    flex: 0 0 76px;
+  }
+
+  .pv3-picker-grid,
+  .pv3-service-grid,
+  .pv3-choice-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .pv3-booking-v3 .pv3-slot-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .pv3-appointment-tabs {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .pv3-appointment-tabs button {
+    justify-content: center;
+    padding-inline: 8px;
+  }
+
+  .pv3-appointment-card-v3 {
+    grid-template-columns: 50px minmax(0, 1fr) !important;
+  }
+
+  .pv3-appointment-card-v3 > aside {
+    grid-column: 2;
+    justify-content: space-between !important;
+  }
+
+  .pv3-appointment-card-v3 > aside span {
+    max-width: none;
+    text-align: left;
+  }
+}
+
+@media (max-width: 460px) {
+  .pv3-book-step-card {
+    padding: 14px;
+  }
+
+  .pv3-book-actions-v3 {
+    display: grid !important;
+    grid-template-columns: 1fr;
+  }
+
+  .pv3-book-actions-v3 .btn {
+    width: 100%;
+  }
+
+  .pv3-booking-v3 .pv3-slot-grid,
+  .pv3-appointment-tabs {
+    grid-template-columns: 1fr;
+  }
+}

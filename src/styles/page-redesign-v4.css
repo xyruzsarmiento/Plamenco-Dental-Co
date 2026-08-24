@@ -305,9 +305,7 @@
 .page-system-admin .content-area .page-stack,
 .page-settings .content-area .page-stack,
 .page-reports .content-area .page-stack,
-.page-report-automation .content-area .page-stack,
 .page-data-import .content-area .page-stack,
-.page-tasks .content-area .page-stack,
 .page-recalls .content-area .page-stack {
   gap: 18px !important;
 }

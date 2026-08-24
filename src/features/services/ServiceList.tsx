@@ -1,5 +1,6 @@
 import { CheckCircle2, Clock3, DollarSign, Eye, PencilLine, XCircle } from 'lucide-react'
 import { Button } from '../../components/ui/Button'
+import { StatusBadge } from '../../components/ui/Badge'
 import type { Service } from './serviceTypes'
 
 type ServiceListProps = {
@@ -42,9 +43,7 @@ export function ServiceList({ services, onView, onEdit, onToggleStatus }: Servic
                 <span className="service-category-tag">{service.category}</span>
                 <h3>{service.name}</h3>
               </div>
-              <span className={`status-badge status-${service.status}`}>
-                {service.status === 'active' ? 'Active' : 'Inactive'}
-              </span>
+              <StatusBadge status={service.status} variant="compact" />
             </div>
 
             <p className="service-card-description">{service.description || 'No description provided.'}</p>

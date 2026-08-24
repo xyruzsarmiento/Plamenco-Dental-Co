@@ -8,7 +8,7 @@ test('security helpers read authenticated user data from browser storage and enf
   const storage: Storage = {
     getItem: (key: string) => {
       if (key === 'plamenco.auth.user') {
-        return JSON.stringify({ role: 'admin', name: 'Dr. Santos' })
+        return JSON.stringify({ role: 'super_admin', name: 'Dr. Santos' })
       }
       return null
     },
@@ -25,9 +25,9 @@ test('security helpers read authenticated user data from browser storage and enf
     writable: true,
   })
 
-  assert.equal(getCurrentSessionRole(), 'admin')
+  assert.equal(getCurrentSessionRole(), 'super_admin')
   assert.equal(getCurrentSessionUserName(), 'Dr. Santos')
-  assert.throws(() => requireRole('staff', ['admin'], 'settings update'))
+  assert.throws(() => requireRole('staff', ['super_admin'], 'settings update'))
 })
 
 test('audit logs capture sensitive actions for review', () => {

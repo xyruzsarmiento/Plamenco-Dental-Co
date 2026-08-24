@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { CalendarClock, ClipboardList, Clock3, Stethoscope, UserRound } from 'lucide-react'
-import { Badge } from '../../components/ui/Badge'
+import { StatusBadge } from '../../components/ui/Badge'
 import { Button } from '../../components/ui/Button'
 import { DashboardBarChart, DashboardTrendChart } from '../../components/ui/DashboardChart'
 import { getStoredAppointments, transitionAppointmentStatus } from '../appointments/appointmentStore'
@@ -186,7 +186,7 @@ export function DentistTodayWorkspace() {
           <article className="panel">
             <div className="panel-header compact-header">
               <div><p className="eyebrow">Next Patient</p><h3>{patientDisplay(patient)}</h3></div>
-              <Badge tone={nextAppointment.status === 'waiting' ? 'warning' : nextAppointment.status === 'in_progress' ? 'success' : 'info'}>{statusLabel(nextAppointment.status)}</Badge>
+              <StatusBadge status={nextAppointment.status} label={statusLabel(nextAppointment.status)} />
             </div>
             <div className="details-grid">
               <div className="detail-item"><span className="label">Time</span><span className="value">{formatTime(nextAppointment.startTime)}</span></div>
@@ -221,7 +221,7 @@ export function DentistTodayWorkspace() {
                     <td><strong>{patientDisplay(patient)}</strong><span>{patient?.patientId ?? appointment.patientId}</span></td>
                     <td>{serviceMap.get(appointment.serviceId)?.name ?? appointment.reasonForVisit ?? 'Not specified'}</td>
                     <td>{appointment.branchId ? branchMap.get(appointment.branchId)?.name ?? 'Unknown / Unmapped' : 'Unknown / Unmapped'}</td>
-                    <td><Badge tone={appointment.status === 'in_progress' ? 'success' : 'warning'}>{statusLabel(appointment.status)}</Badge></td>
+                    <td><StatusBadge status={appointment.status} label={statusLabel(appointment.status)} variant="compact" /></td>
                     <td>{waitMinutes === null ? '—' : `${waitMinutes} min`}</td>
                     <td>
                       <div className="action-buttons">

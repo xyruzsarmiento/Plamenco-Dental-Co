@@ -1,15 +1,21 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useState, type KeyboardEvent } from 'react'
+import { createPortal } from 'react-dom'
 import { useNavigate } from 'react-router-dom'
 import {
   Activity,
+  AlertTriangle,
   BarChart3,
   CalendarDays,
+  CalendarX2,
   CheckCircle2,
   Clock,
   Filter,
+  HeartPulse,
   Plus,
+  RefreshCw,
   Search,
   Stethoscope,
+  UserRound,
   UserRoundCheck,
   UsersRound,
   XCircle,
@@ -18,7 +24,7 @@ import { AppointmentCalendar } from '../features/appointments/AppointmentCalenda
 import { AppointmentDetails } from '../features/appointments/AppointmentDetails'
 import { AppointmentFormModal } from '../features/appointments/AppointmentFormModal'
 import { ClinicalVisitWorkspace } from '../features/dentalRecords/ClinicalVisitWorkspace'
-import { Badge } from '../components/ui/Badge'
+import { StatusBadge } from '../components/ui/Badge'
 import { Button } from '../components/ui/Button'
 import { useAuth } from '../features/auth/AuthContext'
 import type { Appointment, AppointmentFormValues, AppointmentStatus } from '../features/appointments/appointmentTypes'
@@ -29,10 +35,11 @@ import {
   getScheduleConflictDetail,
   getStoredAppointments,
   getAppointmentHistory,
-  resendAppointmentCommunication,
+  resendAppointmentCommunicationPersisted,
 } from '../features/appointments/appointmentStore'
 import {
   createAppointmentPersisted,
+  rescheduleAppointmentPersisted,
   transitionAppointmentStatusPersisted,
 } from '../features/appointments/appointmentPersistence'
 import { createClinicalVisitFromAppointment } from '../features/dentalRecords/dentalRecordStore'
@@ -48,6 +55,7 @@ import type { Patient } from '../features/patients/patientTypes'
 import { getStoredServices } from '../features/services/serviceStore'
 import type { Service } from '../features/services/serviceTypes'
 import type { CommunicationTemplateKey } from '../features/communications/communicationTypes'
+import { completeRecall, linkRecallToAppointment, listPatientRecalls, type RecallQueueItem } from '../features/recalls/recallStore'
 
 type ViewTab = 'queue' | 'calendar' | 'requests'
 type OperationAction = {
@@ -57,9 +65,16 @@ type OperationAction = {
   requiresReason?: boolean
 } | null
 
+type RescheduleDraft = {
+  date: string
+  startTime: string
+  providerId: string
+}
+
 type TrendPoint = { label: string; value: number }
 
 type StatusDatum = { label: string; value: number; key: string }
+type CommunicationFeedback = { appointmentId: string; tone: 'success' | 'warning' | 'danger' | 'info'; message: string } | null
 
 function manilaDate() {
   return new Intl.DateTimeFormat('en-CA', {
@@ -87,6 +102,11 @@ function shortDateLabel(date: string) {
     weekday: 'short',
     day: 'numeric',
   })
+}
+
+function patientInitials(patient?: Patient) {
+  if (!patient) return 'P'
+  return `${patient.firstName?.[0] ?? ''}${patient.lastName?.[0] ?? ''}`.toUpperCase() || 'P'
 }
 
 function AppointmentTrendChart({ data }: { data: TrendPoint[] }) {
@@ -233,9 +253,14 @@ export function AppointmentsPage() {
   const [conflictError, setConflictError] = useState<string | null>(null)
   const [operationAction, setOperationAction] = useState<OperationAction>(null)
   const [operationReason, setOperationReason] = useState('')
+  const [rescheduleDraft, setRescheduleDraft] = useState<RescheduleDraft>({ date: '', startTime: '', providerId: '' })
   const [operationError, setOperationError] = useState<string | null>(null)
   const [clinicalRecord, setClinicalRecord] = useState<DentalRecord | null>(null)
+  const [pendingFollowUpRecall, setPendingFollowUpRecall] = useState<RecallQueueItem | null>(null)
+  const [selectedFollowUpRecommendation, setSelectedFollowUpRecommendation] = useState<RecallQueueItem | null>(null)
   const [isAppointmentSaving, setIsAppointmentSaving] = useState(false)
+  const [communicationPendingKey, setCommunicationPendingKey] = useState<string | null>(null)
+  const [communicationFeedback, setCommunicationFeedback] = useState<CommunicationFeedback>(null)
 
   const confirmedCount = appointments.filter((appointment) => appointment.status === 'confirmed').length
   const pendingCount = appointments.filter((appointment) => appointment.status === 'pending').length
@@ -351,6 +376,35 @@ export function AppointmentsPage() {
     setShowForm(true)
   }
 
+  function handleBookFollowUpAppointment(appointment: Appointment, recall: RecallQueueItem) {
+    setSelectedAppointment(null)
+    setPendingFollowUpRecall(recall)
+    setFormValues({
+      patientId: appointment.patientId,
+      branchId: appointment.branchId || (branchFilter !== 'all' ? branchFilter : branches[0]?.id ?? ''),
+      providerId: appointment.providerId ?? '',
+      serviceId: appointment.serviceId,
+      date: recall.dueDate || manilaDate(),
+      startTime: '09:00',
+      endTime: '09:30',
+      durationMinutes: appointment.durationMinutes,
+      estimatedAmountCents: appointment.estimatedAmountCents,
+      paymentStatus: 'not_billed',
+      depositStatus: 'not_required',
+      depositRequiredCents: 0,
+      depositPaidCents: 0,
+      bookingSource: 'staff_entry',
+      reasonForVisit: recall.reason || 'Follow-up appointment',
+      patientNotes: '',
+      internalNotes: `Booked from clinical follow-up recommendation ${recall.id} linked to ${appointment.appointmentNumber ?? appointment.id}.`,
+      notes: '',
+      status: 'pending',
+    })
+    setFormError(null)
+    setConflictError(null)
+    setShowForm(true)
+  }
+
   function handleFormValueChange(values: AppointmentFormValues) {
     setFormValues(values)
 
@@ -417,7 +471,7 @@ export function AppointmentsPage() {
     setIsAppointmentSaving(true)
     setFormError(null)
     try {
-      await createAppointmentPersisted({
+      const confirmed = await createAppointmentPersisted({
         ...formValues,
         endTime,
         durationMinutes: selectedService?.duration,
@@ -426,9 +480,15 @@ export function AppointmentsPage() {
         depositRequiredCents: formValues.depositRequiredCents ?? 0,
         depositPaidCents: formValues.depositPaidCents ?? 0,
       }, user?.email ?? 'staff-entry')
+
+      if (pendingFollowUpRecall) {
+        await linkRecallToAppointment(pendingFollowUpRecall.id, confirmed.id)
+        await listPatientRecalls(confirmed.patientId)
+      }
       setAppointments(getStoredAppointments())
       setShowForm(false)
       setConflictError(null)
+      setPendingFollowUpRecall(null)
     } catch (cause) {
       setFormError(cause instanceof Error ? cause.message : 'The appointment could not be saved.')
     } finally {
@@ -444,6 +504,7 @@ export function AppointmentsPage() {
         actor: user?.email ?? 'clinic-user',
         expectedUpdatedAt: selectedAppointment.updatedAt,
       })
+      await completeLinkedRecallIfNeeded(updated)
       setAppointments(getStoredAppointments())
       setSelectedAppointment(updated)
     } catch (cause) {
@@ -493,6 +554,11 @@ export function AppointmentsPage() {
   function openOperationAction(appointment: Appointment, status: AppointmentStatus, label: string, requiresReason = false) {
     setOperationAction({ appointment, status, label, requiresReason })
     setOperationReason('')
+    setRescheduleDraft({
+      date: appointment.date,
+      startTime: appointment.startTime,
+      providerId: appointment.providerId ?? '',
+    })
     setOperationError(null)
   }
 
@@ -506,11 +572,14 @@ export function AppointmentsPage() {
     setIsAppointmentSaving(true)
     setOperationError(null)
     try {
-      const updated = await transitionAppointmentStatusPersisted(operationAction.appointment.id, operationAction.status, {
-        actor: user?.email ?? 'clinic-user',
-        reason: operationReason.trim(),
-        expectedUpdatedAt: operationAction.appointment.updatedAt,
-      })
+      const updated = operationAction.status === 'rescheduled'
+        ? await confirmRescheduleOperation(operationAction.appointment)
+        : await transitionAppointmentStatusPersisted(operationAction.appointment.id, operationAction.status, {
+          actor: user?.email ?? 'clinic-user',
+          reason: operationReason.trim(),
+          expectedUpdatedAt: operationAction.appointment.updatedAt,
+        })
+      await completeLinkedRecallIfNeeded(updated)
       setAppointments(getStoredAppointments())
       setSelectedAppointment(updated)
       setOperationAction(null)
@@ -522,19 +591,99 @@ export function AppointmentsPage() {
     }
   }
 
-  function handleManualResend(appointment: Appointment, templateKey: CommunicationTemplateKey) {
-    if (!['appointment_confirmed', 'appointment_reminder', 'appointment_rescheduled'].includes(templateKey)) return
-    const result = resendAppointmentCommunication(
-      appointment.id,
-      templateKey as 'appointment_confirmed' | 'appointment_reminder' | 'appointment_rescheduled',
-      user?.email ?? 'clinic-user',
-    )
-    if (result.error) {
-      alert(result.error)
-      return
+  async function confirmRescheduleOperation(appointment: Appointment) {
+    const service = serviceMap.get(appointment.serviceId)
+    const branchId = appointment.branchId ?? ''
+    const providerId = rescheduleDraft.providerId.trim()
+    const date = rescheduleDraft.date
+    const startTime = rescheduleDraft.startTime
+    const duration = service?.duration ?? appointment.durationMinutes ?? 30
+    const endTime = addMinutesToTime(startTime, duration)
+
+    if (!date) throw new Error('Choose a new appointment date.')
+    if (!startTime) throw new Error('Choose a new appointment time.')
+    if (!providerId) throw new Error('Choose the dentist for this rescheduled appointment.')
+
+    const conflict = getScheduleConflictDetail(date, startTime, endTime, appointment.id, providerId, branchId, appointment.operatoryId)
+    const unchangedSlot = date === appointment.date && startTime === appointment.startTime && providerId === appointment.providerId
+    if (unchangedSlot) {
+      throw new Error('Choose a new date, time, or dentist before confirming the reschedule.')
     }
-    setAppointments(getStoredAppointments())
-    setSelectedAppointment(getStoredAppointments().find((entry) => entry.id === appointment.id) ?? appointment)
+
+    if (conflict && 'appointment' in conflict) {
+      const provider = conflict.appointment.providerId ? providerMap.get(conflict.appointment.providerId) : undefined
+      throw new Error(`${provider?.displayName ?? 'The selected dentist'} already has an appointment from ${formatAppointmentTime(conflict.appointment.startTime)} to ${formatAppointmentTime(conflict.appointment.endTime)}.`)
+    }
+    if (conflict && 'block' in conflict) {
+      throw new Error(`This time is blocked for ${conflict.block.reason || conflict.block.type.replaceAll('_', ' ')}.`)
+    }
+
+    const availableSlot = getAvailableAppointmentSlots({
+      branchId,
+      providerId,
+      serviceId: appointment.serviceId,
+      date,
+      excludeAppointmentId: appointment.id,
+      operatoryId: appointment.operatoryId,
+    }).some((slot) => slot.startTime === startTime && slot.providerId === providerId)
+
+    if (!availableSlot) {
+      throw new Error('The selected dentist is not available for that date and time.')
+    }
+
+    return rescheduleAppointmentPersisted(appointment.id, {
+      branchId,
+      providerId,
+      date,
+      startTime,
+      endTime,
+    }, {
+      actor: user?.email ?? 'clinic-user',
+      reason: operationReason.trim(),
+      expectedUpdatedAt: appointment.updatedAt,
+    })
+  }
+
+  async function handleManualResend(appointment: Appointment, templateKey: CommunicationTemplateKey) {
+    if (!['appointment_confirmed', 'appointment_reminder', 'appointment_rescheduled'].includes(templateKey)) return
+    const actionKey = `${appointment.id}:${templateKey}`
+    if (communicationPendingKey) return
+
+    setCommunicationPendingKey(actionKey)
+    setCommunicationFeedback(null)
+    try {
+      const result = await resendAppointmentCommunicationPersisted(
+        appointment.id,
+        templateKey as 'appointment_confirmed' | 'appointment_reminder' | 'appointment_rescheduled',
+        user?.email ?? 'clinic-user',
+      )
+      if (result.error) {
+        setCommunicationFeedback({ appointmentId: appointment.id, tone: 'warning', message: result.error })
+        return
+      }
+
+      const logs = result.logs ?? []
+      const sentOrQueued = logs.filter((log) => ['sent', 'queued', 'delivered'].includes(log.status)).length
+      const skipped = logs.filter((log) => log.status === 'skipped').length
+      const failed = logs.filter((log) => log.status === 'failed').length
+      const latest = logs[0]
+      const summary = sentOrQueued
+        ? `${sentOrQueued} channel${sentOrQueued === 1 ? '' : 's'} sent or queued.`
+        : skipped
+          ? `${skipped} channel${skipped === 1 ? '' : 's'} skipped by patient preferences, contact availability, or provider setup.`
+          : 'No communication channel was eligible.'
+      setCommunicationFeedback({
+        appointmentId: appointment.id,
+        tone: failed ? 'danger' : sentOrQueued ? 'success' : 'warning',
+        message: latest ? `${summary} Last recorded: ${new Date(latest.createdAt).toLocaleString('en-PH')}.` : summary,
+      })
+      setAppointments(getStoredAppointments())
+      setSelectedAppointment(getStoredAppointments().find((entry) => entry.id === appointment.id) ?? appointment)
+    } catch (cause) {
+      setCommunicationFeedback({ appointmentId: appointment.id, tone: 'danger', message: cause instanceof Error ? cause.message : 'The communication could not be recorded.' })
+    } finally {
+      setCommunicationPendingKey(null)
+    }
   }
 
   async function openClinicalRecord(appointment: Appointment) {
@@ -547,6 +696,20 @@ export function AppointmentsPage() {
       alert(cause instanceof Error ? cause.message : 'The clinical record could not be opened.')
     } finally {
       setIsAppointmentSaving(false)
+    }
+  }
+
+  async function completeLinkedRecallIfNeeded(appointment: Appointment) {
+    if (appointment.status !== 'completed') return
+    try {
+      const recalls = await listPatientRecalls(appointment.patientId)
+      const linkedRecall = recalls.find((recall) => recall.linkedAppointmentId === appointment.id && recall.status === 'booked')
+      if (linkedRecall) {
+        await completeRecall(linkedRecall.id, appointment.id)
+        await listPatientRecalls(appointment.patientId)
+      }
+    } catch (cause) {
+      setOperationError(cause instanceof Error ? cause.message : 'The linked follow-up could not be marked complete.')
     }
   }
 
@@ -569,6 +732,7 @@ export function AppointmentsPage() {
   function handleCloseForm() {
     if (isAppointmentSaving) return
     setShowForm(false)
+    setPendingFollowUpRecall(null)
     setFormError(null)
     setConflictError(null)
   }
@@ -724,37 +888,58 @@ export function AppointmentsPage() {
                       const provider = appointment.providerId ? providerMap.get(appointment.providerId) : undefined
                       const waitStart = appointment.waitingAt ?? appointment.checkedInAt
                       const waitMinutes = waitStart ? Math.max(0, Math.floor((Date.now() - new Date(waitStart).getTime()) / 60000)) : null
+                      const openDetails = () => setSelectedAppointment(appointment)
+                      const onCardKeyDown = (event: KeyboardEvent<HTMLElement>) => {
+                        if (event.key === 'Enter' || event.key === ' ') {
+                          event.preventDefault()
+                          openDetails()
+                        }
+                      }
                       return (
-                        <article key={appointment.id} className={`operations-card sa-appointments-flow-card status-${appointment.status}`}>
-                          <div className="operations-card-time">
-                            <strong>{appointment.startTime}</strong>
-                            <span>{appointment.appointmentNumber ?? appointment.id}</span>
+                        <article
+                          key={appointment.id}
+                          className={`operations-card sa-appointments-flow-card status-${appointment.status}`}
+                          role="button"
+                          tabIndex={0}
+                          aria-label={`Open appointment workspace for ${patient ? `${patient.firstName} ${patient.lastName}` : appointment.patientId}`}
+                          onClick={openDetails}
+                          onKeyDown={onCardKeyDown}
+                        >
+                          <div className="journey-card-main">
+                            <div className="journey-patient-block">
+                              <span className="journey-avatar" style={patient?.profileImage ? { backgroundImage: `url(${patient.profileImage})` } : undefined}>
+                                {!patient?.profileImage && patientInitials(patient)}
+                              </span>
+                              <span className="journey-patient-copy">
+                                <strong>{patient ? `${patient.firstName} ${patient.lastName}` : 'Patient'}</strong>
+                                <small>{patient?.patientId ?? appointment.patientId}</small>
+                              </span>
+                            </div>
+                            <div className="journey-care-block">
+                              <strong>{service?.name ?? 'Service not assigned'}</strong>
+                              <span><Stethoscope size={13} />{provider?.displayName ?? 'Dentist not assigned'}</span>
+                              {waitMinutes !== null && <em>{appointment.status === 'waiting' ? 'Waiting' : 'In clinic'} {waitMinutes} min</em>}
+                            </div>
+                            <div className="journey-schedule-block">
+                              <strong>{formatAppointmentTime(appointment.startTime)}</strong>
+                              <span>{appointment.appointmentNumber ?? appointment.id}</span>
+                            </div>
                           </div>
-                          <div>
-                            <h4>{patient ? `${patient.firstName} ${patient.lastName}` : 'Patient'}</h4>
-                            <p>{patient?.patientId ?? appointment.patientId}</p>
-                          </div>
-                          <div className="operations-card-meta">
-                            <span>{service?.name ?? 'Service'}</span>
-                            <span>{provider?.displayName ?? 'No dentist'}</span>
-                            {waitMinutes !== null && <span>Waiting {waitMinutes} min</span>}
-                          </div>
-                          <div className="operations-card-actions">
-                            <button type="button" className="text-button" onClick={() => setSelectedAppointment(appointment)}>Details</button>
+                          <div className="operations-card-actions" onClick={(event) => event.stopPropagation()} onKeyDown={(event) => event.stopPropagation()}>
                             {appointment.status === 'confirmed' && permissions.can('appointments.check_in') && (
-                              <button type="button" className="text-button" disabled={isAppointmentSaving} onClick={() => openOperationAction(appointment, 'checked_in', 'Check In')}>Check In</button>
+                              <button type="button" className="text-button operations-card-action operations-card-action-primary" disabled={isAppointmentSaving} onClick={() => openOperationAction(appointment, 'checked_in', 'Check In')}>Check In</button>
                             )}
                             {appointment.status === 'checked_in' && permissions.can('appointments.check_in') && (
-                              <button type="button" className="text-button" disabled={isAppointmentSaving} onClick={() => openOperationAction(appointment, 'waiting', 'Move to Waiting')}>Move to Waiting</button>
+                              <button type="button" className="text-button operations-card-action operations-card-action-primary" disabled={isAppointmentSaving} onClick={() => openOperationAction(appointment, 'waiting', 'Move to Waiting')}>Move to Waiting</button>
                             )}
                             {appointment.status === 'waiting' && permissions.can('appointments.start') && (
-                              <button type="button" className="text-button" disabled={isAppointmentSaving} onClick={() => openOperationAction(appointment, 'in_progress', 'Start Visit')}>Start Visit</button>
+                              <button type="button" className="text-button operations-card-action operations-card-action-primary" disabled={isAppointmentSaving} onClick={() => openOperationAction(appointment, 'in_progress', 'Start Visit')}>Start Visit</button>
                             )}
                             {appointment.status === 'in_progress' && permissions.can('appointments.complete') && (
-                              <button type="button" className="text-button" disabled={isAppointmentSaving} onClick={() => openOperationAction(appointment, 'completed', 'Complete Visit')}>Complete</button>
+                              <button type="button" className="text-button operations-card-action operations-card-action-primary" disabled={isAppointmentSaving} onClick={() => openOperationAction(appointment, 'completed', 'Complete Visit')}>Complete</button>
                             )}
                             {appointment.status === 'confirmed' && permissions.can('appointments.mark_no_show') && (
-                              <button type="button" className="text-button" disabled={isAppointmentSaving} onClick={() => openOperationAction(appointment, 'no_show', 'Mark No Show', true)}>No Show</button>
+                              <button type="button" className="text-button operations-card-action operations-card-action-danger" disabled={isAppointmentSaving} onClick={() => openOperationAction(appointment, 'no_show', 'Mark No Show', true)}>No Show</button>
                             )}
                           </div>
                         </article>
@@ -879,7 +1064,7 @@ export function AppointmentsPage() {
                         <div className="request-patient"><strong>{patient?.firstName} {patient?.lastName}</strong><small>{patient?.patientId}</small></div>
                         <div className="request-service"><p>{service?.name}</p></div>
                       </div>
-                      <Badge tone="warning">Pending</Badge>
+                      <StatusBadge status="pending" />
                     </div>
 
                     <div className="request-details">
@@ -934,9 +1119,51 @@ export function AppointmentsPage() {
           onStatusChange={(status) => void handleStatusChange(status)}
           onActionRequest={(appointment, status, label, requiresReason) => openOperationAction(appointment, status, label, requiresReason)}
           onManualResend={handleManualResend}
-          onOpenPatientRecord={() => navigate('/app/patients')}
+          communicationPendingKey={communicationPendingKey}
+          communicationFeedback={communicationFeedback?.appointmentId === selectedAppointment.id ? communicationFeedback : null}
+          onOpenPatientRecord={(appointment) => navigate(`/app/patients/${encodeURIComponent(appointment.patientId)}`)}
           onOpenClinicalRecord={(appointment) => void openClinicalRecord(appointment)}
+          onBookFollowUp={handleBookFollowUpAppointment}
+          onViewFollowUpRecommendation={setSelectedFollowUpRecommendation}
         />
+      )}
+
+      {selectedFollowUpRecommendation && createPortal(
+        <div className="modal-backdrop modal-layer-child followup-recommendation-backdrop-v7" role="presentation" onMouseDown={(event) => { if (event.currentTarget === event.target) setSelectedFollowUpRecommendation(null) }}>
+          <section className="modal followup-recommendation-modal-v7" role="dialog" aria-modal="true" aria-labelledby="followup-recommendation-title">
+            <header>
+              <span><HeartPulse size={21} /></span>
+              <div>
+                <p className="eyebrow">Clinical follow-up</p>
+                <h2 id="followup-recommendation-title">Follow-up recommendation</h2>
+                <p>{selectedFollowUpRecommendation.patientName || selectedFollowUpRecommendation.patientId}</p>
+              </div>
+              <button type="button" aria-label="Close recommendation" onClick={() => setSelectedFollowUpRecommendation(null)}><XCircle size={18} /></button>
+            </header>
+            <div className="followup-recommendation-body-v7">
+              <div><span>Recommended date</span><strong>{selectedFollowUpRecommendation.dueDate ? formatDate(selectedFollowUpRecommendation.dueDate) : 'No date recorded'}</strong></div>
+              <div><span>Status</span><strong>{selectedFollowUpRecommendation.status.replaceAll('_', ' ')}</strong></div>
+              <div><span>Dentist</span><strong>{selectedFollowUpRecommendation.providerName || 'Dental care team'}</strong></div>
+              <div><span>Type</span><strong>{selectedFollowUpRecommendation.kind.replaceAll('_', ' ')}</strong></div>
+              <section>
+                <span>Clinical reason</span>
+                <p>{selectedFollowUpRecommendation.reason || 'Clinical follow-up recommended.'}</p>
+              </section>
+              {selectedFollowUpRecommendation.patientMessage && <section><span>Patient message</span><p>{selectedFollowUpRecommendation.patientMessage}</p></section>}
+              {selectedFollowUpRecommendation.linkedAppointmentId && <section><span>Linked appointment</span><p>{selectedFollowUpRecommendation.linkedAppointmentId}</p></section>}
+            </div>
+            <footer>
+              {selectedFollowUpRecommendation.status !== 'booked' && !selectedFollowUpRecommendation.linkedAppointmentId && selectedAppointment && (
+                <Button onClick={() => {
+                  handleBookFollowUpAppointment(selectedAppointment, selectedFollowUpRecommendation)
+                  setSelectedFollowUpRecommendation(null)
+                }}>Book follow-up</Button>
+              )}
+              <Button variant="secondary" onClick={() => setSelectedFollowUpRecommendation(null)}>Close</Button>
+            </footer>
+          </section>
+        </div>,
+        document.body
       )}
 
       {clinicalRecord && (
@@ -959,26 +1186,116 @@ export function AppointmentsPage() {
         />
       )}
 
-      {operationAction && (
-        <div className="modal-backdrop" role="presentation">
-          <section className="modal operation-action-modal" role="dialog" aria-modal="true" aria-labelledby="operation-action-title">
-            <div className="modal-header">
-              <div><p className="eyebrow">Appointment operation</p><h2 id="operation-action-title">{operationAction.label}</h2></div>
-              <button className="icon-button" type="button" aria-label="Close operation" disabled={isAppointmentSaving} onClick={() => setOperationAction(null)}><XCircle size={18} /></button>
-            </div>
-            <div className="operation-confirm-body">
-              <strong>{patientMap.get(operationAction.appointment.patientId)?.firstName} {patientMap.get(operationAction.appointment.patientId)?.lastName}</strong>
-              <span>{operationAction.appointment.appointmentNumber ?? operationAction.appointment.id}</span>
-              <span>{formatDate(operationAction.appointment.date)} - {operationAction.appointment.startTime}</span>
-              <textarea disabled={isAppointmentSaving} value={operationReason} onChange={(event) => setOperationReason(event.target.value)} placeholder={operationAction.requiresReason ? 'Reason is required' : 'Optional note'} rows={4} />
-              {operationError && <div className="inline-alert">{operationError}</div>}
-            </div>
-            <div className="modal-actions">
-              <Button variant="secondary" disabled={isAppointmentSaving} onClick={() => setOperationAction(null)}>Cancel</Button>
-              <Button disabled={isAppointmentSaving} onClick={() => void confirmOperationAction()}>{isAppointmentSaving ? 'Saving…' : 'Confirm'}</Button>
-            </div>
-          </section>
-        </div>
+      {operationAction && createPortal(
+        <div className="modal-backdrop modal-layer-child operation-action-backdrop" role="presentation">
+          {(() => {
+            const appointment = operationAction.appointment
+            const patient = patientMap.get(appointment.patientId)
+            const service = serviceMap.get(appointment.serviceId)
+            const provider = appointment.providerId ? providerMap.get(appointment.providerId) : undefined
+            const branch = appointment.branchId ? branchMap.get(appointment.branchId) : undefined
+            const duration = service?.duration ?? appointment.durationMinutes ?? 30
+            const rescheduleEndTime = rescheduleDraft.startTime ? addMinutesToTime(rescheduleDraft.startTime, duration) : appointment.endTime
+            const eligibleProviders = appointment.branchId ? getEligibleProviders(appointment.branchId) : providers.filter((entry) => entry.status === 'active')
+            const patientName = patient ? `${patient.firstName} ${patient.lastName}` : 'Patient appointment'
+            const appointmentNumber = appointment.appointmentNumber ?? appointment.id
+            const isReschedule = operationAction.status === 'rescheduled'
+            const isCancel = operationAction.status === 'cancelled'
+            const isNoShow = operationAction.status === 'no_show'
+            const toneClass = isCancel || isNoShow ? 'is-danger' : isReschedule ? 'is-reschedule' : 'is-neutral'
+            const title = isReschedule ? 'Reschedule appointment' : isCancel ? 'Cancel appointment' : isNoShow ? 'Mark as no show' : operationAction.label
+            const kicker = isReschedule ? 'Schedule change' : isCancel ? 'Destructive action' : isNoShow ? 'Attendance exception' : 'Appointment operation'
+            const explanation = isReschedule
+              ? 'Choose a new date, time, and dentist. The system will check availability before saving.'
+              : isCancel
+                ? 'This will cancel the appointment and remove it from active clinic flow. Keep the reason clear for audit history.'
+                : isNoShow
+                  ? 'Use this only when the patient did not attend the scheduled appointment. This is separate from cancellation.'
+                  : 'Confirm this appointment workflow update.'
+            const closeLabel = isReschedule ? 'Keep current appointment' : isCancel ? 'Keep appointment' : isNoShow ? 'Go back' : 'Cancel'
+            const primaryLabel = isReschedule ? 'Confirm reschedule' : isCancel ? 'Cancel appointment' : isNoShow ? 'Mark as no show' : 'Confirm'
+
+            return (
+              <section className={`modal operation-action-modal operation-dialog-v55 ${toneClass}`} role="dialog" aria-modal="true" aria-labelledby="operation-action-title" aria-describedby="operation-action-description">
+                <div className="operation-dialog-v55-header">
+                  <span className="operation-dialog-v55-icon" aria-hidden="true">
+                    {isReschedule ? <RefreshCw size={22} /> : isCancel ? <CalendarX2 size={22} /> : isNoShow ? <AlertTriangle size={22} /> : <CheckCircle2 size={22} />}
+                  </span>
+                  <div>
+                    <p className="eyebrow">{kicker}</p>
+                    <h2 id="operation-action-title">{title}</h2>
+                    <p id="operation-action-description">{explanation}</p>
+                  </div>
+                  <button className="operation-dialog-v55-close" type="button" aria-label="Close" disabled={isAppointmentSaving} onClick={() => setOperationAction(null)}><XCircle size={18} /></button>
+                </div>
+
+                <div className="operation-dialog-v55-body">
+                  <section className="operation-dialog-v55-context" aria-label="Appointment context">
+                    <div className="operation-dialog-v55-patient">
+                      <span><UserRound size={18} /></span>
+                      <div>
+                        <strong>{patientName}</strong>
+                        <small>{patient?.patientId ?? appointment.patientId} - {appointmentNumber}</small>
+                      </div>
+                    </div>
+                    <dl>
+                      <div><dt>Current date</dt><dd>{formatDate(appointment.date)}</dd></div>
+                      <div><dt>Current time</dt><dd>{formatAppointmentTime(appointment.startTime)} - {formatAppointmentTime(appointment.endTime)}</dd></div>
+                      <div><dt>Dentist</dt><dd>{provider?.displayName ?? 'Not assigned'}</dd></div>
+                      <div><dt>Service</dt><dd>{service?.name ?? 'Service not assigned'}</dd></div>
+                      <div><dt>Branch</dt><dd>{branch?.name ?? 'No branch assigned'}</dd></div>
+                    </dl>
+                  </section>
+
+                  {isReschedule && (
+                    <section className="operation-dialog-v55-form" aria-label="New appointment schedule">
+                      <div className="operation-dialog-v55-field-grid">
+                        <label>
+                          <span>New date</span>
+                          <input disabled={isAppointmentSaving} type="date" value={rescheduleDraft.date} onChange={(event) => setRescheduleDraft((draft) => ({ ...draft, date: event.target.value }))} />
+                        </label>
+                        <label>
+                          <span>New time</span>
+                          <input disabled={isAppointmentSaving} type="time" value={rescheduleDraft.startTime} onChange={(event) => setRescheduleDraft((draft) => ({ ...draft, startTime: event.target.value }))} />
+                        </label>
+                      </div>
+                      <label>
+                        <span>Dentist</span>
+                        <select disabled={isAppointmentSaving} value={rescheduleDraft.providerId} onChange={(event) => setRescheduleDraft((draft) => ({ ...draft, providerId: event.target.value }))}>
+                          <option value="">Select dentist</option>
+                          {eligibleProviders.map((entry) => <option key={entry.id} value={entry.id}>{entry.displayName}</option>)}
+                        </select>
+                      </label>
+                      <div className="operation-dialog-v55-new-slot">
+                        <CalendarDays size={15} />
+                        <span>{rescheduleDraft.date || 'No date selected'} - {rescheduleDraft.startTime ? `${formatAppointmentTime(rescheduleDraft.startTime)} - ${formatAppointmentTime(rescheduleEndTime)}` : 'No time selected'}</span>
+                      </div>
+                    </section>
+                  )}
+
+                  <label className="operation-dialog-v55-note">
+                    <span>{operationAction.requiresReason || isCancel || isNoShow ? 'Reason' : 'Note'}</span>
+                    <textarea
+                      disabled={isAppointmentSaving}
+                      value={operationReason}
+                      onChange={(event) => setOperationReason(event.target.value)}
+                      placeholder={isReschedule ? 'Reason for the schedule change' : isCancel ? 'Reason for cancellation' : isNoShow ? 'Optional note about the missed visit' : 'Optional note'}
+                      rows={4}
+                    />
+                  </label>
+
+                  {operationError && <div className="inline-alert operation-dialog-v55-alert" role="alert">{operationError}</div>}
+                </div>
+
+                <div className="operation-dialog-v55-actions">
+                  <Button variant="secondary" disabled={isAppointmentSaving} onClick={() => setOperationAction(null)}>{closeLabel}</Button>
+                  <Button variant={isCancel || isNoShow ? 'danger' : 'primary'} disabled={isAppointmentSaving} onClick={() => void confirmOperationAction()}>{isAppointmentSaving ? 'Saving...' : primaryLabel}</Button>
+                </div>
+              </section>
+            )
+          })()}
+        </div>,
+        document.body
       )}
     </section>
   )

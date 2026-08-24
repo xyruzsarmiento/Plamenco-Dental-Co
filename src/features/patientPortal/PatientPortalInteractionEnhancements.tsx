@@ -1,8 +1,6 @@
 import { useEffect } from 'react'
 import { useAuth } from '../auth/AuthContext'
 import { getInvoicesByPatient, getPaymentsByPatient, getReceiptsByPatient } from '../billing/billingStore'
-import { getCurrentPatientForAuthenticatedUser } from '../patients/patientStore'
-import { updateMyPatientProfilePersisted } from '../patients/patientPersistence'
 
 function closeEnhancementModal() {
   document.querySelector('.pv4-detail-backdrop')?.remove()
@@ -40,7 +38,7 @@ function createDetailModal(title: string, subtitle: string, bodyHtml: string, ey
     <section class="pv4-detail-modal" role="dialog" aria-modal="true" aria-label="${escapeHtml(title)}">
       <header>
         <div><span>${escapeHtml(eyebrow)}</span><h2>${escapeHtml(title)}</h2><p>${escapeHtml(subtitle)}</p></div>
-        <button type="button" class="pv4-detail-close" aria-label="Close details">×</button>
+        <button type="button" class="pv4-detail-close" aria-label="Close details"><svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button>
       </header>
       <div class="pv4-detail-body">${bodyHtml}</div>
       <footer><button type="button" class="pv4-detail-done">Done</button></footer>
@@ -116,72 +114,11 @@ function openPaymentReceipt(patientId: string, paymentId: string) {
   )
 }
 
-function injectProfilePhotoUploader(authUserId: string) {
-  const page = document.querySelector<HTMLElement>('.pv3-profile-layout')
-  if (!page || page.parentElement?.querySelector(':scope > .pv4-profile-photo-card')) return
-  const card = document.createElement('section')
-  card.className = 'pv4-profile-photo-card'
-  card.innerHTML = `
-    <div class="pv4-photo-preview"><span>Photo</span></div>
-    <div><span>PROFILE PHOTO</span><h3>Personalize your account</h3><p>Upload a clear square photo. JPG, PNG or WebP up to 2 MB.</p></div>
-    <label><input type="file" accept="image/jpeg,image/png,image/webp"/><strong>Upload photo</strong></label>
-    <small class="pv4-photo-status" aria-live="polite"></small>`
-  page.insertAdjacentElement('beforebegin', card)
-  const input = card.querySelector<HTMLInputElement>('input')!
-  const preview = card.querySelector<HTMLElement>('.pv4-photo-preview')!
-  const status = card.querySelector<HTMLElement>('.pv4-photo-status')!
-
-  void getCurrentPatientForAuthenticatedUser(authUserId).then((patient) => {
-    if (patient?.profileImage) preview.style.backgroundImage = `url(${patient.profileImage})`
-  })
-
-  input.addEventListener('change', () => {
-    const file = input.files?.[0]
-    if (!file) return
-    if (!file.type.startsWith('image/')) { status.textContent = 'Please choose an image file.'; return }
-    if (file.size > 2 * 1024 * 1024) { status.textContent = 'The image must be 2 MB or smaller.'; return }
-    const reader = new FileReader()
-    reader.onload = () => {
-      void (async () => {
-        const image = String(reader.result ?? '')
-        const patient = await getCurrentPatientForAuthenticatedUser(authUserId)
-        if (!patient) { status.textContent = 'Patient profile could not be loaded.'; return }
-        status.textContent = 'Saving photo…'
-        try {
-          await updateMyPatientProfilePersisted({
-            firstName: patient.firstName,
-            middleName: patient.middleName,
-            lastName: patient.lastName,
-            dateOfBirth: patient.dateOfBirth,
-            email: patient.email,
-            phone: patient.phone,
-            address: patient.address,
-            emergencyContact: patient.emergencyContact,
-            emergencyContactPhone: patient.emergencyContactPhone,
-            emergencyContactRelationship: patient.emergencyContactRelationship ?? '',
-            profileImage: image,
-          })
-          preview.style.backgroundImage = `url(${image})`
-          document.querySelectorAll<HTMLElement>('.pv3-avatar').forEach((avatar) => {
-            avatar.style.backgroundImage = `url(${image})`
-            avatar.textContent = ''
-          })
-          status.textContent = 'Profile photo updated.'
-        } catch (error) {
-          status.textContent = error instanceof Error ? error.message : 'Unable to save profile photo.'
-        }
-      })()
-    }
-    reader.readAsDataURL(file)
-  })
-}
-
 export function PatientPortalInteractionEnhancements() {
   const { user } = useAuth()
 
   useEffect(() => {
     const patientId = user?.patientId ?? ''
-    const authUserId = user?.id ?? ''
     let frame = 0
     const enhance = () => {
       cancelAnimationFrame(frame)
@@ -190,7 +127,6 @@ export function PatientPortalInteractionEnhancements() {
           injectBillingDetails(patientId)
           decoratePaymentRows(patientId)
         }
-        if (authUserId) injectProfilePhotoUploader(authUserId)
       })
     }
     enhance()
@@ -253,7 +189,7 @@ export function PatientPortalInteractionEnhancements() {
       document.removeEventListener('click', onClick)
       document.removeEventListener('keydown', onKey)
       closeEnhancementModal()
-      document.querySelectorAll('.pv4-billing-metrics,.pv4-profile-photo-card').forEach((node) => node.remove())
+      document.querySelectorAll('.pv4-billing-metrics').forEach((node) => node.remove())
     }
   }, [user?.id, user?.patientId])
 

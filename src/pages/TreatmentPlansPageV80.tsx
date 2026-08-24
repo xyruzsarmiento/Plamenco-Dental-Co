@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { CalendarDays, CheckCircle2, ChevronRight, FileText, Plus, Search, Send, ShieldCheck, Sparkles, Stethoscope, Trash2, UserRound, X } from 'lucide-react'
 import { Button } from '../components/ui/Button'
+import { Pagination, SkeletonList } from '../components/ui/DesignSystem'
 import { PageScaffold } from '../components/ui/PageScaffold'
 import { usePermissions } from '../features/auth/permissions'
 import { getStoredBranches } from '../features/branches/branchStore'
@@ -22,6 +23,8 @@ type DraftItem = {
   phase: string
   quotedPricePhp: string
 }
+
+const PLAN_PAGE_SIZE_OPTIONS = [10, 20, 50]
 
 function humanize(value: string) {
   return value.replaceAll('_', ' ').replace(/\b\w/g, (char) => char.toUpperCase())
@@ -70,6 +73,8 @@ export function TreatmentPlansPageV80() {
   const [patientNotes, setPatientNotes] = useState('')
   const [internalNotes, setInternalNotes] = useState('')
   const [items, setItems] = useState<DraftItem[]>([])
+  const [planPage, setPlanPage] = useState(1)
+  const [planPageSize, setPlanPageSize] = useState(10)
 
   const selectedPatient = patients.find((patient) => patient.patientId === selectedPatientId)
   const filteredPatients = useMemo(() => {
@@ -90,6 +95,21 @@ export function TreatmentPlansPageV80() {
     value: plans.reduce((sum, plan) => sum + plan.quotedTotalCents, 0),
     procedures: plans.reduce((sum, plan) => sum + plan.items.length, 0),
   }), [plans])
+
+  const planPageCount = Math.max(1, Math.ceil(plans.length / planPageSize))
+  const effectivePlanPage = Math.min(planPage, planPageCount)
+  const visiblePlans = useMemo(() => {
+    const start = (effectivePlanPage - 1) * planPageSize
+    return plans.slice(start, start + planPageSize)
+  }, [effectivePlanPage, planPageSize, plans])
+
+  useEffect(() => {
+    setPlanPage(1)
+  }, [planPageSize, selectedPatientId])
+
+  useEffect(() => {
+    setPlanPage((current) => Math.min(current, planPageCount))
+  }, [planPageCount])
 
   async function refresh(patientId = selectedPatientId) {
     if (!patientId) return setPlans([])
@@ -219,7 +239,25 @@ export function TreatmentPlansPageV80() {
               {error && <div className="tp80-error" role="alert">{error}</div>}
               <section className="tp80-registry">
                 <div className="tp80-section-head"><div><span className="tp80-eyebrow">Care recommendations</span><h3>Treatment plan registry</h3><p>Review quoted procedures, current decision state, and scheduling readiness.</p></div><span>{plans.length} plan{plans.length === 1 ? '' : 's'}</span></div>
-                {loading ? <div className="tp80-empty">Loading treatment plans…</div> : plans.length ? <div className="tp80-plan-grid">{plans.map((plan) => <article key={plan.id} className="tp80-plan-card"><div className="tp80-plan-head"><div><small>{plan.planNumber} · v{plan.versionNumber}</small><h3>{plan.name}</h3><p>{plan.providerNameSnapshot || 'Dentist not assigned'} · {branches.find((branch) => branch.id === plan.branchId)?.name || 'Branch not assigned'}</p></div><span className={`tp80-status status-${plan.status}`}>{humanize(plan.status)}</span></div>{plan.description && <p className="tp80-description">{plan.description}</p>}<div className="tp80-plan-stats"><div><span>Estimate</span><strong>{formatTreatmentPlanCurrency(plan.quotedTotalCents)}</strong></div><div><span>Procedures</span><strong>{plan.items.length}</strong></div><div><span>Created</span><strong>{formatDate(plan.createdAt)}</strong></div></div><div className="tp80-preview">{plan.items.slice(0, 3).map((item) => <div key={item.id}><span><strong>{item.serviceNameSnapshot}</strong><small>{item.phase || 'No phase'} · Qty {item.quantity}</small></span><b>{formatTreatmentPlanCurrency(item.quotedPriceCents)}</b></div>)}</div><footer><button type="button" onClick={() => setSelectedPlan(plan)}>View full plan</button>{plan.status === 'draft' && can('treatments.edit') && <Button size="sm" onClick={() => void present(plan)}><Send size={14} /> Present</Button>}</footer></article>)}</div> : <div className="tp80-empty"><FileText size={24} /><h3>No treatment plans yet</h3><p>Create the first care recommendation for this patient.</p></div>}
+                {loading ? <SkeletonList items={5} withAvatar /> : plans.length ? (
+                  <>
+                    <div className="tp80-plan-grid">
+                      {visiblePlans.map((plan) => (
+                        <article key={plan.id} className="tp80-plan-card">
+                          <div className="tp80-plan-head">
+                            <div><small>{plan.planNumber} · v{plan.versionNumber}</small><h3>{plan.name}</h3><p>{plan.providerNameSnapshot || 'Dentist not assigned'} · {branches.find((branch) => branch.id === plan.branchId)?.name || 'Branch not assigned'}</p></div>
+                            <span className={`tp80-status status-${plan.status}`}>{humanize(plan.status)}</span>
+                          </div>
+                          {plan.description && <p className="tp80-description">{plan.description}</p>}
+                          <div className="tp80-plan-stats"><div><span>Estimate</span><strong>{formatTreatmentPlanCurrency(plan.quotedTotalCents)}</strong></div><div><span>Procedures</span><strong>{plan.items.length}</strong></div><div><span>Created</span><strong>{formatDate(plan.createdAt)}</strong></div></div>
+                          <div className="tp80-preview">{plan.items.slice(0, 3).map((item) => <div key={item.id}><span><strong>{item.serviceNameSnapshot}</strong><small>{item.phase || 'No phase'} · Qty {item.quantity}</small></span><b>{formatTreatmentPlanCurrency(item.quotedPriceCents)}</b></div>)}</div>
+                          <footer><button type="button" onClick={() => setSelectedPlan(plan)}>View full plan</button>{plan.status === 'draft' && can('treatments.edit') && <Button size="sm" onClick={() => void present(plan)}><Send size={14} /> Present</Button>}</footer>
+                        </article>
+                      ))}
+                    </div>
+                    <Pagination page={effectivePlanPage} pageCount={planPageCount} totalItems={plans.length} pageSize={planPageSize} pageSizeOptions={PLAN_PAGE_SIZE_OPTIONS} onPageChange={setPlanPage} onPageSizeChange={setPlanPageSize} label="Treatment plan registry pages" />
+                  </>
+                ) : <div className="tp80-empty"><FileText size={24} /><h3>No treatment plans yet</h3><p>Create the first care recommendation for this patient.</p></div>}
               </section>
             </> : <div className="tp80-empty"><UserRound size={26} /><h3>No patient selected</h3></div>}
           </main>
@@ -261,3 +299,4 @@ export function TreatmentPlansPageV80() {
     </PageScaffold>
   )
 }
+

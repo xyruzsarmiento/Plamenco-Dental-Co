@@ -1,25 +1,29 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Calendar, FileText, Pill, Plus, Stethoscope, User } from 'lucide-react'
-import { Badge } from '../../components/ui/Badge'
+import { StatusBadge } from '../../components/ui/Badge'
 import { Button } from '../../components/ui/Button'
 import { EmptyState } from '../../components/ui/EmptyState'
+import { useAuth } from '../auth/AuthContext'
+import { usePermissions } from '../auth/permissions'
 import {
   getInvoicesByPatient,
   getOutstandingBalanceByPatient,
   getPaymentsByPatient,
 } from '../billing/billingStore'
 import {
-  createDocument,
+  archiveDocumentPersisted,
+  createDocumentPersisted,
   deleteDentalImage,
-  deleteDocument,
   getDentalImagesByPatient,
   getDocumentsByPatient,
+  updateDocumentVisibilityPersisted,
 } from '../documents/documentStore'
 import { DocumentList, DocumentUploadPanel } from '../documents/DocumentUploadPanel'
 import { PrescriptionForm } from '../prescriptions/PrescriptionForm'
-import { createPrescription, getPrescriptionsByPatient } from '../prescriptions/prescriptionStore'
+import { createPrescriptionPersisted, getPrescriptionsByPatient, getPrescriptionPrintableText, type Prescription } from '../prescriptions/prescriptionStore'
 import { DentalRecordList } from '../dentalRecords/DentalRecordList'
 import { getDentalRecordsByPatientId } from '../dentalRecords/dentalRecordStore'
+import { getStoredProviders } from '../dentists/dentistStore'
 import { TreatmentList } from '../treatments/TreatmentList'
 import { TreatmentPlanCard } from '../treatments/TreatmentPlanCard'
 import { getStoredTreatmentPlans, getTreatmentsByPatient } from '../treatments/treatmentStore'
@@ -65,6 +69,26 @@ function formatCurrency(cents: number) {
   }).format(cents / 100)
 }
 
+function todayManila() {
+  return new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Asia/Manila',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).format(new Date())
+}
+
+const emptyPrescriptionDraft = {
+  medication: '',
+  dosage: '',
+  frequency: '',
+  duration: '',
+  instructions: '',
+  prescribedBy: '',
+  prescriptionDate: todayManila(),
+  notes: '',
+}
+
 export function PatientProfile({
   onAddDentalRecord,
   onAddTreatment,
@@ -74,18 +98,140 @@ export function PatientProfile({
   onRecordPayment,
   patient,
 }: PatientProfileProps) {
+  const { user } = useAuth()
+  const permissions = usePermissions()
   const [activeTab, setActiveTab] = useState<TabKey>('overview')
+  const [prescriptionDraft, setPrescriptionDraft] = useState(emptyPrescriptionDraft)
+  const [prescriptionMessage, setPrescriptionMessage] = useState<string | null>(null)
+  const [prescriptionError, setPrescriptionError] = useState<string | null>(null)
+  const [isPrescriptionSaving, setIsPrescriptionSaving] = useState(false)
+  const [prescriptions, setPrescriptions] = useState<Prescription[]>(() => getPrescriptionsByPatient(patient.patientId))
+  const [documents, setDocuments] = useState(() => getDocumentsByPatient(patient.patientId))
+  const [documentBusyId, setDocumentBusyId] = useState<string | null>(null)
+  const [documentMessage, setDocumentMessage] = useState<string | null>(null)
+  const [documentError, setDocumentError] = useState<string | null>(null)
 
   const dentalRecords = useMemo(() => getDentalRecordsByPatientId(patient.patientId), [patient.patientId])
   const treatments = useMemo(() => getTreatmentsByPatient(patient.patientId), [patient.patientId])
   const treatmentPlans = useMemo(() => getStoredTreatmentPlans().filter((plan) => plan.patientId === patient.patientId), [patient.patientId])
   const invoices = useMemo(() => getInvoicesByPatient(patient.patientId), [patient.patientId])
   const payments = useMemo(() => getPaymentsByPatient(patient.patientId), [patient.patientId])
-  const documents = useMemo(() => getDocumentsByPatient(patient.patientId), [patient.patientId])
   const dentalImages = useMemo(() => getDentalImagesByPatient(patient.patientId), [patient.patientId])
-  const prescriptions = useMemo(() => getPrescriptionsByPatient(patient.patientId), [patient.patientId])
   const outstandingBalance = useMemo(() => getOutstandingBalanceByPatient(patient.patientId), [patient.patientId])
+  const prescribingProvider = useMemo(() => getStoredProviders().find((provider) => provider.profileId === user?.id && provider.status === 'active' && ['dentist', 'associate_dentist'].includes(provider.role)), [user?.id])
+  const prescriberName = prescribingProvider?.displayName ?? ''
+  const canAuthorPrescription = Boolean(prescribingProvider && permissions.can('prescriptions.create'))
+  const canUploadDocuments = permissions.can('documents.upload')
+  const documentActor = user?.name || user?.email || 'Clinic user'
   const fullName = `${patient.firstName}${patient.middleName ? ` ${patient.middleName}` : ''} ${patient.lastName}`
+
+  useEffect(() => {
+    setPrescriptions(getPrescriptionsByPatient(patient.patientId))
+    setDocuments(getDocumentsByPatient(patient.patientId))
+    setPrescriptionDraft({ ...emptyPrescriptionDraft, prescribedBy: prescriberName, prescriptionDate: todayManila() })
+    setPrescriptionMessage(null)
+    setPrescriptionError(null)
+    setDocumentMessage(null)
+    setDocumentError(null)
+  }, [patient.patientId, prescriberName])
+
+  async function handleCreatePrescription() {
+    if (isPrescriptionSaving) return
+    if (!canAuthorPrescription) {
+      setPrescriptionError('Only an active dentist profile may create prescriptions.')
+      return
+    }
+    setPrescriptionError(null)
+    setPrescriptionMessage(null)
+    setIsPrescriptionSaving(true)
+    try {
+      const confirmed = await createPrescriptionPersisted({
+        patientId: patient.patientId,
+        providerId: prescribingProvider?.id,
+        providerNameSnapshot: prescriberName,
+        prescribedBy: prescriberName,
+        prescriptionDate: prescriptionDraft.prescriptionDate,
+        notes: prescriptionDraft.notes,
+        items: [{
+          medication: prescriptionDraft.medication,
+          strength: '',
+          dosage: prescriptionDraft.dosage,
+          frequency: prescriptionDraft.frequency,
+          duration: prescriptionDraft.duration,
+          instructions: prescriptionDraft.instructions,
+        }],
+      })
+      setPrescriptions([confirmed, ...getPrescriptionsByPatient(patient.patientId).filter((entry) => entry.id !== confirmed.id)])
+      setPrescriptionDraft({ ...emptyPrescriptionDraft, prescribedBy: prescriberName, prescriptionDate: todayManila() })
+      setPrescriptionMessage('Prescription saved.')
+    } catch (cause) {
+      setPrescriptionError(cause instanceof Error ? cause.message : 'Prescription could not be saved.')
+    } finally {
+      setIsPrescriptionSaving(false)
+    }
+  }
+
+  function printPrescription(prescription: Prescription) {
+    const printWindow = window.open('', '_blank', 'width=720,height=900')
+    if (!printWindow) return
+    const safeText = getPrescriptionPrintableText(prescription)
+      .split('\n')
+      .map((line) => `<div class="line">${line.replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;')}</div>`)
+      .join('')
+    printWindow.document.write(`
+      <html>
+        <head>
+          <title>Prescription</title>
+          <style>body{font-family:sans-serif;margin:32px;color:#172126}.line{margin:8px 0;white-space:pre-wrap}</style>
+        </head>
+        <body>${safeText}</body>
+      </html>
+    `)
+    printWindow.document.close()
+    printWindow.focus()
+    printWindow.print()
+  }
+
+  async function handleUploadDocument(payload: Parameters<typeof createDocumentPersisted>[0]) {
+    setDocumentError(null)
+    setDocumentMessage(null)
+    const confirmed = await createDocumentPersisted({ ...payload, uploadedBy: documentActor, patientVisible: payload.patientVisible ?? false })
+    setDocuments([confirmed, ...getDocumentsByPatient(patient.patientId).filter((entry) => entry.id !== confirmed.id)])
+    setDocumentMessage('Document uploaded to the clinic database.')
+    return confirmed
+  }
+
+  async function handleToggleDocument(documentId: string, patientVisible: boolean) {
+    if (documentBusyId) return
+    setDocumentBusyId(documentId)
+    setDocumentError(null)
+    setDocumentMessage(null)
+    try {
+      const updated = await updateDocumentVisibilityPersisted(documentId, patientVisible)
+      setDocuments(getDocumentsByPatient(patient.patientId).map((entry) => entry.id === updated.id ? updated : entry))
+      setDocumentMessage(patientVisible ? 'Document shared with the patient portal.' : 'Document made private.')
+    } catch (cause) {
+      setDocumentError(cause instanceof Error ? cause.message : 'Document sharing could not be changed.')
+    } finally {
+      setDocumentBusyId(null)
+    }
+  }
+
+  async function handleArchiveDocument(documentId: string) {
+    if (documentBusyId || !window.confirm('Archive this document? It will be removed from clinic lists and the patient portal.')) return
+    setDocumentBusyId(documentId)
+    setDocumentError(null)
+    setDocumentMessage(null)
+    try {
+      await archiveDocumentPersisted(documentId)
+      setDocuments(getDocumentsByPatient(patient.patientId))
+      setDocumentMessage('Document archived.')
+    } catch (cause) {
+      setDocumentError(cause instanceof Error ? cause.message : 'Document could not be archived.')
+    } finally {
+      setDocumentBusyId(null)
+    }
+  }
 
   return (
     <div className="patient-profile premium-profile-shell">
@@ -97,9 +243,7 @@ export function PatientProfile({
             <div className="profile-meta">
               <span className="patient-id">{patient.patientId}</span>
               <span className="patient-age">{getAge(patient.dateOfBirth)} years old</span>
-              <Badge tone={patient.status === 'active' ? 'success' : 'warning'}>
-                {patient.status.charAt(0).toUpperCase() + patient.status.slice(1)}
-              </Badge>
+              <StatusBadge status={patient.status} variant="compact" />
             </div>
           </div>
           <div className="profile-actions">
@@ -357,19 +501,18 @@ export function PatientProfile({
 
         {activeTab === 'documents' && (
           <div className="tab-content">
-            <DocumentUploadPanel
-              patientId={patient.patientId}
-              onUpload={({ patientId, fileName, fileType, category, uploadedBy, content }) => {
-                createDocument({
-                  patientId,
-                  fileName,
-                  fileType,
-                  category,
-                  uploadedBy,
-                  content,
-                })
-              }}
-            />
+            {documentMessage && <div className="success-alert">{documentMessage}</div>}
+            {documentError && <div className="error-alert" role="alert">{documentError}</div>}
+            {canUploadDocuments ? (
+              <DocumentUploadPanel
+                patientId={patient.patientId}
+                uploadedBy={documentActor}
+                defaultPatientVisible={false}
+                onUpload={handleUploadDocument}
+              />
+            ) : (
+              <div className="empty-state-panel">Document uploads and sharing controls are limited to authorized clinic users.</div>
+            )}
 
             {documents.length === 0 ? (
               <EmptyState title="No documents" message="This patient does not have any uploaded documents yet." />
@@ -378,7 +521,9 @@ export function PatientProfile({
                 <h3>Patient files</h3>
                 <DocumentList
                   documents={documents}
-                  onDelete={(documentId) => deleteDocument(documentId)}
+                  busyId={documentBusyId}
+                  onDelete={canUploadDocuments ? (documentId) => void handleArchiveDocument(documentId) : undefined}
+                  onToggleVisibility={canUploadDocuments ? (documentId, patientVisible) => void handleToggleDocument(documentId, patientVisible) : undefined}
                 />
               </div>
             )}
@@ -409,29 +554,21 @@ export function PatientProfile({
           <div className="tab-content">
             <div className="profile-section">
               <h3>New prescription</h3>
-              <PrescriptionForm
-                values={{
-                  medication: '',
-                  dosage: '',
-                  frequency: '',
-                  duration: '',
-                  instructions: '',
-                  prescribedBy: 'Dr. Santos',
-                }}
-                onChange={() => undefined}
-                onSubmit={() => {
-                  createPrescription({
-                    patientId: patient.patientId,
-                    medication: '',
-                    dosage: '',
-                    frequency: '',
-                    duration: '',
-                    instructions: '',
-                    prescribedBy: 'Dr. Santos',
-                  })
-                }}
-                onPrint={() => undefined}
-              />
+              {prescriptionMessage && <div className="success-alert">{prescriptionMessage}</div>}
+              {prescriptionError && <div className="error-alert" role="alert">{prescriptionError}</div>}
+              {canAuthorPrescription ? (
+                <PrescriptionForm
+                  values={{ ...prescriptionDraft, prescribedBy: prescriberName }}
+                  onChange={(values) => setPrescriptionDraft(values)}
+                  onSubmit={() => void handleCreatePrescription()}
+                  onPrint={() => undefined}
+                  disabled={isPrescriptionSaving}
+                />
+              ) : (
+                <div className="empty-state-panel">
+                  Prescription authoring is available only to an active dentist profile. This view remains read-only for non-clinical accounts.
+                </div>
+              )}
             </div>
 
             {prescriptions.length === 0 ? (
@@ -450,32 +587,7 @@ export function PatientProfile({
                         <button
                           type="button"
                           className="icon-button"
-                          onClick={() => {
-                            const printWindow = window.open('', '_blank', 'width=720,height=900')
-                            if (!printWindow) return
-
-                            printWindow.document.write(`
-                              <html>
-                                <head>
-                                  <title>Prescription</title>
-                                  <style>body{font-family:sans-serif;margin:32px;color:#172126}h2{margin-bottom:12px}.line{margin:8px 0}</style>
-                                </head>
-                                <body>
-                                  <h2>Plamenco Dental Co</h2>
-                                  <div class="line"><strong>Medication:</strong> ${prescription.medication}</div>
-                                  <div class="line"><strong>Dosage:</strong> ${prescription.dosage}</div>
-                                  <div class="line"><strong>Frequency:</strong> ${prescription.frequency}</div>
-                                  <div class="line"><strong>Duration:</strong> ${prescription.duration}</div>
-                                  <div class="line"><strong>Instructions:</strong> ${prescription.instructions}</div>
-                                  <div class="line"><strong>Prescribed by:</strong> ${prescription.prescribedBy}</div>
-                                  <div class="line"><strong>Date:</strong> ${prescription.prescriptionDate}</div>
-                                </body>
-                              </html>
-                            `)
-                            printWindow.document.close()
-                            printWindow.focus()
-                            printWindow.print()
-                          }}
+                          onClick={() => printPrescription(prescription)}
                         >
                           Print
                         </button>

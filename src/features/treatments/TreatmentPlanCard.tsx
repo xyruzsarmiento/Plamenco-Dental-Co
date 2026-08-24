@@ -1,5 +1,5 @@
 import { CheckCircle2, Circle } from 'lucide-react'
-import { Badge } from '../../components/ui/Badge'
+import { StatusBadge } from '../../components/ui/Badge'
 import type { Treatment, TreatmentPlan } from './treatmentTypes'
 import { getServiceById, getTreatmentProgress } from './treatmentStore'
 import { getPatientName } from '../dentalRecords/dentalRecordStore'
@@ -22,9 +22,7 @@ export function TreatmentPlanCard({ plan, treatments }: TreatmentPlanCardProps) 
           <h3>{plan.name}</h3>
           <p className="plan-patient">Patient: {patientName}</p>
         </div>
-        <Badge tone={plan.status === 'completed' ? 'success' : plan.status === 'cancelled' ? 'danger' : plan.status === 'in_progress' ? 'info' : 'warning'}>
-          {plan.status.replace('_', ' ')}
-        </Badge>
+        <StatusBadge status={plan.status} />
       </div>
 
       {plan.description && <p className="plan-description">{plan.description}</p>}
@@ -64,8 +62,6 @@ export function TreatmentPlanCard({ plan, treatments }: TreatmentPlanCardProps) 
 
               const service = getServiceById(treatment.serviceId)
               const isCompleted = treatment.status === 'completed'
-              const isInProgress = treatment.status === 'in_progress' || treatment.status === 'scheduled'
-
               return (
                 <div key={treatment.id} className={`plan-step step-${treatment.status}`}>
                   <div className="step-indicator">
@@ -79,9 +75,7 @@ export function TreatmentPlanCard({ plan, treatments }: TreatmentPlanCardProps) 
                   <div className="step-content">
                     <div className="step-title">
                       <strong>{service?.name ?? treatment.description}</strong>
-                      <Badge tone={isCompleted ? 'success' : isInProgress ? 'info' : 'warning'}>
-                        {treatment.status.replace('_', ' ')}
-                      </Badge>
+                      <StatusBadge status={treatment.status} variant="compact" />
                     </div>
                     <div className="step-meta">
                       {treatment.toothNumber && <span>Tooth #{treatment.toothNumber}</span>}

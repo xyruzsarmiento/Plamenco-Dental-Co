@@ -1,6 +1,6 @@
 import { isSupabaseConfigured, supabase } from '../../lib/supabase'
 
-const inventoryTables = [
+const inventoryTables: Array<[string, string, (row: any) => unknown]> = [
   ['inventory_categories', 'plamenco.inventory.categories', (row: any) => ({ id: row.id, name: row.name, status: row.status ?? 'active' })],
   ['inventory_units', 'plamenco.inventory.units', (row: any) => ({ id: row.id, label: row.label, abbreviation: row.abbreviation, status: row.status ?? 'active' })],
   ['suppliers', 'plamenco.inventory.suppliers', (row: any) => ({ id: row.id, supplierNumber: row.supplier_number, name: row.name, contactPerson: row.contact_person ?? '', phone: row.phone ?? '', email: row.email ?? '', address: row.address ?? '', notes: row.notes ?? '', status: row.status ?? 'active', createdAt: row.created_at ?? new Date().toISOString(), updatedAt: row.updated_at ?? row.created_at ?? new Date().toISOString() })],

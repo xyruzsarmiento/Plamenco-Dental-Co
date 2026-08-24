@@ -3,6 +3,7 @@ import { AlertCircle, ArrowLeft, CheckCircle2, ClipboardList, FileSignature, Hea
 import { Link, Navigate, useParams } from 'react-router-dom'
 import { Badge } from '../components/ui/Badge'
 import { Button } from '../components/ui/Button'
+import { SkeletonCard, SkeletonList, SkeletonText } from '../components/ui/DesignSystem'
 import { Input } from '../components/ui/Input'
 import { Textarea } from '../components/ui/Textarea'
 import { useAuth } from '../features/auth/AuthContext'
@@ -36,6 +37,10 @@ function formatDateTime(value?: string) {
 
 function statusLabel(value: string) {
   return value.replaceAll('_', ' ').replace(/\b\w/g, (letter) => letter.toUpperCase())
+}
+
+function medicalValue(value: string) {
+  return value.trim() || 'None recorded'
 }
 
 export function PatientIntakePage() {
@@ -107,6 +112,7 @@ export function PatientIntakePage() {
   const emergencyContactComplete = Boolean(patient?.emergencyContact.trim() && patient?.emergencyContactPhone.trim())
   const medicalHistoryComplete = Boolean(intake?.medicalHistoryConfirmedAt)
   const intakeComplete = Boolean(patient && emergencyContactComplete && medicalHistoryComplete && requiredUnsignedForms.length === 0)
+  const previousMedicalHistory = history.slice(1)
 
   if (!user || user.role !== 'patient') return <Navigate to="/login" replace />
   if (patient && routePatientId && routePatientId !== patient.patientId) return <Navigate to={`/portal/${patient.patientId}/intake`} replace />
@@ -178,7 +184,21 @@ export function PatientIntakePage() {
     }
   }
 
-  if (loading) return <main className="page-stack portal-intake-page"><div className="panel"><p>Loading your intake information...</p></div></main>
+  if (loading) {
+    return (
+      <main className="page-stack portal-intake-page">
+        <SkeletonCard>
+          <SkeletonText lines={3} widths={['180px', 'min(520px, 82%)', 'min(420px, 70%)']} />
+        </SkeletonCard>
+        <SkeletonCard>
+          <SkeletonList items={4} withAvatar={false} />
+        </SkeletonCard>
+        <SkeletonCard>
+          <SkeletonText lines={5} widths={['220px', '96%', '92%', '88%', '72%']} />
+        </SkeletonCard>
+      </main>
+    )
+  }
 
   if (error && !patient) {
     return <main className="page-stack portal-intake-page"><div className="panel empty-state-panel"><AlertCircle size={24} /><h2>Could not load your intake</h2><p>{error}</p><Button onClick={() => void load()}>Retry</Button></div></main>
@@ -231,7 +251,29 @@ export function PatientIntakePage() {
         <Textarea label="Other medical information your dentist should know" value={medicalForm.medicalNotes} onChange={(event) => setMedicalForm({ ...medicalForm, medicalNotes: event.target.value })} />
         <label className="intake-confirmation-row"><input type="checkbox" checked={medicalForm.confirmedNoAllergies} onChange={(event) => setMedicalForm({ ...medicalForm, confirmedNoAllergies: event.target.checked, allergies: event.target.checked ? '' : medicalForm.allergies })} /><span>I confirm that I currently have no allergies to record.</span></label>
         <div className="action-buttons"><Button onClick={() => void saveMedicalHistory()} disabled={saveState === 'saving'}><Save size={15} /> {saveState === 'saving' ? 'Saving...' : 'Save & Confirm Medical History'}</Button>{saveState === 'saved' && <span className="success-text"><CheckCircle2 size={15} /> Saved successfully</span>}</div>
-        {history.length > 1 && <p className="muted-label">Previous medical-history revisions are retained for traceability. Latest update: {formatDateTime(history[0]?.changedAt)}.</p>}
+        {previousMedicalHistory.length > 0 && (
+          <section className="medical-history-revision-history" aria-labelledby="medical-history-history-title">
+            <div className="medical-history-history-head">
+              <div><p className="eyebrow">Revision history</p><h3 id="medical-history-history-title">Previous medical-history submissions</h3></div>
+              <span>{previousMedicalHistory.length} previous</span>
+            </div>
+            <p className="muted-label">Current allergies, medications, and conditions remain above. Older submissions are retained here for traceability.</p>
+            <div className="medical-history-revision-list" tabIndex={0}>
+              {previousMedicalHistory.map((revision) => (
+                <article key={revision.id} className="medical-history-revision-card">
+                  <header><div><strong>{formatDateTime(revision.changedAt)}</strong><span>{statusLabel(revision.source)}</span></div>{revision.confirmedNoAllergies && <Badge tone="success">No allergies confirmed</Badge>}</header>
+                  <dl>
+                    <div><dt>Allergies</dt><dd>{revision.confirmedNoAllergies ? 'Patient confirmed no allergies.' : medicalValue(revision.allergies)}</dd></div>
+                    <div><dt>Current medications</dt><dd>{medicalValue(revision.currentMedications)}</dd></div>
+                    <div><dt>Medical conditions</dt><dd>{medicalValue(revision.medicalConditions)}</dd></div>
+                    <div><dt>Previous surgeries / hospitalizations</dt><dd>{medicalValue(revision.previousSurgeries)}</dd></div>
+                    <div><dt>Other medical information</dt><dd>{medicalValue(revision.medicalNotes)}</dd></div>
+                  </dl>
+                </article>
+              ))}
+            </div>
+          </section>
+        )}
       </section>
 
       <section className="panel">

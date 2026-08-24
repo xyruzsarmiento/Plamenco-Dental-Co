@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Activity, CheckCircle2, Clock3, Eye, Filter, Layers3, PencilLine, Plus, Search, ShieldCheck, Stethoscope, XCircle } from 'lucide-react'
+import { Activity, CheckCircle2, Clock3, Eye, Filter, Layers3, PencilLine, Plus, Search, ShieldCheck, Stethoscope, X, XCircle } from 'lucide-react'
 import { PageScaffold } from '../components/ui/PageScaffold'
 import { Button } from '../components/ui/Button'
+import { Pagination } from '../components/ui/DesignSystem'
 import { ServiceFormModalV15 } from '../features/services/ServiceFormModalV15'
 import type { Service, ServiceFormValues, ServiceStatus } from '../features/services/serviceTypes'
 import { createServicePersisted, formatServicePrice, getStoredServices, loadServicesFromSupabase, toggleServiceStatus, updateServicePersisted } from '../features/services/serviceStore'
@@ -22,6 +23,8 @@ function dedupeServices(services: Service[]) {
   return Array.from(map.values())
 }
 
+const SERVICE_PAGE_SIZE = 10
+
 export function ServicesPageV15() {
   const [services, setServices] = useState<Service[]>(() => getStoredServices())
   const [search, setSearch] = useState('')
@@ -33,6 +36,7 @@ export function ServicesPageV15() {
   const [viewing, setViewing] = useState<Service | null>(null)
   const [feedback, setFeedback] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
+  const [servicePage, setServicePage] = useState(1)
 
   useEffect(() => {
     let mounted = true
@@ -59,6 +63,19 @@ export function ServicesPageV15() {
       .filter((service) => status === 'all' || service.status === status)
       .sort((a, b) => a.name.localeCompare(b.name))
   }, [category, search, status, uniqueServices])
+  const servicePageCount = Math.max(1, Math.ceil(filtered.length / SERVICE_PAGE_SIZE))
+  const visibleServices = useMemo(() => {
+    const safePage = Math.min(servicePage, servicePageCount)
+    return filtered.slice((safePage - 1) * SERVICE_PAGE_SIZE, safePage * SERVICE_PAGE_SIZE)
+  }, [filtered, servicePage, servicePageCount])
+
+  useEffect(() => {
+    setServicePage(1)
+  }, [category, search, status])
+
+  useEffect(() => {
+    setServicePage((page) => Math.min(page, servicePageCount))
+  }, [servicePageCount])
 
   const summary = useMemo(() => ({
     total: uniqueServices.length,
@@ -137,7 +154,7 @@ export function ServicesPageV15() {
 
         {filtered.length ? (
           <div className="svc15-grid">
-            {filtered.map((service) => (
+            {visibleServices.map((service) => (
               <article key={service.id} className={`svc15-card ${service.status === 'inactive' ? 'is-inactive' : ''}`}>
                 <div className="svc15-card-top"><span className="svc15-category">{service.category}</span><span className={`svc15-status ${service.status === 'active' ? 'is-active' : ''}`}>{service.status}</span></div>
                 <div className="svc15-card-icon"><Stethoscope size={21} /></div>
@@ -151,13 +168,14 @@ export function ServicesPageV15() {
         ) : (
           <div className="svc15-empty"><Search size={24} /><h3>No services match this view</h3><p>Adjust your filters or create a new service.</p><Button className="svc15-add-service-btn" onClick={add} icon={<Plus size={15} />}>Add service</Button></div>
         )}
+        <Pagination page={servicePage} pageCount={servicePageCount} totalItems={filtered.length} pageSize={SERVICE_PAGE_SIZE} onPageChange={setServicePage} label="Service library pages" />
 
         {showForm && <ServiceFormModalV15 mode={mode} service={editing} existingServices={uniqueServices} onSubmit={save} onClose={() => { setShowForm(false); setEditing(undefined) }} isSubmitting={saving} />}
 
         {viewing && (
           <div className="svc15-modal-backdrop" onClick={() => setViewing(null)}>
             <aside className="svc15-detail" role="dialog" aria-modal="true" aria-labelledby="svc15-detail-title" onClick={(event) => event.stopPropagation()}>
-              <div className="svc15-detail-head"><div><span>Service detail</span><h2 id="svc15-detail-title">{viewing.name}</h2><p>{viewing.category} · {viewing.status}</p></div><button type="button" onClick={() => setViewing(null)} aria-label="Close service details">×</button></div>
+              <div className="svc15-detail-head"><div><span>Service detail</span><h2 id="svc15-detail-title">{viewing.name}</h2><p>{viewing.category} · {viewing.status}</p></div><button type="button" onClick={() => setViewing(null)} aria-label="Close service details"><X size={19} /></button></div>
               <div className="svc15-detail-body"><div className="svc15-detail-icon"><Activity size={24} /></div><p>{viewing.description || 'No description provided.'}</p><div className="svc15-detail-metrics"><div><span>Catalogue price</span><strong>{formatServicePrice(viewing.price)}</strong></div><div><span>Duration</span><strong>{viewing.duration} minutes</strong></div><div><span>Status</span><strong>{viewing.status}</strong></div><div><span>Category</span><strong>{viewing.category}</strong></div></div></div>
               <div className="svc15-detail-actions"><Button variant="secondary" onClick={() => setViewing(null)}>Close</Button><Button onClick={() => edit(viewing)}>Edit service</Button></div>
             </aside>

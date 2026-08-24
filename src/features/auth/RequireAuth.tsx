@@ -1,4 +1,5 @@
 import { Navigate, useLocation } from 'react-router-dom'
+import { PortalSkeleton } from '../../components/ui/DesignSystem'
 import { useAuth } from './AuthContext'
 
 export function RequireAuth({ children }: { children: React.ReactNode }) {
@@ -6,11 +7,7 @@ export function RequireAuth({ children }: { children: React.ReactNode }) {
   const { user, isAuthenticated, isLoading } = useAuth()
 
   if (isLoading) {
-    return (
-      <main className="auth-page">
-        <div className="loading-state">Restoring secure session...</div>
-      </main>
-    )
+    return <PortalSkeleton variant="internal" message="Restoring secure session" />
   }
 
   if (!isAuthenticated) {

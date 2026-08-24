@@ -335,7 +335,7 @@
 
 .patient-portal-shell .badge-info { background: var(--portal-blue-soft); color: var(--portal-blue-deep); }
 .patient-portal-shell .badge-success { background: #ecfdf3; color: #15803d; }
-.patient-portal-shell .badge-warning { background: #fff7ed; color: #b45309; }
+.patient-portal-shell .badge-warning { background: #fefce8; color: #a16207; }
 .patient-portal-shell .badge-danger { background: #fef2f2; color: #b91c1c; }
 
 .patient-portal-shell .portal-sidebar-toggle {

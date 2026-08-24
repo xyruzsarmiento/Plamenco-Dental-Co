@@ -1,6 +1,6 @@
 import { RefreshCw, Send, Settings2 } from 'lucide-react'
 import { useState } from 'react'
-import { Badge } from '../../components/ui/Badge'
+import { Badge, StatusBadge } from '../../components/ui/Badge'
 import { Button } from '../../components/ui/Button'
 import { usePermissions } from '../auth/permissions'
 import {
@@ -170,7 +170,7 @@ export function CommunicationOperationsPanel({ actor }: CommunicationOperationsP
           <div key={log.id} className="communication-log-mini">
             <span>{log.channel.replace('_', ' ')}</span>
             <strong>{log.templateKey.replaceAll('_', ' ')}</strong>
-            <Badge tone={log.status === 'sent' || log.status === 'delivered' ? 'success' : log.status === 'failed' ? 'danger' : log.status === 'queued' || log.status === 'sending' ? 'warning' : 'neutral'}>{log.status}</Badge>
+            <StatusBadge status={log.status} variant="compact" />
           </div>
         )) : (
           <div className="empty-state-panel">No delivery records yet.</div>

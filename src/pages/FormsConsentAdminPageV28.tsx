@@ -3,29 +3,38 @@ import {
   Archive,
   CheckCircle2,
   ClipboardSignature,
+  CopyPlus,
+  Eye,
   FilePlus2,
   FileText,
   History,
-  LockKeyhole,
+  MoreHorizontal,
+  PencilLine,
   Plus,
   Search,
   Send,
   ShieldCheck,
   Sparkles,
+  Trash2,
   UsersRound,
   X,
 } from 'lucide-react'
-import { Badge } from '../components/ui/Badge'
+import { Badge, StatusBadge } from '../components/ui/Badge'
 import { Button } from '../components/ui/Button'
+import { SkeletonList } from '../components/ui/DesignSystem'
 import { PageScaffold } from '../components/ui/PageScaffold'
 import { getStoredBranches } from '../features/branches/branchStore'
 import {
   archiveTemplate,
+  archiveVersion,
   assignPublishedForm,
+  createDraftVersionFromVersion,
   createFormTemplateDraft,
   createNextDraftVersion,
+  deleteDraftVersion,
   listAssignments,
   listFormTemplates,
+  listFormVersionUsage,
   listFormVersions,
   publishVersion,
   sanitizeFormPreview,
@@ -71,6 +80,7 @@ const blankCreate = {
 const blankAssign = { patientId: '', versionId: '', branchId: '', appointmentId: '', clinicalVisitId: '', treatmentPlanId: '', treatmentId: '' }
 
 type ConfirmAction = 'publish' | 'archive' | null
+type DraftValues = Pick<FormVersionAdminRow, 'content' | 'requiresSignature' | 'signatureMethod' | 'effectiveDate'>
 
 function labelize(value: string) {
   return value.replaceAll('_', ' ').replace(/\b\w/g, (letter) => letter.toUpperCase())
@@ -82,7 +92,21 @@ function formatDate(value?: string) {
   return Number.isNaN(date.getTime()) ? value : date.toLocaleDateString('en-PH', { timeZone: 'Asia/Manila', year: 'numeric', month: 'short', day: 'numeric' })
 }
 
+function formatDateTime(value?: string) {
+  if (!value) return 'Not set'
+  const date = new Date(value)
+  return Number.isNaN(date.getTime())
+    ? value
+    : date.toLocaleString('en-PH', { timeZone: 'Asia/Manila', year: 'numeric', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })
+}
+
 function templateTone(status: string) {
+  if (status === 'published') return 'success' as const
+  if (status === 'archived') return 'neutral' as const
+  return 'warning' as const
+}
+
+function versionStatusTone(status: string) {
   if (status === 'published') return 'success' as const
   if (status === 'archived') return 'neutral' as const
   return 'warning' as const
@@ -93,6 +117,7 @@ export function FormsConsentAdminPageV28() {
   const branches = useMemo(() => getStoredBranches(), [])
   const [templates, setTemplates] = useState<FormTemplateAdminRow[]>([])
   const [versions, setVersions] = useState<FormVersionAdminRow[]>([])
+  const [versionUsage, setVersionUsage] = useState<Record<string, { assignmentCount: number; signedSubmissionCount: number; finalSubmissionCount: number }>>({})
   const [assignmentCount, setAssignmentCount] = useState(0)
   const [selectedTemplateId, setSelectedTemplateId] = useState<string | null>(null)
   const [selectedVersionId, setSelectedVersionId] = useState<string | null>(null)
@@ -103,6 +128,10 @@ export function FormsConsentAdminPageV28() {
   const [showCreate, setShowCreate] = useState(false)
   const [showAssign, setShowAssign] = useState(false)
   const [confirmAction, setConfirmAction] = useState<ConfirmAction>(null)
+  const [publishTargetId, setPublishTargetId] = useState<string | null>(null)
+  const [deleteTarget, setDeleteTarget] = useState<FormVersionAdminRow | null>(null)
+  const [viewingVersion, setViewingVersion] = useState<FormVersionAdminRow | null>(null)
+  const [openVersionMenuId, setOpenVersionMenuId] = useState<string | null>(null)
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState('all')
   const [createForm, setCreateForm] = useState(blankCreate)
@@ -133,7 +162,9 @@ export function FormsConsentAdminPageV28() {
       const [rows, assignments] = await Promise.all([listFormTemplates(), listAssignments(500)])
       setTemplates(rows)
       setAssignmentCount(assignments.length)
-      const nextId = preferredId ?? selectedTemplateId ?? rows[0]?.id ?? null
+      const preferredExists = preferredId ? rows.some((row) => row.id === preferredId) : false
+      const selectedExists = selectedTemplateId ? rows.some((row) => row.id === selectedTemplateId) : false
+      const nextId = preferredExists ? preferredId! : selectedExists ? selectedTemplateId! : rows[0]?.id ?? null
       setSelectedTemplateId(nextId)
       if (nextId) {
         const versionRows = await listFormVersions(nextId)
@@ -141,6 +172,7 @@ export function FormsConsentAdminPageV28() {
         setSelectedVersionId(versionRows[0]?.id ?? null)
       } else {
         setVersions([])
+        setVersionUsage({})
         setSelectedVersionId(null)
       }
     } catch (loadError) {
@@ -164,6 +196,25 @@ export function FormsConsentAdminPageV28() {
       .catch((loadError) => active && setError(loadError instanceof Error ? loadError.message : 'Could not load form versions.'))
     return () => { active = false }
   }, [selectedTemplateId])
+
+  useEffect(() => {
+    if (versions.length === 0) {
+      setVersionUsage({})
+      return
+    }
+    let active = true
+    void listFormVersionUsage(versions.map((version) => version.id))
+      .then((rows) => {
+        if (!active) return
+        setVersionUsage(Object.fromEntries(rows.map((row) => [row.versionId, {
+          assignmentCount: row.assignmentCount,
+          signedSubmissionCount: row.signedSubmissionCount,
+          finalSubmissionCount: row.finalSubmissionCount,
+        }])))
+      })
+      .catch((loadError) => active && setError(loadError instanceof Error ? loadError.message : 'Could not load version usage.'))
+    return () => { active = false }
+  }, [versions])
 
   useEffect(() => {
     if (!selectedDraft) return
@@ -200,13 +251,69 @@ export function FormsConsentAdminPageV28() {
     } finally { setBusy(false) }
   }
 
+  function getDraftValues(version: FormVersionAdminRow): DraftValues {
+    if (selectedDraft?.id === version.id) {
+      return {
+        content: draftForm.content,
+        requiresSignature: draftForm.requiresSignature,
+        signatureMethod: draftForm.signatureMethod,
+        effectiveDate: draftForm.effectiveDate || undefined,
+      }
+    }
+    return {
+      content: version.content,
+      requiresSignature: version.requiresSignature,
+      signatureMethod: version.signatureMethod,
+      effectiveDate: version.effectiveDate,
+    }
+  }
+
+  function validateDraftForPublish(version: FormVersionAdminRow) {
+    const values = getDraftValues(version)
+    const validationErrors: string[] = []
+    if (!values.content.trim()) validationErrors.push('Clinic-provided content is required before publishing.')
+    if (values.requiresSignature && values.signatureMethod === 'none') validationErrors.push('Choose a signature method before publishing a signature-required version.')
+    return validationErrors
+  }
+
+  function requestPublish(version: FormVersionAdminRow) {
+    setMessage(null)
+    setError(null)
+    if (version.versionStatus !== 'draft') {
+      setError('Only draft versions can be published.')
+      return
+    }
+    const validationErrors = validateDraftForPublish(version)
+    if (validationErrors.length > 0) {
+      setError(validationErrors.join(' '))
+      return
+    }
+    setSelectedVersionId(version.id)
+    setPublishTargetId(version.id)
+    setConfirmAction('publish')
+  }
+
+  function openVersionDetails(version: FormVersionAdminRow) {
+    setOpenVersionMenuId(null)
+    setSelectedVersionId(version.id)
+    setViewingVersion(version)
+  }
+
+  function editDraft(version: FormVersionAdminRow) {
+    setOpenVersionMenuId(null)
+    setSelectedVersionId(version.id)
+  }
+
   async function handlePublish() {
-    if (!selectedDraft) return
+    const target = versions.find((version) => version.id === publishTargetId) ?? selectedDraft
+    if (!target) return
     setBusy(true); setMessage(null); setError(null)
     try {
-      await publishVersion(selectedDraft.id)
+      if (selectedDraft?.id === target.id) await updateDraftVersion({ versionId: target.id, ...draftForm })
+      await publishVersion(target.id)
       setConfirmAction(null)
-      setMessage(`Version ${selectedDraft.versionNumber} published successfully.`)
+      setPublishTargetId(null)
+      setMessage(`Version ${target.versionNumber} published successfully.`)
       await loadTemplates(selectedTemplateId ?? undefined)
     } catch (publishError) {
       setError(publishError instanceof Error ? publishError.message : 'Form version could not be published.')
@@ -222,6 +329,41 @@ export function FormsConsentAdminPageV28() {
       await loadTemplates(selectedTemplate.id)
     } catch (versionError) {
       setError(versionError instanceof Error ? versionError.message : 'New draft version could not be created.')
+    } finally { setBusy(false) }
+  }
+
+  async function handleNewVersionFrom(version: FormVersionAdminRow) {
+    setBusy(true); setMessage(null); setError(null)
+    try {
+      const next = await createDraftVersionFromVersion(version.id)
+      setMessage(`Draft version ${next.versionNumber} created from version ${version.versionNumber}.`)
+      await loadTemplates(next.templateId)
+    } catch (versionError) {
+      setError(versionError instanceof Error ? versionError.message : 'New draft version could not be created.')
+    } finally { setBusy(false) }
+  }
+
+  async function handleDeleteDraft() {
+    if (!deleteTarget) return
+    setBusy(true); setMessage(null); setError(null)
+    try {
+      await deleteDraftVersion(deleteTarget.id)
+      setDeleteTarget(null)
+      setMessage(`Draft version ${deleteTarget.versionNumber} deleted.`)
+      await loadTemplates(selectedTemplateId ?? undefined)
+    } catch (deleteError) {
+      setError(deleteError instanceof Error ? deleteError.message : 'Draft could not be deleted.')
+    } finally { setBusy(false) }
+  }
+
+  async function handleArchiveVersion(version: FormVersionAdminRow) {
+    setBusy(true); setMessage(null); setError(null)
+    try {
+      await archiveVersion(version.id)
+      setMessage(`Version ${version.versionNumber} archived. Historical assignments and submissions were preserved.`)
+      await loadTemplates(selectedTemplateId ?? undefined)
+    } catch (archiveError) {
+      setError(archiveError instanceof Error ? archiveError.message : 'Version could not be archived.')
     } finally { setBusy(false) }
   }
 
@@ -300,7 +442,7 @@ export function FormsConsentAdminPageV28() {
         <div className="forms-v28-workspace">
           <section className="forms-v28-library">
             <header><div><span>Template library</span><h3>{filteredTemplates.length} forms</h3></div><Badge tone="info">Governed</Badge></header>
-            {loading ? <div className="forms-v28-skeleton"><i /><i /><i /></div> : filteredTemplates.length === 0 ? (
+            {loading ? <SkeletonList items={5} withAvatar /> : filteredTemplates.length === 0 ? (
               <div className="forms-v28-empty"><ClipboardSignature size={30} /><h3>No forms found</h3><p>Create a new clinic-authored draft or adjust the current filters.</p></div>
             ) : (
               <div className="forms-v28-template-list">
@@ -321,16 +463,19 @@ export function FormsConsentAdminPageV28() {
             ) : (
               <div className="forms-v28-detail-stack">
                 <header className="forms-v28-detail-head">
-                  <div><span>{labelize(selectedTemplate.category)}</span><h3>{selectedTemplate.title}</h3><p>{selectedTemplate.description || 'No description provided.'}</p></div>
+                  <div><span>{labelize(selectedTemplate.category)}</span><h3>{selectedTemplate.title}</h3>{selectedTemplate.description ? <p>{selectedTemplate.description}</p> : <p className="forms-v28-muted-value">No description</p>}</div>
                   <Badge tone={templateTone(selectedTemplate.status)}>{labelize(selectedTemplate.status)}</Badge>
                 </header>
 
-                <div className="forms-v28-meta-grid">
-                  <article><span>Applies to</span><strong>{labelize(selectedTemplate.appliesTo)}</strong></article>
-                  <article><span>Current version</span><strong>{selectedTemplate.currentVersionNumber ? `v${selectedTemplate.currentVersionNumber}` : 'Not published'}</strong></article>
-                  <article><span>Effective date</span><strong>{formatDate(selectedTemplate.effectiveDate)}</strong></article>
-                  <article><span>Signature</span><strong>{selectedTemplate.signatureMethod ? labelize(selectedTemplate.signatureMethod) : 'Not published'}</strong></article>
-                </div>
+                <section className="forms-v28-consent-summary">
+                  <header><div><span>{selectedTemplate.category === 'medical_history' ? 'Medical History Consent' : 'Consent template'}</span><h4>Governance summary</h4></div><StatusBadge status={selectedTemplate.status} variant="compact" /></header>
+                  <div className="forms-v28-meta-grid">
+                    <article><span>Applies to</span><strong>{labelize(selectedTemplate.appliesTo)}</strong></article>
+                    <article><span>Current version</span><strong>{selectedTemplate.currentVersionNumber ? `v${selectedTemplate.currentVersionNumber}` : 'Not published'}</strong></article>
+                    <article><span>Effective date</span><strong>{selectedTemplate.effectiveDate ? formatDate(selectedTemplate.effectiveDate) : 'Not set'}</strong></article>
+                    <article><span>Signature</span><strong>{selectedTemplate.signatureMethod ? labelize(selectedTemplate.signatureMethod) : 'Not published'}</strong></article>
+                  </div>
+                </section>
 
                 <div className="forms-v28-actions">
                   {selectedTemplate.status !== 'archived' && !selectedDraft && <Button variant="secondary" onClick={() => void handleNewVersion()} disabled={busy}><Plus size={15} /> New version</Button>}
@@ -340,23 +485,69 @@ export function FormsConsentAdminPageV28() {
                 <section className="forms-v28-version-card">
                   <header><div><span>Version history</span><h4>{versions.length} version{versions.length === 1 ? '' : 's'}</h4></div><History size={18} /></header>
                   {versions.length === 0 ? <div className="forms-v28-mini-empty">No versions recorded.</div> : versions.map((version) => (
-                    <button type="button" key={version.id} className={`forms-v28-version ${selectedVersionId === version.id ? 'active' : ''}`} onClick={() => setSelectedVersionId(version.id)}>
-                      <div><strong>Version {version.versionNumber}</strong><span>{version.publishedAt ? `Published ${formatDate(version.publishedAt)}` : 'Unpublished draft'}</span></div>
-                      <Badge tone={version.versionStatus === 'published' ? 'success' : 'warning'}>{labelize(version.versionStatus)}</Badge>
-                    </button>
+                    <article key={version.id} className={`forms-v28-version ${selectedVersionId === version.id ? 'active' : ''}`}>
+                      <button type="button" className="forms-v28-version-main" onClick={() => openVersionDetails(version)}>
+                        <div className="forms-v28-version-title">
+                          <strong>Version {version.versionNumber}</strong>
+                          <Badge tone={versionStatusTone(version.versionStatus)}>{labelize(version.versionStatus)}</Badge>
+                          <small>Effective {formatDate(version.effectiveDate)} · Modified {formatDateTime(version.updatedAt)}</small>
+                        </div>
+                        <div className="forms-v28-version-meta">
+                          <span><small>Effective</small><strong>{version.effectiveDate ? formatDate(version.effectiveDate) : 'Not set'}</strong></span>
+                          <span><small>Modified</small><strong>{formatDateTime(version.updatedAt)}</strong></span>
+                          <span><small>{version.versionStatus === 'draft' ? 'State' : 'Published'}</small><strong>{version.publishedAt ? formatDateTime(version.publishedAt) : 'Unpublished draft'}</strong></span>
+                        </div>
+                        <div className="forms-v28-version-flags">
+                          {(versionUsage[version.id]?.assignmentCount ?? 0) > 0 && <Badge tone="info">{versionUsage[version.id].assignmentCount} assigned</Badge>}
+                          {(versionUsage[version.id]?.signedSubmissionCount ?? 0) > 0 && <Badge tone="success">{versionUsage[version.id].signedSubmissionCount} signed</Badge>}
+                        </div>
+                      </button>
+                      <div className="forms-v28-version-menu-wrap">
+                        <button
+                          type="button"
+                          className="forms-v28-version-menu-trigger"
+                          aria-label={`Open actions for version ${version.versionNumber}`}
+                          aria-expanded={openVersionMenuId === version.id}
+                          onClick={(event) => { event.stopPropagation(); setOpenVersionMenuId(openVersionMenuId === version.id ? null : version.id) }}
+                        >
+                          <MoreHorizontal size={18} />
+                        </button>
+                        {openVersionMenuId === version.id && (
+                          <div className="forms-v28-version-menu" role="menu" aria-label={`Version ${version.versionNumber} actions`}>
+                            <button type="button" role="menuitem" onClick={() => openVersionDetails(version)}><Eye size={14} /><span>View</span></button>
+                            {version.versionStatus === 'draft' ? (
+                              <>
+                                <button type="button" role="menuitem" onClick={() => editDraft(version)}><PencilLine size={14} /><span>Edit draft</span></button>
+                                <button type="button" role="menuitem" onClick={() => { setOpenVersionMenuId(null); requestPublish(version) }} disabled={busy}><Send size={14} /><span>Publish</span></button>
+                                <button type="button" role="menuitem" className="danger" onClick={() => { setOpenVersionMenuId(null); setDeleteTarget(version) }} disabled={busy || (versionUsage[version.id]?.finalSubmissionCount ?? 0) > 0 || (versionUsage[version.id]?.assignmentCount ?? 0) > 0} title={(versionUsage[version.id]?.assignmentCount ?? 0) > 0 ? 'This draft is referenced by patient consent records and cannot be deleted.' : undefined}><Trash2 size={14} /><span>Delete draft</span></button>
+                              </>
+                            ) : (
+                              <>
+                                <button type="button" role="menuitem" onClick={() => { setOpenVersionMenuId(null); void handleNewVersionFrom(version) }} disabled={busy || Boolean(selectedDraft)} title={selectedDraft ? 'Save, publish, or delete the existing draft before creating another draft.' : undefined}><CopyPlus size={14} /><span>Create new draft</span></button>
+                                {version.versionStatus !== 'archived' && <button type="button" role="menuitem" onClick={() => { setOpenVersionMenuId(null); void handleArchiveVersion(version) }} disabled={busy}><Archive size={14} /><span>Archive</span></button>}
+                              </>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                      {version.versionStatus !== 'draft' && (versionUsage[version.id]?.finalSubmissionCount ?? 0) > 0 && (
+                        <p className="forms-v28-version-integrity">Referenced by finalized patient consent records. Historical wording is protected; use archive instead of deletion.</p>
+                      )}
+                    </article>
                   ))}
                 </section>
 
                 {selectedDraft && (
                   <section className="forms-v28-editor">
-                    <header><div><span>Editable draft</span><h4>Version {selectedDraft.versionNumber}</h4></div><LockKeyhole size={18} /></header>
+                    <header><div><span>Editable draft</span><h4>{selectedTemplate.title} · Version {selectedDraft.versionNumber}</h4></div><StatusBadge status="draft" variant="compact" /></header>
+                    <p className="forms-v28-editor-note">Draft edits are saved to this version only. Published consent wording remains immutable.</p>
                     <label>Clinic-provided content<textarea rows={12} value={draftForm.content} onChange={(event) => setDraftForm({ ...draftForm, content: event.target.value })} /></label>
                     <div className="forms-v28-form-grid">
                       <label>Effective date<input type="date" value={draftForm.effectiveDate} onChange={(event) => setDraftForm({ ...draftForm, effectiveDate: event.target.value })} /></label>
                       <label>Signature method<select value={draftForm.signatureMethod} disabled={!draftForm.requiresSignature} onChange={(event) => setDraftForm({ ...draftForm, signatureMethod: event.target.value as SignatureMethod })}>{signatureMethods.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}</select></label>
                     </div>
                     <label className="forms-v28-check"><input type="checkbox" checked={draftForm.requiresSignature} onChange={(event) => setDraftForm({ ...draftForm, requiresSignature: event.target.checked, signatureMethod: event.target.checked ? (draftForm.signatureMethod === 'none' ? 'typed_acknowledgement' : draftForm.signatureMethod) : 'none' })} /><span>This version requires a configured signature method.</span></label>
-                    <div className="forms-v28-actions end"><Button variant="secondary" onClick={() => void handleSaveDraft()} disabled={busy}>Save draft</Button><Button onClick={() => setConfirmAction('publish')} disabled={busy || !draftForm.content.trim()}>Publish version {selectedDraft.versionNumber}</Button></div>
+                    <div className="forms-v28-actions end"><Button variant="secondary" onClick={() => void handleSaveDraft()} disabled={busy}>Save draft</Button><Button onClick={() => requestPublish(selectedDraft)} disabled={busy || !draftForm.content.trim()}>Publish version {selectedDraft.versionNumber}</Button></div>
                   </section>
                 )}
 
@@ -400,12 +591,58 @@ export function FormsConsentAdminPageV28() {
         </div>
       )}
 
+      {viewingVersion && (
+        <div className="forms-v28-modal-backdrop" role="presentation" onMouseDown={(event) => event.target === event.currentTarget && setViewingVersion(null)}>
+          <section className="forms-v28-modal large forms-v28-version-modal" role="dialog" aria-modal="true" aria-labelledby="forms-v28-version-title">
+            <header>
+              <div><span>View version</span><h2 id="forms-v28-version-title">Version {viewingVersion.versionNumber}</h2><p>{selectedTemplate?.title ?? 'Medical History Consent'}</p></div>
+              <button type="button" onClick={() => setViewingVersion(null)} aria-label="Close version details"><X size={19} /></button>
+            </header>
+            <div className="forms-v28-modal-body">
+              <section className="forms-v28-version-modal-summary">
+                <StatusBadge status={viewingVersion.versionStatus} />
+                <div><span>Effective</span><strong>{viewingVersion.effectiveDate ? formatDate(viewingVersion.effectiveDate) : 'Not set'}</strong></div>
+                <div><span>Modified</span><strong>{formatDateTime(viewingVersion.updatedAt)}</strong></div>
+                <div><span>Published</span><strong>{viewingVersion.publishedAt ? formatDateTime(viewingVersion.publishedAt) : 'Not published'}</strong></div>
+                <div><span>Signature</span><strong>{viewingVersion.requiresSignature ? labelize(viewingVersion.signatureMethod) : 'Not required'}</strong></div>
+                <div><span>Usage</span><strong>{versionUsage[viewingVersion.id]?.assignmentCount ?? 0} assigned · {versionUsage[viewingVersion.id]?.signedSubmissionCount ?? 0} signed</strong></div>
+              </section>
+              {viewingVersion.versionStatus !== 'draft' && (versionUsage[viewingVersion.id]?.finalSubmissionCount ?? 0) > 0 && (
+                <div className="forms-v28-modal-note"><ShieldCheck size={18} /><span>This version is referenced by finalized patient consent records. Its historical content remains protected for auditability.</span></div>
+              )}
+              <section className="forms-v28-version-content">
+                <div><span>Clinic-provided content</span><StatusBadge status={viewingVersion.versionStatus} variant="compact" /></div>
+                <p>{sanitizeFormPreview(viewingVersion.content) || 'No content recorded.'}</p>
+              </section>
+            </div>
+            <footer>
+              <Button variant="secondary" onClick={() => setViewingVersion(null)}>Close</Button>
+              {viewingVersion.versionStatus === 'draft' && <Button variant="secondary" onClick={() => { setViewingVersion(null); editDraft(viewingVersion) }}>Edit draft</Button>}
+              {viewingVersion.versionStatus === 'draft' && <Button onClick={() => { setViewingVersion(null); requestPublish(viewingVersion) }}>Publish</Button>}
+              {viewingVersion.versionStatus !== 'draft' && <Button variant="secondary" onClick={() => { setViewingVersion(null); void handleNewVersionFrom(viewingVersion) }} disabled={busy || Boolean(selectedDraft)}>Create new draft</Button>}
+            </footer>
+          </section>
+        </div>
+      )}
+
       {confirmAction && (
         <div className="forms-v28-modal-backdrop" role="presentation">
           <section className="forms-v28-modal compact" role="dialog" aria-modal="true" aria-labelledby="forms-v28-confirm-title">
             <header><div><span>Confirm action</span><h2 id="forms-v28-confirm-title">{confirmAction === 'publish' ? 'Publish this version?' : 'Archive this form?'}</h2></div><button type="button" onClick={() => !busy && setConfirmAction(null)} aria-label="Close confirmation"><X size={19} /></button></header>
             <div className="forms-v28-modal-body"><div className="forms-v28-modal-note"><ShieldCheck size={18} /><span>{confirmAction === 'publish' ? 'Publishing makes this version immutable and available for patient assignment. Existing signed versions remain unchanged.' : 'Archiving stops new assignments while preserving historical assignments and submissions.'}</span></div></div>
             <footer><Button variant="secondary" onClick={() => setConfirmAction(null)} disabled={busy}>Cancel</Button><Button onClick={() => void (confirmAction === 'publish' ? handlePublish() : handleArchive())} disabled={busy}>{busy ? 'Working...' : confirmAction === 'publish' ? 'Publish version' : 'Archive form'}</Button></footer>
+          </section>
+        </div>
+      )}
+
+      {deleteTarget && (
+        <div className="forms-v28-modal-backdrop" role="presentation">
+          <section className="forms-v28-modal compact" role="dialog" aria-modal="true" aria-labelledby="forms-v28-delete-title">
+            <header><div><span>Delete draft</span><h2 id="forms-v28-delete-title">Delete version {deleteTarget.versionNumber}?</h2><p>{selectedTemplate?.title ?? 'Selected form template'}</p></div><button type="button" onClick={() => !busy && setDeleteTarget(null)} aria-label="Close delete confirmation"><X size={19} /></button></header>
+            <div className="forms-v28-modal-body">
+              <div className="forms-v28-modal-note danger"><Trash2 size={18} /><span>This draft has not been published. Deleting it cannot be undone, but published and signed consent records remain protected.</span></div>
+            </div>
+            <footer><Button variant="secondary" onClick={() => setDeleteTarget(null)} disabled={busy}>Keep draft</Button><Button variant="danger" onClick={() => void handleDeleteDraft()} disabled={busy}>{busy ? 'Deleting...' : 'Delete draft'}</Button></footer>
           </section>
         </div>
       )}

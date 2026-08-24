@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { ArrowLeft, ArrowRight, CalendarDays, FileText, Import, Mail, Phone, Plus, Search, Stethoscope, UserRound, UsersRound, WalletCards } from 'lucide-react'
-import { Badge } from '../components/ui/Badge'
+import { ArrowLeft, ArrowRight, CalendarDays, FileText, HeartPulse, Import, Mail, Phone, Plus, Search, Stethoscope, UserRound, UsersRound, WalletCards } from 'lucide-react'
+import { StatusBadge } from '../components/ui/Badge'
 import { Button } from '../components/ui/Button'
 import { Select } from '../components/ui/Select'
 import { usePermissions } from '../features/auth/permissions'
@@ -30,6 +30,7 @@ import type { Patient, PatientFormMode, PatientFormValues, PatientOrigin } from 
 import { getStoredProviders } from '../features/dentists/dentistStore'
 import { getStoredServices } from '../features/services/serviceStore'
 import { getTreatmentsByPatient } from '../features/treatments/treatmentStore'
+import { getRecallDueBucket, getStoredPatientRecalls, listPatientRecalls, type RecallQueueItem } from '../features/recalls/recallStore'
 
 type DetailTab = 'overview' | 'appointments' | 'treatments' | 'billing' | 'documents' | 'communications' | 'activity'
 
@@ -146,6 +147,7 @@ export function PatientsPageV10() {
   const [allowDuplicate, setAllowDuplicate] = useState(false)
   const [showRecordForm, setShowRecordForm] = useState(false)
   const [recordError, setRecordError] = useState<string | null>(null)
+  const [patientRecalls, setPatientRecalls] = useState<RecallQueueItem[]>([])
   const [recordValues, setRecordValues] = useState<DentalRecordFormValues>({
     patientId: '', recordDate: manilaToday(), visitType: 'consultation', chiefComplaint: '', clinicalFindings: '', assessment: '', treatmentPerformed: '', recommendations: '', patientVisibleSummary: '', diagnosis: '', treatmentPlan: '', findings: '', treatmentNotes: '', clinicalNotes: '', followUpRequired: false, followUpDate: '', followUpNotes: '', status: 'draft', relatedAppointmentId: '', source: 'native', lastUpdatedBy: 'Clinic user', createdBy: 'Clinic user',
   })
@@ -163,6 +165,10 @@ export function PatientsPageV10() {
     return patients.find((patient) => patient.patientId === id || patient.id === id) ?? null
   }, [patients, routePatientId])
   const patient360 = useMemo(() => selectedPatient ? getPatient360Summary(selectedPatient) : null, [selectedPatient])
+  const activePatientRecalls = useMemo(() => patientRecalls
+    .filter((item) => !['completed', 'dismissed', 'cancelled'].includes(item.status))
+    .sort((a, b) => String(a.dueDate ?? '9999-12-31').localeCompare(String(b.dueDate ?? '9999-12-31'))), [patientRecalls])
+  const nextPatientRecall = activePatientRecalls[0]
 
   const canCreate = permissions.can('patients.create')
   const canEdit = permissions.can('patients.edit_basic')
@@ -192,6 +198,21 @@ export function PatientsPageV10() {
   const growth = useMemo(() => registrationSeries(patients), [patients])
 
   useEffect(() => { setDetailTab('overview') }, [routePatientId])
+
+  useEffect(() => {
+    let active = true
+    if (!selectedPatient?.patientId) {
+      setPatientRecalls([])
+      return () => { active = false }
+    }
+
+    setPatientRecalls(getStoredPatientRecalls(selectedPatient.patientId))
+    void listPatientRecalls(selectedPatient.patientId)
+      .then((items) => { if (active) setPatientRecalls(items) })
+      .catch(() => { if (active) setPatientRecalls(getStoredPatientRecalls(selectedPatient.patientId)) })
+
+    return () => { active = false }
+  }, [selectedPatient?.patientId])
 
   function openAdd() {
     setFormMode('add'); setFormValues(emptyPatientValues()); setFormError(null); setDuplicateMatches([]); setAllowDuplicate(false); setShowForm(true)
@@ -261,7 +282,7 @@ export function PatientsPageV10() {
             <div><span className="patient-profile-kicker-v10">Patient 360</span><h2>{getPatientDisplayName(selectedPatient)}</h2><p>{selectedPatient.patientId} · {ageFromDob(selectedPatient.dateOfBirth)} · {branchName}</p></div>
           </div>
           <div className="patient-profile-status-v10">
-            <Badge tone={selectedPatient.status === 'active' ? 'success' : 'neutral'}>{selectedPatient.status}</Badge>
+            <StatusBadge status={selectedPatient.status} />
             <span>{selectedPatient.authUserId ? 'Portal connected' : 'Portal not connected'}</span>
           </div>
         </header>
@@ -281,13 +302,17 @@ export function PatientsPageV10() {
           {detailTab === 'overview' && <div className="patient-profile-overview-v10">
             <section className="patient-profile-panel-v10 patient-profile-main-v10"><div className="patient-profile-section-head-v10"><div><span>Clinical context</span><h3>Health & contact profile</h3></div></div><div className="patient-profile-detail-grid-v10">
               <div><span>Phone</span><strong>{selectedPatient.phone || 'Not recorded'}</strong></div><div><span>Email</span><strong>{selectedPatient.email || 'Not recorded'}</strong></div><div><span>Address</span><strong>{selectedPatient.address || 'Not recorded'}</strong></div><div><span>Emergency contact</span><strong>{selectedPatient.emergencyContact || 'Not recorded'}</strong></div>
-            </div><div className="patient-clinical-alerts-v10"><div className={selectedPatient.allergies ? 'is-alert' : ''}><span>Allergies</span><strong>{selectedPatient.allergies || 'None reported'}</strong></div><div><span>Medical conditions</span><strong>{selectedPatient.medicalConditions || 'None reported'}</strong></div><div><span>Current medications</span><strong>{selectedPatient.currentMedications || 'None recorded'}</strong></div></div></section>
-            <aside className="patient-profile-panel-v10"><div className="patient-profile-section-head-v10"><div><span>Care history</span><h3>Engagement</h3></div></div><div className="patient-engagement-v10"><div><strong>{patient360.appointmentStats.completed}</strong><span>Completed</span></div><div><strong>{patient360.appointmentStats.noShow}</strong><span>No-shows</span></div><div><strong>{patient360.treatments.length}</strong><span>Treatments</span></div><div><strong>{patient360.providerHistory.length}</strong><span>Providers</span></div></div><div className="patient-mini-timeline-v10">{patient360.activities.slice(0, 4).map((item) => <div key={item.id}><span /><div><strong>{item.label}</strong><small>{formatDate(item.date)} · {item.module}</small></div></div>)}{!patient360.activities.length && <p>No activity recorded.</p>}</div></aside>
+            </div><div className="patient-clinical-alerts-v10"><div className={selectedPatient.allergies ? 'is-alert' : ''}><span>Allergies</span><strong>{selectedPatient.allergies || 'None reported'}</strong></div><div><span>Medical conditions</span><strong>{selectedPatient.medicalConditions || 'None reported'}</strong></div><div><span>Current medications</span><strong>{selectedPatient.currentMedications || 'None recorded'}</strong></div></div>
+            <div className="contextual-followup-summary patient-contextual-followup">
+              <HeartPulse size={18} />
+              {nextPatientRecall ? <><span className={`contextual-followup-badge is-${getRecallDueBucket(nextPatientRecall)}`}>{getRecallDueBucket(nextPatientRecall).replaceAll('_', ' ')}</span><div><strong>{nextPatientRecall.dueDate ? formatDate(nextPatientRecall.dueDate) : 'Date not set'}</strong><p>{nextPatientRecall.reason || 'Follow-up recommended'}</p><small>{nextPatientRecall.providerName || 'Dentist not recorded'} · {nextPatientRecall.status.replaceAll('_', ' ')}</small></div></> : <div><strong>No active follow-up recommendation</strong><p>Clinical recalls and follow-ups will appear here when recorded.</p></div>}
+            </div></section>
+            <aside className="patient-profile-panel-v10"><div className="patient-profile-section-head-v10"><div><span>Care history</span><h3>Engagement</h3></div><strong>{patient360.activities.length}</strong></div><div className="patient-engagement-v10"><div><strong>{patient360.appointmentStats.completed}</strong><span>Completed</span></div><div><strong>{patient360.appointmentStats.noShow}</strong><span>No-shows</span></div><div><strong>{patient360.treatments.length}</strong><span>Treatments</span></div><div><strong>{patient360.providerHistory.length}</strong><span>Providers</span></div></div><div className="patient-mini-timeline-v10" aria-label={`Engagement history, ${patient360.activities.length} event${patient360.activities.length === 1 ? '' : 's'}`} tabIndex={patient360.activities.length > 7 ? 0 : undefined}>{patient360.activities.map((item) => <div key={item.id}><span /><div><strong>{item.label}</strong><small>{formatDate(item.date)} · {item.module}</small></div></div>)}{!patient360.activities.length && <p>No activity recorded.</p>}</div></aside>
           </div>}
 
-          {detailTab === 'appointments' && <section className="patient-profile-panel-v10"><div className="patient-profile-section-head-v10"><div><span>Visit history</span><h3>Appointments</h3></div><strong>{patient360.appointments.length}</strong></div><div className="patient-record-list-v10">{patient360.appointments.map((appointment) => <article key={appointment.id}><div><strong>{formatDate(appointment.date)} · {formatTime(appointment.startTime)}</strong><span>{serviceMap.get(appointment.serviceId)?.name ?? 'Service'} · {appointment.providerId ? providerMap.get(appointment.providerId)?.displayName ?? 'Dentist' : 'No dentist'}</span></div><Badge tone={appointment.status === 'completed' ? 'success' : appointment.status === 'cancelled' || appointment.status === 'no_show' ? 'danger' : 'info'}>{appointment.status.replaceAll('_', ' ')}</Badge></article>)}{!patient360.appointments.length && <div className="patient-empty-inline-v10">No appointments recorded.</div>}</div></section>}
+          {detailTab === 'appointments' && <section className="patient-profile-panel-v10"><div className="patient-profile-section-head-v10"><div><span>Visit history</span><h3>Appointments</h3></div><strong>{patient360.appointments.length}</strong></div><div className="patient-record-list-v10">{patient360.appointments.map((appointment) => <article key={appointment.id}><div><strong>{formatDate(appointment.date)} · {formatTime(appointment.startTime)}</strong><span>{serviceMap.get(appointment.serviceId)?.name ?? 'Service'} · {appointment.providerId ? providerMap.get(appointment.providerId)?.displayName ?? 'Dentist' : 'No dentist'}</span></div><StatusBadge status={appointment.status} variant="compact" /></article>)}{!patient360.appointments.length && <div className="patient-empty-inline-v10">No appointments recorded.</div>}</div></section>}
 
-          {detailTab === 'treatments' && <section className="patient-profile-panel-v10"><div className="patient-profile-section-head-v10"><div><span>Care delivered</span><h3>Treatments</h3></div><strong>{patient360.treatments.length}</strong></div><div className="patient-record-list-v10">{patient360.treatments.map((treatment) => <article key={treatment.id}><div><strong>{treatment.serviceNameSnapshot || serviceMap.get(treatment.serviceId)?.name || 'Treatment'}</strong><span>{formatDate(treatment.treatmentDate)} · {treatment.providerId ? providerMap.get(treatment.providerId)?.displayName ?? 'Dentist' : 'No dentist'}</span></div><Badge tone={treatment.status === 'completed' ? 'success' : 'info'}>{treatment.status}</Badge></article>)}{!patient360.treatments.length && <div className="patient-empty-inline-v10">No treatments recorded.</div>}</div></section>}
+          {detailTab === 'treatments' && <section className="patient-profile-panel-v10"><div className="patient-profile-section-head-v10"><div><span>Care delivered</span><h3>Treatments</h3></div><strong>{patient360.treatments.length}</strong></div><div className="patient-record-list-v10">{patient360.treatments.map((treatment) => <article key={treatment.id}><div><strong>{treatment.serviceNameSnapshot || serviceMap.get(treatment.serviceId)?.name || 'Treatment'}</strong><span>{formatDate(treatment.treatmentDate)} · {treatment.providerId ? providerMap.get(treatment.providerId)?.displayName ?? 'Dentist' : 'No dentist'}</span></div><StatusBadge status={treatment.status} variant="compact" /></article>)}{!patient360.treatments.length && <div className="patient-empty-inline-v10">No treatments recorded.</div>}</div></section>}
 
           {detailTab === 'billing' && <div className="patient-profile-overview-v10"><section className="patient-profile-panel-v10"><div className="patient-profile-section-head-v10"><div><span>Receivables</span><h3>Invoices</h3></div><strong>{formatCurrency(patient360.billing.outstandingBalanceCents)}</strong></div><div className="patient-record-list-v10">{patient360.invoices.map((invoice) => <article key={invoice.id}><div><strong>{invoice.invoiceNumber}</strong><span>{formatDate(invoice.invoiceDate)} · {invoice.status.replaceAll('_', ' ')}</span></div><strong>{formatCurrency(invoice.balanceCents)}</strong></article>)}{!patient360.invoices.length && <div className="patient-empty-inline-v10">No invoices recorded.</div>}</div></section><section className="patient-profile-panel-v10"><div className="patient-profile-section-head-v10"><div><span>Collections</span><h3>Payments</h3></div><strong>{patient360.payments.length}</strong></div><div className="patient-record-list-v10">{patient360.payments.map((payment) => <article key={payment.id}><div><strong>{payment.paymentNumber}</strong><span>{formatDate(payment.date)} · {payment.paymentMethod.replaceAll('_', ' ')}</span></div><strong>{formatCurrency(payment.amountCents)}</strong></article>)}{!patient360.payments.length && <div className="patient-empty-inline-v10">No payments recorded.</div>}</div></section></div>}
 
@@ -336,7 +361,7 @@ export function PatientsPageV10() {
             const next = patientAppointments.filter((appointment) => appointment.date >= manilaToday() && !['cancelled', 'completed', 'no_show'].includes(appointment.status)).sort((a, b) => a.date.localeCompare(b.date))[0]
             const treatmentCount = getTreatmentsByPatient(patient.patientId).length
             return <article key={patient.id} className="patient-directory-row-v10" onClick={() => navigate(`/app/patients/${encodeURIComponent(patient.patientId)}`)}>
-              <div className="patient-directory-person-v10"><div className="patient-directory-avatar-v10">{initials(patient)}</div><div><strong>{getPatientDisplayName(patient)}</strong><span>{patient.patientId}</span><Badge tone={patient.status === 'active' ? 'success' : 'neutral'}>{patient.status}</Badge></div></div>
+              <div className="patient-directory-person-v10"><div className="patient-directory-avatar-v10">{initials(patient)}</div><div><strong>{getPatientDisplayName(patient)}</strong><span>{patient.patientId}</span><StatusBadge status={patient.status} variant="compact" /></div></div>
               <div className="patient-directory-contact-v10"><span><Mail size={14} />{patient.email || 'No email'}</span><span><Phone size={14} />{patient.phone || 'No phone'}</span></div>
               <div className="patient-directory-context-v10"><strong>{patient.preferredBranchId ? branchMap.get(patient.preferredBranchId)?.name ?? 'Unknown branch' : 'No preferred branch'}</strong><span>{originLabels[patient.origin ?? 'staff_created']} · {treatmentCount} treatment{treatmentCount === 1 ? '' : 's'}</span></div>
               <div className="patient-directory-next-v10"><strong>{next ? formatDate(next.date) : 'No upcoming visit'}</strong><span>{next ? `${formatTime(next.startTime)} · ${serviceMap.get(next.serviceId)?.name ?? 'Service'}` : 'No appointment scheduled'}</span></div>

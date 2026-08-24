@@ -19,7 +19,7 @@ import {
   UsersRound,
 } from 'lucide-react'
 import { useState } from 'react'
-import { Badge } from '../components/ui/Badge'
+import { Badge, StatusBadge } from '../components/ui/Badge'
 import { Button } from '../components/ui/Button'
 import { Select } from '../components/ui/Select'
 import {
@@ -74,17 +74,11 @@ const sections: Array<{ key: AdminSection; label: string; icon: typeof Activity 
   { key: 'health', label: 'System Health', icon: Database },
 ]
 
-const internalRoles: Array<Exclude<UserRole, 'patient'>> = ['super_admin', 'admin', 'dentist', 'associate_dentist', 'staff']
+const internalRoles: Array<Exclude<UserRole, 'patient'>> = ['super_admin', 'dentist', 'associate_dentist', 'staff']
 
 function formatDate(value: string) {
   const date = new Date(value)
   return Number.isNaN(date.getTime()) ? value : date.toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' })
-}
-
-function toneFor(status: 'healthy' | 'warning' | 'attention') {
-  if (status === 'healthy') return 'success'
-  if (status === 'warning') return 'warning'
-  return 'danger'
 }
 
 function operationalTone(status: OperationalState): 'success' | 'warning' | 'danger' | 'neutral' | 'info' {
@@ -319,7 +313,7 @@ export function SystemAdministrationPage() {
           <div className="analytics-grid">
             <section className="panel table-panel">
               <div className="chart-header"><div><span className="chart-kicker">System status</span><h3>Configuration checks</h3></div><ServerCog size={18} /></div>
-              <div className="table-scroll"><table className="table"><tbody>{[...snapshot.integrationDiagnostics, ...snapshot.securityDiagnostics].map((item) => <tr key={item.id}><td><strong>{item.label}</strong><span>{item.detail}</span></td><td><Badge tone={toneFor(item.status)}>{item.status}</Badge></td></tr>)}</tbody></table></div>
+              <div className="table-scroll"><table className="table"><tbody>{[...snapshot.integrationDiagnostics, ...snapshot.securityDiagnostics].map((item) => <tr key={item.id}><td><strong>{item.label}</strong><span>{item.detail}</span></td><td><StatusBadge status={item.status} variant="compact" /></td></tr>)}</tbody></table></div>
             </section>
             <section className="panel table-panel">
               <div className="chart-header"><div><span className="chart-kicker">Administrative changes</span><h3>Recent activity</h3></div><FileText size={18} /></div>
@@ -334,8 +328,8 @@ export function SystemAdministrationPage() {
           <section className="panel table-panel">
             <div className="chart-header"><div><span className="chart-kicker">Internal accounts</span><h3>Users and access status</h3></div><UsersRound size={18} /></div>
             <div className="table-scroll"><table className="table"><thead><tr><th>Name</th><th>Role</th><th>Status</th><th>Contact</th><th>Action</th></tr></thead><tbody>
-              {staff.map((member) => <tr key={member.id}><td><strong>{member.name}</strong><span>Created {member.createdAt.slice(0, 10)}</span></td><td>{roleLabels[member.role]}</td><td><Badge tone={member.status === 'active' ? 'success' : 'neutral'}>{member.status}</Badge></td><td>{member.email}<span>{member.phone}</span></td><td><Button size="sm" variant="secondary" onClick={() => toggleAccount(member.id, member.status === 'active' ? 'inactive' : 'active')}>{member.status === 'active' ? 'Deactivate' : 'Activate'}</Button></td></tr>)}
-              {invitations.map((invite) => <tr key={invite.id}><td><strong>{invite.name}</strong><span>{invite.email}</span></td><td>{roleLabels[invite.role]}</td><td><Badge tone={invite.status === 'failed' ? 'danger' : invite.status === 'sent' ? 'success' : 'warning'}>{invite.status}</Badge></td><td>{invite.branchIds.length} branch assignment(s)</td><td>Invitation metadata</td></tr>)}
+              {staff.map((member) => <tr key={member.id}><td><strong>{member.name}</strong><span>Created {member.createdAt.slice(0, 10)}</span></td><td>{roleLabels[member.role]}</td><td><StatusBadge status={member.status} variant="compact" /></td><td>{member.email}<span>{member.phone}</span></td><td><Button size="sm" variant="secondary" onClick={() => toggleAccount(member.id, member.status === 'active' ? 'inactive' : 'active')}>{member.status === 'active' ? 'Deactivate' : 'Activate'}</Button></td></tr>)}
+              {invitations.map((invite) => <tr key={invite.id}><td><strong>{invite.name}</strong><span>{invite.email}</span></td><td>{roleLabels[invite.role]}</td><td><StatusBadge status={invite.status} variant="compact" /></td><td>{invite.branchIds.length} branch assignment(s)</td><td>Invitation metadata</td></tr>)}
             </tbody></table></div>
           </section>
           <section className="panel">
@@ -369,7 +363,7 @@ export function SystemAdministrationPage() {
         <section className="panel table-panel">
           <div className="chart-header"><div><span className="chart-kicker">Branch configuration</span><h3>Pulilan and Plaridel foundation</h3></div><Building2 size={18} /></div>
           <div className="table-scroll"><table className="table"><thead><tr><th>Branch</th><th>Code</th><th>Contact</th><th>Hours</th><th>Status</th></tr></thead><tbody>
-            {branches.map((branch) => <tr key={branch.id}><td><strong>{branch.name}</strong><span>{branch.address}</span></td><td>{branch.code}</td><td>{branch.phone || 'No phone'}<span>{branch.email || 'No email'}</span></td><td>{branch.openingTime} - {branch.closingTime}</td><td><Badge tone={branch.status === 'active' ? 'success' : 'neutral'}>{branch.status}</Badge></td></tr>)}
+            {branches.map((branch) => <tr key={branch.id}><td><strong>{branch.name}</strong><span>{branch.address}</span></td><td>{branch.code}</td><td>{branch.phone || 'No phone'}<span>{branch.email || 'No email'}</span></td><td>{branch.openingTime} - {branch.closingTime}</td><td><StatusBadge status={branch.status} variant="compact" /></td></tr>)}
           </tbody></table></div>
         </section>
       )}
@@ -393,7 +387,7 @@ export function SystemAdministrationPage() {
         <section className="panel table-panel">
           <div className="chart-header"><div><span className="chart-kicker">Service configuration</span><h3>Current service catalog</h3></div><Stethoscope size={18} /></div>
           <div className="table-scroll"><table className="table"><thead><tr><th>Service</th><th>Category</th><th>Duration</th><th>Price</th><th>Status</th></tr></thead><tbody>
-            {services.map((service) => <tr key={service.id}><td><strong>{service.name}</strong><span>{service.description || 'No description'}</span></td><td>{service.category}</td><td>{service.duration} min</td><td>{new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP' }).format(service.price / 100)}</td><td><Badge tone={service.status === 'active' ? 'success' : 'neutral'}>{service.status}</Badge></td></tr>)}
+            {services.map((service) => <tr key={service.id}><td><strong>{service.name}</strong><span>{service.description || 'No description'}</span></td><td>{service.category}</td><td>{service.duration} min</td><td>{new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP' }).format(service.price / 100)}</td><td><StatusBadge status={service.status} variant="compact" /></td></tr>)}
           </tbody></table></div>
           <p className="muted">Current service prices are administrative settings. Historical treatments, charges, and invoices keep their existing price snapshots.</p>
         </section>
@@ -458,7 +452,7 @@ export function SystemAdministrationPage() {
       {activeSection === 'integrations' && (
         <section className="panel table-panel">
           <div className="chart-header"><div><span className="chart-kicker">Integrations</span><h3>Safe configuration status</h3></div><ServerCog size={18} /></div>
-          <div className="table-scroll"><table className="table"><tbody>{snapshot.integrationDiagnostics.map((item) => <tr key={item.id}><td><strong>{item.label}</strong><span>{item.detail}</span></td><td><Badge tone={toneFor(item.status)}>{item.status}</Badge></td></tr>)}</tbody></table></div>
+          <div className="table-scroll"><table className="table"><tbody>{snapshot.integrationDiagnostics.map((item) => <tr key={item.id}><td><strong>{item.label}</strong><span>{item.detail}</span></td><td><StatusBadge status={item.status} variant="compact" /></td></tr>)}</tbody></table></div>
           <p className="muted">Integration tests should be executed by server-side functions with rate limits and approved recipients.</p>
         </section>
       )}
@@ -478,8 +472,8 @@ export function SystemAdministrationPage() {
 
       {activeSection === 'security' && (
         <div className="analytics-grid">
-          <section className="panel table-panel"><div className="chart-header"><div><span className="chart-kicker">Security center</span><h3>Account and session checks</h3></div><KeyRound size={18} /></div><div className="table-scroll"><table className="table"><tbody>{snapshot.securityDiagnostics.map((item) => <tr key={item.id}><td><strong>{item.label}</strong><span>{item.detail}</span></td><td><Badge tone={toneFor(item.status)}>{item.status}</Badge></td></tr>)}</tbody></table></div><div style={{ marginTop: 12 }}><Button variant="danger" onClick={signOut}>Sign out current session</Button></div></section>
-          <section className="panel table-panel"><div className="chart-header"><div><span className="chart-kicker">Profile integrity</span><h3>Auth linkage diagnostics</h3></div><ShieldCheck size={18} /></div><div className="table-scroll"><table className="table"><tbody>{snapshot.dataIntegrityDiagnostics.map((item) => <tr key={item.id}><td><strong>{item.label}</strong><span>{item.detail}</span></td><td><Badge tone={toneFor(item.status)}>{item.status}</Badge></td></tr>)}</tbody></table></div></section>
+          <section className="panel table-panel"><div className="chart-header"><div><span className="chart-kicker">Security center</span><h3>Account and session checks</h3></div><KeyRound size={18} /></div><div className="table-scroll"><table className="table"><tbody>{snapshot.securityDiagnostics.map((item) => <tr key={item.id}><td><strong>{item.label}</strong><span>{item.detail}</span></td><td><StatusBadge status={item.status} variant="compact" /></td></tr>)}</tbody></table></div><div style={{ marginTop: 12 }}><Button variant="danger" onClick={signOut}>Sign out current session</Button></div></section>
+          <section className="panel table-panel"><div className="chart-header"><div><span className="chart-kicker">Profile integrity</span><h3>Auth linkage diagnostics</h3></div><ShieldCheck size={18} /></div><div className="table-scroll"><table className="table"><tbody>{snapshot.dataIntegrityDiagnostics.map((item) => <tr key={item.id}><td><strong>{item.label}</strong><span>{item.detail}</span></td><td><StatusBadge status={item.status} variant="compact" /></td></tr>)}</tbody></table></div></section>
         </div>
       )}
 
@@ -513,7 +507,7 @@ export function SystemAdministrationPage() {
                   <tr key={job.id}>
                     <td><strong>{job.jobName}</strong><span>{job.nextScheduledRun ?? 'Next run unknown'}</span></td>
                     <td>{formatDate(job.startedAt)}<span>{job.finishedAt ? `Finished ${formatDate(job.finishedAt)}` : 'Finish time unavailable'}</span></td>
-                    <td><Badge tone={job.status === 'succeeded' ? 'success' : job.status === 'failed' ? 'danger' : job.status === 'partial' ? 'warning' : 'neutral'}>{job.status}</Badge><span>{job.processed} processed, {job.failed} failed</span></td>
+                    <td><StatusBadge status={job.status} variant="compact" /><span>{job.processed} processed, {job.failed} failed</span></td>
                   </tr>
                 ))}
               </tbody></table></div>
@@ -535,8 +529,8 @@ export function SystemAdministrationPage() {
                   <tr key={backup.id}>
                     <td><strong>{labelize(backup.kind)}</strong><span>{backup.environment} - {formatBytes(backup.sizeBytes)}</span></td>
                     <td><strong>{backup.location}</strong><span>{backup.checksum ? `Checksum ${backup.checksum}` : backup.retentionPolicy ?? 'Retention not recorded'}</span></td>
-                    <td><Badge tone={backup.status === 'completed' ? 'success' : backup.status === 'failed' ? 'danger' : 'warning'}>{backup.status}</Badge><span>{backup.completedAt ? formatDate(backup.completedAt) : formatDate(backup.startedAt)}</span></td>
-                    <td><Badge tone={backup.verificationStatus === 'verified' ? 'success' : backup.verificationStatus === 'verification_failed' ? 'danger' : 'warning'}>{labelize(backup.verificationStatus)}</Badge></td>
+                    <td><StatusBadge status={backup.status} variant="compact" /><span>{backup.completedAt ? formatDate(backup.completedAt) : formatDate(backup.startedAt)}</span></td>
+                    <td><StatusBadge status={backup.verificationStatus} label={labelize(backup.verificationStatus)} variant="compact" /></td>
                   </tr>
                 ))}
                 {systemHealth.backupRegistry.length === 0 && <tr><td colSpan={4}>No backup evidence recorded. Confirm Supabase backup capabilities before production migration or import.</td></tr>}
@@ -554,7 +548,7 @@ export function SystemAdministrationPage() {
                   <tr key={plan.id}>
                     <td><strong>{plan.reason}</strong><span>{plan.impact}</span></td>
                     <td>{plan.targetEnvironment}<span>{plan.dataScope}</span></td>
-                    <td><Badge tone={plan.status === 'approved' ? 'warning' : plan.status === 'completed' ? 'success' : plan.status === 'cancelled' ? 'neutral' : 'info'}>{plan.status}</Badge></td>
+                    <td><StatusBadge status={plan.status} variant="compact" /></td>
                     <td>{plan.status === 'draft' ? <Button size="sm" variant="secondary" onClick={() => { approveRestorePlan(plan.id, actor); setRefreshKey((entry) => entry + 1) }}>Approve plan</Button> : plan.approvedBy ?? 'Not approved'}</td>
                   </tr>
                 ))}

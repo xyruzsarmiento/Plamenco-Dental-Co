@@ -4,6 +4,11 @@ const STAFF_STORAGE_KEY = 'plamenco.staff.accounts'
 
 const seedStaff: StaffMember[] = []
 
+function normalizeStaffMember(member: StaffMember): StaffMember {
+  const legacyRole = (member as { role?: unknown }).role
+  return legacyRole === 'admin' ? { ...member, role: 'staff', position: member.position || 'Staff' } : member
+}
+
 function safeParseStaff(value: string | null): StaffMember[] | null {
   if (!value) {
     return null
@@ -11,7 +16,7 @@ function safeParseStaff(value: string | null): StaffMember[] | null {
 
   try {
     const parsed = JSON.parse(value) as StaffMember[]
-    return Array.isArray(parsed) ? parsed : null
+    return Array.isArray(parsed) ? parsed.map(normalizeStaffMember) : null
   } catch {
     return null
   }

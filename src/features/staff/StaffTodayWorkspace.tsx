@@ -1,9 +1,10 @@
-import { CalendarPlus, CheckCircle2, Clock3, CreditCard, MessageSquareText, Search, UserPlus, UsersRound } from 'lucide-react'
-import { useMemo, useState } from 'react'
+import { CalendarPlus, CheckCircle2, Clock3, CreditCard, Search, UserPlus, UsersRound } from 'lucide-react'
+import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Badge } from '../../components/ui/Badge'
+import { Badge, StatusBadge } from '../../components/ui/Badge'
 import { Button } from '../../components/ui/Button'
 import { DashboardBarChart, DashboardTrendChart } from '../../components/ui/DashboardChart'
+import { Pagination } from '../../components/ui/DesignSystem'
 import { getStoredAppointments } from '../appointments/appointmentStore'
 import { getStoredBranches } from '../branches/branchStore'
 import { getStoredProviders } from '../dentists/dentistStore'
@@ -40,16 +41,14 @@ function formatTime(value: string) {
   return `${hours % 12 || 12}:${String(minutes).padStart(2, '0')} ${suffix}`
 }
 
-function tone(status: string): 'success' | 'warning' | 'danger' | 'info' | 'neutral' {
-  if (['confirmed', 'completed', 'paid'].includes(status)) return 'success'
-  if (['pending', 'checked_in', 'waiting', 'in_progress', 'partially_paid'].includes(status)) return 'warning'
-  if (['cancelled', 'rejected', 'no_show'].includes(status)) return 'danger'
-  return 'info'
-}
+const DASHBOARD_PAGE_SIZE = 8
+const QUEUE_PAGE_SIZE = 5
 
 export function StaffTodayWorkspace() {
   const navigate = useNavigate()
   const [query, setQuery] = useState('')
+  const [appointmentPage, setAppointmentPage] = useState(1)
+  const [queuePage, setQueuePage] = useState(1)
   const today = manilaToday()
 
   const appointments = useMemo(() => getStoredAppointments(), [])
@@ -86,6 +85,15 @@ export function StaffTodayWorkspace() {
       .filter((patient) => [getPatientDisplayName(patient), patient.patientId, patient.phone, patient.email].join(' ').toLowerCase().includes(normalized))
       .slice(0, 6)
   }, [patients, query])
+  const appointmentPageCount = Math.max(1, Math.ceil(todayAppointments.length / DASHBOARD_PAGE_SIZE))
+  const queuePageCount = Math.max(1, Math.ceil(queue.length / QUEUE_PAGE_SIZE))
+  const visibleAppointments = todayAppointments.slice((Math.min(appointmentPage, appointmentPageCount) - 1) * DASHBOARD_PAGE_SIZE, Math.min(appointmentPage, appointmentPageCount) * DASHBOARD_PAGE_SIZE)
+  const visibleQueue = queue.slice((Math.min(queuePage, queuePageCount) - 1) * QUEUE_PAGE_SIZE, Math.min(queuePage, queuePageCount) * QUEUE_PAGE_SIZE)
+
+  useEffect(() => {
+    setAppointmentPage((page) => Math.min(page, appointmentPageCount))
+    setQueuePage((page) => Math.min(page, queuePageCount))
+  }, [appointmentPageCount, queuePageCount])
 
   return (
     <div className="staff-today-workspace">
@@ -123,7 +131,7 @@ export function StaffTodayWorkspace() {
             <div className="staff-empty-state"><CalendarPlus size={22} /><strong>No appointments today</strong><span>The live schedule will appear here when appointments are available.</span></div>
           ) : (
             <div className="staff-appointment-list">
-              {todayAppointments.slice(0, 12).map((appointment) => {
+              {visibleAppointments.map((appointment) => {
                 const patient = patientMap.get(appointment.patientId)
                 return (
                   <button key={appointment.id} type="button" className="staff-appointment-row" onClick={() => navigate('/app/appointments')}>
@@ -134,21 +142,23 @@ export function StaffTodayWorkspace() {
                     </div>
                     <div className="staff-appointment-meta">
                       <span>{branches.get(appointment.branchId ?? '')?.name ?? 'Branch not set'}</span>
-                      <Badge tone={tone(appointment.status)}>{appointment.status.replaceAll('_', ' ')}</Badge>
+                      <StatusBadge status={appointment.status} variant="compact" />
                     </div>
                   </button>
                 )
               })}
             </div>
           )}
+          <Pagination page={appointmentPage} pageCount={appointmentPageCount} totalItems={todayAppointments.length} pageSize={DASHBOARD_PAGE_SIZE} onPageChange={setAppointmentPage} label="Today appointment pages" />
         </section>
 
         <aside className="staff-side-stack">
           <section className="staff-panel">
             <div className="staff-section-header"><div><p className="eyebrow">Live queue</p><h2>Patients in clinic</h2></div><Badge tone="info">{queue.length}</Badge></div>
             {queue.length === 0 ? <div className="staff-empty-state compact"><UsersRound size={20} /><span>No patients currently queued.</span></div> : (
-              <div className="staff-queue-list">{queue.map((row) => <div key={row.id}><span>{formatTime(row.startTime)}</span><strong>{patientMap.get(row.patientId) ? getPatientDisplayName(patientMap.get(row.patientId)!) : row.patientId}</strong><Badge tone={tone(row.status)}>{row.status.replaceAll('_', ' ')}</Badge></div>)}</div>
+              <div className="staff-queue-list">{visibleQueue.map((row) => <div key={row.id}><span>{formatTime(row.startTime)}</span><strong>{patientMap.get(row.patientId) ? getPatientDisplayName(patientMap.get(row.patientId)!) : row.patientId}</strong><StatusBadge status={row.status} variant="compact" /></div>)}</div>
             )}
+            <Pagination page={queuePage} pageCount={queuePageCount} totalItems={queue.length} pageSize={QUEUE_PAGE_SIZE} onPageChange={setQueuePage} label="Patients in clinic pages" />
           </section>
 
           <section className="staff-panel">
@@ -162,11 +172,7 @@ export function StaffTodayWorkspace() {
       <section className="staff-quick-actions">
         <button type="button" onClick={() => navigate('/app/appointments')}><CalendarPlus size={18} /><span><strong>Book / walk-in</strong><small>Create or manage appointments</small></span></button>
         <button type="button" onClick={() => navigate('/app/billing')}><CreditCard size={18} /><span><strong>Payment handoff</strong><small>Open billing and payment records</small></span></button>
-        <button type="button" onClick={() => navigate('/app/communications')}><MessageSquareText size={18} /><span><strong>Communications</strong><small>Reminders and patient messages</small></span></button>
-        <button type="button" onClick={() => navigate('/app/tasks')}><CheckCircle2 size={18} /><span><strong>Tasks</strong><small>Open operational work queue</small></span></button>
       </section>
-
-      {pending.length > 0 && <div className="staff-attention-strip"><strong>{pending.length} appointment request{pending.length === 1 ? '' : 's'} need attention.</strong><button type="button" onClick={() => navigate('/app/appointments')}>Review now</button></div>}
     </div>
   )
 }

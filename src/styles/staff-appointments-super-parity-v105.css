@@ -394,3 +394,30 @@
   .appointments-v40 .sa-appointments-branch-bar{grid-column:1/-1!important;grid-row:2!important}
   .appointments-v40 .sa-appointments-week-strip{grid-template-columns:repeat(7,108px)!important}
 }
+
+/* Today's Patient Journey: compact operational flow board */
+.appointments-v40 .sa-appointments-flow-board{overflow:hidden!important}
+.appointments-v40 .operations-columns{align-items:start!important}
+.appointments-v40 .sa-appointments-flow-column{display:grid!important;grid-template-rows:auto minmax(0,1fr)!important;min-height:250px!important;max-height:min(58vh,610px)!important;overflow:hidden!important}
+.appointments-v40 .operations-column-header{position:sticky!important;top:0!important;z-index:2!important;display:flex!important;align-items:center!important;justify-content:space-between!important;gap:10px!important}
+.appointments-v40 .operations-card-list{display:grid!important;align-content:start!important;gap:7px!important;min-height:0!important;max-height:min(50vh,535px)!important;padding:8px!important;overflow-y:auto!important;overflow-x:hidden!important;overscroll-behavior:contain!important;scrollbar-width:thin!important}
+.appointments-v40 .sa-appointments-flow-card{display:grid!important;grid-template-columns:minmax(0,1fr) auto!important;grid-template-areas:"patient time" "meta meta" "actions actions"!important;gap:7px 10px!important;min-height:0!important;padding:10px 11px!important;border:1px solid #e3eaf3!important;border-radius:12px!important;background:#fff!important;box-shadow:none!important}
+.appointments-v40 .sa-appointments-flow-card:hover{border-color:#bfdbfe!important;background:#fbfdff!important;box-shadow:0 8px 18px rgba(37,99,235,.055)!important}
+.appointments-v40 .sa-appointments-flow-card .operations-card-time{grid-area:time!important;display:grid!important;justify-items:end!important;align-content:start!important;gap:2px!important;min-width:86px!important}
+.appointments-v40 .sa-appointments-flow-card .operations-card-time strong{color:#172033!important;font-size:.83rem!important;line-height:1!important;font-weight:900!important;letter-spacing:0!important}
+.appointments-v40 .sa-appointments-flow-card .operations-card-time span{max-width:100px!important;color:#2563eb!important;font-size:.62rem!important;line-height:1.1!important;font-weight:850!important;text-align:right!important;overflow:hidden!important;text-overflow:ellipsis!important;white-space:nowrap!important}
+.appointments-v40 .sa-appointments-flow-card>div:not([class]){grid-area:patient!important;display:grid!important;gap:2px!important;min-width:0!important}
+.appointments-v40 .sa-appointments-flow-card h4{margin:0!important;color:#111827!important;font-size:.86rem!important;line-height:1.15!important;font-weight:900!important;letter-spacing:0!important;overflow:hidden!important;text-overflow:ellipsis!important;white-space:nowrap!important}
+.appointments-v40 .sa-appointments-flow-card p{margin:0!important;color:#64748b!important;font-size:.68rem!important;line-height:1.2!important;font-weight:750!important;overflow:hidden!important;text-overflow:ellipsis!important;white-space:nowrap!important}
+.appointments-v40 .sa-appointments-flow-card .operations-card-meta{grid-area:meta!important;display:flex!important;align-items:center!important;gap:5px 9px!important;flex-wrap:wrap!important;min-width:0!important;padding-top:2px!important}
+.appointments-v40 .sa-appointments-flow-card .operations-card-meta span{min-width:0!important;color:#526077!important;font-size:.67rem!important;line-height:1.25!important;font-weight:750!important}
+.appointments-v40 .sa-appointments-flow-card .operations-card-meta span+span::before{content:"";display:inline-block;width:3px;height:3px;margin:0 8px 2px 0;border-radius:999px;background:#cbd5e1}
+.appointments-v40 .sa-appointments-flow-card .operations-card-meta span:last-child:not(:nth-child(2)){padding:2px 6px!important;border-radius:999px!important;background:#fefce8!important;color:#854d0e!important}
+.appointments-v40 .sa-appointments-flow-card .operations-card-actions{grid-area:actions!important;display:flex!important;align-items:center!important;justify-content:flex-start!important;gap:6px!important;flex-wrap:wrap!important;padding-top:6px!important;border-top:1px solid #eef2f7!important}
+.appointments-v40 .sa-appointments-flow-card .operations-card-action{min-height:28px!important;margin:0!important;padding:0 8px!important;border:1px solid #dbe3ee!important;border-radius:8px!important;background:#fff!important;color:#475569!important;font-size:.67rem!important;font-weight:850!important;line-height:1!important;text-decoration:none!important}
+.appointments-v40 .sa-appointments-flow-card .operations-card-action-primary{border-color:#bfdbfe!important;background:#eff6ff!important;color:#1d4ed8!important}
+.appointments-v40 .sa-appointments-flow-card .operations-card-action-danger{border-color:#fecaca!important;background:#fff1f2!important;color:#b91c1c!important}
+.appointments-v40 .sa-appointments-flow-card .operations-card-action:disabled{opacity:.55!important;cursor:not-allowed!important}
+.appointments-v40 .operations-empty{min-height:128px!important;padding:18px 12px!important}
+@media(max-width:1180px){.appointments-v40 .sa-appointments-flow-column{max-height:min(56vh,560px)!important}.appointments-v40 .operations-card-list{max-height:min(48vh,486px)!important}}
+@media(max-width:680px){.appointments-v40 .sa-appointments-flow-column{min-height:220px!important;max-height:430px!important}.appointments-v40 .operations-card-list{max-height:360px!important}}

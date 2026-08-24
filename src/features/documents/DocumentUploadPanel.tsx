@@ -1,8 +1,10 @@
 import { useRef, useState } from 'react'
-import { Download, Eye, FileText, Trash2, Upload } from 'lucide-react'
+import type { ChangeEvent, DragEvent } from 'react'
+import { Download, Eye, FileText, LockKeyhole, Share2, Trash2, Upload, UploadCloud } from 'lucide-react'
 import { Button } from '../../components/ui/Button'
 import { Input } from '../../components/ui/Input'
 import { Select } from '../../components/ui/Select'
+import { Textarea } from '../../components/ui/Textarea'
 import type { DocumentCategory, PatientDocument } from './documentStore'
 
 type DocumentUploadPanelProps = {
@@ -13,24 +15,29 @@ type DocumentUploadPanelProps = {
     fileType: string
     category: DocumentCategory
     uploadedBy: string
+    description?: string
+    patientVisible?: boolean
     content: string
   }) => Promise<unknown> | unknown
+  uploadedBy?: string
+  defaultPatientVisible?: boolean
+  onCancel?: () => void
 }
 
-export function DocumentUploadPanel({ patientId, onUpload }: DocumentUploadPanelProps) {
+export function DocumentUploadPanel({ defaultPatientVisible = false, onCancel, patientId, onUpload, uploadedBy = 'Clinic user' }: DocumentUploadPanelProps) {
   const fileInputRef = useRef<HTMLInputElement | null>(null)
   const [fileName, setFileName] = useState('')
   const [fileType, setFileType] = useState('application/pdf')
   const [category, setCategory] = useState<DocumentCategory>('medical')
-  const [uploadedBy, setUploadedBy] = useState('Clinic user')
+  const [description, setDescription] = useState('')
+  const [patientVisible, setPatientVisible] = useState(defaultPatientVisible)
   const [content, setContent] = useState('')
   const [readingFile, setReadingFile] = useState(false)
   const [progress, setProgress] = useState(0)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  function handleFilesSelected(event: React.ChangeEvent<HTMLInputElement>) {
-    const file = event.target.files?.[0]
+  function processFile(file: File | undefined) {
     if (!file) return
 
     setFileName(file.name)
@@ -53,6 +60,16 @@ export function DocumentUploadPanel({ patientId, onUpload }: DocumentUploadPanel
     reader.readAsDataURL(file)
   }
 
+  function handleFilesSelected(event: ChangeEvent<HTMLInputElement>) {
+    processFile(event.target.files?.[0])
+  }
+
+  function handleDrop(event: DragEvent<HTMLDivElement>) {
+    event.preventDefault()
+    if (saving) return
+    processFile(event.dataTransfer.files?.[0])
+  }
+
   async function handleSubmit() {
     if (saving || readingFile || !content || !fileName.trim()) return
     setSaving(true)
@@ -64,13 +81,16 @@ export function DocumentUploadPanel({ patientId, onUpload }: DocumentUploadPanel
         fileType,
         category,
         uploadedBy,
+        description,
+        patientVisible,
         content,
       })
 
       setFileName('')
       setFileType('application/pdf')
       setCategory('medical')
-      setUploadedBy('Clinic user')
+      setDescription('')
+      setPatientVisible(defaultPatientVisible)
       setContent('')
       setProgress(0)
       if (fileInputRef.current) fileInputRef.current.value = ''
@@ -82,9 +102,18 @@ export function DocumentUploadPanel({ patientId, onUpload }: DocumentUploadPanel
   }
 
   return (
-    <div className="upload-panel">
-      <div className="upload-row">
-        <input ref={fileInputRef} type="file" onChange={handleFilesSelected} disabled={saving} />
+    <div className="upload-panel document-upload-panel-v10">
+      <div
+        className={`document-dropzone-v10 ${content ? 'has-file' : ''}`}
+        onDragOver={(event) => event.preventDefault()}
+        onDrop={handleDrop}
+      >
+        <input ref={fileInputRef} type="file" onChange={handleFilesSelected} disabled={saving} className="document-file-input-v10" />
+        <span className="document-dropzone-icon-v10"><UploadCloud size={22} /></span>
+        <div>
+          <strong>{fileName || 'Drop a patient document here'}</strong>
+          <small>{fileName ? `${fileType || 'Unknown file type'}` : 'PDF, image, Word, or text file up to 10 MB.'}</small>
+        </div>
         <Button variant="secondary" icon={<Upload size={16} />} onClick={() => fileInputRef.current?.click()} disabled={saving}>
           Select file
         </Button>
@@ -93,7 +122,7 @@ export function DocumentUploadPanel({ patientId, onUpload }: DocumentUploadPanel
       {readingFile && (
         <div className="upload-progress">
           <div className="progress-track"><span style={{ width: `${progress}%` }} /></div>
-          <small>Preparing file…</small>
+          <small>Preparing file...</small>
         </div>
       )}
 
@@ -107,20 +136,38 @@ export function DocumentUploadPanel({ patientId, onUpload }: DocumentUploadPanel
           options={[
             { label: 'X-ray', value: 'xray' },
             { label: 'Consent form', value: 'consent' },
+            { label: 'Referral', value: 'referral' },
+            { label: 'Prescription', value: 'prescription' },
+            { label: 'Lab result', value: 'lab_result' },
             { label: 'Medical document', value: 'medical' },
             { label: 'Treatment document', value: 'treatment' },
             { label: 'Other', value: 'other' },
           ]}
         />
-        <Input label="Uploaded by" value={uploadedBy} onChange={(event) => setUploadedBy(event.target.value)} disabled={saving} />
+        <Input label="Uploaded by" value={uploadedBy} disabled />
         <Input label="File type" value={fileType} onChange={(event) => setFileType(event.target.value)} disabled={saving} />
       </div>
+
+      <Textarea label="Description" value={description} onChange={(event) => setDescription(event.target.value)} disabled={saving} />
+      <label className={`document-share-toggle document-share-toggle-v10 ${patientVisible ? 'is-shared' : ''}`}>
+        <input type="checkbox" checked={patientVisible} onChange={(event) => setPatientVisible(event.target.checked)} disabled={saving} />
+        <span className="document-share-icon-v10">{patientVisible ? <Share2 size={16} /> : <LockKeyhole size={16} />}</span>
+        <span>
+          <strong>{patientVisible ? 'Shared with patient portal' : 'Private to clinic'}</strong>
+          <small>{patientVisible ? 'The patient can view this document in their portal.' : 'Only authorized clinic users can access this file.'}</small>
+        </span>
+      </label>
 
       {error && <div className="error-alert" role="alert">{error}</div>}
 
       <div className="modal-actions">
+        {onCancel && (
+          <Button variant="secondary" onClick={onCancel} disabled={saving}>
+            Cancel
+          </Button>
+        )}
         <Button onClick={() => void handleSubmit()} icon={<Upload size={16} />} disabled={!content || !fileName.trim() || readingFile || saving}>
-          {saving ? 'Saving to database…' : 'Upload document'}
+          {saving ? 'Saving to database...' : 'Upload document'}
         </Button>
       </div>
     </div>
@@ -129,10 +176,12 @@ export function DocumentUploadPanel({ patientId, onUpload }: DocumentUploadPanel
 
 type DocumentListProps = {
   documents: PatientDocument[]
-  onDelete: (documentId: string) => void
+  onDelete?: (documentId: string) => void
+  onToggleVisibility?: (documentId: string, patientVisible: boolean) => void
+  busyId?: string | null
 }
 
-export function DocumentList({ documents, onDelete }: DocumentListProps) {
+export function DocumentList({ busyId, documents, onDelete, onToggleVisibility }: DocumentListProps) {
   if (documents.length === 0) return null
 
   return (
@@ -142,13 +191,19 @@ export function DocumentList({ documents, onDelete }: DocumentListProps) {
           <div className="document-icon"><FileText size={18} /></div>
           <div className="document-details">
             <strong>{document.fileName}</strong>
-            <span>{document.category}</span>
-            <small>{new Date(document.uploadDate).toLocaleDateString()} • {document.uploadedBy}</small>
+            <span>{document.category.replaceAll('_', ' ')}</span>
+            <small>{new Date(document.uploadDate).toLocaleDateString()} - {document.uploadedBy}</small>
+            <small>{document.patientVisible ? 'Shared with patient' : 'Private clinic file'}</small>
           </div>
           <div className="document-actions">
             {document.content && <a href={document.content} target="_blank" rel="noreferrer" aria-label={`Preview ${document.fileName}`}><Eye size={16} /></a>}
             {document.content && <a href={document.content} download={document.fileName} aria-label={`Download ${document.fileName}`}><Download size={16} /></a>}
-            <button type="button" aria-label={`Delete ${document.fileName}`} onClick={() => onDelete(document.id)}><Trash2 size={16} /></button>
+            {onToggleVisibility && (
+              <button type="button" disabled={busyId === document.id} aria-label={`${document.patientVisible ? 'Make private' : 'Share'} ${document.fileName}`} onClick={() => onToggleVisibility(document.id, !document.patientVisible)}>
+                {document.patientVisible ? 'Private' : 'Share'}
+              </button>
+            )}
+            {onDelete && <button type="button" disabled={busyId === document.id} aria-label={`Archive ${document.fileName}`} onClick={() => onDelete(document.id)}><Trash2 size={16} /></button>}
           </div>
         </article>
       ))}

@@ -1,5 +1,5 @@
-import { CalendarDays, CheckCircle2, Clock3, Pencil, Trash2 } from 'lucide-react'
-import { Badge } from '../../components/ui/Badge'
+import { CalendarDays, Pencil, Trash2 } from 'lucide-react'
+import { StatusBadge } from '../../components/ui/Badge'
 import type { DentalRecord } from './dentalRecordTypes'
 
 type DentalRecordListProps = {
@@ -48,10 +48,7 @@ export function DentalRecordList({ records, onDelete, onEdit }: DentalRecordList
                 <CalendarDays size={14} />
                 {formatDate(record.recordDate)}
               </span>
-              <span>
-                {record.status === 'completed' ? <CheckCircle2 size={14} /> : <Clock3 size={14} />}
-                {record.status}
-              </span>
+              <StatusBadge status={record.status} variant="compact" />
             </div>
 
             <div className="clinical-grid">
@@ -86,9 +83,7 @@ export function DentalRecordList({ records, onDelete, onEdit }: DentalRecordList
             </div>
 
             <div className="record-footer">
-              <Badge tone={record.status === 'completed' ? 'success' : record.status === 'follow_up' ? 'warning' : 'info'}>
-                {record.status}
-              </Badge>
+              <StatusBadge status={record.status} variant="compact" />
               {record.followUpDate && (
                 <small>Follow-up: {formatDate(record.followUpDate)}</small>
               )}

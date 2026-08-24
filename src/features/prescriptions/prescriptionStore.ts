@@ -1,4 +1,3 @@
-import { insertRemoteTableRow } from '../../lib/supabaseSync'
 import { supabase } from '../../lib/supabase'
 import { getStoredBranches } from '../branches/branchStore'
 import { getStoredProviders } from '../dentists/dentistStore'
@@ -221,7 +220,7 @@ export async function createPrescriptionPersisted(input: PrescriptionInput): Pro
 
   if (error || !data) {
     if (import.meta.env.DEV && error?.message) console.error('[prescription persistence]', error)
-    throw new Error('Prescription could not be saved. Your changes were not submitted.')
+    throw new Error(error?.message || 'Prescription could not be saved. Your changes were not submitted.')
   }
 
   const confirmed = mapPrescriptionRow(data as Record<string, any>)
@@ -230,7 +229,7 @@ export async function createPrescriptionPersisted(input: PrescriptionInput): Pro
 }
 
 /**
- * Legacy local-first helper retained for compatibility with inactive/test code.
+ * Legacy local-only helper retained for inactive/test code.
  * Active routed UI must use createPrescriptionPersisted instead.
  */
 export function createPrescription(input: PrescriptionInput): Prescription {
@@ -263,20 +262,6 @@ export function createPrescription(input: PrescriptionInput): Prescription {
   }
 
   saveStoredPrescriptions([prescription, ...getStoredPrescriptions()])
-  void insertRemoteTableRow('prescriptions', {
-    id: prescription.id,
-    patient_id: prescription.patientId,
-    dental_record_id: prescription.dentalRecordId ?? null,
-    appointment_id: prescription.appointmentId ?? null,
-    branch_id: prescription.branchId ?? null,
-    provider_id: prescription.providerId ?? null,
-    provider_name_snapshot: prescription.providerNameSnapshot ?? '',
-    items: prescription.items,
-    notes: prescription.notes,
-    prescribed_by: prescription.prescribedBy,
-    prescription_date: prescription.prescriptionDate,
-    status: prescription.status,
-  })
   recordAuditEntry({
     user: prescription.prescribedBy,
     action: 'prescription_created',
