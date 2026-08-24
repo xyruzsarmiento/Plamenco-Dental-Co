@@ -1,0 +1,311 @@
+/* PART 4 — Patient Portal: Recalls & Follow-Ups
+   Premium responsive treatment recommendation cards + detail modal. */
+
+.pv3-recall-list-v5 {
+  display: grid;
+  gap: 16px;
+}
+
+.pv3-recall-card-v5 {
+  position: relative;
+  display: grid;
+  grid-template-columns: 52px minmax(0, 1fr) minmax(190px, 220px);
+  gap: 18px;
+  align-items: start;
+  padding: 20px;
+  border: 1px solid #dce6f5;
+  border-radius: 20px;
+  background: linear-gradient(135deg, #ffffff 0%, #ffffff 72%, #f7faff 100%);
+  box-shadow: 0 8px 24px rgba(31, 64, 117, 0.055);
+  cursor: pointer;
+  overflow: hidden;
+  transition: border-color .18s ease, box-shadow .18s ease, transform .18s ease;
+}
+
+.pv3-recall-card-v5::before {
+  content: '';
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 3px;
+  background: #2f6fed;
+  opacity: 0;
+  transition: opacity .18s ease;
+}
+
+.pv3-recall-card-v5:hover,
+.pv3-recall-card-v5:focus-visible {
+  border-color: #b9cff8;
+  box-shadow: 0 14px 34px rgba(31, 82, 160, 0.11);
+  transform: translateY(-2px);
+  outline: none;
+}
+
+.pv3-recall-card-v5:hover::before,
+.pv3-recall-card-v5:focus-visible::before { opacity: 1; }
+
+.pv3-recall-icon-v5 {
+  width: 52px;
+  height: 52px;
+  display: grid;
+  place-items: center;
+  border: 1px solid #cfe0ff;
+  border-radius: 16px;
+  color: #2366e8;
+  background: linear-gradient(145deg, #eef5ff, #e5efff);
+}
+
+.pv3-recall-main-v5 { min-width: 0; }
+
+.pv3-recall-card-top-v5 {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  min-height: 28px;
+  margin-bottom: 7px;
+}
+
+.pv3-recall-card-top-v5 > small {
+  color: #65738a;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+}
+
+.pv3-recall-main-v5 > h3 {
+  margin: 0;
+  color: #111c31;
+  font-size: clamp(17px, 1.35vw, 20px);
+  line-height: 1.25;
+}
+
+.pv3-recall-main-v5 > p {
+  max-width: 760px;
+  margin: 7px 0 16px;
+  color: #65738a;
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.pv3-recall-main-v5 > dl {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px 18px;
+  margin: 0;
+}
+
+.pv3-recall-main-v5 > dl > div { min-width: 0; }
+
+.pv3-recall-main-v5 dt {
+  margin-bottom: 4px;
+  color: #8793a7;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: .07em;
+  text-transform: uppercase;
+}
+
+.pv3-recall-main-v5 dd {
+  margin: 0;
+  color: #24334c;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+
+.pv3-recall-action-v5 {
+  min-width: 0;
+  align-self: stretch;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: center;
+  gap: 9px;
+  padding-left: 18px;
+  border-left: 1px solid #e8eef7;
+}
+
+.pv3-recall-action-v5 > span {
+  color: #68778f;
+  font-size: 12px;
+  font-weight: 700;
+  text-align: center;
+}
+
+.pv3-recall-action-v5 .pv3-linked-appointment-v5 { color: #137a45; }
+
+.pv3-recall-action-v5 > button {
+  min-height: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 9px 14px;
+  border: 1px solid #2f6fed;
+  border-radius: 11px;
+  color: #fff;
+  background: #2f6fed;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 0 5px 13px rgba(47, 111, 237, .18);
+  transition: background .16s ease, transform .16s ease;
+}
+
+.pv3-recall-action-v5 > button:hover { background: #245dd1; transform: translateY(-1px); }
+
+.pv3-recall-action-v5 > b {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  color: #2f6fed;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+/* Detail modal */
+.pv3-recall-modal-v5 {
+  width: min(720px, calc(100vw - 32px));
+  max-height: min(820px, calc(100dvh - 32px));
+  overflow: auto;
+}
+
+.pv3-recall-detail-status-v5 {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.pv3-recall-detail-status-v5 > span:last-child {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: #596981;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.pv3-recall-detail-hero-v5 {
+  display: grid;
+  grid-template-columns: 48px minmax(0, 1fr);
+  gap: 14px;
+  align-items: start;
+  padding: 17px;
+  margin-bottom: 16px;
+  border: 1px solid #d9e6fb;
+  border-radius: 16px;
+  background: linear-gradient(135deg, #f7faff, #eef5ff);
+}
+
+.pv3-recall-detail-hero-v5 > span {
+  width: 48px;
+  height: 48px;
+  display: grid;
+  place-items: center;
+  border: 1px solid #c9dcff;
+  border-radius: 14px;
+  color: #2769e8;
+  background: #fff;
+}
+
+.pv3-recall-detail-hero-v5 small {
+  color: #2f6fed;
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+.pv3-recall-detail-hero-v5 h3 {
+  margin: 4px 0 5px;
+  color: #142038;
+  font-size: 16px;
+  line-height: 1.35;
+}
+
+.pv3-recall-detail-hero-v5 p {
+  margin: 0;
+  color: #65738a;
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+.pv3-recall-detail-grid-v5 {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin-bottom: 15px;
+}
+
+.pv3-recall-detail-grid-v5 > div {
+  min-width: 0;
+  padding: 13px 14px;
+  border: 1px solid #e1e8f2;
+  border-radius: 12px;
+  background: #fbfcfe;
+}
+
+.pv3-recall-detail-grid-v5 span {
+  display: block;
+  margin-bottom: 5px;
+  color: #8995a8;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+}
+
+.pv3-recall-detail-grid-v5 strong {
+  display: block;
+  color: #1d2b43;
+  font-size: 12px;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 1100px) {
+  .pv3-recall-card-v5 { grid-template-columns: 48px minmax(0, 1fr); }
+  .pv3-recall-icon-v5 { width: 48px; height: 48px; }
+  .pv3-recall-action-v5 {
+    grid-column: 2;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto auto;
+    align-items: center;
+    padding: 12px 0 0;
+    border-left: 0;
+    border-top: 1px solid #e8eef7;
+  }
+  .pv3-recall-action-v5 > span { text-align: left; }
+  .pv3-recall-action-v5 > b { padding-inline: 4px; }
+  .pv3-recall-main-v5 > dl { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (max-width: 640px) {
+  .pv3-recall-card-v5 {
+    grid-template-columns: 42px minmax(0, 1fr);
+    gap: 12px;
+    padding: 15px;
+    border-radius: 16px;
+  }
+  .pv3-recall-icon-v5 { width: 42px; height: 42px; border-radius: 13px; }
+  .pv3-recall-main-v5 > p { margin-bottom: 13px; }
+  .pv3-recall-main-v5 > dl { grid-template-columns: 1fr; gap: 10px; }
+  .pv3-recall-action-v5 {
+    grid-column: 1 / -1;
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+  .pv3-recall-action-v5 > span { text-align: center; }
+  .pv3-recall-action-v5 > button { width: 100%; }
+  .pv3-recall-detail-grid-v5 { grid-template-columns: 1fr; }
+  .pv3-recall-detail-hero-v5 { grid-template-columns: 42px minmax(0, 1fr); padding: 14px; }
+  .pv3-recall-detail-hero-v5 > span { width: 42px; height: 42px; }
+  .pv3-recall-modal-v5 footer { display: grid; grid-template-columns: 1fr; }
+  .pv3-recall-modal-v5 footer button { width: 100%; }
+}
