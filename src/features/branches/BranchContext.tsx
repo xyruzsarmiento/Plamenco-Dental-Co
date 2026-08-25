@@ -154,8 +154,9 @@ export function BranchProvider({ children }: { children: ReactNode }) {
   useEffect(() => { void refreshBranchAccess() }, [refreshBranchAccess])
 
   useEffect(() => {
-    if (!supabase || !user || user.role === 'patient' || user.role === 'super_admin') return
-    const channel = supabase.channel(`branch-access-${user.id}`)
+    const client = supabase
+    if (!client || !user || user.role === 'patient' || user.role === 'super_admin') return
+    const channel = client.channel(`branch-access-${user.id}`)
     if (user.role === 'staff') {
       channel.on('postgres_changes', { event: '*', schema: 'public', table: 'staff_branch_assignments', filter: `profile_id=eq.${user.id}` }, () => { void refreshBranchAccess() })
     } else {
@@ -163,7 +164,7 @@ export function BranchProvider({ children }: { children: ReactNode }) {
       channel.on('postgres_changes', { event: '*', schema: 'public', table: 'providers', filter: `profile_id=eq.${user.id}` }, () => { void refreshBranchAccess() })
     }
     channel.subscribe()
-    return () => { void supabase.removeChannel(channel) }
+    return () => { void client.removeChannel(channel) }
   }, [refreshBranchAccess, user])
 
   const setActiveBranch = useCallback((branchId: string) => {
