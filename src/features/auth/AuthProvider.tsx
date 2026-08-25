@@ -305,6 +305,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           provider,
           options: {
             redirectTo,
+            ...(provider === 'facebook' ? { scopes: 'email public_profile' } : {}),
             ...(provider === 'google' ? { queryParams: { prompt: 'select_account' } } : {}),
           },
         })
