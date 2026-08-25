@@ -135,7 +135,6 @@ export function BranchProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth()
   const [availableBranches, setAvailableBranches] = useState<Branch[]>([])
   const [authorizedBranchIds, setAuthorizedBranchIds] = useState<string[]>([])
-  const [primaryBranchId, setPrimaryBranchId] = useState<string | null>(null)
   const [scope, setScope] = useState<BranchScope | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -146,7 +145,6 @@ export function BranchProvider({ children }: { children: ReactNode }) {
     if (!user || user.role === 'patient') {
       setAvailableBranches([])
       setAuthorizedBranchIds([])
-      setPrimaryBranchId(null)
       setScope(null)
       setError(null)
       setIsLoading(false)
@@ -175,7 +173,6 @@ export function BranchProvider({ children }: { children: ReactNode }) {
 
       setAvailableBranches(authorizedBranches)
       setAuthorizedBranchIds(normalizedIds)
-      setPrimaryBranchId(primary)
 
       const stored = readStoredScope(user.id)
       let nextScope: BranchScope | null = null
@@ -196,7 +193,6 @@ export function BranchProvider({ children }: { children: ReactNode }) {
     } catch (cause) {
       setAvailableBranches([])
       setAuthorizedBranchIds([])
-      setPrimaryBranchId(null)
       setScope(null)
       setError(cause instanceof Error ? cause.message : 'Unable to establish branch workspace access.')
     } finally {
