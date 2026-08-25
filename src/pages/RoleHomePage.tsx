@@ -1,7 +1,7 @@
 import '../styles/staff-super-admin-parity-v105.css'
 import { AppointmentRequestAlert } from '../components/dashboard/AppointmentRequestAlert'
 import { DashboardGreeting } from '../components/dashboard/DashboardGreeting'
-import { SuperAdminOverviewV56 } from '../features/admin/SuperAdminOverviewV56'
+import { SuperAdminBranchDashboardV128 } from '../features/admin/SuperAdminBranchDashboardV128'
 import { useAuth } from '../features/auth/AuthContext'
 import { DentistTodayWorkspace } from '../features/dentalRecords/DentistTodayWorkspace'
 import { StaffTodayWorkspace } from '../features/staff/StaffTodayWorkspace'
@@ -12,7 +12,7 @@ export function RoleHomePage() {
   let workspace: React.ReactNode
 
   if (user?.role === 'super_admin') {
-    workspace = <SuperAdminOverviewV56 />
+    workspace = <SuperAdminBranchDashboardV128 />
   } else if (user?.role === 'dentist' || user?.role === 'associate_dentist') {
     workspace = <DentistTodayWorkspace />
   } else {
