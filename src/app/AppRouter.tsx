@@ -17,7 +17,7 @@ import { BillingBranchWorkspaceV123 } from '../pages/BillingBranchWorkspaceV123'
 import { BranchesPageV27 } from '../pages/BranchesPageV27'
 import { DataImportPageV21 } from '../pages/DataImportPageV21'
 import { DentalRecordsPageV11 } from '../pages/DentalRecordsPageV11'
-import { DentistsPageV51 } from '../pages/DentistsPageV51'
+import { DentistsBranchAssignmentsV126 } from '../pages/DentistsBranchAssignmentsV126'
 import { DocumentsPage } from '../pages/DocumentsPage'
 import { ExpensesBranchWorkspaceV122 } from '../pages/ExpensesBranchWorkspaceV122'
 import { FormsConsentAdminPageV28 } from '../pages/FormsConsentAdminPageV28'
@@ -35,7 +35,7 @@ import { RoleHomePage } from '../pages/RoleHomePage'
 import { ServicesPageV49 } from '../pages/ServicesPageV49'
 import { SettingsPageV30 } from '../pages/SettingsPageV30'
 import { SystemAdministrationPageV58 } from '../pages/SystemAdministrationPageV58'
-import { TeamAccessPageV26 } from '../pages/TeamAccessPageV26'
+import { TeamAccessBranchAssignmentsV126 } from '../pages/TeamAccessBranchAssignmentsV126'
 import { TreatmentPlansPageV44 } from '../pages/TreatmentPlansPageV44'
 import { TreatmentsPageV43 } from '../pages/TreatmentsPageV43'
 import { UnauthorizedPage } from '../pages/UnauthorizedPage'
@@ -104,8 +104,8 @@ export function AppRouter() {
           <Route path="services" element={<RequirePermission anyOf={['services.view', 'services.manage']}><ServicesPageV49 /></RequirePermission>} />
           <Route path="inventory" element={<RequirePermission permission="inventory.view"><InventoryPageV56 /></RequirePermission>} />
           <Route path="expenses" element={<RequirePermission permission="expenses.view"><ExpensesBranchWorkspaceV122 /></RequirePermission>} />
-          <Route path="staff" element={<RequirePermission anyOf={['staff.manage', 'dentists.manage']}><TeamAccessPageV26 /></RequirePermission>} />
-          <Route path="dentists" element={<RequirePermission permission="dentists.manage"><DentistsPageV51 /></RequirePermission>} />
+          <Route path="staff" element={<RequirePermission anyOf={['staff.manage', 'dentists.manage']}><TeamAccessBranchAssignmentsV126 /></RequirePermission>} />
+          <Route path="dentists" element={<RequirePermission permission="dentists.manage"><DentistsBranchAssignmentsV126 /></RequirePermission>} />
           <Route path="branches" element={<RequirePermission anyOf={['branches.view', 'branches.manage']}><BranchesPageV27 /></RequirePermission>} />
           <Route path="reports" element={<RequirePermission anyOf={['reports.view', 'reports.view_limited']}><ReportsBranchWorkspaceV124 /></RequirePermission>} />
           <Route path="data-import" element={<RequirePermission permission="patients.import"><DataImportPageV21 /></RequirePermission>} />
