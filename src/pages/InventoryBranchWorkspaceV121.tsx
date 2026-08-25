@@ -1,10 +1,11 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { ArrowRightLeft, Boxes, ClipboardCheck, ClipboardList, Package, PackageCheck, PackageMinus, PackagePlus, Search, Truck } from 'lucide-react'
 import { Button } from '../components/ui/Button'
 import { Pagination } from '../components/ui/DesignSystem'
 import { usePermissions } from '../features/auth/permissions'
 import type { Branch } from '../features/branches/branchTypes'
 import { InventoryActionModal, type InventoryDialog } from '../features/inventory/InventoryActionModal'
+import { ensureItemRegisteredToBranchV128 } from '../features/inventory/branchInventoryRegistrationV128'
 import {
   getBranchInventory,
   getExpiryStatus,
@@ -48,6 +49,8 @@ export function InventoryBranchWorkspaceV121({ activeBranch, availableBranches, 
   const [search, setSearch] = useState('')
   const [page, setPage] = useState(1)
   const [dialog, setDialog] = useState<InventoryDialog | null>(null)
+  const [branchRegistrationError, setBranchRegistrationError] = useState<string | null>(null)
+  const itemIdsBeforeCreate = useRef<Set<string>>(new Set())
 
   const items = useMemo(() => { void refreshKey; return getInventoryItems().filter((item) => item.status === 'active') }, [refreshKey, cacheKey])
   const suppliers = useMemo(() => { void refreshKey; return getSuppliers() }, [refreshKey, cacheKey])
@@ -89,9 +92,32 @@ export function InventoryBranchWorkspaceV121({ activeBranch, availableBranches, 
   const expiringSoon = batches.filter((batch) => getExpiryStatus(batch) === 'expiring_soon').length
   const totalOnHand = stocks.reduce((sum, row) => sum + Number(row.quantityOnHand || 0), 0)
 
-  useEffect(() => { setPage(1); setSearch(''); setDialog(null) }, [activeBranch.id, cacheKey])
+  useEffect(() => { setPage(1); setSearch(''); setDialog(null); setBranchRegistrationError(null) }, [activeBranch.id, cacheKey])
   useEffect(() => setPage(1), [tab, search])
   function refresh() { setRefreshKey((value) => value + 1) }
+
+  function openAddItem() {
+    itemIdsBeforeCreate.current = new Set(getInventoryItems().map((item) => item.id))
+    setBranchRegistrationError(null)
+    setDialog({ type: 'add_item' })
+  }
+
+  function handleDialogSuccess() {
+    const completedDialog = dialog
+    void (async () => {
+      try {
+        if (completedDialog?.type === 'add_item') {
+          const createdItem = getInventoryItems().find((item) => !itemIdsBeforeCreate.current.has(item.id))
+          if (createdItem) await ensureItemRegisteredToBranchV128(activeBranch.id, createdItem)
+        }
+      } catch (cause) {
+        setBranchRegistrationError(cause instanceof Error ? cause.message : 'The item was created but could not be registered to this branch.')
+      } finally {
+        setDialog(null)
+        refresh()
+      }
+    })()
+  }
 
   function renderStockRow(row: any) {
     const { item, stock, itemBatches } = row
@@ -110,7 +136,9 @@ export function InventoryBranchWorkspaceV121({ activeBranch, availableBranches, 
   }
 
   return <section className="inv121-page" data-inventory-scope={activeBranch.id} data-inventory-cache-key={cacheKey}>
-    <header className="inv121-hero"><div><span>Branch inventory workspace</span><h2>Inventory Control Center</h2><p>Stock, procurement, movements and counts for <strong>{activeBranch.name}</strong> only. Global catalog items from another branch are not shown as local stock.</p></div><div className="inv121-hero-actions">{permissions.can('inventory.create_item') && <Button icon={<PackagePlus size={16}/>} onClick={() => setDialog({ type: 'add_item' })}>Add Item</Button>}{permissions.can('suppliers.manage') && <Button variant="secondary" icon={<Truck size={16}/>} onClick={() => setDialog({ type: 'add_supplier' })}>Add Supplier</Button>}{permissions.canAny(['purchase_orders.create', 'purchases.create']) && <Button variant="secondary" icon={<ClipboardList size={16}/>} onClick={() => setDialog({ type: 'purchase_order' })}>Purchase Order</Button>}{permissions.can('inventory.adjust') && <Button variant="secondary" icon={<ClipboardCheck size={16}/>} onClick={() => setDialog({ type: 'stock_count' })}>Stock Count</Button>}</div></header>
+    <header className="inv121-hero"><div><span>Branch inventory workspace</span><h2>Inventory Control Center</h2><p>Stock, procurement, movements and counts for <strong>{activeBranch.name}</strong> only. Global catalog items from another branch are not shown as local stock.</p></div><div className="inv121-hero-actions">{permissions.can('inventory.create_item') && <Button icon={<PackagePlus size={16}/>} onClick={openAddItem}>Add Item</Button>}{permissions.can('suppliers.manage') && <Button variant="secondary" icon={<Truck size={16}/>} onClick={() => setDialog({ type: 'add_supplier' })}>Add Supplier</Button>}{permissions.canAny(['purchase_orders.create', 'purchases.create']) && <Button variant="secondary" icon={<ClipboardList size={16}/>} onClick={() => setDialog({ type: 'purchase_order' })}>Purchase Order</Button>}{permissions.can('inventory.adjust') && <Button variant="secondary" icon={<ClipboardCheck size={16}/>} onClick={() => setDialog({ type: 'stock_count' })}>Stock Count</Button>}</div></header>
+
+    {branchRegistrationError && <div className="inline-alert error" role="alert">{branchRegistrationError}</div>}
 
     <section className="inv121-metrics" aria-label={`${activeBranch.name} inventory overview`}><article><Boxes size={17}/><span>Branch items</span><strong>{stockRows.length}</strong></article><article><PackageCheck size={17}/><span>Total on hand</span><strong>{totalOnHand.toLocaleString('en-PH')}</strong></article><article><Boxes size={17}/><span>Low stock</span><strong>{lowStock}</strong></article><article><PackageMinus size={17}/><span>Out of stock</span><strong>{outOfStock}</strong></article><article><ClipboardCheck size={17}/><span>Expiring soon</span><strong>{expiringSoon}</strong></article></section>
 
@@ -127,6 +155,6 @@ export function InventoryBranchWorkspaceV121({ activeBranch, availableBranches, 
     </div>
 
     <Pagination page={safePage} pageCount={pageCount} totalItems={scopedRows.length} pageSize={PAGE_SIZE} onPageChange={setPage} label={`${activeBranch.name} inventory pages`} />
-    {dialog && <InventoryActionModal dialog={dialog} branches={dialog.type === 'create_transfer' || dialog.type === 'quick_transfer' ? availableBranches : [activeBranch]} preferredBranchId={activeBranch.id} onClose={() => setDialog(null)} onSuccess={() => { setDialog(null); refresh() }} />}
+    {dialog && <InventoryActionModal dialog={dialog} branches={dialog.type === 'create_transfer' || dialog.type === 'quick_transfer' ? availableBranches : [activeBranch]} preferredBranchId={activeBranch.id} onClose={() => setDialog(null)} onSuccess={handleDialogSuccess} />}
   </section>
 }
