@@ -8,6 +8,7 @@ import { getStoredBranches } from '../branches/branchStore'
 import { getDentalRecordsByPatientId } from '../dentalRecords/dentalRecordStore'
 import { getDocumentsByPatient } from '../documents/documentStore'
 import { getTreatmentsByPatient } from '../treatments/treatmentStore'
+import '../../styles/patient-branch-history-v125.css'
 
 type SummaryRow = { key: string; label: string; branches: string[]; Icon: typeof Building2 }
 
