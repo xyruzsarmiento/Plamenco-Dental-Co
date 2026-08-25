@@ -14,6 +14,7 @@ type QueryOptions = {
   tags?: string[]
   scope?: string
   force?: boolean
+  returnStaleOnError?: boolean
 }
 
 const DEFAULT_STALE_TIME = 30_000
@@ -73,6 +74,7 @@ export async function cachedQuery<T>(key: string, queryFn: () => Promise<T>, opt
       const current = entries.get(entryKey) as CacheEntry<T> | undefined
       if (current?.value !== undefined) {
         entries.set(entryKey, { ...current, promise: undefined })
+        if (options.returnStaleOnError !== false) return current.value
       } else {
         entries.delete(entryKey)
       }
@@ -90,6 +92,10 @@ export async function cachedQuery<T>(key: string, queryFn: () => Promise<T>, opt
   })
 
   return queryPromise
+}
+
+export function prefetchQuery<T>(key: string, queryFn: () => Promise<T>, options: QueryOptions = {}) {
+  return cachedQuery(key, queryFn, options).then(() => undefined).catch(() => undefined)
 }
 
 export function readCachedQuery<T>(key: string, scope?: string): T | undefined {
