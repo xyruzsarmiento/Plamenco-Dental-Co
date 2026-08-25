@@ -431,8 +431,9 @@ for each row execute procedure public.part11_lock_form_submission_context();
 -- Restrictive branch guard layers on top of existing patient/permission policies.
 drop policy if exists "part11_form_assignments_branch_guard" on public.patient_form_assignments;
 create policy "part11_form_assignments_branch_guard"
+on public.patient_form_assignments
 as restrictive
-on public.patient_form_assignments for all
+for all
 to authenticated
 using (
   public.current_user_owns_patient(patient_id)
@@ -457,8 +458,9 @@ with check (
 
 drop policy if exists "part11_form_submissions_branch_guard" on public.patient_form_submissions;
 create policy "part11_form_submissions_branch_guard"
+on public.patient_form_submissions
 as restrictive
-on public.patient_form_submissions for all
+for all
 to authenticated
 using (
   public.current_user_owns_patient(patient_id)
