@@ -1,3 +1,4 @@
+import './BillingPageV46.css'
 import { BillingPageV32 } from './BillingPageV32'
 
 export function BillingPageV46() {
