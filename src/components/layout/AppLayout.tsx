@@ -2,6 +2,7 @@ import '../../styles/internal-portal-blue-unification-v103.css'
 import '../../styles/internal-portal-responsive-v105.css'
 import '../../styles/internal-portal-shell-fix-v106.css'
 import '../../styles/portal-shell-premium-v1.css'
+import '../../styles/super-admin-branch-workspace-v119.css'
 import { Menu, X } from 'lucide-react'
 import { useEffect, useState, type CSSProperties } from 'react'
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
@@ -10,7 +11,9 @@ import { roleLabels, usePermissions } from '../../features/auth/permissions'
 import { TopbarNotificationBell } from '../../features/notifications/TopbarNotificationBell'
 import { getAvatarDisplayUrl, getInitials, loadOwnInternalProfile } from '../../features/profiles/profileStore'
 import { Button } from '../ui/Button'
+import { BranchContextIndicator } from './BranchContextIndicator'
 import { navigationGroups, navigationItems } from './navigation'
+import { SuperAdminBranchCreateGuard } from './SuperAdminBranchCreateGuard'
 
 function getPageClass(pathname: string) {
   if (pathname === '/app' || pathname === '/app/') return 'page-dashboard'
@@ -159,6 +162,7 @@ export function AppLayout() {
             <p className="eyebrow">{workspaceEyebrow}</p>
             <h1>{currentPage}</h1>
           </div>
+          {user?.role === 'super_admin' && <BranchContextIndicator />}
           <div className="topbar-actions">
             <TopbarNotificationBell />
             <div className="topbar-account-pill" aria-label="Current account role">
@@ -169,6 +173,8 @@ export function AppLayout() {
 
         <main className="content-area"><Outlet /></main>
       </div>
+
+      {user?.role === 'super_admin' && <SuperAdminBranchCreateGuard />}
     </div>
   )
 }
