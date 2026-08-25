@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { ArrowLeft, CalendarDays, FileText, HeartPulse, Landmark, Pill, ReceiptText, Stethoscope, UserRound } from 'lucide-react'
+import { ArrowLeft, CalendarDays, FileText, HeartPulse, Landmark, ReceiptText, Stethoscope, UserRound } from 'lucide-react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { Badge, StatusBadge } from '../components/ui/Badge'
 import { Button } from '../components/ui/Button'
@@ -11,6 +11,7 @@ import { getPatient360Summary } from '../features/patients/patient360Store'
 import { getPatientDisplayName, getStoredPatients } from '../features/patients/patientStore'
 import { getRecallDueBucket, getStoredPatientRecalls, listPatientRecalls, type RecallQueueItem } from '../features/recalls/recallStore'
 import { getStoredServices } from '../features/services/serviceStore'
+import '../styles/patient-branch-history-v125.css'
 
 type DetailTab = 'overview' | 'appointments' | 'clinical' | 'treatments' | 'prescriptions' | 'billing' | 'documents' | 'recalls'
 
