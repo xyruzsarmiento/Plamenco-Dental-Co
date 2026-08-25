@@ -16,6 +16,7 @@ import { loadPatientsFromSupabase } from './features/patients/patientPersistence
 import { OfflineStatusBanner } from './features/patientPortal/OfflineStatusBanner'
 import { PatientDocumentLinkInterceptor } from './features/patientPortal/PatientDocumentLinkInterceptor'
 import { hydratePatientPortalFromDatabase } from './features/patientPortal/patientPortalHydration'
+import { WorkspaceAccountIsolationGuard } from './features/security/WorkspaceIsolationGuard'
 import { loadServicesFromSupabase } from './features/services/serviceStore'
 import { cachedQuery, queryCachePolicy, readCachedQuery } from './lib/queryCache'
 import { syncSupabaseToLocalStorage } from './lib/supabaseSync'
@@ -160,6 +161,7 @@ function App() {
   return (
     <AppErrorBoundary>
       <AuthProvider>
+        <WorkspaceAccountIsolationGuard />
         <DataBootstrap>
           <ModalAccessibilityManager />
           <AdaptivePaginationEnhancer />
