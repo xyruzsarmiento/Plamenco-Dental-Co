@@ -98,50 +98,22 @@ function OperatingCostChart({ data }: { data: MonthPoint[] }) {
           {line && <path d={line} className="expense-trend-v115-line" />}
 
           {active && (
-            <line
-              x1={active.x}
-              x2={active.x}
-              y1={top}
-              y2={top + usableHeight}
-              className="expense-trend-v115-guide"
-            />
+            <line x1={active.x} x2={active.x} y1={top} y2={top + usableHeight} className="expense-trend-v115-guide" />
           )}
 
           {points.map((point, index) => (
             <g key={point.key}>
-              <circle
-                cx={point.x}
-                cy={point.y}
-                r="16"
-                className="expense-trend-v115-hit"
-                tabIndex={0}
-                aria-label={`${point.label}: ${formatExpenseCurrency(point.value)}`}
-                onMouseEnter={() => setActiveIndex(index)}
-                onFocus={() => setActiveIndex(index)}
-                onBlur={() => setActiveIndex(null)}
-              />
-              <circle
-                cx={point.x}
-                cy={point.y}
-                r={activeIndex === index ? 6 : 4.5}
-                className={`expense-trend-v115-dot ${activeIndex === index ? 'is-active' : ''}`}
-              />
-              <text x={point.x} y={height - 18} textAnchor="middle" className="expense-trend-v115-xlabel">
-                {point.label}
-              </text>
+              <circle cx={point.x} cy={point.y} r="16" className="expense-trend-v115-hit" tabIndex={0} aria-label={`${point.label}: ${formatExpenseCurrency(point.value)}`} onMouseEnter={() => setActiveIndex(index)} onFocus={() => setActiveIndex(index)} onBlur={() => setActiveIndex(null)} />
+              <circle cx={point.x} cy={point.y} r={activeIndex === index ? 6 : 4.5} className={`expense-trend-v115-dot ${activeIndex === index ? 'is-active' : ''}`} />
+              <text x={point.x} y={height - 18} textAnchor="middle" className="expense-trend-v115-xlabel">{point.label}</text>
             </g>
           ))}
         </svg>
       </div>
 
       {active && (
-        <div
-          className="expense-trend-v115-tooltip"
-          style={{ left: `${(active.x / width) * 100}%`, top: `${Math.max(5, ((active.y - 2) / height) * 100)}%` }}
-        >
-          <span>{active.label}</span>
-          <strong>{formatExpenseCurrency(active.value)}</strong>
-          <small>Recorded operating costs</small>
+        <div className="expense-trend-v115-tooltip" style={{ left: `${(active.x / width) * 100}%`, top: `${Math.max(5, ((active.y - 2) / height) * 100)}%` }}>
+          <span>{active.label}</span><strong>{formatExpenseCurrency(active.value)}</strong><small>Recorded operating costs</small>
         </div>
       )}
     </div>
@@ -159,8 +131,11 @@ export function ExpenseTrendEnhancer() {
       const nextTarget = document.querySelector<HTMLElement>('.ex57-trend')
       if (nextTarget !== target) setTarget(nextTarget)
 
-      const branchSelect = document.querySelector<HTMLSelectElement>('.ex57-filters select')
-      const nextBranch = branchSelect?.value ?? 'all'
+      const scopedPage = document.querySelector<HTMLElement>('.ex122-page[data-expense-scope-key]')
+      const scopeKey = scopedPage?.dataset.expenseScopeKey ?? ''
+      const scopedBranch = scopeKey.startsWith('expenses:') ? scopeKey.split(':')[1] : ''
+      const legacyBranchSelect = document.querySelector<HTMLSelectElement>('.ex57-page:not(.ex122-page) .ex57-filters select')
+      const nextBranch = scopedBranch || legacyBranchSelect?.value || 'all'
       setBranch((current) => current === nextBranch ? current : nextBranch)
 
       const nextExpenses = getExpenses()
