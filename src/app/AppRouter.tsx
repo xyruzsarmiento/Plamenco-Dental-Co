@@ -10,6 +10,7 @@ import { RequirePatientAuth } from '../features/auth/RequirePatientAuth'
 import { RequirePermission } from '../features/auth/RequirePermission'
 import { RequireRole } from '../features/auth/RequireRole'
 import { ResetPasswordPage } from '../features/auth/ResetPasswordPage'
+import { BranchProvider } from '../features/branches/BranchContext'
 import { PatientPortalRoute } from '../features/patientPortal/PatientPortalRoute'
 import { AppointmentsPageV38 } from '../pages/AppointmentsPageV38'
 import { BillingPageV46 } from '../pages/BillingPageV46'
@@ -48,6 +49,14 @@ function BookRoute() {
   return <Navigate to="/login" replace state={{ from: { pathname: '/book' } }} />
 }
 
+function InternalPortalShell() {
+  return (
+    <BranchProvider>
+      <AppLayout />
+    </BranchProvider>
+  )
+}
+
 function RouteRobotsMeta() {
   const location = useLocation()
 
@@ -79,7 +88,7 @@ export function AppRouter() {
         <Route path="/unauthorized" element={<UnauthorizedPage />} />
         <Route path="/portal/:patientId" element={<RequirePatientAuth><PatientPortalRoute /></RequirePatientAuth>} />
         <Route path="/portal/:patientId/intake" element={<RequirePatientAuth><PatientIntakePage /></RequirePatientAuth>} />
-        <Route path="/app" element={<RequireAuth><AppLayout /></RequireAuth>}>
+        <Route path="/app" element={<RequireAuth><InternalPortalShell /></RequireAuth>}>
           <Route index element={<RoleHomePage />} />
           <Route path="profile" element={<ProfilePage />} />
           <Route path="appointments" element={<RequirePermission permission="appointments.view"><AppointmentsPageV38 /></RequirePermission>} />
