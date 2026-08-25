@@ -8,6 +8,7 @@ import { useEffect, useState, type CSSProperties } from 'react'
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../features/auth/AuthContext'
 import { roleLabels, usePermissions } from '../../features/auth/permissions'
+import { useBranchContext } from '../../features/branches/BranchContext'
 import { TopbarNotificationBell } from '../../features/notifications/TopbarNotificationBell'
 import { getAvatarDisplayUrl, getInitials, loadOwnInternalProfile } from '../../features/profiles/profileStore'
 import { Button } from '../ui/Button'
@@ -28,6 +29,7 @@ export function AppLayout() {
   const [profileName, setProfileName] = useState('')
   const { user, signOut } = useAuth()
   const { canAny } = usePermissions()
+  const { availableBranches } = useBranchContext()
   const location = useLocation()
   const navigate = useNavigate()
 
@@ -101,6 +103,7 @@ export function AppLayout() {
     : rawAvatarUrl
   const avatarStyle = avatarUrl ? ({ '--profile-avatar-image': `url(${avatarUrl})` } as CSSProperties) : undefined
   const initials = getInitials(profileName || user?.name || '', user?.email ?? '')
+  const showBranchSelector = user?.role === 'super_admin' || availableBranches.length > 1
 
   return (
     <div className={`app-shell role-${user?.role ?? 'guest'} ${getPageClass(location.pathname)}`}>
@@ -162,7 +165,7 @@ export function AppLayout() {
             <p className="eyebrow">{workspaceEyebrow}</p>
             <h1>{currentPage}</h1>
           </div>
-          {user?.role === 'super_admin' && <BranchContextIndicator />}
+          {showBranchSelector && <BranchContextIndicator />}
           <div className="topbar-actions">
             <TopbarNotificationBell />
             <div className="topbar-account-pill" aria-label="Current account role">
