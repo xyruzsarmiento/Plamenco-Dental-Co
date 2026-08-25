@@ -12,6 +12,7 @@ import { RequireRole } from '../features/auth/RequireRole'
 import { ResetPasswordPage } from '../features/auth/ResetPasswordPage'
 import { BranchProvider } from '../features/branches/BranchContext'
 import { PatientPortalRoute } from '../features/patientPortal/PatientPortalRoute'
+import { WorkspaceBranchIsolationGuard } from '../features/security/WorkspaceIsolationGuard'
 import { AppointmentsPageV38 } from '../pages/AppointmentsPageV38'
 import { BillingBranchWorkspaceV123 } from '../pages/BillingBranchWorkspaceV123'
 import { BranchesPageV27 } from '../pages/BranchesPageV27'
@@ -53,6 +54,7 @@ function BookRoute() {
 function InternalPortalShell() {
   return (
     <BranchProvider>
+      <WorkspaceBranchIsolationGuard />
       <AppLayout />
     </BranchProvider>
   )
