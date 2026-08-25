@@ -23,11 +23,7 @@ const PAGE_SIZE = 10
 
 type Tab = 'stock' | 'movements' | 'purchase_orders' | 'transfers' | 'stock_counts' | 'suppliers'
 
-type Props = {
-  activeBranch: Branch
-  availableBranches: Branch[]
-  cacheKey: string
-}
+type Props = { activeBranch: Branch; availableBranches: Branch[]; cacheKey: string }
 
 function quantity(value: number, unitId?: string) {
   const unit = getInventoryUnits().find((entry) => entry.id === unitId)
@@ -67,11 +63,16 @@ export function InventoryBranchWorkspaceV121({ activeBranch, availableBranches, 
   const branchMap = useMemo(() => new Map(availableBranches.map((branch) => [branch.id, branch])), [availableBranches])
   const query = search.trim().toLowerCase()
 
-  const stockRows = useMemo(() => items.map((item) => {
-    const stock = stocks.find((row) => row.itemId === item.id)
+  // A branch workspace is a stock-position view, not the global catalog. An item appears
+  // here only when this branch has its own branch_inventory row. The same catalog item can
+  // therefore exist in Pulilan and Plaridel with completely independent balances.
+  const stockRows = useMemo(() => stocks.map((stock) => {
+    const item = itemMap.get(stock.itemId)
+    if (!item) return null
     const itemBatches = batches.filter((row) => row.itemId === item.id)
     return { item, stock, itemBatches }
-  }).filter(({ item }) => !query || [item.name, item.itemCode, item.sku, item.brand].some((value) => String(value ?? '').toLowerCase().includes(query))), [batches, items, query, stocks])
+  }).filter((row): row is NonNullable<typeof row> => Boolean(row))
+    .filter(({ item }) => !query || [item.name, item.itemCode, item.sku, item.brand].some((value) => String(value ?? '').toLowerCase().includes(query))), [batches, itemMap, query, stocks])
 
   const scopedRows = tab === 'stock' ? stockRows
     : tab === 'movements' ? movements.filter((row) => !query || [itemMap.get(row.itemId)?.name, row.movementType, row.reason].some((value) => String(value ?? '').toLowerCase().includes(query)))
@@ -83,33 +84,21 @@ export function InventoryBranchWorkspaceV121({ activeBranch, availableBranches, 
   const pageCount = Math.max(1, Math.ceil(scopedRows.length / PAGE_SIZE))
   const safePage = Math.min(page, pageCount)
   const visibleRows = scopedRows.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE) as any[]
-
   const lowStock = stockRows.filter(({ stock }) => getStockStatus(stock) === 'low_stock').length
   const outOfStock = stockRows.filter(({ stock }) => getStockStatus(stock) === 'out_of_stock').length
   const expiringSoon = batches.filter((batch) => getExpiryStatus(batch) === 'expiring_soon').length
   const totalOnHand = stocks.reduce((sum, row) => sum + Number(row.quantityOnHand || 0), 0)
 
-  useEffect(() => {
-    setPage(1)
-    setSearch('')
-    setDialog(null)
-  }, [activeBranch.id, cacheKey])
-
+  useEffect(() => { setPage(1); setSearch(''); setDialog(null) }, [activeBranch.id, cacheKey])
   useEffect(() => setPage(1), [tab, search])
-
-  function refresh() {
-    setRefreshKey((value) => value + 1)
-  }
+  function refresh() { setRefreshKey((value) => value + 1) }
 
   function renderStockRow(row: any) {
     const { item, stock, itemBatches } = row
-    const onHand = Number(stock?.quantityOnHand ?? 0)
+    const onHand = Number(stock.quantityOnHand ?? 0)
     const status = getStockStatus(stock)
-    return <article key={item.id} className="inv121-stock-card">
-      <div className="inv121-stock-main">
-        <span className="inv121-item-icon"><Package size={18}/></span>
-        <div><span>{item.itemCode}</span><h3>{item.name}</h3><p>{item.brand || 'No brand'} · {labelize(status)}</p></div>
-      </div>
+    return <article key={stock.id} className="inv121-stock-card">
+      <div className="inv121-stock-main"><span className="inv121-item-icon"><Package size={18}/></span><div><span>{item.itemCode}</span><h3>{item.name}</h3><p>{item.brand || 'No brand'} · {labelize(status)}</p></div></div>
       <div className="inv121-stock-quantity"><span>{activeBranch.name}</span><strong>{quantity(onHand, item.unitId)}</strong><small>{itemBatches.length ? `${itemBatches.length} active batch${itemBatches.length === 1 ? '' : 'es'}` : 'No batch records'}</small></div>
       <div className="inv121-row-actions">
         {permissions.can('inventory.stock_in') && <Button size="sm" variant="secondary" icon={<PackagePlus size={14}/>} onClick={() => setDialog({ type: 'stock_in', item })}>Stock In</Button>}
@@ -121,32 +110,11 @@ export function InventoryBranchWorkspaceV121({ activeBranch, availableBranches, 
   }
 
   return <section className="inv121-page" data-inventory-scope={activeBranch.id} data-inventory-cache-key={cacheKey}>
-    <header className="inv121-hero">
-      <div><span>Branch inventory workspace</span><h2>Inventory Control Center</h2><p>Stock, procurement, movements and counts for <strong>{activeBranch.name}</strong> only.</p></div>
-      <div className="inv121-hero-actions">
-        {permissions.can('inventory.create_item') && <Button icon={<PackagePlus size={16}/>} onClick={() => setDialog({ type: 'add_item' })}>Add Item</Button>}
-        {permissions.can('suppliers.manage') && <Button variant="secondary" icon={<Truck size={16}/>} onClick={() => setDialog({ type: 'add_supplier' })}>Add Supplier</Button>}
-        {permissions.canAny(['purchase_orders.create', 'purchases.create']) && <Button variant="secondary" icon={<ClipboardList size={16}/>} onClick={() => setDialog({ type: 'purchase_order' })}>Purchase Order</Button>}
-        {permissions.can('inventory.adjust') && <Button variant="secondary" icon={<ClipboardCheck size={16}/>} onClick={() => setDialog({ type: 'stock_count' })}>Stock Count</Button>}
-      </div>
-    </header>
+    <header className="inv121-hero"><div><span>Branch inventory workspace</span><h2>Inventory Control Center</h2><p>Stock, procurement, movements and counts for <strong>{activeBranch.name}</strong> only. Global catalog items from another branch are not shown as local stock.</p></div><div className="inv121-hero-actions">{permissions.can('inventory.create_item') && <Button icon={<PackagePlus size={16}/>} onClick={() => setDialog({ type: 'add_item' })}>Add Item</Button>}{permissions.can('suppliers.manage') && <Button variant="secondary" icon={<Truck size={16}/>} onClick={() => setDialog({ type: 'add_supplier' })}>Add Supplier</Button>}{permissions.canAny(['purchase_orders.create', 'purchases.create']) && <Button variant="secondary" icon={<ClipboardList size={16}/>} onClick={() => setDialog({ type: 'purchase_order' })}>Purchase Order</Button>}{permissions.can('inventory.adjust') && <Button variant="secondary" icon={<ClipboardCheck size={16}/>} onClick={() => setDialog({ type: 'stock_count' })}>Stock Count</Button>}</div></header>
 
-    <section className="inv121-metrics" aria-label={`${activeBranch.name} inventory overview`}>
-      <article><Boxes size={17}/><span>Catalog items</span><strong>{items.length}</strong></article>
-      <article><PackageCheck size={17}/><span>Total on hand</span><strong>{totalOnHand.toLocaleString('en-PH')}</strong></article>
-      <article><Boxes size={17}/><span>Low stock</span><strong>{lowStock}</strong></article>
-      <article><PackageMinus size={17}/><span>Out of stock</span><strong>{outOfStock}</strong></article>
-      <article><ClipboardCheck size={17}/><span>Expiring soon</span><strong>{expiringSoon}</strong></article>
-    </section>
+    <section className="inv121-metrics" aria-label={`${activeBranch.name} inventory overview`}><article><Boxes size={17}/><span>Branch items</span><strong>{stockRows.length}</strong></article><article><PackageCheck size={17}/><span>Total on hand</span><strong>{totalOnHand.toLocaleString('en-PH')}</strong></article><article><Boxes size={17}/><span>Low stock</span><strong>{lowStock}</strong></article><article><PackageMinus size={17}/><span>Out of stock</span><strong>{outOfStock}</strong></article><article><ClipboardCheck size={17}/><span>Expiring soon</span><strong>{expiringSoon}</strong></article></section>
 
-    <section className="inv121-command">
-      <div className="inv121-tabs" role="tablist" aria-label="Branch inventory sections">
-        {([
-          ['stock', 'Stock'], ['movements', 'Movements'], ['purchase_orders', 'Purchase Orders'], ['transfers', 'Transfers'], ['stock_counts', 'Stock Counts'], ['suppliers', 'Suppliers'],
-        ] as Array<[Tab, string]>).map(([key, label]) => <button key={key} type="button" role="tab" aria-selected={tab === key} className={tab === key ? 'is-active' : ''} onClick={() => setTab(key)}>{label}</button>)}
-      </div>
-      <label className="inv121-search"><Search size={16}/><input value={search} onChange={(event) => setSearch(event.target.value)} placeholder={`Search ${activeBranch.name} inventory`} /></label>
-    </section>
+    <section className="inv121-command"><div className="inv121-tabs" role="tablist" aria-label="Branch inventory sections">{([['stock', 'Stock'], ['movements', 'Movements'], ['purchase_orders', 'Purchase Orders'], ['transfers', 'Transfers'], ['stock_counts', 'Stock Counts'], ['suppliers', 'Suppliers']] as Array<[Tab, string]>).map(([key, label]) => <button key={key} type="button" role="tab" aria-selected={tab === key} className={tab === key ? 'is-active' : ''} onClick={() => setTab(key)}>{label}</button>)}</div><label className="inv121-search"><Search size={16}/><input value={search} onChange={(event) => setSearch(event.target.value)} placeholder={`Search ${activeBranch.name} inventory`} /></label></section>
 
     <div className="inv121-list">
       {tab === 'stock' && visibleRows.map(renderStockRow)}
@@ -159,13 +127,6 @@ export function InventoryBranchWorkspaceV121({ activeBranch, availableBranches, 
     </div>
 
     <Pagination page={safePage} pageCount={pageCount} totalItems={scopedRows.length} pageSize={PAGE_SIZE} onPageChange={setPage} label={`${activeBranch.name} inventory pages`} />
-
-    {dialog && <InventoryActionModal
-      dialog={dialog}
-      branches={dialog.type === 'create_transfer' || dialog.type === 'quick_transfer' ? availableBranches : [activeBranch]}
-      preferredBranchId={activeBranch.id}
-      onClose={() => setDialog(null)}
-      onSuccess={() => { setDialog(null); refresh() }}
-    />}
+    {dialog && <InventoryActionModal dialog={dialog} branches={dialog.type === 'create_transfer' || dialog.type === 'quick_transfer' ? availableBranches : [activeBranch]} preferredBranchId={activeBranch.id} onClose={() => setDialog(null)} onSuccess={() => { setDialog(null); refresh() }} />}
   </section>
 }
