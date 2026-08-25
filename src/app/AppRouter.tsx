@@ -25,8 +25,9 @@ import { InventoryPageV56 } from '../pages/InventoryPageV56'
 import { LandingPage } from '../pages/LandingPage'
 import { NotFoundPage } from '../pages/NotFoundPage'
 import { NotificationsPageV25 } from '../pages/NotificationsPageV25'
+import { PatientBranchAwareDetailV125 } from '../pages/PatientBranchAwareDetailV125'
 import { PatientIntakePage } from '../pages/PatientIntakePage'
-import { PatientsPageV36 } from '../pages/PatientsPageV36'
+import { PatientsBranchDirectoryV125 } from '../pages/PatientsBranchDirectoryV125'
 import { PrescriptionsPage } from '../pages/PrescriptionsPage'
 import { ProfilePage } from '../pages/ProfilePage'
 import { ReportsBranchWorkspaceV124 } from '../pages/ReportsBranchWorkspaceV124'
@@ -92,8 +93,8 @@ export function AppRouter() {
           <Route index element={<RoleHomePage />} />
           <Route path="profile" element={<ProfilePage />} />
           <Route path="appointments" element={<RequirePermission permission="appointments.view"><AppointmentsPageV38 /></RequirePermission>} />
-          <Route path="patients" element={<RequirePermission permission="patients.view"><PatientsPageV36 /></RequirePermission>} />
-          <Route path="patients/:patientId" element={<RequirePermission permission="patients.view"><PatientsPageV36 /></RequirePermission>} />
+          <Route path="patients" element={<RequirePermission permission="patients.view"><PatientsBranchDirectoryV125 /></RequirePermission>} />
+          <Route path="patients/:patientId" element={<RequirePermission permission="patients.view"><PatientBranchAwareDetailV125 /></RequirePermission>} />
           <Route path="dental-records" element={<RequirePermission permission="clinical_records.view"><DentalRecordsPageV11 /></RequirePermission>} />
           <Route path="treatments" element={<RequirePermission permission="treatments.view"><TreatmentsPageV43 /></RequirePermission>} />
           <Route path="treatment-plans" element={<RequirePermission permission="treatments.view"><TreatmentPlansPageV44 /></RequirePermission>} />
