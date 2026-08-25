@@ -13,7 +13,7 @@ import { ResetPasswordPage } from '../features/auth/ResetPasswordPage'
 import { BranchProvider } from '../features/branches/BranchContext'
 import { PatientPortalRoute } from '../features/patientPortal/PatientPortalRoute'
 import { AppointmentsPageV38 } from '../pages/AppointmentsPageV38'
-import { BillingPageV46 } from '../pages/BillingPageV46'
+import { BillingBranchWorkspaceV123 } from '../pages/BillingBranchWorkspaceV123'
 import { BranchesPageV27 } from '../pages/BranchesPageV27'
 import { DataImportPageV21 } from '../pages/DataImportPageV21'
 import { DentalRecordsPageV11 } from '../pages/DentalRecordsPageV11'
@@ -99,7 +99,7 @@ export function AppRouter() {
           <Route path="treatment-plans" element={<RequirePermission permission="treatments.view"><TreatmentPlansPageV44 /></RequirePermission>} />
           <Route path="prescriptions" element={<RequirePermission permission="prescriptions.view"><PrescriptionsPage /></RequirePermission>} />
           <Route path="documents" element={<RequirePermission anyOf={['documents.view', 'documents.upload']}><DocumentsPage /></RequirePermission>} />
-          <Route path="billing" element={<RequirePermission anyOf={['billing.view', 'payments.view']}><BillingPageV46 /></RequirePermission>} />
+          <Route path="billing" element={<RequirePermission anyOf={['billing.view', 'payments.view']}><BillingBranchWorkspaceV123 /></RequirePermission>} />
           <Route path="services" element={<RequirePermission anyOf={['services.view', 'services.manage']}><ServicesPageV49 /></RequirePermission>} />
           <Route path="inventory" element={<RequirePermission permission="inventory.view"><InventoryPageV56 /></RequirePermission>} />
           <Route path="expenses" element={<RequirePermission permission="expenses.view"><ExpensesBranchWorkspaceV122 /></RequirePermission>} />
