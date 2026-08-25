@@ -1,142 +1,180 @@
-/* v117 — one clean internal page-header treatment.
-   Several legacy hero generations layered radial-gradient circles and pseudo-elements.
-   This file is intentionally loaded last and normalizes only the top command/hero cards. */
+/* v117 — final internal page-header normalization.
+   IMPORTANT: do not use :where() here. :where() has zero specificity and older page-specific
+   hero rules (many with !important) can win even when this stylesheet is imported last.
+   These explicit html body selectors intentionally outrank legacy hero decoration rules. */
 
-:where(
-  .patients-header,
-  .patients36-hero,
-  .documents-v10-hero,
-  .bill14-command-header,
-  .svc15-command,
-  .dv108-hero,
-  .data-import-v21-hero,
-  .inventory-v22-hero,
-  .ex57-hero,
-  .team-v26-hero,
-  .branches-v27-hero,
-  .forms-v28-hero,
-  .sys58-hero,
-  .settings-v30-hero,
-  .internal-profile-hero,
-  .prescriptions-hero,
-  .portal-page-hero
-) {
+html body .patients-header,
+html body .patients36-hero,
+html body .documents-v10-hero,
+html body .bill14-command-header,
+html body .svc15-command,
+html body .dr11-command-header,
+html body .dv108-hero,
+html body .data-import-v21-hero,
+html body .inventory-v22-hero,
+html body .ex57-hero,
+html body .team-v26-hero,
+html body .branches-v27-hero,
+html body .forms-v28-hero,
+html body .sys58-hero,
+html body .settings-v30-hero,
+html body .internal-profile-hero,
+html body .prescriptions-hero,
+html body .portal-page-hero,
+html body .sav56-hero,
+html body .rv56-hero,
+html body .tx43-hero,
+html body .tp80-hero,
+html body .notifications-v25-hero {
   position: relative !important;
   isolation: isolate !important;
   overflow: hidden !important;
-  background-color: #f8fbff !important;
-  background-image: linear-gradient(135deg, #ffffff 0%, #f8fbff 62%, #eef5ff 100%) !important;
-  border: 1px solid #d7e4f6 !important;
-  box-shadow: 0 14px 34px rgba(15, 23, 42, .045) !important;
+  background: linear-gradient(135deg, #ffffff 0%, #fbfdff 56%, #f2f7ff 100%) !important;
+  background-color: #ffffff !important;
+  background-image: linear-gradient(135deg, #ffffff 0%, #fbfdff 56%, #f2f7ff 100%) !important;
+  border: 1px solid #d8e5f5 !important;
+  box-shadow: 0 12px 30px rgba(15, 23, 42, .045) !important;
 }
 
-:where(
-  .patients-header,
-  .patients36-hero,
-  .documents-v10-hero,
-  .bill14-command-header,
-  .svc15-command,
-  .dv108-hero,
-  .data-import-v21-hero,
-  .inventory-v22-hero,
-  .ex57-hero,
-  .team-v26-hero,
-  .branches-v27-hero,
-  .forms-v28-hero,
-  .sys58-hero,
-  .settings-v30-hero,
-  .internal-profile-hero,
-  .prescriptions-hero,
-  .portal-page-hero
-)::before,
-:where(
-  .patients-header,
-  .patients36-hero,
-  .documents-v10-hero,
-  .bill14-command-header,
-  .svc15-command,
-  .dv108-hero,
-  .data-import-v21-hero,
-  .inventory-v22-hero,
-  .ex57-hero,
-  .team-v26-hero,
-  .branches-v27-hero,
-  .forms-v28-hero,
-  .sys58-hero,
-  .settings-v30-hero,
-  .internal-profile-hero,
-  .prescriptions-hero,
-  .portal-page-hero
-)::after {
+html body .patients-header::before,
+html body .patients-header::after,
+html body .patients36-hero::before,
+html body .patients36-hero::after,
+html body .documents-v10-hero::before,
+html body .documents-v10-hero::after,
+html body .bill14-command-header::before,
+html body .bill14-command-header::after,
+html body .svc15-command::before,
+html body .svc15-command::after,
+html body .dr11-command-header::before,
+html body .dr11-command-header::after,
+html body .dv108-hero::before,
+html body .dv108-hero::after,
+html body .data-import-v21-hero::before,
+html body .data-import-v21-hero::after,
+html body .inventory-v22-hero::before,
+html body .inventory-v22-hero::after,
+html body .ex57-hero::before,
+html body .ex57-hero::after,
+html body .team-v26-hero::before,
+html body .team-v26-hero::after,
+html body .branches-v27-hero::before,
+html body .branches-v27-hero::after,
+html body .forms-v28-hero::before,
+html body .forms-v28-hero::after,
+html body .sys58-hero::before,
+html body .sys58-hero::after,
+html body .settings-v30-hero::before,
+html body .settings-v30-hero::after,
+html body .internal-profile-hero::before,
+html body .internal-profile-hero::after,
+html body .prescriptions-hero::before,
+html body .prescriptions-hero::after,
+html body .portal-page-hero::before,
+html body .portal-page-hero::after,
+html body .sav56-hero::before,
+html body .sav56-hero::after,
+html body .rv56-hero::before,
+html body .rv56-hero::after,
+html body .tx43-hero::before,
+html body .tx43-hero::after,
+html body .tp80-hero::before,
+html body .tp80-hero::after,
+html body .notifications-v25-hero::before,
+html body .notifications-v25-hero::after {
   content: none !important;
   display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  width: 0 !important;
+  height: 0 !important;
   background: none !important;
+  background-image: none !important;
   border: 0 !important;
   box-shadow: none !important;
 }
 
-/* Some older versions use real decorative nodes instead of pseudo-elements. */
-:where(
-  .patients-header,
-  .patients36-hero,
-  .documents-v10-hero,
-  .bill14-command-header,
-  .svc15-command,
-  .dv108-hero,
-  .data-import-v21-hero,
-  .inventory-v22-hero,
-  .ex57-hero,
-  .team-v26-hero,
-  .branches-v27-hero,
-  .forms-v28-hero,
-  .sys58-hero,
-  .settings-v30-hero,
-  .internal-profile-hero,
-  .prescriptions-hero,
-  .portal-page-hero
-) > :where(.hero-orb, .hero-circle, .hero-decoration, .decorative-circle, [class*="hero-orb"], [class*="hero-circle"]) {
+/* A few legacy hero generations used real decorative children instead of pseudo-elements. */
+html body .patients-header > .hero-orb,
+html body .patients-header > .hero-circle,
+html body .patients-header > .hero-decoration,
+html body .patients36-hero > .hero-orb,
+html body .patients36-hero > .hero-circle,
+html body .patients36-hero > .hero-decoration,
+html body .documents-v10-hero > .hero-orb,
+html body .documents-v10-hero > .hero-circle,
+html body .bill14-command-header > .hero-orb,
+html body .bill14-command-header > .hero-circle,
+html body .svc15-command > .hero-orb,
+html body .svc15-command > .hero-circle,
+html body .dr11-command-header > .hero-orb,
+html body .dr11-command-header > .hero-circle,
+html body .data-import-v21-hero > .hero-orb,
+html body .data-import-v21-hero > .hero-circle,
+html body .inventory-v22-hero > .hero-orb,
+html body .inventory-v22-hero > .hero-circle,
+html body .ex57-hero > .hero-orb,
+html body .ex57-hero > .hero-circle,
+html body .team-v26-hero > .hero-orb,
+html body .team-v26-hero > .hero-circle,
+html body .branches-v27-hero > .hero-orb,
+html body .branches-v27-hero > .hero-circle,
+html body .forms-v28-hero > .hero-orb,
+html body .forms-v28-hero > .hero-circle,
+html body .sys58-hero > .hero-orb,
+html body .sys58-hero > .hero-circle,
+html body .settings-v30-hero > .hero-orb,
+html body .settings-v30-hero > .hero-circle,
+html body .internal-profile-hero > .hero-orb,
+html body .internal-profile-hero > .hero-circle,
+html body .prescriptions-hero > .hero-orb,
+html body .prescriptions-hero > .hero-circle,
+html body .portal-page-hero > .hero-orb,
+html body .portal-page-hero > .hero-circle,
+html body .portal-page-hero > .hero-decoration {
   display: none !important;
 }
 
-/* Keep the page header compact and intentional after decoration removal. */
-.patients-header,
-.documents-v10-hero,
-.bill14-command-header,
-.svc15-command,
-.dv108-hero,
-.data-import-v21-hero,
-.inventory-v22-hero,
-.ex57-hero,
-.team-v26-hero,
-.branches-v27-hero,
-.forms-v28-hero,
-.sys58-hero,
-.settings-v30-hero,
-.internal-profile-hero,
-.prescriptions-hero {
+/* Preserve clean, intentional dimensions after removing the artwork. */
+html body .patients-header,
+html body .patients36-hero,
+html body .documents-v10-hero,
+html body .bill14-command-header,
+html body .svc15-command,
+html body .dr11-command-header,
+html body .data-import-v21-hero,
+html body .inventory-v22-hero,
+html body .ex57-hero,
+html body .team-v26-hero,
+html body .branches-v27-hero,
+html body .forms-v28-hero,
+html body .sys58-hero,
+html body .settings-v30-hero,
+html body .internal-profile-hero,
+html body .prescriptions-hero {
   min-width: 0 !important;
 }
 
 @media (max-width: 760px) {
-  :where(
-    .patients-header,
-    .patients36-hero,
-    .documents-v10-hero,
-    .bill14-command-header,
-    .svc15-command,
-    .dv108-hero,
-    .data-import-v21-hero,
-    .inventory-v22-hero,
-    .ex57-hero,
-    .team-v26-hero,
-    .branches-v27-hero,
-    .forms-v28-hero,
-    .sys58-hero,
-    .settings-v30-hero,
-    .internal-profile-hero,
-    .prescriptions-hero,
-    .portal-page-hero
-  ) {
-    background-image: linear-gradient(180deg, #ffffff 0%, #f4f8ff 100%) !important;
+  html body .patients-header,
+  html body .patients36-hero,
+  html body .documents-v10-hero,
+  html body .bill14-command-header,
+  html body .svc15-command,
+  html body .dr11-command-header,
+  html body .dv108-hero,
+  html body .data-import-v21-hero,
+  html body .inventory-v22-hero,
+  html body .ex57-hero,
+  html body .team-v26-hero,
+  html body .branches-v27-hero,
+  html body .forms-v28-hero,
+  html body .sys58-hero,
+  html body .settings-v30-hero,
+  html body .internal-profile-hero,
+  html body .prescriptions-hero,
+  html body .portal-page-hero {
+    background: linear-gradient(180deg, #ffffff 0%, #f5f9ff 100%) !important;
+    background-image: linear-gradient(180deg, #ffffff 0%, #f5f9ff 100%) !important;
   }
 }
