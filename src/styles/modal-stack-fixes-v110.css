@@ -1,0 +1,18 @@
+/* Modal stack fixes v110 */
+.appointment37-backdrop,
+.modal-backdrop.appointment37-backdrop {
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: 6100 !important;
+}
+
+.operation-action-backdrop,
+.modal-backdrop.operation-action-backdrop,
+.modal-layer-child.operation-action-backdrop {
+  z-index: 6300 !important;
+}
+
+/* Any explicitly marked child dialog opened from an already-open workspace must win. */
+.modal-backdrop.modal-layer-child {
+  z-index: 6300 !important;
+}
