@@ -18,6 +18,7 @@ import '../styles/patient-page-hero-premium-v10.css'
 import { PatientPortalInteractionEnhancements } from '../features/patientPortal/PatientPortalInteractionEnhancements'
 import { PatientPortalLiveEnhancements } from '../features/patientPortal/PatientPortalLiveEnhancements'
 import { PatientPortalSemanticStatusEnhancer } from '../features/patientPortal/PatientPortalSemanticStatusEnhancer'
+import { PatientReceiptInteractionFix } from '../features/patientPortal/PatientReceiptInteractionFix'
 import { PatientPortalPage as PatientPortalPageV3 } from './PatientPortalPageV3'
 
 export function PatientPortalPage() {
@@ -27,6 +28,7 @@ export function PatientPortalPage() {
       <PatientPortalInteractionEnhancements />
       <PatientPortalLiveEnhancements />
       <PatientPortalSemanticStatusEnhancer />
+      <PatientReceiptInteractionFix />
     </>
   )
 }
