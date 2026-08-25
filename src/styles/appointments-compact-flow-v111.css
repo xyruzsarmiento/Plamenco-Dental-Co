@@ -1,0 +1,92 @@
+/* Compact internal appointment workspace and reliable journey avatars. */
+
+.appointments-v40 .sa-appointments-page-v8,
+.appointments-v40 .premium-appointments-page {
+  gap: 18px !important;
+}
+
+.appointments-v40 .sa-appointments-overview-grid {
+  height: auto !important;
+  min-height: 0 !important;
+  max-height: none !important;
+  grid-auto-rows: auto !important;
+  align-items: start !important;
+  align-content: start !important;
+  margin-bottom: 0 !important;
+}
+
+.appointments-v40 .sa-appointments-week-card,
+.appointments-v40 .sa-appointments-branch-card {
+  height: auto !important;
+  min-height: 0 !important;
+  max-height: none !important;
+  align-self: start !important;
+}
+
+.appointments-v40 .sa-appointments-view-switcher {
+  margin-top: 0 !important;
+  margin-bottom: 0 !important;
+}
+
+.appointments-v40 .sa-appointments-flow-board {
+  margin-top: 0 !important;
+}
+
+.appointments-v40 .operations-columns {
+  align-items: start !important;
+  min-height: 0 !important;
+}
+
+.appointments-v40 .sa-appointments-flow-column {
+  height: auto !important;
+  min-height: 270px !important;
+  max-height: none !important;
+  align-self: start !important;
+}
+
+.appointments-v40 .operations-card-list {
+  min-height: 0 !important;
+}
+
+.appointments-v40 .journey-avatar {
+  position: relative !important;
+  isolation: isolate !important;
+  color: #1d4ed8 !important;
+}
+
+.appointments-v40 .journey-avatar-image {
+  position: absolute !important;
+  inset: 0 !important;
+  z-index: 3 !important;
+  display: block !important;
+  width: 100% !important;
+  height: 100% !important;
+  max-width: none !important;
+  object-fit: cover !important;
+  object-position: center !important;
+  border-radius: inherit !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+  pointer-events: none !important;
+}
+
+@media (max-width: 1180px) {
+  .appointments-v40 .sa-appointments-flow-column {
+    min-height: 250px !important;
+  }
+}
+
+@media (max-width: 760px) {
+  .appointments-v40 .sa-appointments-page-v8,
+  .appointments-v40 .premium-appointments-page {
+    gap: 14px !important;
+  }
+
+  .appointments-v40 .sa-appointments-overview-grid {
+    gap: 12px !important;
+  }
+
+  .appointments-v40 .sa-appointments-flow-column {
+    min-height: 230px !important;
+  }
+}
