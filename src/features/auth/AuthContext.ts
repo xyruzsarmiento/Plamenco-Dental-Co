@@ -13,12 +13,15 @@ export type RegisterFormInput = {
   acceptedTerms: boolean
 }
 
+export type SocialAuthProvider = 'google' | 'facebook'
+
 export type AuthContextValue = {
   user: AuthUser | null
   authError: string | null
   isLoading: boolean
   isAuthenticated: boolean
   signIn: (email: string, password: string) => Promise<boolean>
+  signInWithSocial: (provider: SocialAuthProvider) => Promise<{ success: boolean; message: string }>
   registerPatient: (values: RegisterFormInput) => Promise<{ success: boolean; message: string }>
   requestPasswordReset: (email: string) => Promise<{ success: boolean; message: string }>
   resetPassword: (newPassword: string, confirmPassword: string) => Promise<{ success: boolean; message: string }>
