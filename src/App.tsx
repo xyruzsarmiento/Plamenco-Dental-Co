@@ -16,6 +16,7 @@ import { loadServicesFromSupabase } from './features/services/serviceStore'
 import { cachedQuery, queryCachePolicy, readCachedQuery } from './lib/queryCache'
 import { syncSupabaseToLocalStorage } from './lib/supabaseSync'
 import './styles/adaptive-pagination.css'
+import './styles/public-auth-responsive-part7.css'
 
 const PATIENT_PORTAL_CACHE_KEYS = [
   'plamenco.appointments',
@@ -51,9 +52,6 @@ function DataBootstrap({ children }: { children: React.ReactNode }) {
     const scope = `user:${user.id}`
     const bootstrapKey = `workspace-bootstrap:${user.role}`
     const hasWarmBootstrap = readCachedQuery<boolean>(bootstrapKey, scope) === true
-
-    // Warm authenticated sessions paint immediately. Cached/local store data remains visible
-    // while the shared bootstrap revalidates in the background.
     setReady(hasWarmBootstrap)
 
     const bootstrap = cachedQuery(
@@ -67,8 +65,6 @@ function DataBootstrap({ children }: { children: React.ReactNode }) {
         ]
 
         if (user.role === 'patient') {
-          // Clear patient-scoped local snapshots only on a genuinely cold session. A warm
-          // revalidation keeps the current screen usable until fresh RLS-scoped rows arrive.
           if (!hasWarmBootstrap) clearPatientPortalCaches()
           essentialLoads.push(hydratePatientPortalFromDatabase())
         }
@@ -86,8 +82,6 @@ function DataBootstrap({ children }: { children: React.ReactNode }) {
     void bootstrap.finally(() => {
       if (!active) return
       setReady(true)
-
-      // Patient sessions intentionally do not run the broad internal clinic sync.
       if (user.role === 'patient') return
 
       backgroundTimer = window.setTimeout(() => {
@@ -97,11 +91,7 @@ function DataBootstrap({ children }: { children: React.ReactNode }) {
             await syncSupabaseToLocalStorage()
             return true
           },
-          {
-            ...queryCachePolicy.frequent,
-            tags: ['internal-sync'],
-            scope,
-          },
+          { ...queryCachePolicy.frequent, tags: ['internal-sync'], scope },
         ).catch((error) => {
           console.error('[background clinic sync failed]', error)
         })
