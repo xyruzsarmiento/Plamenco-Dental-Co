@@ -33,6 +33,7 @@ import './styles/clinic-ui-fixes-v116.css'
 import './styles/internal-hero-cleanup-v117.css'
 import './styles/inventory-compact-branch-v118.css'
 import './styles/internal-expenses-branch-v122.css'
+import './styles/internal-reports-branch-v124.css'
 
 const PATIENT_PORTAL_CACHE_KEYS = [
   'plamenco.appointments',
