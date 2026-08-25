@@ -1,3 +1,4 @@
+import { clearAllQueryCache } from './queryCache'
 import { supabase } from './supabase'
 
 const PUBLIC_CACHE_KEYS = new Set([
@@ -11,6 +12,7 @@ const PUBLIC_CACHE_KEYS = new Set([
 ])
 
 export function clearSensitiveClinicCaches() {
+  clearAllQueryCache()
   if (typeof window === 'undefined') return
 
   const removals: string[] = []
@@ -32,11 +34,20 @@ export function registerSessionCacheSecurity() {
     return
   }
 
+  let activeUserId = ''
+
   void supabase.auth.getSession().then(({ data, error }) => {
-    if (error || !data.session?.user) clearSensitiveClinicCaches()
+    if (error || !data.session?.user) {
+      clearSensitiveClinicCaches()
+      activeUserId = ''
+      return
+    }
+    activeUserId = data.session.user.id
   })
 
   supabase.auth.onAuthStateChange((_event, session) => {
-    if (!session?.user) clearSensitiveClinicCaches()
+    const nextUserId = session?.user?.id ?? ''
+    if (!nextUserId || (activeUserId && activeUserId !== nextUserId)) clearSensitiveClinicCaches()
+    activeUserId = nextUserId
   })
 }
