@@ -1,0 +1,294 @@
+/* Final UI refinements v109
+   - Record payment modal
+   - Dentist analytics charts
+   - Today's patient flow avatars
+   - Nested appointment modal stacking
+*/
+
+/* ---------- modal stacking ---------- */
+.pay14-backdrop,
+.modal-backdrop.pay14-backdrop {
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: 5200 !important;
+  display: grid !important;
+  place-items: center !important;
+  padding: 24px !important;
+  overflow: auto !important;
+  background: rgba(15, 23, 42, .52) !important;
+  backdrop-filter: blur(9px) saturate(.9) !important;
+}
+
+.operation-action-backdrop,
+.modal-layer-child.operation-action-backdrop {
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: 6200 !important;
+  background: rgba(15, 23, 42, .58) !important;
+  backdrop-filter: blur(10px) !important;
+}
+
+/* Other child dialogs launched while Appointment Workspace is open. */
+body > .modal-backdrop.modal-layer-child,
+body > .modal-backdrop.operation-action-backdrop {
+  z-index: 6200 !important;
+}
+
+/* ---------- record payment ---------- */
+.pay14-modal {
+  width: min(980px, 100%) !important;
+  max-width: 980px !important;
+  max-height: min(92dvh, 860px) !important;
+  display: grid !important;
+  grid-template-rows: auto minmax(0, 1fr) auto !important;
+  overflow: hidden !important;
+  border: 1px solid rgba(203, 213, 225, .92) !important;
+  border-radius: 26px !important;
+  background: #f8fafc !important;
+  box-shadow: 0 42px 100px rgba(15, 23, 42, .28) !important;
+}
+
+.pay14-header {
+  position: relative !important;
+  z-index: 3 !important;
+  padding: 22px 24px 20px !important;
+  border-bottom: 1px solid #e6edf6 !important;
+  background: linear-gradient(135deg, #ffffff 0%, #f8fbff 66%, #eef5ff 100%) !important;
+}
+
+.pay14-title-block { align-items: center !important; gap: 14px !important; }
+.pay14-title-block > .pay14-icon {
+  width: 46px !important;
+  height: 46px !important;
+  display: grid !important;
+  place-items: center !important;
+  flex: 0 0 46px !important;
+  border: 1px solid #cfe0ff !important;
+  border-radius: 14px !important;
+  background: #eaf2ff !important;
+  color: #2563eb !important;
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,.6) !important;
+}
+.pay14-kicker { color: #2563eb !important; font-size: .68rem !important; letter-spacing: .11em !important; font-weight: 850 !important; text-transform: uppercase !important; }
+.pay14-title-block h2 { margin: 3px 0 3px !important; color: #0f172a !important; font-size: clamp(1.45rem, 2.1vw, 2rem) !important; line-height: 1.05 !important; letter-spacing: -.035em !important; }
+.pay14-title-block p { margin: 0 !important; color: #64748b !important; font-size: .84rem !important; }
+.pay14-close {
+  width: 42px !important;
+  height: 42px !important;
+  border: 1px solid #d8e2ef !important;
+  border-radius: 13px !important;
+  background: rgba(255,255,255,.92) !important;
+  color: #475569 !important;
+  box-shadow: 0 7px 20px rgba(15,23,42,.06) !important;
+}
+
+.pay14-body {
+  min-height: 0 !important;
+  display: grid !important;
+  grid-template-columns: minmax(0, 1.55fr) minmax(285px, .75fr) !important;
+  overflow: hidden !important;
+  background: #f8fafc !important;
+}
+.pay14-form-column {
+  min-width: 0 !important;
+  overflow-y: auto !important;
+  padding: 18px !important;
+  display: grid !important;
+  align-content: start !important;
+  gap: 12px !important;
+  scrollbar-gutter: stable !important;
+}
+.pay14-summary-column {
+  min-width: 0 !important;
+  overflow-y: auto !important;
+  padding: 18px 18px 18px 4px !important;
+  border-left: 1px solid #e5edf6 !important;
+  background: linear-gradient(180deg, #f3f7fc, #f8fafc) !important;
+  display: grid !important;
+  align-content: start !important;
+  gap: 12px !important;
+}
+.pay14-section,
+.pay14-summary-card,
+.pay14-trust-card {
+  border: 1px solid #dfe7f1 !important;
+  border-radius: 17px !important;
+  background: #fff !important;
+  box-shadow: 0 8px 24px rgba(15,23,42,.035) !important;
+}
+.pay14-section { padding: 16px !important; }
+.pay14-section-head { gap: 11px !important; margin-bottom: 14px !important; }
+.pay14-section-head > span {
+  width: 30px !important;
+  height: 30px !important;
+  flex: 0 0 30px !important;
+  display: grid !important;
+  place-items: center !important;
+  border-radius: 10px !important;
+  background: #edf4ff !important;
+  color: #2563eb !important;
+  font-size: .72rem !important;
+  font-weight: 900 !important;
+}
+.pay14-section-head h3 { margin: 0 0 2px !important; color: #172033 !important; font-size: .94rem !important; }
+.pay14-section-head p { margin: 0 !important; color: #728096 !important; font-size: .75rem !important; line-height: 1.45 !important; }
+.pay14-grid { gap: 12px !important; }
+.pay14-grid label > span { margin-bottom: 6px !important; color: #52617a !important; font-size: .71rem !important; font-weight: 800 !important; }
+.pay14-grid input,
+.pay14-grid select {
+  min-height: 44px !important;
+  border: 1px solid #cfdaea !important;
+  border-radius: 12px !important;
+  background: #fbfdff !important;
+  color: #172033 !important;
+  box-shadow: none !important;
+}
+.pay14-grid input:focus,
+.pay14-grid select:focus { border-color: #6ea0ff !important; box-shadow: 0 0 0 3px rgba(37,99,235,.1) !important; outline: 0 !important; }
+.pay14-summary-card { padding: 18px !important; }
+.pay14-summary-card > h3 { margin: 7px 0 3px !important; font-size: 1.35rem !important; letter-spacing: -.03em !important; color: #0f172a !important; }
+.pay14-summary-card > p { margin: 0 0 14px !important; color: #64748b !important; font-size: .8rem !important; }
+.pay14-summary-icon {
+  width: 42px !important; height: 42px !important; display: grid !important; place-items: center !important;
+  margin-bottom: 12px !important; border: 1px solid #d5e4ff !important; border-radius: 13px !important;
+  background: #edf4ff !important; color: #2563eb !important;
+}
+.pay14-summary-metrics { display: grid !important; gap: 0 !important; border-top: 1px solid #edf1f6 !important; }
+.pay14-summary-metrics > div { display: flex !important; justify-content: space-between !important; gap: 12px !important; padding: 11px 0 !important; border-bottom: 1px solid #edf1f6 !important; }
+.pay14-summary-metrics span { color: #738096 !important; font-size: .75rem !important; }
+.pay14-summary-metrics strong { color: #172033 !important; font-size: .82rem !important; }
+.pay14-summary-metrics .is-emphasis { margin: 5px -8px !important; padding: 11px 8px !important; border: 0 !important; border-radius: 10px !important; background: #eef5ff !important; }
+.pay14-trust-card { padding: 14px !important; gap: 11px !important; }
+.pay14-trust-card > svg { color: #2563eb !important; flex: 0 0 auto !important; }
+.pay14-trust-card strong { color: #172033 !important; font-size: .8rem !important; }
+.pay14-trust-card p { margin: 4px 0 0 !important; color: #718096 !important; font-size: .72rem !important; line-height: 1.5 !important; }
+.pay14-footer {
+  position: relative !important;
+  z-index: 4 !important;
+  min-height: 74px !important;
+  padding: 13px 18px !important;
+  border-top: 1px solid #dfe7f1 !important;
+  background: rgba(255,255,255,.97) !important;
+  box-shadow: 0 -10px 30px rgba(15,23,42,.045) !important;
+}
+.pay14-footer > div:first-child span { color: #64748b !important; font-size: .65rem !important; letter-spacing: .08em !important; text-transform: uppercase !important; }
+.pay14-footer > div:first-child strong { color: #0f172a !important; font-size: 1rem !important; }
+.pay14-success { padding: 48px 26px !important; background: #fff !important; }
+
+/* ---------- today's patient journey ---------- */
+.appointments-v40 .journey-avatar {
+  width: 46px !important;
+  height: 46px !important;
+  flex: 0 0 46px !important;
+  display: grid !important;
+  place-items: center !important;
+  overflow: hidden !important;
+  border: 1px solid #bfd5fa !important;
+  border-radius: 14px !important;
+  background-color: #eaf2ff !important;
+  background-size: cover !important;
+  background-position: center !important;
+  background-repeat: no-repeat !important;
+  color: #1d4ed8 !important;
+  font-weight: 900 !important;
+  font-size: .78rem !important;
+  box-shadow: inset 0 0 0 2px rgba(255,255,255,.75) !important;
+}
+.appointments-v40 .journey-avatar::before,
+.appointments-v40 .journey-avatar::after { display: none !important; }
+.appointments-v40 .journey-patient-block { gap: 11px !important; min-width: 0 !important; }
+.appointments-v40 .journey-patient-copy { min-width: 0 !important; }
+.appointments-v40 .journey-patient-copy strong { overflow: hidden !important; text-overflow: ellipsis !important; white-space: nowrap !important; max-width: 150px !important; }
+.appointments-v40 .journey-patient-copy small { overflow: hidden !important; text-overflow: ellipsis !important; white-space: nowrap !important; max-width: 150px !important; }
+
+/* ---------- dentist activity & performance ---------- */
+.dv108-analytics {
+  border: 1px solid #dde6f2 !important;
+  border-radius: 22px !important;
+  padding: 22px !important;
+  background: linear-gradient(180deg,#fff 0%,#fbfdff 100%) !important;
+  box-shadow: 0 18px 48px rgba(15,23,42,.055) !important;
+}
+.dv108-analytics .dv108-section-head { padding-bottom: 16px !important; margin-bottom: 16px !important; border-bottom: 1px solid #edf1f6 !important; }
+.dv108-analytics .dv108-section-head h3 { margin: 4px 0 3px !important; color: #0f172a !important; font-size: 1.15rem !important; letter-spacing: -.025em !important; }
+.dv108-analytics .dv108-section-head p { margin: 0 !important; color: #6b7890 !important; font-size: .78rem !important; }
+.dv108-chart-grid { display: grid !important; grid-template-columns: repeat(2,minmax(0,1fr)) !important; gap: 14px !important; }
+.dv108-chart-grid > article {
+  min-width: 0 !important;
+  min-height: 300px !important;
+  padding: 18px !important;
+  border: 1px solid #e0e8f2 !important;
+  border-radius: 18px !important;
+  background: #fff !important;
+  box-shadow: 0 9px 26px rgba(15,23,42,.035) !important;
+}
+.dv108-chart-grid > article h4 { margin: 0 0 15px !important; color: #172033 !important; font-size: .9rem !important; letter-spacing: -.015em !important; }
+.dv108-chart {
+  height: 205px !important;
+  display: flex !important;
+  align-items: stretch !important;
+  gap: 8px !important;
+  padding: 12px 8px 4px !important;
+  overflow-x: auto !important;
+  overflow-y: hidden !important;
+  border-radius: 14px !important;
+  background: linear-gradient(180deg,#f8fbff 0%,#fff 100%) !important;
+  scrollbar-width: thin !important;
+}
+.dv108-chart-col { min-width: 42px !important; flex: 1 0 42px !important; display: grid !important; grid-template-rows: 1fr auto !important; gap: 7px !important; }
+.dv108-bars { min-height: 150px !important; display: flex !important; align-items: end !important; justify-content: center !important; gap: 4px !important; border-bottom: 1px solid #dce6f2 !important; }
+.dv108-bars > span { width: 8px !important; min-height: 4px !important; border-radius: 8px 8px 2px 2px !important; box-shadow: 0 4px 10px rgba(37,99,235,.12) !important; }
+.dv108-bars .is-scheduled { background: linear-gradient(180deg,#5b8cff,#2563eb) !important; }
+.dv108-bars .is-completed { background: linear-gradient(180deg,#45c981,#16a34a) !important; }
+.dv108-chart-col small { min-width: 0 !important; color: #7b8799 !important; font-size: .6rem !important; line-height: 1.15 !important; text-align: center !important; }
+.dv108-chart-grid > article > footer { margin-top: 12px !important; padding-top: 11px !important; border-top: 1px solid #edf1f6 !important; display: flex !important; gap: 16px !important; color: #64748b !important; font-size: .72rem !important; }
+.dv108-chart-grid > article > footer span { display: inline-flex !important; align-items: center !important; gap: 6px !important; }
+.dv108-chart-grid > article > footer i { width: 8px !important; height: 8px !important; border-radius: 999px !important; }
+.dv108-chart-grid > article > footer i.is-scheduled { background:#2563eb !important; }
+.dv108-chart-grid > article > footer i.is-completed { background:#16a34a !important; }
+.dv108-donut-wrap { min-height: 210px !important; display: grid !important; grid-template-columns: 180px minmax(0,1fr) !important; align-items: center !important; gap: 22px !important; padding: 6px 4px !important; }
+.dv108-donut {
+  width: 160px !important; height: 160px !important; margin: auto !important; position: relative !important;
+  display: grid !important; place-content: center !important; border-radius: 50% !important;
+  box-shadow: inset 0 0 0 1px rgba(15,23,42,.03), 0 12px 30px rgba(37,99,235,.10) !important;
+}
+.dv108-donut::after { content:'' !important; position:absolute !important; inset:28px !important; border-radius:50% !important; background:#fff !important; box-shadow:0 0 0 1px #edf1f6 !important; }
+.dv108-donut strong,.dv108-donut span { position:relative !important; z-index:1 !important; text-align:center !important; }
+.dv108-donut strong { font-size:1.5rem !important; color:#0f172a !important; }
+.dv108-donut span { color:#7a8798 !important; font-size:.68rem !important; }
+.dv108-donut-legend { display:grid !important; gap:8px !important; }
+.dv108-donut-legend > div { display:grid !important; grid-template-columns:auto 1fr auto !important; gap:9px !important; align-items:center !important; padding:8px 10px !important; border:1px solid #e8edf4 !important; border-radius:10px !important; background:#fbfdff !important; }
+.dv108-donut-legend i { width:8px !important; height:8px !important; border-radius:50% !important; }
+.dv108-donut-legend span { color:#52617a !important; font-size:.72rem !important; }
+.dv108-donut-legend strong { color:#172033 !important; font-size:.78rem !important; }
+.dv108-ranked-list { min-height: 205px !important; display:grid !important; align-content:start !important; gap:8px !important; padding:12px !important; border-radius:14px !important; background:#f8fbff !important; }
+.dv108-ranked-list > div { display:flex !important; align-items:center !important; justify-content:space-between !important; gap:12px !important; padding:10px 11px !important; border:1px solid #e4ebf4 !important; border-radius:10px !important; background:#fff !important; }
+.dv108-ranked-list > p { min-height:170px !important; display:grid !important; place-items:center !important; margin:0 !important; color:#7b8799 !important; text-align:center !important; }
+.dv108-utilization { min-height:205px !important; display:grid !important; place-content:center !important; justify-items:center !important; gap:8px !important; padding:22px !important; border:1px solid #d8e5f7 !important; border-radius:16px !important; background:linear-gradient(145deg,#f7fbff,#eef5ff) !important; text-align:center !important; }
+.dv108-utilization strong { font-size:2.35rem !important; line-height:1 !important; letter-spacing:-.05em !important; color:#172033 !important; }
+.dv108-utilization span { max-width:330px !important; color:#65738a !important; font-size:.76rem !important; line-height:1.55 !important; }
+
+@media (max-width: 900px) {
+  .pay14-body { grid-template-columns: 1fr !important; overflow-y:auto !important; }
+  .pay14-form-column { overflow:visible !important; }
+  .pay14-summary-column { overflow:visible !important; padding:0 18px 18px !important; border-left:0 !important; border-top:1px solid #e5edf6 !important; }
+  .dv108-chart-grid { grid-template-columns:1fr !important; }
+}
+
+@media (max-width: 640px) {
+  .pay14-backdrop,.modal-backdrop.pay14-backdrop { padding:0 !important; align-items:end !important; }
+  .pay14-modal { width:100% !important; max-height:96dvh !important; border-radius:24px 24px 0 0 !important; }
+  .pay14-header { padding:16px !important; }
+  .pay14-body { overflow-y:auto !important; }
+  .pay14-form-column { padding:12px !important; }
+  .pay14-summary-column { padding:12px !important; }
+  .pay14-grid-2 { grid-template-columns:1fr !important; }
+  .pay14-span-2 { grid-column:auto !important; }
+  .pay14-footer { align-items:stretch !important; gap:10px !important; flex-direction:column !important; }
+  .pay14-footer-actions { display:grid !important; grid-template-columns:1fr 1fr !important; width:100% !important; }
+  .dv108-analytics { padding:14px !important; border-radius:18px !important; }
+  .dv108-chart-grid > article { min-height:0 !important; padding:14px !important; }
+  .dv108-donut-wrap { grid-template-columns:1fr !important; }
+  .appointments-v40 .journey-patient-copy strong,
+  .appointments-v40 .journey-patient-copy small { max-width:120px !important; }
+}
