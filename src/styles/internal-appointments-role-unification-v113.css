@@ -1,0 +1,244 @@
+/* Final internal appointment layout unification.
+   Uses the real AppLayout page class so Staff, Dentist and Super Admin share one layout. */
+
+.page-appointments .sa-appointments-page-v8,
+.page-appointments .premium-appointments-page {
+  display: grid !important;
+  align-content: start !important;
+  gap: 14px !important;
+  width: 100% !important;
+  min-width: 0 !important;
+}
+
+.page-appointments .sa-appointments-page-v8 > *,
+.page-appointments .premium-appointments-page > * {
+  min-width: 0 !important;
+  margin-block: 0 !important;
+}
+
+/* Remove the dead vertical space before Today's flow / Calendar / Requests. */
+.page-appointments .sa-appointments-overview-grid {
+  height: auto !important;
+  min-height: 0 !important;
+  max-height: none !important;
+  align-items: start !important;
+  align-content: start !important;
+  margin: 0 !important;
+}
+
+.page-appointments .sa-appointments-week-card,
+.page-appointments .sa-appointments-branch-card {
+  height: auto !important;
+  min-height: 0 !important;
+  max-height: none !important;
+  align-self: start !important;
+  margin: 0 !important;
+}
+
+.page-appointments .sa-appointments-card-heading {
+  margin-bottom: 10px !important;
+}
+
+.page-appointments .sa-appointments-view-switcher {
+  margin: 0 !important;
+  margin-top: -2px !important;
+  width: fit-content !important;
+  max-width: 100% !important;
+  min-height: 50px !important;
+  padding: 5px !important;
+  gap: 5px !important;
+}
+
+.page-appointments .sa-appointments-view-switcher > button {
+  min-height: 38px !important;
+  padding-inline: 18px !important;
+}
+
+/* One identical patient-journey board for every internal role. */
+.page-appointments .sa-appointments-flow-board {
+  width: 100% !important;
+  min-width: 0 !important;
+  margin: 0 !important;
+  overflow: hidden !important;
+}
+
+.page-appointments .sa-appointments-flow-header {
+  padding: 18px 20px !important;
+  gap: 16px !important;
+  min-height: 0 !important;
+}
+
+.page-appointments .operations-columns {
+  display: grid !important;
+  grid-auto-flow: column !important;
+  grid-auto-columns: 300px !important;
+  gap: 12px !important;
+  padding: 14px !important;
+  align-items: start !important;
+  align-content: start !important;
+  min-height: 0 !important;
+  height: auto !important;
+  overflow-x: auto !important;
+  overflow-y: hidden !important;
+  scroll-snap-type: x proximity !important;
+  scrollbar-gutter: stable !important;
+}
+
+.page-appointments .sa-appointments-flow-column {
+  width: 300px !important;
+  min-width: 300px !important;
+  max-width: 300px !important;
+  min-height: 250px !important;
+  height: auto !important;
+  align-self: start !important;
+  scroll-snap-align: start !important;
+}
+
+.page-appointments .operations-column-header {
+  min-height: 56px !important;
+  padding: 13px 14px !important;
+}
+
+.page-appointments .operations-card-list {
+  display: grid !important;
+  align-content: start !important;
+  gap: 10px !important;
+  padding: 12px !important;
+  min-height: 0 !important;
+}
+
+.page-appointments .sa-appointments-flow-card {
+  width: 100% !important;
+  min-width: 0 !important;
+  margin: 0 !important;
+  padding: 13px !important;
+}
+
+.page-appointments .journey-card-main {
+  min-width: 0 !important;
+  gap: 10px 12px !important;
+}
+
+.page-appointments .journey-patient-copy,
+.page-appointments .journey-care-block,
+.page-appointments .journey-schedule-block {
+  min-width: 0 !important;
+}
+
+.page-appointments .journey-patient-copy strong,
+.page-appointments .journey-patient-copy small,
+.page-appointments .journey-care-block strong,
+.page-appointments .journey-care-block span {
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+
+.page-appointments .operations-card-actions {
+  gap: 7px !important;
+  padding-top: 9px !important;
+  margin-top: 0 !important;
+}
+
+/* Keep Staff/Dentist/Super Admin visually identical; permissions only change available actions. */
+.page-appointments.role-staff .operations-columns,
+.page-appointments.role-dentist .operations-columns,
+.page-appointments.role-associate_dentist .operations-columns,
+.page-appointments.role-super_admin .operations-columns {
+  grid-auto-columns: 300px !important;
+}
+
+.page-appointments.role-staff .sa-appointments-flow-column,
+.page-appointments.role-dentist .sa-appointments-flow-column,
+.page-appointments.role-associate_dentist .sa-appointments-flow-column,
+.page-appointments.role-super_admin .sa-appointments-flow-column {
+  width: 300px !important;
+  min-width: 300px !important;
+  max-width: 300px !important;
+}
+
+@media (max-width: 1280px) {
+  .page-appointments .sa-appointments-page-v8,
+  .page-appointments .premium-appointments-page {
+    gap: 12px !important;
+  }
+
+  .page-appointments .operations-columns,
+  .page-appointments.role-staff .operations-columns,
+  .page-appointments.role-dentist .operations-columns,
+  .page-appointments.role-associate_dentist .operations-columns,
+  .page-appointments.role-super_admin .operations-columns {
+    grid-auto-columns: 286px !important;
+  }
+
+  .page-appointments .sa-appointments-flow-column,
+  .page-appointments.role-staff .sa-appointments-flow-column,
+  .page-appointments.role-dentist .sa-appointments-flow-column,
+  .page-appointments.role-associate_dentist .sa-appointments-flow-column,
+  .page-appointments.role-super_admin .sa-appointments-flow-column {
+    width: 286px !important;
+    min-width: 286px !important;
+    max-width: 286px !important;
+  }
+}
+
+@media (max-width: 900px) {
+  .page-appointments .sa-appointments-view-switcher {
+    width: 100% !important;
+    display: grid !important;
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  }
+
+  .page-appointments .sa-appointments-view-switcher > button {
+    min-width: 0 !important;
+    justify-content: center !important;
+    padding-inline: 8px !important;
+  }
+
+  .page-appointments .sa-appointments-flow-header {
+    padding: 16px !important;
+  }
+
+  .page-appointments .operations-columns,
+  .page-appointments.role-staff .operations-columns,
+  .page-appointments.role-dentist .operations-columns,
+  .page-appointments.role-associate_dentist .operations-columns,
+  .page-appointments.role-super_admin .operations-columns {
+    grid-auto-columns: minmax(78vw, 320px) !important;
+    padding: 12px !important;
+  }
+
+  .page-appointments .sa-appointments-flow-column,
+  .page-appointments.role-staff .sa-appointments-flow-column,
+  .page-appointments.role-dentist .sa-appointments-flow-column,
+  .page-appointments.role-associate_dentist .sa-appointments-flow-column,
+  .page-appointments.role-super_admin .sa-appointments-flow-column {
+    width: auto !important;
+    min-width: 0 !important;
+    max-width: none !important;
+  }
+}
+
+@media (max-width: 560px) {
+  .page-appointments .sa-appointments-page-v8,
+  .page-appointments .premium-appointments-page {
+    gap: 10px !important;
+  }
+
+  .page-appointments .sa-appointments-view-switcher {
+    min-height: 46px !important;
+  }
+
+  .page-appointments .sa-appointments-view-switcher > button {
+    font-size: .75rem !important;
+  }
+
+  .page-appointments .operations-columns,
+  .page-appointments.role-staff .operations-columns,
+  .page-appointments.role-dentist .operations-columns,
+  .page-appointments.role-associate_dentist .operations-columns,
+  .page-appointments.role-super_admin .operations-columns {
+    grid-auto-columns: calc(100vw - 48px) !important;
+    gap: 10px !important;
+    padding: 10px !important;
+  }
+}
