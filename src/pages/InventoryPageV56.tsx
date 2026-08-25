@@ -1,12 +1,15 @@
-import { AlertTriangle, Boxes, CircleDollarSign, Package, PackageCheck, PackageX, PencilLine, Trash2 } from 'lucide-react'
+import { AlertTriangle, Boxes, Building2, CircleDollarSign, Package, PackageCheck, PackageX, PencilLine, Trash2 } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 import { Button } from '../components/ui/Button'
 import { Pagination } from '../components/ui/DesignSystem'
 import { ReportRankedBarsV54 } from '../components/ui/ReportsAnalyticsV54'
+import { useBranchContext } from '../features/branches/BranchContext'
 import { getStoredBranches } from '../features/branches/branchStore'
 import { InventoryActionModal, type InventoryDialog } from '../features/inventory/InventoryActionModal'
 import { getBranchInventory, getInventoryItems, getInventoryUnits, getSuppliers } from '../features/inventory/inventoryStore'
 import { buildEnterpriseReportSnapshot, formatReportCurrency } from '../features/reports/reportStore'
+import '../styles/internal-inventory-branch-v121.css'
+import { InventoryBranchWorkspaceV121 } from './InventoryBranchWorkspaceV121'
 import { InventoryPageV22 } from './InventoryPageV22'
 
 function unitLabel(unitId: string) {
@@ -18,6 +21,15 @@ const CATALOG_PAGE_SIZE = 6
 const CHART_PAGE_SIZE = 8
 
 export function InventoryPageV56() {
+  const {
+    activeBranch,
+    activeBranchId,
+    availableBranches,
+    authorizedBranchIds,
+    hasBranchAccess,
+    isAllBranchesMode,
+    isLoading: branchScopeLoading,
+  } = useBranchContext()
   const [refreshKey, setRefreshKey] = useState(0)
   const [dialog, setDialog] = useState<InventoryDialog | null>(null)
   const [catalogPage, setCatalogPage] = useState(1)
@@ -67,12 +79,38 @@ export function InventoryPageV56() {
     setRefreshKey((current) => current + 1)
   }
 
-  return <section className="inventory56-page">
-    <InventoryPageV22 key={refreshKey} />
+  if (branchScopeLoading) {
+    return <section className="inventory56-page"><div className="inventory56-no-branch" role="status"><Building2 size={28}/><h2>Loading inventory workspace</h2><p>Resolving your authorized clinic branch before inventory data is shown.</p></div></section>
+  }
+
+  if (!isAllBranchesMode && (!hasBranchAccess || !activeBranch || !activeBranchId)) {
+    return <section className="inventory56-page"><div className="inventory56-no-branch" role="alert"><Building2 size={28}/><h2>No inventory branch assigned</h2><p>This account has no active clinic branch assignment. Inventory operations stay unavailable until an authorized branch is assigned.</p></div></section>
+  }
+
+  const inventoryCacheKey = `inventory:${isAllBranchesMode ? 'all' : activeBranchId}:${authorizedBranchIds.slice().sort().join(',')}`
+
+  if (!isAllBranchesMode && activeBranch) {
+    return <section className="inventory56-page">
+      <InventoryBranchWorkspaceV121
+        key={inventoryCacheKey}
+        activeBranch={activeBranch}
+        availableBranches={availableBranches}
+        cacheKey={inventoryCacheKey}
+      />
+    </section>
+  }
+
+  return <section className="inventory56-page" data-inventory-cache-key={inventoryCacheKey}>
+    <div className="inventory56-scope-banner" role="note">
+      <Building2 size={18}/>
+      <div><strong>All Branches · comparison workspace</strong><span>Clinic-wide totals are shown below. Branch-owned actions must explicitly choose a destination/source branch before saving. Switch to Pulilan or Plaridel for normal day-to-day stock operations.</span></div>
+    </div>
+
+    <InventoryPageV22 key={`${inventoryCacheKey}:${refreshKey}`} />
 
     <section className="inventory56-maintenance" aria-label="Inventory catalog maintenance">
       <header className="inventory56-section-head">
-        <div><span>Catalog controls</span><h2>Edit or remove inventory items</h2><p>Correct catalog mistakes without changing quantities directly. Quantity changes should continue through Stock In, Stock Out, Adjust, receiving, transfers, or stock counts so the ledger stays auditable.</p></div>
+        <div><span>Global catalog controls</span><h2>Edit or remove inventory items</h2><p>The item catalog is clinic-wide. Quantity changes remain branch-owned and must continue through Stock In, Stock Out, Adjust, receiving, transfers, or stock counts.</p></div>
         <div className="inventory56-head-count"><Package size={18}/><strong>{items.length}</strong><span>active items</span></div>
       </header>
       {items.length ? <><div className="inventory56-maintenance-grid">{visibleCatalogItems.map((item) => {
@@ -80,17 +118,17 @@ export function InventoryPageV56() {
         const supplier = suppliers.find((entry) => entry.id === item.defaultSupplierId)
         return <article key={item.id} className="inventory56-maintenance-card">
           <div className="inventory56-maintenance-icon"><Package size={19}/></div>
-          <div className="inventory56-maintenance-copy"><span>{item.itemCode}</span><h3>{item.name}</h3><p>{item.sku ? `Stock code ${item.sku}` : 'No optional stock code'} · {item.brand || 'No brand'}</p><div><span><strong>{onHand.toLocaleString('en-PH')}</strong> {unitLabel(item.unitId)} on hand</span><span>{supplier?.name || 'No default supplier'}</span></div></div>
+          <div className="inventory56-maintenance-copy"><span>{item.itemCode}</span><h3>{item.name}</h3><p>{item.sku ? `Stock code ${item.sku}` : 'No optional stock code'} · {item.brand || 'No brand'}</p><div><span><strong>{onHand.toLocaleString('en-PH')}</strong> {unitLabel(item.unitId)} clinic-wide</span><span>{supplier?.name || 'No default supplier'}</span></div></div>
           <div className="inventory56-maintenance-actions"><Button size="sm" variant="secondary" icon={<PencilLine size={14}/>} onClick={() => setDialog({ type: 'edit_item', item })}>Edit</Button><Button size="sm" variant="ghost" icon={<Trash2 size={14}/>} onClick={() => setDialog({ type: 'remove_item', item })}>Remove</Button></div>
         </article>
       })}</div><Pagination page={catalogPage} pageCount={catalogPageCount} totalItems={items.length} pageSize={CATALOG_PAGE_SIZE} onPageChange={setCatalogPage} label="Catalog control pages" /></> : <div className="inventory56-empty"><Package size={24}/><strong>No active inventory items</strong><span>Add an item from the Inventory Control Center to start tracking supplies.</span></div>}
     </section>
 
     <section className="inventory56-intelligence" aria-label="Inventory intelligence">
-      <header className="inventory56-section-head"><div><span>Inventory intelligence</span><h2>Stock health and purchasing performance</h2><p>Recorded inventory activity shown as supporting analytics below the day-to-day inventory workspace.</p></div><div className="inventory56-value"><CircleDollarSign size={18}/><span>Recorded valuation</span><strong>{formatReportCurrency(snapshot.inventory.inventoryValuationCents)}</strong></div></header>
+      <header className="inventory56-section-head"><div><span>All-branch inventory intelligence</span><h2>Stock health and purchasing performance</h2><p>Clinic-wide comparison analytics. Use a branch workspace for operational stock changes.</p></div><div className="inventory56-value"><CircleDollarSign size={18}/><span>Recorded valuation</span><strong>{formatReportCurrency(snapshot.inventory.inventoryValuationCents)}</strong></div></header>
 
       <div className="inventory56-risk-card">
-        <div className="inventory56-card-heading"><div><span>Stock health</span><h3>Risk overview</h3><p>Current recorded stock condition across the clinic inventory.</p></div></div>
+        <div className="inventory56-card-heading"><div><span>Stock health</span><h3>Risk overview</h3><p>Current recorded stock condition across all clinic branches.</p></div></div>
         <div className="inventory56-risk-grid">{risk.map((item) => { const Icon = item.icon; return <article key={item.label} className={`inventory56-risk-item tone-${item.tone}`}><i><Icon size={18}/></i><div><span>{item.label}</span><strong>{item.value}</strong><small>{item.helper}</small></div></article> })}</div>
       </div>
 
