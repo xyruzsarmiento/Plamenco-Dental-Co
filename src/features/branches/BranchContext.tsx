@@ -70,7 +70,7 @@ function readStoredScope(userId: string): BranchScope | null {
   try {
     const value = window.localStorage.getItem(storageKey(userId))
     if (!value) return null
-    const parsed = JSON.parse(value) as Partial<BranchScope>
+    const parsed = JSON.parse(value) as { kind?: unknown; branchId?: unknown }
     if (parsed.kind === 'all') return { kind: 'all' }
     if (parsed.kind === 'branch' && typeof parsed.branchId === 'string' && parsed.branchId) {
       return { kind: 'branch', branchId: parsed.branchId }
