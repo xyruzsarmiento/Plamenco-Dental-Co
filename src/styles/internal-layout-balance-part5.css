@@ -1,0 +1,166 @@
+/* PART 5 — Internal portal width, grid balance, and responsive spacing
+   Applies only to Staff, Dentist / Associate Dentist, and Super Admin shells. */
+
+.role-staff .content-area,
+.role-dentist .content-area,
+.role-associate_dentist .content-area,
+.role-super_admin .content-area {
+  min-width: 0;
+  width: 100%;
+}
+
+.role-staff .content-area > *,
+.role-dentist .content-area > *,
+.role-associate_dentist .content-area > *,
+.role-super_admin .content-area > * {
+  width: 100%;
+  min-width: 0;
+  max-width: none;
+}
+
+/* Remove the old centered/narrow profile cap. The page should use the workspace width. */
+.role-staff .internal-profile-page,
+.role-dentist .internal-profile-page,
+.role-associate_dentist .internal-profile-page,
+.role-super_admin .internal-profile-page {
+  width: 100% !important;
+  max-width: none !important;
+}
+
+/* Personal information remains a deliberate full-width section. */
+.role-staff .internal-profile-panel-wide,
+.role-dentist .internal-profile-panel-wide,
+.role-associate_dentist .internal-profile-panel-wide,
+.role-super_admin .internal-profile-panel-wide {
+  grid-column: 1 / -1 !important;
+}
+
+/* Desktop profile: pair account context with account/security instead of leaving a dead half-column. */
+@media (min-width: 1181px) {
+  .role-staff .internal-profile-grid,
+  .role-dentist .internal-profile-grid,
+  .role-associate_dentist .internal-profile-grid,
+  .role-super_admin .internal-profile-grid {
+    grid-template-columns: minmax(300px, .72fr) minmax(0, 1.28fr) !important;
+    align-items: start !important;
+    gap: 18px !important;
+  }
+
+  .role-staff .internal-profile-grid > .internal-profile-panel:has(.internal-profile-account-list),
+  .role-dentist .internal-profile-grid > .internal-profile-panel:has(.internal-profile-account-list),
+  .role-associate_dentist .internal-profile-grid > .internal-profile-panel:has(.internal-profile-account-list),
+  .role-super_admin .internal-profile-grid > .internal-profile-panel:has(.internal-profile-account-list) {
+    grid-column: 1 !important;
+  }
+
+  .role-staff .internal-profile-grid > .account-security-v7,
+  .role-dentist .internal-profile-grid > .account-security-v7,
+  .role-associate_dentist .internal-profile-grid > .account-security-v7,
+  .role-super_admin .internal-profile-grid > .account-security-v7 {
+    grid-column: 2 !important;
+    align-self: stretch !important;
+  }
+
+  /* Dentist professional information is its own complete section below the account row. */
+  .role-dentist .internal-profile-grid > .internal-profile-panel:has(.internal-profile-info-grid):not(.internal-profile-panel-wide),
+  .role-associate_dentist .internal-profile-grid > .internal-profile-panel:has(.internal-profile-info-grid):not(.internal-profile-panel-wide) {
+    grid-column: 1 / -1 !important;
+  }
+}
+
+/* Common page scaffolds should fill the available content column instead of retaining legacy caps. */
+.role-staff :is(.premium-page-scaffold, .rv56-page),
+.role-dentist :is(.premium-page-scaffold, .rv56-page),
+.role-associate_dentist :is(.premium-page-scaffold, .rv56-page),
+.role-super_admin :is(.premium-page-scaffold, .rv56-page) {
+  width: 100% !important;
+  max-width: none !important;
+  min-width: 0 !important;
+}
+
+/* Make generic page grids self-balancing without forcing a useless empty track. */
+.role-staff :is(.premium-page-grid, .workspace-grid, .dashboard-grid, .analytics-grid),
+.role-dentist :is(.premium-page-grid, .workspace-grid, .dashboard-grid, .analytics-grid),
+.role-associate_dentist :is(.premium-page-grid, .workspace-grid, .dashboard-grid, .analytics-grid),
+.role-super_admin :is(.premium-page-grid, .workspace-grid, .dashboard-grid, .analytics-grid) {
+  min-width: 0;
+  width: 100%;
+}
+
+/* Prevent children in desktop grids from enforcing an old fixed column width. */
+.role-staff .content-area :is(.panel, .workspace-panel, .table-panel, .filter-panel),
+.role-dentist .content-area :is(.panel, .workspace-panel, .table-panel, .filter-panel),
+.role-associate_dentist .content-area :is(.panel, .workspace-panel, .table-panel, .filter-panel),
+.role-super_admin .content-area :is(.panel, .workspace-panel, .table-panel, .filter-panel) {
+  min-width: 0;
+  max-width: 100%;
+}
+
+/* Reports: use full width and keep the analytics rows balanced on wide screens. */
+.role-super_admin .rv56-page {
+  margin-inline: 0 !important;
+}
+
+.role-super_admin .rv56-page :is(.rv56-grid, .rv56-chart-grid, .rv56-analytics-grid, .rv56-lower-grid) {
+  width: 100%;
+  min-width: 0;
+}
+
+/* Tables and data regions should shrink within the workspace rather than force the page wider. */
+.role-staff .content-area :is(table, .table-wrap, .data-table-wrap),
+.role-dentist .content-area :is(table, .table-wrap, .data-table-wrap),
+.role-associate_dentist .content-area :is(table, .table-wrap, .data-table-wrap),
+.role-super_admin .content-area :is(table, .table-wrap, .data-table-wrap) {
+  max-width: 100%;
+}
+
+/* Laptop: collapse intentional two-column profile/account layouts before they become cramped. */
+@media (max-width: 1180px) {
+  .role-staff .internal-profile-grid,
+  .role-dentist .internal-profile-grid,
+  .role-associate_dentist .internal-profile-grid,
+  .role-super_admin .internal-profile-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .role-staff .internal-profile-grid > *,
+  .role-dentist .internal-profile-grid > *,
+  .role-associate_dentist .internal-profile-grid > *,
+  .role-super_admin .internal-profile-grid > * {
+    grid-column: 1 !important;
+  }
+}
+
+/* Tablet: let auto-fit data grids collapse naturally before card contents overlap. */
+@media (max-width: 900px) {
+  .role-staff .content-area,
+  .role-dentist .content-area,
+  .role-associate_dentist .content-area,
+  .role-super_admin .content-area {
+    overflow-x: clip;
+  }
+
+  .role-staff .internal-profile-info-grid,
+  .role-dentist .internal-profile-info-grid,
+  .role-associate_dentist .internal-profile-info-grid,
+  .role-super_admin .internal-profile-info-grid {
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr)) !important;
+  }
+}
+
+/* Mobile: all layout cards use the viewport efficiently without fixed-width remnants. */
+@media (max-width: 640px) {
+  .role-staff .content-area > *,
+  .role-dentist .content-area > *,
+  .role-associate_dentist .content-area > *,
+  .role-super_admin .content-area > * {
+    max-width: 100% !important;
+  }
+
+  .role-staff .content-area :is(.panel, .workspace-panel, .table-panel, .filter-panel),
+  .role-dentist .content-area :is(.panel, .workspace-panel, .table-panel, .filter-panel),
+  .role-associate_dentist .content-area :is(.panel, .workspace-panel, .table-panel, .filter-panel),
+  .role-super_admin .content-area :is(.panel, .workspace-panel, .table-panel, .filter-panel) {
+    width: 100%;
+  }
+}
