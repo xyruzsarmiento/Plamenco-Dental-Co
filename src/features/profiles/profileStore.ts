@@ -1,3 +1,4 @@
+import { cachedQuery, invalidateQueryTags, queryCachePolicy, setCachedQuery } from '../../lib/queryCache'
 import { supabase } from '../../lib/supabase'
 import type { UserRole } from '../auth/authTypes'
 
@@ -77,6 +78,18 @@ function mapProvider(row: Record<string, unknown>): DentistProfessionalProfile {
   }
 }
 
+function profileScope(profileId: string) {
+  return `user:${profileId}`
+}
+
+function cacheProfile(profile: InternalProfile) {
+  setCachedQuery(`profile:${profile.id}`, profile, {
+    ...queryCachePolicy.moderate,
+    tags: ['profile', `profile:${profile.id}`],
+    scope: profileScope(profile.id),
+  })
+}
+
 export function getInitials(name: string, email = '') {
   const source = name.trim() || email.trim()
   const parts = source.split(/[\s@._-]+/).filter(Boolean)
@@ -96,31 +109,53 @@ export function validateAvatarFile(file: File) {
   return ''
 }
 
-export async function loadOwnInternalProfile(profileId: string) {
+export async function loadOwnInternalProfile(profileId: string, options: { force?: boolean } = {}) {
   if (!supabase) throw new Error('Supabase is not configured.')
 
-  const { data, error } = await supabase
-    .from('profiles')
-    .select('id, full_name, email, phone, role, status, job_title, address, avatar_url, created_at, updated_at')
-    .eq('id', profileId)
-    .maybeSingle()
+  return cachedQuery(
+    `profile:${profileId}`,
+    async () => {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('id, full_name, email, phone, role, status, job_title, address, avatar_url, created_at, updated_at')
+        .eq('id', profileId)
+        .maybeSingle()
 
-  if (error) throw new Error(error.message)
-  if (!data) throw new Error('Profile could not be found for this account.')
-  return mapProfile(data as ProfileRow)
+      if (error) throw new Error(error.message)
+      if (!data) throw new Error('Profile could not be found for this account.')
+      return mapProfile(data as ProfileRow)
+    },
+    {
+      ...queryCachePolicy.moderate,
+      tags: ['profile', `profile:${profileId}`],
+      scope: profileScope(profileId),
+      force: options.force,
+    },
+  )
 }
 
-export async function loadDentistProfessionalProfile(profileId: string) {
+export async function loadDentistProfessionalProfile(profileId: string, options: { force?: boolean } = {}) {
   if (!supabase) return null
 
-  const { data, error } = await supabase
-    .from('providers')
-    .select('id, display_name, role, email, phone, specialization, license_number, bio, photo_url, status')
-    .eq('profile_id', profileId)
-    .maybeSingle()
+  return cachedQuery(
+    `dentist-professional:${profileId}`,
+    async () => {
+      const { data, error } = await supabase
+        .from('providers')
+        .select('id, display_name, role, email, phone, specialization, license_number, bio, photo_url, status')
+        .eq('profile_id', profileId)
+        .maybeSingle()
 
-  if (error) throw new Error(error.message)
-  return data ? mapProvider(data as Record<string, unknown>) : null
+      if (error) throw new Error(error.message)
+      return data ? mapProvider(data as Record<string, unknown>) : null
+    },
+    {
+      ...queryCachePolicy.moderate,
+      tags: ['profile', 'providers', `profile:${profileId}`],
+      scope: profileScope(profileId),
+      force: options.force,
+    },
+  )
 }
 
 export async function updateOwnInternalProfile(
@@ -142,7 +177,10 @@ export async function updateOwnInternalProfile(
     .single()
 
   if (error) throw new Error(error.message)
-  return mapProfile(data as ProfileRow)
+  const profile = mapProfile(data as ProfileRow)
+  invalidateQueryTags(['profile', `profile:${profileId}`], profileScope(profileId))
+  cacheProfile(profile)
+  return profile
 }
 
 export async function syncOwnInternalProfileEmail(profileId: string, email: string) {
@@ -156,7 +194,10 @@ export async function syncOwnInternalProfileEmail(profileId: string, email: stri
     .single()
 
   if (error) throw new Error(error.message)
-  return mapProfile(data as ProfileRow)
+  const profile = mapProfile(data as ProfileRow)
+  invalidateQueryTags(['profile', `profile:${profileId}`], profileScope(profileId))
+  cacheProfile(profile)
+  return profile
 }
 
 export async function uploadOwnAvatar(profileId: string, file: File, previousPath = '') {
@@ -191,5 +232,8 @@ export async function uploadOwnAvatar(profileId: string, file: File, previousPat
     await supabase.storage.from(INTERNAL_AVATAR_BUCKET).remove([previousPath])
   }
 
-  return mapProfile(updateResult.data as ProfileRow)
+  const profile = mapProfile(updateResult.data as ProfileRow)
+  invalidateQueryTags(['profile', `profile:${profileId}`], profileScope(profileId))
+  cacheProfile(profile)
+  return profile
 }
