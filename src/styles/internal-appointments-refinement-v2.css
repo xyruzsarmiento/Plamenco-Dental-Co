@@ -1,0 +1,177 @@
+/* Internal appointment journey refinement — shared by Staff, Dentist and Super Admin. */
+
+.appointments-v40 .sa-appointments-flow-board {
+  border-radius: 22px !important;
+  border: 1px solid #dfe7f2 !important;
+  background: #fff !important;
+  box-shadow: 0 14px 34px rgba(15, 23, 42, .055) !important;
+}
+
+.appointments-v40 .sa-appointments-flow-header {
+  gap: 18px !important;
+  padding: 22px 24px !important;
+  border-bottom: 1px solid #e8eef7 !important;
+  background: linear-gradient(135deg, #ffffff 0%, #f7faff 72%, #eef5ff 100%) !important;
+}
+
+.appointments-v40 .operations-columns {
+  grid-auto-columns: minmax(330px, 365px) !important;
+  gap: 16px !important;
+  padding: 18px !important;
+  background: #f7f9fc !important;
+}
+
+.appointments-v40 .sa-appointments-flow-column {
+  border-radius: 18px !important;
+  box-shadow: 0 8px 20px rgba(15, 23, 42, .045) !important;
+}
+
+.appointments-v40 .operations-column-header {
+  min-height: 62px !important;
+  padding: 15px 16px !important;
+}
+
+.appointments-v40 .operations-card-list {
+  gap: 12px !important;
+  padding: 14px !important;
+}
+
+.appointments-v40 .sa-appointments-flow-card {
+  gap: 12px !important;
+  padding: 14px !important;
+  border-radius: 16px !important;
+}
+
+.appointments-v40 .journey-card-main {
+  gap: 12px 14px !important;
+}
+
+.appointments-v40 .journey-patient-block {
+  grid-template-columns: 46px minmax(0, 1fr) !important;
+  gap: 11px !important;
+}
+
+/* Important: do not use a background shorthand here. The old shorthand with
+   !important overrode the inline background-image and hid real patient photos. */
+.appointments-v40 .journey-avatar {
+  width: 46px !important;
+  height: 46px !important;
+  border-radius: 14px !important;
+  border: 1px solid #c9dcff !important;
+  background-color: #eaf2ff !important;
+  background-position: center !important;
+  background-size: cover !important;
+  background-repeat: no-repeat !important;
+  box-shadow: inset 0 0 0 2px rgba(255,255,255,.68) !important;
+  overflow: hidden !important;
+}
+
+.appointments-v40 .journey-patient-copy {
+  gap: 4px !important;
+}
+
+.appointments-v40 .journey-patient-copy strong {
+  font-size: .95rem !important;
+  line-height: 1.25 !important;
+}
+
+.appointments-v40 .journey-patient-copy small {
+  font-size: .72rem !important;
+  color: #718096 !important;
+}
+
+.appointments-v40 .journey-care-block {
+  gap: 7px !important;
+  padding-top: 2px !important;
+}
+
+.appointments-v40 .journey-care-block strong {
+  font-size: .88rem !important;
+  font-weight: 800 !important;
+}
+
+.appointments-v40 .journey-care-block span {
+  gap: 7px !important;
+  font-size: .76rem !important;
+}
+
+.appointments-v40 .journey-schedule-block {
+  gap: 6px !important;
+}
+
+.appointments-v40 .journey-schedule-block strong {
+  font-size: .91rem !important;
+}
+
+.appointments-v40 .operations-card-actions {
+  gap: 8px !important;
+  margin-top: 1px !important;
+  padding-top: 10px !important;
+}
+
+.appointments-v40 .operations-card-action {
+  min-height: 34px !important;
+  padding: 0 11px !important;
+  border-radius: 9px !important;
+}
+
+.appointments-v40 .operations-empty {
+  min-height: 128px !important;
+  margin: 0 !important;
+}
+
+@media (min-width: 1500px) {
+  .appointments-v40 .operations-columns {
+    grid-auto-columns: minmax(340px, 380px) !important;
+  }
+}
+
+@media (max-width: 1180px) {
+  .appointments-v40 .sa-appointments-flow-header {
+    padding: 18px !important;
+  }
+
+  .appointments-v40 .operations-columns {
+    grid-auto-columns: minmax(320px, 350px) !important;
+    padding: 14px !important;
+    gap: 13px !important;
+  }
+}
+
+@media (max-width: 760px) {
+  .appointments-v40 .sa-appointments-flow-board {
+    border-radius: 16px !important;
+  }
+
+  .appointments-v40 .sa-appointments-flow-header {
+    padding: 16px !important;
+  }
+
+  .appointments-v40 .operations-columns {
+    grid-auto-columns: minmax(min(88vw, 340px), min(88vw, 340px)) !important;
+    padding: 12px !important;
+  }
+
+  .appointments-v40 .journey-avatar {
+    width: 43px !important;
+    height: 43px !important;
+  }
+
+  .appointments-v40 .journey-patient-block {
+    grid-template-columns: 43px minmax(0, 1fr) !important;
+  }
+}
+
+@media (max-width: 420px) {
+  .appointments-v40 .operations-columns {
+    grid-auto-columns: calc(100vw - 38px) !important;
+  }
+
+  .appointments-v40 .sa-appointments-flow-card {
+    padding: 12px !important;
+  }
+
+  .appointments-v40 .operations-card-actions {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+}
