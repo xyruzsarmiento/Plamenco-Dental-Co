@@ -15,6 +15,7 @@ import '../styles/patient-payments-v6.css'
 import '../styles/patient-documents-v7.css'
 import '../styles/patient-consistency-v9.css'
 import '../styles/patient-page-hero-premium-v10.css'
+import { PatientCareLocationsV125 } from '../features/patientPortal/PatientCareLocationsV125'
 import { PatientPortalInteractionEnhancements } from '../features/patientPortal/PatientPortalInteractionEnhancements'
 import { PatientPortalLiveEnhancements } from '../features/patientPortal/PatientPortalLiveEnhancements'
 import { PatientPortalSemanticStatusEnhancer } from '../features/patientPortal/PatientPortalSemanticStatusEnhancer'
@@ -25,6 +26,7 @@ export function PatientPortalPage() {
   return (
     <>
       <PatientPortalPageV3 />
+      <PatientCareLocationsV125 />
       <PatientPortalInteractionEnhancements />
       <PatientPortalLiveEnhancements />
       <PatientPortalSemanticStatusEnhancer />
