@@ -1,6 +1,7 @@
 import { Building2, UsersRound } from 'lucide-react'
 import { Badge } from '../components/ui/Badge'
 import { useBranchContext } from '../features/branches/BranchContext'
+import '../styles/patient-branch-history-v125.css'
 import { PatientsPageV36 } from './PatientsPageV36'
 
 export function PatientsBranchDirectoryV125() {
