@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { Fragment, useEffect, useState } from 'react'
 import { AppRouter } from './app/AppRouter'
 import { AppErrorBoundary } from './components/system/AppErrorBoundary'
 import { AdaptivePaginationEnhancer } from './components/system/AdaptivePaginationEnhancer'
@@ -17,6 +17,7 @@ import { cachedQuery, queryCachePolicy, readCachedQuery } from './lib/queryCache
 import { syncSupabaseToLocalStorage } from './lib/supabaseSync'
 import './styles/adaptive-pagination.css'
 import './styles/public-auth-responsive-part7.css'
+import './styles/internal-appointments-refinement-v2.css'
 
 const PATIENT_PORTAL_CACHE_KEYS = [
   'plamenco.appointments',
@@ -38,6 +39,7 @@ function clearPatientPortalCaches() {
 function DataBootstrap({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, isLoading, user } = useAuth()
   const [ready, setReady] = useState(false)
+  const [dataRevision, setDataRevision] = useState(0)
 
   useEffect(() => {
     let active = true
@@ -82,7 +84,16 @@ function DataBootstrap({ children }: { children: React.ReactNode }) {
     void bootstrap.finally(() => {
       if (!active) return
       setReady(true)
-      if (user.role === 'patient') return
+
+      // A warm patient session paints from cached/local data first. Once the
+      // database hydration finishes, remount the portal subtree once so pages
+      // re-read invoices, payments, receipts, appointments and care data from
+      // the refreshed patient-scoped snapshots instead of keeping stale memoized
+      // values from the warm render.
+      if (user.role === 'patient') {
+        setDataRevision((value) => value + 1)
+        return
+      }
 
       backgroundTimer = window.setTimeout(() => {
         void cachedQuery(
@@ -115,7 +126,8 @@ function DataBootstrap({ children }: { children: React.ReactNode }) {
       </main>
     )
   }
-  return <>{children}</>
+
+  return <Fragment key={`${user?.id ?? 'public'}:${dataRevision}`}>{children}</Fragment>
 }
 
 function App() {
