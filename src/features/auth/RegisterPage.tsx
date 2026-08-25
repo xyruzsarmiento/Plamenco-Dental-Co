@@ -4,7 +4,6 @@ import { Link } from 'react-router-dom'
 import { Button } from '../../components/ui/Button'
 import { useAuth } from './AuthContext'
 import { AuthShell } from './AuthShell'
-import { SocialAuthButtons } from './SocialAuthButtons'
 
 function getPasswordScore(password: string) {
   if (!password) return 0
@@ -50,8 +49,7 @@ export function RegisterPage() {
 
   return (
     <AuthShell eyebrow="New patient" title="Create your patient account" description="Register securely to manage appointments and access your Plamenco patient experience." footer={<p className="auth-switcher">Already have an account? <Link to="/login">Sign in</Link></p>}>
-      <SocialAuthButtons mode="register" />
-      <form className="auth-form auth-form-grid auth-form-after-social" onSubmit={handleSubmit} noValidate>
+      <form className="auth-form auth-form-grid" onSubmit={handleSubmit} noValidate>
         <label className="field auth-field"><span>First name</span><input type="text" autoComplete="given-name" value={form.firstName} onChange={(e)=>setForm(c=>({...c,firstName:e.target.value}))} required /></label>
         <label className="field auth-field"><span>Middle name <small>(optional)</small></span><input type="text" autoComplete="additional-name" value={form.middleName} onChange={(e)=>setForm(c=>({...c,middleName:e.target.value}))}/></label>
         <label className="field auth-field auth-field-full"><span>Last name</span><input type="text" autoComplete="family-name" value={form.lastName} onChange={(e)=>setForm(c=>({...c,lastName:e.target.value}))} required /></label>
