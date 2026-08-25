@@ -7,26 +7,43 @@ import { PatientPortalPage } from '../../pages/PatientPortalPage'
 
 type BootstrapState = 'loading' | 'ready'
 
+// Keep the non-patient-specific booking foundation warm for the lifetime of the SPA.
+// If auth/session activity causes this route to mount again after a tab switch, the
+// patient portal should not flash its full loading skeleton a second time.
+let bookingFoundationReady = false
+let bookingFoundationPromise: Promise<void> | null = null
+
+function ensureBookingFoundation() {
+  if (bookingFoundationReady) return Promise.resolve()
+  if (bookingFoundationPromise) return bookingFoundationPromise
+
+  bookingFoundationPromise = Promise.allSettled([
+    loadBranchesFromSupabase({ strict: false }),
+    loadServicesFromSupabase({ strict: false }),
+    loadProviderFoundationFromSupabase({ strict: false }),
+  ]).then(() => {
+    bookingFoundationReady = true
+  }).finally(() => {
+    bookingFoundationPromise = null
+  })
+
+  return bookingFoundationPromise
+}
+
 export function PatientPortalRoute() {
-  const [state, setState] = useState<BootstrapState>('loading')
+  const [state, setState] = useState<BootstrapState>(bookingFoundationReady ? 'ready' : 'loading')
 
   useEffect(() => {
     let isMounted = true
 
-    const loadBookingFoundation = async () => {
-      // Booking data is supplemental to the patient portal. A missing provider,
-      // schedule, service, or branch must never prevent an authenticated patient
-      // from opening records, billing, documents, profile, or appointment history.
-      await Promise.allSettled([
-        loadBranchesFromSupabase({ strict: false }),
-        loadServicesFromSupabase({ strict: false }),
-        loadProviderFoundationFromSupabase({ strict: false }),
-      ])
-
-      if (isMounted) setState('ready')
+    if (bookingFoundationReady) {
+      setState('ready')
+      return () => { isMounted = false }
     }
 
-    void loadBookingFoundation()
+    void ensureBookingFoundation().finally(() => {
+      if (isMounted) setState('ready')
+    })
 
     return () => {
       isMounted = false
