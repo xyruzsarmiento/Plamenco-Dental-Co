@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { CheckCircle2, CreditCard, Landmark, Plus, ReceiptText, ShieldCheck, X } from 'lucide-react'
 import { Button } from '../../components/ui/Button'
 import {
@@ -185,5 +186,14 @@ type PaymentRecorderButtonProps = { onSuccess?: () => void }
 
 export function PaymentRecorderButtonV14({ onSuccess }: PaymentRecorderButtonProps) {
   const [open, setOpen] = useState(false)
-  return <><Button onClick={() => setOpen(true)} icon={<Plus size={16} />}>Record payment</Button>{open && <div className="modal-backdrop pay14-backdrop" role="presentation" onClick={() => setOpen(false)}><PaymentRecorderV14 onClose={() => setOpen(false)} onSuccess={() => onSuccess?.()} /></div>}</>
+  const modal = open && typeof document !== 'undefined'
+    ? createPortal(
+        <div className="modal-backdrop pay14-backdrop" role="presentation" onClick={() => setOpen(false)}>
+          <PaymentRecorderV14 onClose={() => setOpen(false)} onSuccess={() => onSuccess?.()} />
+        </div>,
+        document.body,
+      )
+    : null
+
+  return <><Button onClick={() => setOpen(true)} icon={<Plus size={16} />}>Record payment</Button>{modal}</>
 }
