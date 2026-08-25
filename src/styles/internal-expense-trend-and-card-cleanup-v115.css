@@ -1,0 +1,204 @@
+/* Shared internal portal cleanup: Staff, Dentist and Super Admin use the same /app pages. */
+
+/* The legacy expense chart sampled arbitrary calendar days for year view, which could show a
+   flat zero line even when the ledger contained expenses. ExpenseTrendEnhancer renders the
+   real month buckets inside the same chart host, so hide only the legacy chart children. */
+.ex57-trend > .ex57-trend-scroll,
+.ex57-trend > .ex57-tooltip {
+  display: none !important;
+}
+
+.ex57-trend {
+  position: relative !important;
+  min-width: 0 !important;
+  min-height: 0 !important;
+}
+
+.expense-trend-v115 {
+  position: relative;
+  width: 100%;
+  min-width: 0;
+  padding: 10px 6px 0;
+}
+
+.expense-trend-v115-chart-scroll {
+  width: 100%;
+  min-width: 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+  overscroll-behavior-inline: contain;
+  scrollbar-width: thin;
+  -webkit-overflow-scrolling: touch;
+}
+
+.expense-trend-v115 svg {
+  display: block;
+  width: 100%;
+  min-width: 760px;
+  height: auto;
+  aspect-ratio: 1120 / 330;
+  overflow: visible;
+}
+
+.expense-trend-v115-grid {
+  stroke: #e6edf7;
+  stroke-width: 1;
+  stroke-dasharray: 4 7;
+}
+
+.expense-trend-v115-ylabel,
+.expense-trend-v115-xlabel {
+  fill: #718096;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.expense-trend-v115-area {
+  fill: url(#expense-trend-v115-area);
+}
+
+.expense-trend-v115-line {
+  fill: none;
+  stroke: #2563eb;
+  stroke-width: 4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.expense-trend-v115-guide {
+  stroke: #93c5fd;
+  stroke-width: 1.4;
+  stroke-dasharray: 5 6;
+}
+
+.expense-trend-v115-hit {
+  fill: transparent;
+  cursor: crosshair;
+  outline: none;
+}
+
+.expense-trend-v115-dot {
+  fill: #fff;
+  stroke: #2563eb;
+  stroke-width: 3.5;
+  pointer-events: none;
+  transition: r .14s ease, fill .14s ease, stroke .14s ease;
+}
+
+.expense-trend-v115-dot.is-active {
+  fill: #2563eb;
+  stroke: #fff;
+  stroke-width: 4;
+}
+
+.expense-trend-v115-tooltip {
+  position: absolute;
+  z-index: 8;
+  display: grid;
+  gap: 2px;
+  min-width: 150px;
+  padding: 10px 12px;
+  border: 1px solid rgba(148, 163, 184, .24);
+  border-radius: 12px;
+  background: rgba(15, 23, 42, .96);
+  box-shadow: 0 14px 34px rgba(15, 23, 42, .2);
+  color: #fff;
+  transform: translate(-50%, -112%);
+  pointer-events: none;
+}
+
+.expense-trend-v115-tooltip span {
+  color: #93c5fd;
+  font-size: 10px;
+  font-weight: 850;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+}
+
+.expense-trend-v115-tooltip strong {
+  font-size: 14px;
+}
+
+.expense-trend-v115-tooltip small {
+  color: #cbd5e1;
+  font-size: 10px;
+}
+
+/* Remove the repeated/concentric decorative circles from internal hero cards. These were being
+   layered by multiple generations of hero CSS. Keep the clean gradient, border and shadow. */
+.portal-page-hero::before,
+.portal-page-hero::after,
+.documents-v10-hero::before,
+.documents-v10-hero::after,
+.dashboard-greeting-v2::before,
+.dashboard-greeting-v2::after,
+.sav56-hero::before,
+.sav56-hero::after,
+.rv56-hero::before,
+.rv56-hero::after,
+.inventory-v22-hero::before,
+.inventory-v22-hero::after,
+.ex57-hero::before,
+.ex57-hero::after,
+.branches-v27-hero::before,
+.branches-v27-hero::after,
+.settings-v30-hero::before,
+.settings-v30-hero::after,
+.internal-profile-hero::before,
+.internal-profile-hero::after,
+.patients36-hero::before,
+.patients36-hero::after,
+.tx43-hero::before,
+.tx43-hero::after,
+.tp80-hero::before,
+.tp80-hero::after,
+.team-v26-hero::before,
+.team-v26-hero::after,
+.forms-v28-hero::before,
+.forms-v28-hero::after,
+.dv108-hero::before,
+.dv108-hero::after,
+.notifications-v25-hero::before,
+.notifications-v25-hero::after,
+.prescriptions-hero::before,
+.prescriptions-hero::after,
+.bill14-command-header::before,
+.bill14-command-header::after,
+.dr11-command-header::before,
+.dr11-command-header::after,
+.svc15-command::before,
+.svc15-command::after,
+.sys58-hero::before,
+.sys58-hero::after {
+  content: none !important;
+  display: none !important;
+}
+
+@media (max-width: 900px) {
+  .expense-trend-v115 {
+    padding-inline: 0;
+  }
+
+  .expense-trend-v115 svg {
+    width: 860px;
+    min-width: 860px;
+  }
+}
+
+@media (max-width: 560px) {
+  .expense-trend-v115 svg {
+    width: 760px;
+    min-width: 760px;
+  }
+
+  .expense-trend-v115-tooltip {
+    min-width: 136px;
+    max-width: 180px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .expense-trend-v115-dot {
+    transition: none;
+  }
+}
