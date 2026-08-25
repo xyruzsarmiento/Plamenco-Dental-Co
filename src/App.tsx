@@ -35,6 +35,7 @@ import './styles/inventory-compact-branch-v118.css'
 import './styles/internal-expenses-branch-v122.css'
 import './styles/internal-reports-branch-v124.css'
 import './styles/branch-assignment-admin-v126.css'
+import './styles/part11-documents-import-forms-v127.css'
 
 const PATIENT_PORTAL_CACHE_KEYS = [
   'plamenco.appointments',
