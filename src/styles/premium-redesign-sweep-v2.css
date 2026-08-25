@@ -1,0 +1,362 @@
+/* Premium redesign sweep v2
+   Targets requested visual consistency without changing business logic. */
+
+:root {
+  --pr2-blue:#2563eb;
+  --pr2-blue-strong:#1d4ed8;
+  --pr2-blue-soft:#eff6ff;
+  --pr2-ink:#0f172a;
+  --pr2-muted:#64748b;
+  --pr2-line:#dbe7f5;
+  --pr2-surface:#ffffff;
+  --pr2-canvas:#f5f8fc;
+  --pr2-green:#16a34a;
+  --pr2-yellow:#ca8a04;
+  --pr2-red:#dc2626;
+  --pr2-radius:22px;
+  --pr2-shadow:0 18px 48px rgba(15,23,42,.07);
+}
+
+/* ---------- Shared internal page hero language ---------- */
+.content-area > .page-stack > header:first-child,
+.content-area > .page-stack > .sa-appointments-header:first-child,
+.content-area .svc15-command,
+.content-area .documents-v10-hero,
+.content-area .patients36-hero,
+.content-area .inventory-v22-hero,
+.content-area .ex57-hero,
+.content-area .branches-v27-hero,
+.content-area .settings-v30-hero,
+.content-area .internal-profile-hero,
+.content-area .team-v26-hero,
+.content-area .forms-v28-hero,
+.content-area .sys58-hero,
+.content-area .dr11-command-header,
+.content-area .bill14-command-header,
+.content-area .dv108-hero {
+  position:relative!important;
+  isolation:isolate!important;
+  overflow:hidden!important;
+  min-height:148px!important;
+  padding:24px 28px!important;
+  border:1px solid #cfe0f7!important;
+  border-radius:24px!important;
+  background:
+    radial-gradient(circle at 91% 22%, rgba(37,99,235,.10) 0 82px, transparent 83px),
+    radial-gradient(circle at 95% 40%, rgba(37,99,235,.055) 0 142px, transparent 143px),
+    linear-gradient(135deg,#fff 0%,#fbfdff 46%,#eef5ff 100%)!important;
+  box-shadow:0 18px 45px rgba(37,99,235,.075)!important;
+}
+
+.content-area > .page-stack > header:first-child::before,
+.content-area > .page-stack > .sa-appointments-header:first-child::before {
+  content:"";
+  position:absolute;
+  inset:0 auto 0 0;
+  width:4px;
+  background:linear-gradient(#2563eb,#60a5fa);
+}
+
+.content-area > .page-stack > header:first-child h2,
+.content-area > .page-stack > header:first-child h1,
+.content-area .sa-appointments-header h2,
+.content-area .svc15-command h2 {
+  color:var(--pr2-ink)!important;
+  font-size:clamp(1.8rem,3vw,2.55rem)!important;
+  line-height:1.05!important;
+  letter-spacing:-.035em!important;
+}
+
+.content-area > .page-stack > header:first-child p,
+.content-area .sa-appointments-header p,
+.content-area .svc15-command p {
+  max-width:760px!important;
+  color:#667085!important;
+  font-size:.9rem!important;
+  line-height:1.6!important;
+}
+
+.content-area > .page-stack > header:first-child > div:first-child > span,
+.content-area .sa-appointments-kicker,
+.content-area .svc15-command .eyebrow {
+  display:inline-flex!important;
+  align-items:center!important;
+  min-height:25px!important;
+  padding:5px 10px!important;
+  border:1px solid #cfe0ff!important;
+  border-radius:999px!important;
+  background:#f3f7ff!important;
+  color:#1d4ed8!important;
+  font-size:.67rem!important;
+  font-weight:900!important;
+  letter-spacing:.08em!important;
+  text-transform:uppercase!important;
+}
+
+/* Existing appointment hero specifically */
+.sa-appointments-page-v8 .sa-appointments-header {
+  display:flex!important;
+  align-items:center!important;
+  justify-content:space-between!important;
+  gap:24px!important;
+}
+.sa-appointments-header-actions {display:flex!important;align-items:center!important;gap:10px!important;flex-wrap:wrap!important;}
+.sa-appointments-date-chip,.sa-appointments-header-actions .button {
+  min-height:44px!important;border-radius:13px!important;
+}
+
+/* KPI spacing consistency */
+.sa-appointments-kpi-grid {gap:12px!important;margin-block:16px!important;}
+.sa-appointments-kpi {min-height:94px!important;padding:16px!important;border-radius:18px!important;}
+.sa-appointments-insights-grid,.sa-appointments-overview-grid {gap:14px!important;margin-bottom:16px!important;}
+.sa-appointments-view-switcher {margin:4px 0 16px!important;}
+
+/* ---------- Patient portal shared topbar + page hero ---------- */
+.pv3-topbar,
+.patient-portal-v3 .pv3-topbar {
+  min-height:76px!important;
+  padding:12px 24px!important;
+  border-bottom:1px solid #e7eef8!important;
+  background:rgba(255,255,255,.92)!important;
+  backdrop-filter:blur(16px) saturate(140%)!important;
+  -webkit-backdrop-filter:blur(16px) saturate(140%)!important;
+  box-shadow:0 10px 30px rgba(15,23,42,.035)!important;
+}
+
+.pv3-topbar-actions {display:flex!important;align-items:center!important;gap:10px!important;}
+.pv3-topbar .pv3-book-button,
+.pv3-topbar a[href*="booking"],
+.pv3-topbar button[data-book-visit],
+.patient-portal-v3 .pv3-topbar button:last-child {
+  min-height:44px!important;
+  padding:0 16px!important;
+  border:1px solid #1d4ed8!important;
+  border-radius:14px!important;
+  background:linear-gradient(135deg,#2563eb,#1d4ed8)!important;
+  color:#fff!important;
+  font-weight:850!important;
+  box-shadow:0 10px 24px rgba(37,99,235,.22)!important;
+  transition:transform .18s ease,box-shadow .18s ease!important;
+}
+.pv3-topbar .pv3-book-button:hover,
+.patient-portal-v3 .pv3-topbar button:last-child:hover {transform:translateY(-1px)!important;box-shadow:0 14px 28px rgba(37,99,235,.28)!important;}
+
+.pv3-page-head {
+  position:relative!important;
+  isolation:isolate!important;
+  overflow:hidden!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:space-between!important;
+  gap:18px!important;
+  min-height:146px!important;
+  padding:24px 26px!important;
+  border:1px solid #cfe0f7!important;
+  border-radius:24px!important;
+  background:
+    radial-gradient(circle at 94% 25%,rgba(37,99,235,.10) 0 74px,transparent 75px),
+    radial-gradient(circle at 94% 25%,rgba(37,99,235,.05) 0 132px,transparent 133px),
+    linear-gradient(135deg,#fff 0%,#fbfdff 52%,#edf4ff 100%)!important;
+  box-shadow:0 18px 42px rgba(37,99,235,.07)!important;
+}
+.pv3-page-head::before {content:"";position:absolute;left:0;top:24px;bottom:24px;width:4px;border-radius:0 999px 999px 0;background:linear-gradient(#2563eb,#60a5fa);}
+.pv3-page-head > div > span {display:inline-flex!important;align-items:center!important;min-height:25px!important;padding:5px 10px!important;border:1px solid #cfe0ff!important;border-radius:999px!important;background:#f3f7ff!important;color:#1d4ed8!important;font-size:.68rem!important;font-weight:900!important;letter-spacing:.075em!important;}
+.pv3-page-head h2 {margin:9px 0 6px!important;color:#0f172a!important;font-size:clamp(1.8rem,3vw,2.45rem)!important;line-height:1.08!important;letter-spacing:-.035em!important;}
+.pv3-page-head p {max-width:720px!important;margin:0!important;color:#64748b!important;font-size:.9rem!important;line-height:1.55!important;}
+
+/* Patient page surfaces: richer hierarchy without fake data */
+.pv3-page {gap:16px!important;}
+.pv3-page > section:not(.pv3-page-head),
+.pv3-page > div:not(.pv3-page-head):not(.pv3-modal-backdrop) {scroll-margin-top:96px;}
+.pv3-panel,.pv3-treatment-panel-v4,.pv3-treatment-overview-v4,.pv3-payments-panel-v6,.pv3-document-summary-v7 {
+  border-color:#dce6f3!important;
+  border-radius:20px!important;
+  box-shadow:0 10px 28px rgba(15,23,42,.045)!important;
+}
+.pv3-treatment-panel-v4,.pv3-payments-panel-v6 {background:linear-gradient(180deg,#fff,#fbfdff)!important;}
+.pv3-treatment-cards-v4 > article,.pv3-invoice-list-v6 > article,.pv3-payment-history-v6 > article {
+  border-radius:16px!important;
+  border-color:#dde7f3!important;
+  transition:border-color .18s ease,transform .18s ease,box-shadow .18s ease!important;
+}
+.pv3-treatment-cards-v4 > article:hover,.pv3-invoice-list-v6 > article:hover,.pv3-payment-history-v6 > article:hover {border-color:#bdd2f6!important;box-shadow:0 10px 24px rgba(37,99,235,.07)!important;transform:translateY(-1px)!important;}
+
+/* Recalls - denser premium recommendation block */
+.pv3-recalls-v5 .pv3-recall-card-v5 {background:linear-gradient(140deg,#fff 0%,#fff 66%,#f3f7ff 100%)!important;border-radius:20px!important;}
+.pv3-recalls-v5 .pv3-recall-main-v5 > p {max-width:640px!important;color:#64748b!important;}
+.pv3-recalls-v5 .pv3-recall-action-v5 {background:rgba(248,251,255,.72)!important;border-radius:14px!important;padding:14px!important;border:1px solid #e2ebf7!important;}
+
+/* Dental records */
+.pv3-record-list-v4 button,.pv3-record-list-v4 article,.pv3-dental-records-v4 button {border-radius:17px!important;border-color:#dce6f3!important;background:linear-gradient(135deg,#fff,#fbfdff)!important;box-shadow:0 8px 22px rgba(15,23,42,.035)!important;}
+
+/* ---------- Official receipt modal redesign ---------- */
+.pv3-modal-backdrop {
+  background:rgba(15,23,42,.52)!important;
+  backdrop-filter:blur(12px) saturate(120%)!important;
+  -webkit-backdrop-filter:blur(12px) saturate(120%)!important;
+}
+.pv3-payment-modal-v6.is-official-receipt {
+  width:min(820px,calc(100vw - 32px))!important;
+  max-height:min(900px,calc(100dvh - 28px))!important;
+  overflow:auto!important;
+  padding:0!important;
+  border:1px solid #d8e4f4!important;
+  border-radius:26px!important;
+  background:#fff!important;
+  box-shadow:0 32px 90px rgba(15,23,42,.28)!important;
+}
+.pv3-payment-modal-v6.is-official-receipt > header {
+  position:sticky!important;top:0!important;z-index:5!important;
+  display:flex!important;align-items:flex-start!important;justify-content:space-between!important;gap:18px!important;
+  padding:24px 26px 20px!important;
+  border-bottom:1px solid #e6edf7!important;
+  background:linear-gradient(135deg,rgba(255,255,255,.98),rgba(241,246,255,.98))!important;
+  backdrop-filter:blur(12px)!important;
+}
+.pv3-payment-modal-v6.is-official-receipt > header::before {content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:linear-gradient(#2563eb,#60a5fa);}
+.pv3-payment-modal-v6.is-official-receipt > header span {display:inline-flex!important;padding:5px 9px!important;border:1px solid #cfe0ff!important;border-radius:999px!important;background:#f4f8ff!important;color:#1d4ed8!important;font-size:.65rem!important;font-weight:900!important;letter-spacing:.08em!important;}
+.pv3-payment-modal-v6.is-official-receipt > header h2 {margin:8px 0 4px!important;color:#0f172a!important;font-size:1.8rem!important;letter-spacing:-.025em!important;}
+.pv3-payment-modal-v6.is-official-receipt > header p {margin:0!important;color:#64748b!important;font-size:.84rem!important;}
+.pv3-payment-modal-v6.is-official-receipt > header > button {display:grid!important;place-items:center!important;width:42px!important;height:42px!important;border:1px solid #d9e4f2!important;border-radius:13px!important;background:#fff!important;color:#475569!important;box-shadow:0 6px 18px rgba(15,23,42,.06)!important;}
+
+.pv3-payment-modal-v6.is-official-receipt .pv3-detail-status {margin:18px 26px 0!important;padding:0!important;}
+.pv3-payment-modal-v6.is-official-receipt .pv3-payment-receipt-hero-v6 {
+  display:grid!important;grid-template-columns:56px minmax(0,1fr)!important;gap:15px!important;align-items:center!important;
+  margin:16px 26px!important;padding:18px!important;border:1px solid #cfe0f7!important;border-radius:18px!important;
+  background:linear-gradient(135deg,#f8fbff,#edf4ff)!important;
+}
+.pv3-payment-modal-v6.is-official-receipt .pv3-payment-receipt-hero-v6 > span {display:grid!important;place-items:center!important;width:56px!important;height:56px!important;border:1px solid #bfd6ff!important;border-radius:16px!important;background:#fff!important;color:#2563eb!important;box-shadow:0 8px 20px rgba(37,99,235,.10)!important;}
+.pv3-payment-modal-v6.is-official-receipt .pv3-payment-receipt-hero-v6 h3 {margin:3px 0!important;color:#0f172a!important;font-size:1.65rem!important;}
+.pv3-payment-modal-v6.is-official-receipt .pv3-detail-grid {display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:10px!important;margin:0 26px 18px!important;}
+.pv3-payment-modal-v6.is-official-receipt .pv3-detail-grid > div {padding:13px 14px!important;border:1px solid #e0e8f3!important;border-radius:14px!important;background:#fbfdff!important;min-width:0!important;}
+.pv3-payment-modal-v6.is-official-receipt .pv3-detail-grid span {color:#8290a5!important;font-size:.62rem!important;font-weight:900!important;letter-spacing:.07em!important;text-transform:uppercase!important;}
+.pv3-payment-modal-v6.is-official-receipt .pv3-detail-grid strong {display:block!important;margin-top:5px!important;color:#172033!important;font-size:.82rem!important;line-height:1.35!important;overflow-wrap:anywhere!important;}
+.pv3-payment-modal-v6.is-official-receipt .pv3-receipt-items-v7 {margin:0 26px 18px!important;padding:0!important;border:1px solid #e0e8f3!important;border-radius:16px!important;overflow:hidden!important;}
+.pv3-payment-modal-v6.is-official-receipt .pv3-receipt-items-v7 > span {display:block!important;padding:13px 15px!important;background:#f6f9fd!important;color:#52627a!important;font-size:.66rem!important;font-weight:900!important;letter-spacing:.07em!important;text-transform:uppercase!important;}
+.pv3-payment-modal-v6.is-official-receipt table {width:100%!important;border-collapse:collapse!important;}
+.pv3-payment-modal-v6.is-official-receipt th {padding:11px 14px!important;background:#fbfdff!important;color:#64748b!important;font-size:.66rem!important;text-align:left!important;}
+.pv3-payment-modal-v6.is-official-receipt td {padding:12px 14px!important;border-top:1px solid #edf2f7!important;color:#172033!important;font-size:.8rem!important;}
+.pv3-payment-modal-v6.is-official-receipt th:last-child,.pv3-payment-modal-v6.is-official-receipt td:last-child {text-align:right!important;}
+.pv3-payment-modal-v6.is-official-receipt tfoot td {background:#f8fafc!important;font-weight:850!important;}
+.pv3-payment-modal-v6.is-official-receipt .pv3-record-privacy {margin:0 26px 18px!important;padding:13px 15px!important;border:1px solid #dce9f7!important;border-radius:14px!important;background:#f8fbff!important;}
+.pv3-payment-modal-v6.is-official-receipt > footer {position:sticky!important;bottom:0!important;z-index:4!important;display:grid!important;grid-template-columns:1fr 1fr 1fr!important;gap:10px!important;padding:16px 26px 20px!important;border-top:1px solid #e6edf7!important;background:rgba(255,255,255,.96)!important;backdrop-filter:blur(12px)!important;}
+.pv3-payment-modal-v6.is-official-receipt > footer button {min-height:44px!important;border-radius:12px!important;justify-content:center!important;}
+
+/* ---------- Auth redesign ---------- */
+.auth-page {
+  min-height:100dvh!important;
+  padding:clamp(16px,3vw,42px)!important;
+  background:
+    radial-gradient(circle at 10% 12%,rgba(37,99,235,.09),transparent 28%),
+    radial-gradient(circle at 90% 88%,rgba(37,99,235,.06),transparent 30%),
+    #f4f7fb!important;
+}
+.auth-shell {
+  width:min(1180px,100%)!important;
+  min-height:min(780px,calc(100dvh - 84px))!important;
+  display:grid!important;
+  grid-template-columns:minmax(0,.95fr) minmax(460px,.72fr)!important;
+  overflow:hidden!important;
+  border:1px solid #dbe5f2!important;
+  border-radius:30px!important;
+  background:#fff!important;
+  box-shadow:0 34px 90px rgba(15,23,42,.12)!important;
+}
+.auth-visual {position:relative!important;min-height:620px!important;background:#0f2e73!important;}
+.auth-visual-media {position:absolute!important;inset:0!important;overflow:hidden!important;}
+.auth-visual-media img {width:100%!important;height:100%!important;object-fit:cover!important;object-position:center!important;filter:saturate(.82) contrast(1.03)!important;}
+.auth-visual-overlay {position:absolute!important;inset:0!important;background:linear-gradient(180deg,rgba(13,43,104,.18) 0%,rgba(11,39,94,.42) 44%,rgba(13,48,117,.94) 100%)!important;}
+.auth-visual-inner {position:relative!important;z-index:2!important;display:flex!important;flex-direction:column!important;min-height:100%!important;padding:30px!important;color:#fff!important;}
+.auth-brand {align-self:flex-start!important;padding:10px 12px!important;border:1px solid rgba(255,255,255,.24)!important;border-radius:14px!important;background:rgba(255,255,255,.12)!important;backdrop-filter:blur(10px)!important;}
+.auth-brand-logo {width:42px!important;height:42px!important;object-fit:contain!important;border-radius:10px!important;background:#fff!important;padding:4px!important;}
+.auth-visual-copy {margin-top:auto!important;max-width:520px!important;padding-bottom:18px!important;}
+.auth-visual-copy h2 {max-width:500px!important;margin:14px 0!important;color:#fff!important;font-size:clamp(2.1rem,4vw,3.25rem)!important;line-height:1.02!important;letter-spacing:-.045em!important;}
+.auth-visual-copy p {max-width:470px!important;color:rgba(255,255,255,.82)!important;font-size:.95rem!important;line-height:1.65!important;}
+.auth-feature-list {display:flex!important;gap:9px!important;flex-wrap:wrap!important;}
+.auth-feature-list > div {padding:8px 11px!important;border:1px solid rgba(255,255,255,.24)!important;border-radius:999px!important;background:rgba(255,255,255,.1)!important;backdrop-filter:blur(8px)!important;}
+.auth-panel {display:grid!important;align-items:center!important;background:#fff!important;}
+.auth-panel-inner {width:min(430px,100%)!important;margin:auto!important;padding:38px 36px!important;}
+.auth-panel-header h1 {margin:9px 0 10px!important;color:#0f172a!important;font-size:clamp(2rem,3.4vw,2.75rem)!important;line-height:1.03!important;letter-spacing:-.04em!important;}
+.auth-panel-header p {color:#667085!important;line-height:1.6!important;}
+.auth-back-link {display:inline-flex!important;align-items:center!important;gap:7px!important;padding:8px 10px!important;border:1px solid #e0e8f3!important;border-radius:11px!important;background:#fff!important;color:#52627a!important;}
+.auth-panel input,.auth-panel select {min-height:46px!important;border-radius:12px!important;background:#fbfdff!important;}
+.auth-panel .button,.auth-submit {min-height:46px!important;border-radius:12px!important;box-shadow:0 10px 20px rgba(37,99,235,.14)!important;}
+.social-auth-buttons button {min-height:45px!important;border-radius:12px!important;background:#fff!important;border:1px solid #dce5f0!important;box-shadow:0 5px 14px rgba(15,23,42,.035)!important;}
+
+/* ---------- Landing redesign ---------- */
+.lp47b {background:#fff!important;color:#0f172a!important;}
+.lp47b-header {border-bottom:1px solid rgba(226,232,240,.9)!important;background:rgba(255,255,255,.88)!important;backdrop-filter:blur(18px) saturate(150%)!important;}
+.lp47b-header.is-scrolled {box-shadow:0 12px 34px rgba(15,23,42,.065)!important;}
+.lp47b-nav-shell {min-height:78px!important;}
+.lp47b-brand img {width:42px!important;height:42px!important;object-fit:contain!important;border-radius:12px!important;}
+.lp47b-nav-links a {position:relative!important;color:#475569!important;font-weight:750!important;}
+.lp47b-nav-links a::after {content:"";position:absolute;left:0;right:100%;bottom:-8px;height:2px;background:#2563eb;transition:right .18s ease;}
+.lp47b-nav-links a:hover::after {right:0;}
+.lp47b-primary-cta {border-radius:13px!important;box-shadow:0 10px 24px rgba(37,99,235,.2)!important;}
+.lp47b-hero {padding-block:clamp(58px,8vw,112px)!important;background:linear-gradient(180deg,#fff,#f8fbff)!important;}
+.lp47b-hero-grid {grid-template-columns:minmax(0,.9fr) minmax(480px,1.05fr)!important;gap:clamp(42px,7vw,96px)!important;align-items:center!important;}
+.lp47b-hero-copy h1 {max-width:680px!important;font-size:clamp(3.2rem,6.2vw,6.25rem)!important;line-height:.94!important;letter-spacing:-.06em!important;}
+.lp47b-hero-copy > p {max-width:620px!important;font-size:1.05rem!important;line-height:1.7!important;color:#64748b!important;}
+.lp47b-hero-visual {min-height:560px!important;}
+.lp47b-hero-image-wrap {position:absolute!important;inset:22px 0 22px 22px!important;border-radius:30px!important;overflow:hidden!important;background:#eaf1fb!important;box-shadow:0 30px 70px rgba(15,23,42,.14)!important;}
+.lp47b-hero-image-wrap img {width:100%!important;height:100%!important;object-fit:cover!important;object-position:center!important;display:block!important;}
+.lp47b-floating-card {border:1px solid rgba(219,231,245,.95)!important;border-radius:16px!important;box-shadow:0 18px 45px rgba(15,23,42,.14)!important;backdrop-filter:blur(14px)!important;}
+.lp47b-section {padding-block:clamp(68px,8vw,112px)!important;}
+.lp47b-section-heading h2,.lp47b-intro h2 {font-size:clamp(2.1rem,4vw,3.7rem)!important;line-height:1.03!important;letter-spacing:-.045em!important;}
+.lp47b-service-card,.lp47b-provider-card,.lp47b-branch-card,.lp47b-benefit-grid article,.lp47b-journey-grid article {border-radius:20px!important;border-color:#dde7f3!important;box-shadow:0 10px 28px rgba(15,23,42,.045)!important;transition:transform .18s ease,box-shadow .18s ease,border-color .18s ease!important;}
+.lp47b-service-card:hover,.lp47b-provider-card:hover,.lp47b-branch-card:hover {transform:translateY(-4px)!important;border-color:#bfd3f4!important;box-shadow:0 20px 38px rgba(37,99,235,.09)!important;}
+.lp47b-provider-photo {border-radius:18px!important;overflow:hidden!important;background:linear-gradient(135deg,#edf4ff,#dfeafe)!important;}
+.lp47b-provider-photo img {width:100%!important;height:100%!important;object-fit:cover!important;}
+.lp47b-contact-card {border-radius:28px!important;background:linear-gradient(135deg,#123b91,#1d4ed8 64%,#2563eb)!important;box-shadow:0 30px 70px rgba(29,78,216,.24)!important;}
+.lp47b footer,.lp47b-footer {background:#0f1e3a!important;color:#cbd5e1!important;}
+
+/* ---------- Responsive ---------- */
+@media (max-width:1100px) {
+  .auth-shell {grid-template-columns:minmax(0,.8fr) minmax(430px,.72fr)!important;}
+  .lp47b-hero-grid {grid-template-columns:1fr 1fr!important;gap:42px!important;}
+  .lp47b-hero-copy h1 {font-size:clamp(3rem,6vw,4.8rem)!important;}
+  .pv3-payment-modal-v6.is-official-receipt .pv3-detail-grid {grid-template-columns:repeat(2,minmax(0,1fr))!important;}
+}
+
+@media (max-width:820px) {
+  .content-area > .page-stack > header:first-child,.sa-appointments-page-v8 .sa-appointments-header {min-height:0!important;align-items:flex-start!important;flex-direction:column!important;padding:20px!important;}
+  .pv3-page-head {min-height:0!important;align-items:flex-start!important;flex-direction:column!important;padding:20px!important;}
+  .auth-page {padding:0!important;background:#fff!important;}
+  .auth-shell {display:block!important;min-height:100dvh!important;border:0!important;border-radius:0!important;box-shadow:none!important;}
+  .auth-visual {min-height:260px!important;}
+  .auth-visual-inner {min-height:260px!important;padding:20px!important;}
+  .auth-visual-copy {padding:0!important;}
+  .auth-visual-copy h2 {max-width:540px!important;font-size:2.25rem!important;}
+  .auth-visual-copy p,.auth-feature-list {display:none!important;}
+  .auth-panel-inner {width:min(560px,100%)!important;padding:28px 22px 42px!important;}
+  .lp47b-hero-grid {grid-template-columns:1fr!important;}
+  .lp47b-hero-copy h1 {max-width:720px!important;font-size:clamp(3rem,10vw,4.8rem)!important;}
+  .lp47b-hero-visual {min-height:480px!important;}
+  .lp47b-hero-image-wrap {inset:0!important;}
+  .pv3-payment-modal-v6.is-official-receipt > footer {grid-template-columns:1fr 1fr!important;}
+  .pv3-payment-modal-v6.is-official-receipt > footer button:first-child {grid-column:1/-1!important;order:3!important;}
+}
+
+@media (max-width:560px) {
+  .pv3-topbar,.patient-portal-v3 .pv3-topbar {padding:10px 12px!important;min-height:68px!important;}
+  .pv3-page-head {border-radius:18px!important;padding:18px!important;}
+  .pv3-page-head h2 {font-size:1.75rem!important;}
+  .pv3-payment-modal-v6.is-official-receipt {width:100vw!important;max-height:100dvh!important;height:100dvh!important;border:0!important;border-radius:0!important;}
+  .pv3-payment-modal-v6.is-official-receipt > header {padding:18px 16px!important;}
+  .pv3-payment-modal-v6.is-official-receipt .pv3-detail-status,.pv3-payment-modal-v6.is-official-receipt .pv3-payment-receipt-hero-v6,.pv3-payment-modal-v6.is-official-receipt .pv3-detail-grid,.pv3-payment-modal-v6.is-official-receipt .pv3-receipt-items-v7,.pv3-payment-modal-v6.is-official-receipt .pv3-record-privacy {margin-left:16px!important;margin-right:16px!important;}
+  .pv3-payment-modal-v6.is-official-receipt .pv3-detail-grid {grid-template-columns:1fr!important;}
+  .pv3-payment-modal-v6.is-official-receipt .pv3-payment-receipt-hero-v6 {grid-template-columns:46px minmax(0,1fr)!important;padding:14px!important;}
+  .pv3-payment-modal-v6.is-official-receipt .pv3-payment-receipt-hero-v6 > span {width:46px!important;height:46px!important;}
+  .pv3-payment-modal-v6.is-official-receipt > footer {grid-template-columns:1fr!important;padding:12px 16px 16px!important;}
+  .pv3-payment-modal-v6.is-official-receipt > footer button:first-child {grid-column:auto!important;order:3!important;}
+  .lp47b-hero {padding-block:44px!important;}
+  .lp47b-hero-copy h1 {font-size:clamp(2.8rem,13vw,4rem)!important;}
+  .lp47b-hero-visual {min-height:390px!important;}
+  .lp47b-floating-card {max-width:210px!important;}
+  .lp47b-trust-row {display:grid!important;grid-template-columns:1fr!important;}
+}
+
+@media (prefers-reduced-motion:reduce) {
+  *,*::before,*::after {scroll-behavior:auto!important;}
+  .lp47b-service-card,.lp47b-provider-card,.lp47b-branch-card,.pv3-treatment-cards-v4 > article,.pv3-invoice-list-v6 > article,.pv3-payment-history-v6 > article {transition:none!important;transform:none!important;}
+}
