@@ -8,8 +8,7 @@ import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../features/auth/AuthContext'
 import { roleLabels, usePermissions } from '../../features/auth/permissions'
 import { TopbarNotificationBell } from '../../features/notifications/TopbarNotificationBell'
-import { getAvatarDisplayUrl, getInitials } from '../../features/profiles/profileStore'
-import { supabase } from '../../lib/supabase'
+import { getAvatarDisplayUrl, getInitials, loadOwnInternalProfile } from '../../features/profiles/profileStore'
 import { Button } from '../ui/Button'
 import { navigationGroups, navigationItems } from './navigation'
 
@@ -31,28 +30,36 @@ export function AppLayout() {
 
   useEffect(() => {
     let active = true
-    const refreshProfileChrome = () => {
-      if (!supabase || !user?.id || user.role === 'patient') {
+    const refreshProfileChrome = (force = false) => {
+      if (!user?.id || user.role === 'patient') {
         setAvatarPath('')
         setAvatarUpdatedAt('')
         setProfileName('')
         return
       }
-      void supabase.from('profiles').select('avatar_url, full_name, updated_at').eq('id', user.id).maybeSingle().then(({ data }) => {
-        if (!active) return
-        setAvatarPath(String(data?.avatar_url ?? ''))
-        setAvatarUpdatedAt(String(data?.updated_at ?? ''))
-        setProfileName(String(data?.full_name ?? ''))
-      })
+      void loadOwnInternalProfile(user.id, { force })
+        .then((profile) => {
+          if (!active) return
+          setAvatarPath(profile.avatarPath)
+          setAvatarUpdatedAt(profile.updatedAt)
+          setProfileName(profile.fullName)
+        })
+        .catch(() => {
+          if (!active) return
+          setAvatarPath('')
+          setAvatarUpdatedAt('')
+          setProfileName(user.name ?? '')
+        })
     }
 
-    refreshProfileChrome()
-    window.addEventListener('plamenco-profile-updated', refreshProfileChrome)
+    refreshProfileChrome(false)
+    const handleProfileUpdated = () => refreshProfileChrome(true)
+    window.addEventListener('plamenco-profile-updated', handleProfileUpdated)
     return () => {
       active = false
-      window.removeEventListener('plamenco-profile-updated', refreshProfileChrome)
+      window.removeEventListener('plamenco-profile-updated', handleProfileUpdated)
     }
-  }, [location.pathname, user?.id, user?.role])
+  }, [user?.id, user?.name, user?.role])
 
   useEffect(() => {
     document.body.classList.toggle('pv3-nav-lock', isMobileNavOpen)
@@ -103,12 +110,7 @@ export function AppLayout() {
               <small>Dental Co.</small>
             </span>
           </div>
-          <button
-            className="icon-button mobile-only"
-            type="button"
-            aria-label="Close navigation"
-            onClick={() => setIsMobileNavOpen(false)}
-          >
+          <button className="icon-button mobile-only" type="button" aria-label="Close navigation" onClick={() => setIsMobileNavOpen(false)}>
             <X size={18} />
           </button>
         </div>
@@ -120,12 +122,7 @@ export function AppLayout() {
               {group.items.map((item) => {
                 const Icon = item.icon
                 return (
-                  <NavLink
-                    key={item.path}
-                    to={item.path}
-                    end={item.path === '/app'}
-                    onClick={() => setIsMobileNavOpen(false)}
-                  >
+                  <NavLink key={item.path} to={item.path} end={item.path === '/app'} onClick={() => setIsMobileNavOpen(false)}>
                     <Icon size={18} aria-hidden="true" />
                     <span>{item.label}</span>
                   </NavLink>
@@ -138,45 +135,24 @@ export function AppLayout() {
         <div className="sidebar-footer">
           <div className="user-card">
             <NavLink className="internal-avatar-upload" title="Open profile" to="/app/profile">
-              <span className="avatar" style={avatarStyle}>
-                {!avatarUrl && initials}
-              </span>
+              <span className="avatar" style={avatarStyle}>{!avatarUrl && initials}</span>
             </NavLink>
             <span>
               <strong>{profileName || user?.name || user?.email || 'Signed in user'}</strong>
               <small>{user?.role ? roleLabels[user.role] : 'User'}</small>
             </span>
           </div>
-          <Button
-            variant="secondary"
-            size="sm"
-            onClick={() => {
-              signOut()
-              navigate('/login', { replace: true })
-            }}
-          >
+          <Button variant="secondary" size="sm" onClick={() => { signOut(); navigate('/login', { replace: true }) }}>
             Sign out
           </Button>
         </div>
       </aside>
 
-      {isMobileNavOpen && (
-        <button
-          className="nav-backdrop"
-          type="button"
-          aria-label="Close navigation"
-          onClick={() => setIsMobileNavOpen(false)}
-        />
-      )}
+      {isMobileNavOpen && <button className="nav-backdrop" type="button" aria-label="Close navigation" onClick={() => setIsMobileNavOpen(false)} />}
 
       <div className="main-shell">
         <header className="topbar">
-          <button
-            className="icon-button mobile-only"
-            type="button"
-            aria-label="Open navigation"
-            onClick={() => setIsMobileNavOpen(true)}
-          >
+          <button className="icon-button mobile-only" type="button" aria-label="Open navigation" onClick={() => setIsMobileNavOpen(true)}>
             <Menu size={20} />
           </button>
           <div className="topbar-copy">
@@ -191,9 +167,7 @@ export function AppLayout() {
           </div>
         </header>
 
-        <main className="content-area">
-          <Outlet />
-        </main>
+        <main className="content-area"><Outlet /></main>
       </div>
     </div>
   )
