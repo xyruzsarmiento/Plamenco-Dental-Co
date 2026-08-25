@@ -2,6 +2,7 @@ import { Fragment, useEffect, useState } from 'react'
 import { AppRouter } from './app/AppRouter'
 import { AppErrorBoundary } from './components/system/AppErrorBoundary'
 import { AdaptivePaginationEnhancer } from './components/system/AdaptivePaginationEnhancer'
+import { AppointmentJourneyAvatarEnhancer } from './components/system/AppointmentJourneyAvatarEnhancer'
 import { PersistenceStatusNotice } from './components/system/PersistenceStatusNotice'
 import { ModalAccessibilityManager } from './components/ui/ModalAccessibilityManager'
 import { useAuth } from './features/auth/AuthContext'
@@ -20,6 +21,7 @@ import './styles/public-auth-responsive-part7.css'
 import './styles/internal-appointments-refinement-v2.css'
 import './styles/final-ui-refinements-v109.css'
 import './styles/modal-stack-fixes-v110.css'
+import './styles/appointments-compact-flow-v111.css'
 
 const PATIENT_PORTAL_CACHE_KEYS = [
   'plamenco.appointments',
@@ -147,6 +149,7 @@ function App() {
         <DataBootstrap>
           <ModalAccessibilityManager />
           <AdaptivePaginationEnhancer />
+          <AppointmentJourneyAvatarEnhancer />
           <OfflineStatusBanner />
           <PersistenceStatusNotice />
           <PatientDocumentLinkInterceptor />
