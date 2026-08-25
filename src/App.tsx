@@ -36,6 +36,13 @@ function clearPatientPortalCaches() {
   PATIENT_PORTAL_CACHE_KEYS.forEach((key) => window.localStorage.removeItem(key))
 }
 
+function patientPortalSnapshot() {
+  if (typeof window === 'undefined') return ''
+  return PATIENT_PORTAL_CACHE_KEYS
+    .map((key) => `${key}:${window.localStorage.getItem(key) ?? ''}`)
+    .join('|')
+}
+
 function DataBootstrap({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, isLoading, user } = useAuth()
   const [ready, setReady] = useState(false)
@@ -44,6 +51,7 @@ function DataBootstrap({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     let active = true
     let backgroundTimer: number | undefined
+    let patientDataChanged = false
 
     if (isLoading) return () => { active = false }
     if (!isAuthenticated || !user?.id) {
@@ -68,7 +76,12 @@ function DataBootstrap({ children }: { children: React.ReactNode }) {
 
         if (user.role === 'patient') {
           if (!hasWarmBootstrap) clearPatientPortalCaches()
-          essentialLoads.push(hydratePatientPortalFromDatabase())
+          const before = patientPortalSnapshot()
+          essentialLoads.push(
+            hydratePatientPortalFromDatabase().finally(() => {
+              patientDataChanged = before !== patientPortalSnapshot()
+            }),
+          )
         }
 
         await Promise.allSettled(essentialLoads)
@@ -85,13 +98,12 @@ function DataBootstrap({ children }: { children: React.ReactNode }) {
       if (!active) return
       setReady(true)
 
-      // A warm patient session paints from cached/local data first. Once the
-      // database hydration finishes, remount the portal subtree once so pages
-      // re-read invoices, payments, receipts, appointments and care data from
-      // the refreshed patient-scoped snapshots instead of keeping stale memoized
-      // values from the warm render.
+      // Keep an already rendered patient workspace mounted when background
+      // revalidation returns identical data. This avoids the visible mini-reload
+      // users noticed after returning to the browser tab. Remount only when the
+      // patient-scoped persisted snapshot actually changed.
       if (user.role === 'patient') {
-        setDataRevision((value) => value + 1)
+        if (patientDataChanged) setDataRevision((value) => value + 1)
         return
       }
 
