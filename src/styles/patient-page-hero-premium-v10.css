@@ -1,211 +1,185 @@
-/* Premium patient portal page hero cards: cleaner hierarchy, restrained depth, responsive actions. */
+/* Patient portal page headers intentionally mirror the dashboard greeting card.
+   Keep this surface clean: no decorative rings, bubbles, radial circles or oversized art. */
 
 .pv3-shell .pv3-page-head {
-  position: relative;
+  position: relative !important;
   isolation: isolate;
-  overflow: hidden;
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  align-items: center;
-  gap: clamp(18px, 3vw, 36px);
-  min-height: 154px;
-  padding: clamp(24px, 3vw, 34px) clamp(24px, 3.4vw, 42px) !important;
-  border: 1px solid #d7e3f4;
-  border-radius: 24px;
-  background:
-    radial-gradient(circle at 86% 18%, rgba(96, 165, 250, .16), transparent 28%),
-    linear-gradient(135deg, #ffffff 0%, #fbfdff 54%, #f3f7ff 100%);
-  box-shadow:
-    0 18px 44px rgba(15, 23, 42, .055),
-    inset 0 1px 0 rgba(255,255,255,.9);
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) auto !important;
+  align-items: center !important;
+  gap: 18px !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  min-height: 132px !important;
+  padding: 20px 22px !important;
+  overflow: hidden !important;
+  border: 1px solid #dbe5f5 !important;
+  border-radius: 18px !important;
+  background: linear-gradient(135deg, #ffffff 0%, #fbfdff 68%, #f1f6ff 100%) !important;
+  box-shadow: 0 10px 30px rgba(23, 32, 51, .045) !important;
 }
 
-.pv3-shell .pv3-page-head::before {
-  content: "";
-  position: absolute;
-  inset: 0 auto 0 0;
-  width: 4px;
-  border-radius: 24px 0 0 24px;
-  background: linear-gradient(180deg, #2563eb 0%, #60a5fa 100%);
-}
-
-.pv3-shell .pv3-page-head::after {
-  content: "";
-  position: absolute;
-  z-index: -1;
-  right: -34px;
-  bottom: -68px;
-  width: 220px;
-  height: 220px;
-  border-radius: 999px;
-  border: 34px solid rgba(37, 99, 235, .045);
-  box-shadow: 0 0 0 34px rgba(96, 165, 250, .025);
-  pointer-events: none;
+/* Explicitly kill every old decorative ring/bubble from previous hero iterations. */
+.pv3-shell .pv3-page-head::before,
+.pv3-shell .pv3-page-head::after,
+.pv3-shell .pv3-page-head > div::before,
+.pv3-shell .pv3-page-head > div::after {
+  content: none !important;
+  display: none !important;
+  background: none !important;
+  border: 0 !important;
+  box-shadow: none !important;
 }
 
 .pv3-shell .pv3-page-head > div {
-  min-width: 0;
-  max-width: 900px;
+  display: grid !important;
+  min-width: 0 !important;
+  max-width: 920px !important;
+  gap: 2px !important;
 }
 
+/* Dashboard-greeting style eyebrow: small, quiet and not another large pill. */
 .pv3-shell .pv3-page-head > div > span {
-  display: inline-flex;
-  align-items: center;
-  width: fit-content;
-  min-height: 28px;
-  padding: 0 11px;
-  border: 1px solid #cfe0fb;
-  border-radius: 999px;
-  background: rgba(239, 246, 255, .9);
-  color: #1d4ed8 !important;
-  font-size: .67rem !important;
-  font-weight: 900 !important;
-  letter-spacing: .08em !important;
-  line-height: 1 !important;
-  text-transform: uppercase;
-  box-shadow: 0 5px 14px rgba(37, 99, 235, .055);
+  display: block !important;
+  width: auto !important;
+  min-height: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  color: #7c8799 !important;
+  font-size: .76rem !important;
+  font-weight: 800 !important;
+  letter-spacing: 0 !important;
+  line-height: 1.25 !important;
+  text-transform: none !important;
 }
 
 .pv3-shell .pv3-page-head h2 {
-  margin: 12px 0 7px !important;
-  max-width: 760px;
-  color: #0f172a !important;
-  font-size: clamp(1.75rem, 3vw, 2.5rem) !important;
-  font-weight: 780 !important;
-  line-height: 1.06 !important;
-  letter-spacing: -.035em !important;
+  margin: 2px 0 0 !important;
+  max-width: 780px !important;
+  color: #172033 !important;
+  font-size: clamp(1.35rem, 2.1vw, 1.9rem) !important;
+  font-weight: 800 !important;
+  line-height: 1.14 !important;
+  letter-spacing: 0 !important;
+  overflow-wrap: anywhere !important;
   text-wrap: balance;
 }
 
 .pv3-shell .pv3-page-head p {
   max-width: 760px !important;
-  margin: 0 !important;
-  color: #64748b !important;
-  font-size: clamp(.84rem, 1.25vw, .94rem) !important;
-  line-height: 1.62 !important;
+  margin: 2px 0 0 !important;
+  color: #667085 !important;
+  font-size: .82rem !important;
+  line-height: 1.55 !important;
+  overflow-wrap: anywhere !important;
   text-wrap: pretty;
 }
 
+/* Actions use the same compact, premium treatment as dashboard greeting actions. */
 .pv3-shell .pv3-page-head > button,
 .pv3-shell .pv3-page-head > a,
 .pv3-shell .pv3-page-head > .btn {
-  position: relative;
-  z-index: 1;
-  min-width: 156px;
-  min-height: 46px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 9px;
-  padding: 0 18px;
+  position: relative !important;
+  z-index: 1 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  justify-self: end !important;
+  gap: 7px !important;
+  min-width: 0 !important;
+  min-height: 38px !important;
+  padding: 0 14px !important;
   border: 1px solid #2563eb !important;
-  border-radius: 13px !important;
-  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%) !important;
-  color: #fff !important;
-  font-size: .78rem !important;
-  font-weight: 850 !important;
+  border-radius: 9px !important;
+  background: #2563eb !important;
+  color: #ffffff !important;
+  font: inherit !important;
+  font-size: .76rem !important;
+  font-weight: 800 !important;
   letter-spacing: 0 !important;
-  box-shadow: 0 12px 26px rgba(37, 99, 235, .2) !important;
-  transition: transform .16s ease, box-shadow .16s ease, filter .16s ease;
+  line-height: 1 !important;
+  text-transform: none !important;
+  box-shadow: 0 8px 20px rgba(37, 99, 235, .13) !important;
+  transition: transform .16s ease, background-color .16s ease, box-shadow .16s ease !important;
 }
 
 .pv3-shell .pv3-page-head > button:hover,
 .pv3-shell .pv3-page-head > a:hover,
 .pv3-shell .pv3-page-head > .btn:hover {
-  transform: translateY(-1px);
-  filter: saturate(1.05);
-  box-shadow: 0 16px 30px rgba(37, 99, 235, .24) !important;
+  background: #1d4ed8 !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 10px 24px rgba(37, 99, 235, .18) !important;
 }
 
 .pv3-shell .pv3-page-head > button:focus-visible,
 .pv3-shell .pv3-page-head > a:focus-visible,
 .pv3-shell .pv3-page-head > .btn:focus-visible {
-  outline: 3px solid rgba(37, 99, 235, .22);
-  outline-offset: 3px;
+  outline: none !important;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, .18) !important;
 }
 
-/* Remove older oversized decorative rings if they were attached to child elements. */
-.pv3-shell .pv3-page-head > div::before,
-.pv3-shell .pv3-page-head > div::after {
-  content: none !important;
-}
-
-@media (max-width: 900px) {
+@media (max-width: 980px) {
   .pv3-shell .pv3-page-head {
-    grid-template-columns: 1fr;
-    align-items: start;
-    min-height: auto;
-    padding: 26px 26px !important;
+    grid-template-columns: minmax(0, 1fr) auto !important;
+    min-height: 118px !important;
+    padding: 18px 20px !important;
+  }
+}
+
+@media (max-width: 720px) {
+  .pv3-shell .pv3-page-head {
+    grid-template-columns: 1fr !important;
+    align-items: start !important;
+    gap: 14px !important;
+    min-height: 0 !important;
+    padding: 18px !important;
   }
 
   .pv3-shell .pv3-page-head > button,
   .pv3-shell .pv3-page-head > a,
   .pv3-shell .pv3-page-head > .btn {
-    justify-self: start;
-  }
-
-  .pv3-shell .pv3-page-head::after {
-    right: -72px;
-    bottom: -96px;
-    width: 190px;
-    height: 190px;
-    border-width: 28px;
+    justify-self: start !important;
   }
 }
 
 @media (max-width: 640px) {
   .pv3-shell .pv3-page-head {
-    gap: 18px;
-    padding: 22px 19px 22px 21px !important;
-    border-radius: 20px;
-    background:
-      radial-gradient(circle at 100% 0%, rgba(96, 165, 250, .11), transparent 36%),
-      linear-gradient(145deg, #fff 0%, #f8fbff 100%);
-    box-shadow: 0 12px 30px rgba(15, 23, 42, .045);
-  }
-
-  .pv3-shell .pv3-page-head::before {
-    width: 3px;
-    border-radius: 20px 0 0 20px;
-  }
-
-  .pv3-shell .pv3-page-head::after {
-    display: none;
+    gap: 12px !important;
+    padding: 17px !important;
+    border-radius: 16px !important;
   }
 
   .pv3-shell .pv3-page-head > div > span {
-    min-height: 26px;
-    padding-inline: 10px;
-    font-size: .62rem !important;
+    font-size: .7rem !important;
   }
 
   .pv3-shell .pv3-page-head h2 {
-    margin-top: 10px !important;
-    font-size: clamp(1.55rem, 8vw, 1.9rem) !important;
-    line-height: 1.08 !important;
+    font-size: 1.5rem !important;
   }
 
   .pv3-shell .pv3-page-head p {
-    font-size: .82rem !important;
-    line-height: 1.55 !important;
+    font-size: .8rem !important;
   }
 
   .pv3-shell .pv3-page-head > button,
   .pv3-shell .pv3-page-head > a,
   .pv3-shell .pv3-page-head > .btn {
-    width: 100%;
-    min-width: 0;
-    min-height: 44px;
+    width: 100% !important;
+    min-height: 42px !important;
+    justify-self: stretch !important;
   }
 }
 
 @media (max-width: 390px) {
   .pv3-shell .pv3-page-head {
-    padding: 19px 16px 20px 18px !important;
-    border-radius: 18px;
+    padding: 15px !important;
+    border-radius: 15px !important;
   }
 
   .pv3-shell .pv3-page-head h2 {
-    font-size: 1.48rem !important;
+    font-size: 1.36rem !important;
   }
 }
