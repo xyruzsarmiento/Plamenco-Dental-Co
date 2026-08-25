@@ -18,6 +18,7 @@ import { syncSupabaseToLocalStorage } from './lib/supabaseSync'
 import './styles/adaptive-pagination.css'
 import './styles/public-auth-responsive-part7.css'
 import './styles/internal-appointments-refinement-v2.css'
+import './styles/final-ui-refinements-v109.css'
 
 const PATIENT_PORTAL_CACHE_KEYS = [
   'plamenco.appointments',
@@ -98,10 +99,6 @@ function DataBootstrap({ children }: { children: React.ReactNode }) {
       if (!active) return
       setReady(true)
 
-      // Keep an already rendered patient workspace mounted when background
-      // revalidation returns identical data. This avoids the visible mini-reload
-      // users noticed after returning to the browser tab. Remount only when the
-      // patient-scoped persisted snapshot actually changed.
       if (user.role === 'patient') {
         if (patientDataChanged) setDataRevision((value) => value + 1)
         return
