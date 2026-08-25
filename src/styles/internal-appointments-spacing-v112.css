@@ -1,0 +1,346 @@
+/* Internal Appointments spacing + responsive layout unification v112
+   Shared intentionally by Staff, Dentist, and Super Admin.
+   This file only normalizes layout/spacing and does not change permissions or behavior. */
+
+.appointments-v40 .premium-appointments-page,
+.appointments-v40 .sa-appointments-page-v8 {
+  --appointments-section-gap: 18px;
+  --appointments-card-gap: 14px;
+  --appointments-card-radius: 20px;
+  display: grid !important;
+  align-content: start !important;
+  gap: var(--appointments-section-gap) !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  padding-bottom: 24px !important;
+}
+
+/* Prevent inherited page-stack margins from creating inconsistent vertical gaps. */
+.appointments-v40 .premium-appointments-page > *,
+.appointments-v40 .sa-appointments-page-v8 > * {
+  min-width: 0 !important;
+  margin-top: 0 !important;
+  margin-bottom: 0 !important;
+}
+
+/* Hero / command header */
+.appointments-v40 .sa-appointments-header {
+  min-height: 0 !important;
+  padding: 24px 26px !important;
+  gap: 20px !important;
+  border-radius: 22px !important;
+  align-items: center !important;
+}
+
+.appointments-v40 .sa-appointments-header-copy {
+  min-width: 0 !important;
+  max-width: 760px !important;
+}
+
+.appointments-v40 .sa-appointments-header-actions {
+  gap: 10px !important;
+  flex-wrap: wrap !important;
+  justify-content: flex-end !important;
+}
+
+/* KPI cards */
+.appointments-v40 .sa-appointments-kpi-grid {
+  display: grid !important;
+  grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+  gap: var(--appointments-card-gap) !important;
+  align-items: stretch !important;
+}
+
+.appointments-v40 .sa-appointments-kpi {
+  min-width: 0 !important;
+  min-height: 112px !important;
+  height: 100% !important;
+  padding: 16px !important;
+  gap: 12px !important;
+  align-items: flex-start !important;
+  border-radius: 18px !important;
+}
+
+/* Analytics row */
+.appointments-v40 .sa-appointments-insights-grid {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1.55fr) minmax(300px, .75fr) !important;
+  gap: var(--appointments-card-gap) !important;
+  align-items: stretch !important;
+}
+
+.appointments-v40 .sa-appointments-insights-grid > * {
+  min-width: 0 !important;
+  height: 100% !important;
+  border-radius: var(--appointments-card-radius) !important;
+}
+
+/* Schedule pulse / branch load row. Remove old fixed/min heights that produced dead space. */
+.appointments-v40 .sa-appointments-overview-grid {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1.55fr) minmax(300px, .75fr) !important;
+  gap: var(--appointments-card-gap) !important;
+  align-items: start !important;
+  align-content: start !important;
+  height: auto !important;
+  min-height: 0 !important;
+  max-height: none !important;
+}
+
+.appointments-v40 .sa-appointments-week-card,
+.appointments-v40 .sa-appointments-branch-card {
+  min-width: 0 !important;
+  width: 100% !important;
+  height: auto !important;
+  min-height: 0 !important;
+  max-height: none !important;
+  align-self: start !important;
+  padding: 18px !important;
+  border-radius: var(--appointments-card-radius) !important;
+}
+
+.appointments-v40 .sa-appointments-card-heading {
+  margin: 0 0 14px !important;
+  padding: 0 !important;
+}
+
+.appointments-v40 .sa-appointments-week-strip {
+  gap: 8px !important;
+}
+
+.appointments-v40 .sa-appointments-branch-list {
+  display: grid !important;
+  gap: 8px !important;
+}
+
+/* Tabs should sit directly between the overview row and flow board. */
+.appointments-v40 .sa-appointments-view-switcher {
+  width: fit-content !important;
+  max-width: 100% !important;
+  min-height: 52px !important;
+  padding: 5px !important;
+  gap: 5px !important;
+  margin: 0 !important;
+  border-radius: 16px !important;
+}
+
+.appointments-v40 .sa-appointments-view-switcher > button {
+  min-height: 40px !important;
+  padding: 0 18px !important;
+}
+
+/* Today's patient journey */
+.appointments-v40 .sa-appointments-flow-board {
+  width: 100% !important;
+  min-width: 0 !important;
+  margin: 0 !important;
+  border-radius: 22px !important;
+  overflow: hidden !important;
+}
+
+.appointments-v40 .sa-appointments-flow-header {
+  min-height: 0 !important;
+  padding: 20px 22px !important;
+  gap: 18px !important;
+  align-items: center !important;
+}
+
+.appointments-v40 .operations-flow {
+  gap: 8px !important;
+  flex-wrap: wrap !important;
+  justify-content: flex-end !important;
+}
+
+.appointments-v40 .operations-columns {
+  display: grid !important;
+  grid-auto-flow: column !important;
+  grid-auto-columns: minmax(315px, 350px) !important;
+  gap: 14px !important;
+  padding: 16px !important;
+  align-items: start !important;
+  align-content: start !important;
+  min-height: 0 !important;
+  height: auto !important;
+  overflow-x: auto !important;
+  overflow-y: hidden !important;
+  scroll-snap-type: x proximity !important;
+  scrollbar-gutter: stable both-edges !important;
+}
+
+.appointments-v40 .sa-appointments-flow-column {
+  scroll-snap-align: start !important;
+  min-width: 0 !important;
+  width: 100% !important;
+  height: auto !important;
+  min-height: 250px !important;
+  max-height: none !important;
+  align-self: start !important;
+  border-radius: 18px !important;
+}
+
+.appointments-v40 .operations-column-header {
+  min-height: 58px !important;
+  padding: 14px 15px !important;
+}
+
+.appointments-v40 .operations-card-list {
+  display: grid !important;
+  align-content: start !important;
+  gap: 10px !important;
+  min-height: 0 !important;
+  padding: 12px !important;
+}
+
+.appointments-v40 .sa-appointments-flow-card {
+  width: 100% !important;
+  min-width: 0 !important;
+  margin: 0 !important;
+  padding: 13px !important;
+  gap: 10px !important;
+  border-radius: 15px !important;
+}
+
+.appointments-v40 .journey-card-main {
+  gap: 10px 12px !important;
+}
+
+.appointments-v40 .operations-card-actions {
+  gap: 7px !important;
+  padding-top: 9px !important;
+  margin-top: 0 !important;
+}
+
+/* Calendar and request surfaces should inherit the same spacing rhythm. */
+.appointments-v40 .sa-appointments-calendar,
+.appointments-v40 .sa-appointments-requests,
+.appointments-v40 .appointments-calendar,
+.appointments-v40 .requests-panel {
+  margin: 0 !important;
+}
+
+/* Laptop */
+@media (max-width: 1360px) {
+  .appointments-v40 .sa-appointments-kpi-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  }
+
+  .appointments-v40 .sa-appointments-insights-grid,
+  .appointments-v40 .sa-appointments-overview-grid {
+    grid-template-columns: minmax(0, 1.35fr) minmax(280px, .8fr) !important;
+  }
+
+  .appointments-v40 .operations-columns {
+    grid-auto-columns: minmax(300px, 330px) !important;
+  }
+}
+
+/* Tablet */
+@media (max-width: 1024px) {
+  .appointments-v40 .premium-appointments-page,
+  .appointments-v40 .sa-appointments-page-v8 {
+    --appointments-section-gap: 14px;
+    --appointments-card-gap: 12px;
+  }
+
+  .appointments-v40 .sa-appointments-header {
+    padding: 20px !important;
+    align-items: flex-start !important;
+  }
+
+  .appointments-v40 .sa-appointments-kpi-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+
+  .appointments-v40 .sa-appointments-insights-grid,
+  .appointments-v40 .sa-appointments-overview-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .appointments-v40 .sa-appointments-week-card,
+  .appointments-v40 .sa-appointments-branch-card {
+    padding: 16px !important;
+  }
+
+  .appointments-v40 .sa-appointments-flow-header {
+    align-items: flex-start !important;
+  }
+
+  .appointments-v40 .operations-flow {
+    justify-content: flex-start !important;
+  }
+}
+
+/* Mobile */
+@media (max-width: 720px) {
+  .appointments-v40 .premium-appointments-page,
+  .appointments-v40 .sa-appointments-page-v8 {
+    --appointments-section-gap: 12px;
+    padding-bottom: 16px !important;
+  }
+
+  .appointments-v40 .sa-appointments-header {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    padding: 16px !important;
+    gap: 14px !important;
+    border-radius: 17px !important;
+  }
+
+  .appointments-v40 .sa-appointments-header-actions {
+    width: 100% !important;
+    justify-content: stretch !important;
+  }
+
+  .appointments-v40 .sa-appointments-header-actions > * {
+    flex: 1 1 auto !important;
+  }
+
+  .appointments-v40 .sa-appointments-kpi-grid {
+    grid-template-columns: 1fr !important;
+    gap: 10px !important;
+  }
+
+  .appointments-v40 .sa-appointments-kpi {
+    min-height: 0 !important;
+    padding: 14px !important;
+  }
+
+  .appointments-v40 .sa-appointments-view-switcher {
+    width: 100% !important;
+    display: grid !important;
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  }
+
+  .appointments-v40 .sa-appointments-view-switcher > button {
+    min-width: 0 !important;
+    padding: 0 8px !important;
+    justify-content: center !important;
+  }
+
+  .appointments-v40 .sa-appointments-flow-header {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    padding: 16px !important;
+    gap: 12px !important;
+  }
+
+  .appointments-v40 .operations-columns {
+    grid-auto-columns: minmax(86vw, 86vw) !important;
+    padding: 11px !important;
+    gap: 11px !important;
+  }
+
+  .appointments-v40 .sa-appointments-flow-column {
+    min-height: 220px !important;
+  }
+}
+
+@media (max-width: 420px) {
+  .appointments-v40 .sa-appointments-view-switcher > button span {
+    font-size: .72rem !important;
+  }
+
+  .appointments-v40 .operations-columns {
+    grid-auto-columns: calc(100vw - 42px) !important;
+  }
+}
