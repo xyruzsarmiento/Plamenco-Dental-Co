@@ -4,6 +4,7 @@ import { AppErrorBoundary } from './components/system/AppErrorBoundary'
 import { AdaptivePaginationEnhancer } from './components/system/AdaptivePaginationEnhancer'
 import { AppointmentJourneyAvatarEnhancer } from './components/system/AppointmentJourneyAvatarEnhancer'
 import { ExpenseTrendEnhancer } from './components/system/ExpenseTrendEnhancer'
+import { InternalUiActionsEnhancerV116 } from './components/system/InternalUiActionsEnhancerV116'
 import { PersistenceStatusNotice } from './components/system/PersistenceStatusNotice'
 import { ModalAccessibilityManager } from './components/ui/ModalAccessibilityManager'
 import { useAuth } from './features/auth/AuthContext'
@@ -27,6 +28,7 @@ import './styles/internal-appointments-spacing-v112.css'
 import './styles/internal-appointments-role-unification-v113.css'
 import './styles/internal-appointments-role-unification-v114.css'
 import './styles/internal-expense-trend-and-card-cleanup-v115.css'
+import './styles/clinic-ui-fixes-v116.css'
 
 const PATIENT_PORTAL_CACHE_KEYS = [
   'plamenco.appointments',
@@ -156,6 +158,7 @@ function App() {
           <AdaptivePaginationEnhancer />
           <AppointmentJourneyAvatarEnhancer />
           <ExpenseTrendEnhancer />
+          <InternalUiActionsEnhancerV116 />
           <OfflineStatusBanner />
           <PersistenceStatusNotice />
           <PatientDocumentLinkInterceptor />
