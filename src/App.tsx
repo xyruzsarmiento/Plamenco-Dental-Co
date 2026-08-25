@@ -13,6 +13,7 @@ import { OfflineStatusBanner } from './features/patientPortal/OfflineStatusBanne
 import { PatientDocumentLinkInterceptor } from './features/patientPortal/PatientDocumentLinkInterceptor'
 import { hydratePatientPortalFromDatabase } from './features/patientPortal/patientPortalHydration'
 import { loadServicesFromSupabase } from './features/services/serviceStore'
+import { cachedQuery, queryCachePolicy, readCachedQuery } from './lib/queryCache'
 import { syncSupabaseToLocalStorage } from './lib/supabaseSync'
 import './styles/adaptive-pagination.css'
 
@@ -42,36 +43,66 @@ function DataBootstrap({ children }: { children: React.ReactNode }) {
     let backgroundTimer: number | undefined
 
     if (isLoading) return () => { active = false }
-    if (!isAuthenticated) {
+    if (!isAuthenticated || !user?.id) {
       setReady(true)
       return () => { active = false }
     }
 
-    setReady(false)
+    const scope = `user:${user.id}`
+    const bootstrapKey = `workspace-bootstrap:${user.role}`
+    const hasWarmBootstrap = readCachedQuery<boolean>(bootstrapKey, scope) === true
 
-    const essentialLoads: Promise<unknown>[] = [
-      loadBranchesFromSupabase({ strict: false }),
-      loadProviderFoundationFromSupabase({ strict: false }),
-      loadPatientsFromSupabase({ strict: false }),
-      loadServicesFromSupabase({ strict: false }),
-    ]
+    // Warm authenticated sessions paint immediately. Cached/local store data remains visible
+    // while the shared bootstrap revalidates in the background.
+    setReady(hasWarmBootstrap)
 
-    if (user?.role === 'patient') {
-      // A failed patient refresh must never fall back to another session's stale medical/financial cache.
-      clearPatientPortalCaches()
-      essentialLoads.push(hydratePatientPortalFromDatabase())
-    }
+    const bootstrap = cachedQuery(
+      bootstrapKey,
+      async () => {
+        const essentialLoads: Promise<unknown>[] = [
+          loadBranchesFromSupabase({ strict: false }),
+          loadProviderFoundationFromSupabase({ strict: false }),
+          loadPatientsFromSupabase({ strict: false }),
+          loadServicesFromSupabase({ strict: false }),
+        ]
 
-    void Promise.allSettled(essentialLoads).finally(() => {
+        if (user.role === 'patient') {
+          // Clear patient-scoped local snapshots only on a genuinely cold session. A warm
+          // revalidation keeps the current screen usable until fresh RLS-scoped rows arrive.
+          if (!hasWarmBootstrap) clearPatientPortalCaches()
+          essentialLoads.push(hydratePatientPortalFromDatabase())
+        }
+
+        await Promise.allSettled(essentialLoads)
+        return true
+      },
+      {
+        ...(user.role === 'patient' ? queryCachePolicy.frequent : queryCachePolicy.moderate),
+        tags: ['workspace-bootstrap', 'branches', 'providers', 'patients', 'services', user.role === 'patient' ? 'patient-portal' : 'internal-portal'],
+        scope,
+      },
+    )
+
+    void bootstrap.finally(() => {
       if (!active) return
       setReady(true)
 
       // Patient sessions intentionally do not run the broad internal clinic sync.
-      // Their portal cache is hydrated only from patient-scoped/sanitized reads.
-      if (user?.role === 'patient') return
+      if (user.role === 'patient') return
 
       backgroundTimer = window.setTimeout(() => {
-        void syncSupabaseToLocalStorage().catch((error) => {
+        void cachedQuery(
+          'internal-background-sync',
+          async () => {
+            await syncSupabaseToLocalStorage()
+            return true
+          },
+          {
+            ...queryCachePolicy.frequent,
+            tags: ['internal-sync'],
+            scope,
+          },
+        ).catch((error) => {
           console.error('[background clinic sync failed]', error)
         })
       }, 0)
@@ -81,7 +112,7 @@ function DataBootstrap({ children }: { children: React.ReactNode }) {
       active = false
       if (backgroundTimer !== undefined) window.clearTimeout(backgroundTimer)
     }
-  }, [isAuthenticated, isLoading, user?.role])
+  }, [isAuthenticated, isLoading, user?.id, user?.role])
 
   if (isLoading || !ready) {
     return (
