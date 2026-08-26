@@ -83,16 +83,19 @@ function replaceRefund(refund: Refund) {
   const next = [refund, ...getStoredRefunds().filter((entry) => entry.id !== refund.id)]
   window.localStorage.setItem(REFUND_STORAGE_KEY, JSON.stringify(next))
 }
+function signalBillingMutation(branchId?: string) {
+  if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent('plamenco:billing-mutated', { detail: { branchId } }))
+}
 function rpcError(message: string, cause: { message?: string } | null | undefined) {
   if (import.meta.env.DEV && cause?.message) console.error('[billing persistence]', cause)
-  return new Error(message)
+  return new Error(cause?.message ? `${message} ${cause.message}` : message)
 }
 
 export async function createInvoicePersisted(input: { patientDbId: string; branchId?: string; invoiceDate: string; dueDate?: string; items: InvoiceItem[]; notes?: string; clientRequestId?: string }): Promise<Invoice> {
   const db = requireDatabase(); const clientRequestId = input.clientRequestId ?? createUuid()
   const { data, error } = await db.rpc('create_invoice_from_items', { p_patient_id: input.patientDbId, p_branch_id: input.branchId || null, p_invoice_date: input.invoiceDate, p_due_date: input.dueDate || null, p_items: input.items, p_notes: input.notes ?? '', p_client_request_id: clientRequestId })
   if (error || !data?.invoice) throw rpcError('Unable to create the invoice. No financial changes were committed.', error)
-  const invoice = mapInvoiceRow(data.invoice as Record<string, any>); replaceInvoice(invoice); return invoice
+  const invoice = mapInvoiceRow(data.invoice as Record<string, any>); replaceInvoice(invoice); signalBillingMutation(invoice.branchId); return invoice
 }
 
 export async function recordManualPaymentPersisted(input: { invoiceId: string; amountCents: number; paymentMethod: PaymentMethod; date: string; referenceNumber?: string; notes?: string; clientRequestId?: string }): Promise<{ payment: Payment; invoice: Invoice; receipt: Receipt }> {
@@ -100,31 +103,31 @@ export async function recordManualPaymentPersisted(input: { invoiceId: string; a
   const { data, error } = await db.rpc('record_manual_payment', { p_invoice_id: input.invoiceId, p_amount_cents: input.amountCents, p_payment_method: input.paymentMethod, p_payment_date: input.date, p_reference_number: input.referenceNumber ?? '', p_notes: input.notes ?? '', p_client_request_id: clientRequestId })
   if (error || !data?.payment || !data?.invoice || !data?.receipt) throw rpcError('Payment was not recorded. No balance change was committed.', error)
   const payment=mapPaymentRow(data.payment as Record<string,any>), invoice=mapInvoiceRow(data.invoice as Record<string,any>), receipt=mapReceiptRow(data.receipt as Record<string,any>)
-  replacePayment(payment); replaceInvoice(invoice); replaceReceipt(receipt); return { payment, invoice, receipt }
+  replacePayment(payment); replaceInvoice(invoice); replaceReceipt(receipt); signalBillingMutation(invoice.branchId ?? payment.branchId); return { payment, invoice, receipt }
 }
 
 export async function applyInvoiceDiscountPersisted(input: { invoiceId: string; itemId: string; type: DiscountType; valueCents?: number; percentage?: number; reason: string }): Promise<Invoice> {
   const db=requireDatabase(); const {data,error}=await db.rpc('apply_invoice_discount',{p_invoice_id:input.invoiceId,p_item_id:input.itemId,p_discount_type:input.type,p_value_cents:input.valueCents??null,p_percentage:input.percentage??null,p_reason:input.reason})
-  if(error||!data) throw rpcError('Discount was not applied. The invoice was left unchanged.',error); const invoice=mapInvoiceRow(data as Record<string,any>); replaceInvoice(invoice); return invoice
+  if(error||!data) throw rpcError('Discount was not applied. The invoice was left unchanged.',error); const invoice=mapInvoiceRow(data as Record<string,any>); replaceInvoice(invoice); signalBillingMutation(invoice.branchId); return invoice
 }
 
 export async function voidInvoicePersisted(invoiceId:string,reason:string):Promise<Invoice>{
-  const db=requireDatabase(); const {data,error}=await db.rpc('void_invoice',{p_invoice_id:invoiceId,p_reason:reason}); if(error||!data) throw rpcError('The invoice could not be voided. It remains unchanged.',error); const invoice=mapInvoiceRow(data as Record<string,any>); replaceInvoice(invoice); return invoice
+  const db=requireDatabase(); const {data,error}=await db.rpc('void_invoice',{p_invoice_id:invoiceId,p_reason:reason}); if(error||!data) throw rpcError('The invoice could not be voided. It remains unchanged.',error); const invoice=mapInvoiceRow(data as Record<string,any>); replaceInvoice(invoice); signalBillingMutation(invoice.branchId); return invoice
 }
 
 export async function refundPaymentPersisted(input:{paymentId:string;amountCents:number;reason:string;gatewayRefundId?:string;clientRequestId?:string}):Promise<{refund:Refund;payment:Payment;invoice:Invoice}>{
   const db=requireDatabase(); const clientRequestId=input.clientRequestId??createUuid(); const {data,error}=await db.rpc('record_payment_refund',{p_payment_id:input.paymentId,p_amount_cents:input.amountCents,p_reason:input.reason,p_gateway_refund_id:input.gatewayRefundId??'',p_client_request_id:clientRequestId})
   if(error||!data?.refund||!data?.payment||!data?.invoice) throw rpcError('The refund could not be recorded. No financial changes were committed.',error)
-  const refund=mapRefundRow(data.refund as Record<string,any>),payment=mapPaymentRow(data.payment as Record<string,any>),invoice=mapInvoiceRow(data.invoice as Record<string,any>); replaceRefund(refund);replacePayment(payment);replaceInvoice(invoice);return{refund,payment,invoice}
+  const refund=mapRefundRow(data.refund as Record<string,any>),payment=mapPaymentRow(data.payment as Record<string,any>),invoice=mapInvoiceRow(data.invoice as Record<string,any>); replaceRefund(refund);replacePayment(payment);replaceInvoice(invoice);signalBillingMutation(invoice.branchId ?? payment.branchId);return{refund,payment,invoice}
 }
 
 export async function verifySubmittedPaymentPersisted(paymentId:string):Promise<{payment:Payment;invoice:Invoice;receipt:Receipt}>{
   const db=requireDatabase(); const {data,error}=await db.rpc('verify_submitted_payment',{p_payment_id:paymentId})
   if(error||!data?.payment||!data?.invoice||!data?.receipt) throw rpcError('The submitted payment could not be verified. No balance change was committed.',error)
-  const payment=mapPaymentRow(data.payment as Record<string,any>),invoice=mapInvoiceRow(data.invoice as Record<string,any>),receipt=mapReceiptRow(data.receipt as Record<string,any>);replacePayment(payment);replaceInvoice(invoice);replaceReceipt(receipt);return{payment,invoice,receipt}
+  const payment=mapPaymentRow(data.payment as Record<string,any>),invoice=mapInvoiceRow(data.invoice as Record<string,any>),receipt=mapReceiptRow(data.receipt as Record<string,any>);replacePayment(payment);replaceInvoice(invoice);replaceReceipt(receipt);signalBillingMutation(invoice.branchId ?? payment.branchId);return{payment,invoice,receipt}
 }
 
 export async function rejectSubmittedPaymentPersisted(paymentId:string,internalReason:string,patientReason=''):Promise<Payment>{
   const db=requireDatabase(); const {data,error}=await db.rpc('reject_submitted_payment',{p_payment_id:paymentId,p_internal_reason:internalReason,p_patient_reason:patientReason})
-  if(error||!data?.payment) throw rpcError('The submitted payment could not be rejected. It remains unchanged.',error); const payment=mapPaymentRow(data.payment as Record<string,any>);replacePayment(payment);return payment
+  if(error||!data?.payment) throw rpcError('The submitted payment could not be rejected. It remains unchanged.',error); const payment=mapPaymentRow(data.payment as Record<string,any>);replacePayment(payment);signalBillingMutation(payment.branchId);return payment
 }
