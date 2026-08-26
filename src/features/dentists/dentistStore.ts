@@ -260,79 +260,58 @@ export async function saveScheduleBlocks(providerId: string, blocks: Omit<Provid
   const normalized = blocks
     .filter((block) => block.branchId && block.startTime && block.endTime && block.startTime < block.endTime)
     .map((block) => ({ ...block, status: block.status ?? 'active' as const }))
-  const timestamp = nowIso()
-  const previousAll = getProviderScheduleBlocks()
-  const previousProviderBlocks = previousAll.filter((block) => block.providerId === providerId)
-  const otherProviderBlocks = previousAll.filter((block) => block.providerId !== providerId)
-  const nextBlocks = normalized.map((block): ProviderScheduleBlock => ({
-    id: generateUUID(),
-    providerId,
-    ...block,
-    createdAt: timestamp,
-    updatedAt: timestamp,
-  }))
 
   if (!supabase) {
+    const timestamp = nowIso()
+    const otherProviderBlocks = getProviderScheduleBlocks().filter((block) => block.providerId !== providerId)
+    const nextBlocks = normalized.map((block): ProviderScheduleBlock => ({
+      id: generateUUID(), providerId, ...block, createdAt: timestamp, updatedAt: timestamp,
+    }))
     saveProviderScheduleBlocks([...otherProviderBlocks, ...nextBlocks])
     return { blocks: nextBlocks, persisted: false }
   }
 
-  const deleteResult = await supabase.from('provider_schedule_blocks').delete().eq('provider_id', providerId)
-  if (deleteResult.error) throw new Error(`Unable to replace provider schedule: ${deleteResult.error.message}`)
-
-  if (nextBlocks.length) {
-    const insertResult = await supabase.from('provider_schedule_blocks').insert(nextBlocks.map((block) => ({
-      id: block.id,
-      provider_id: block.providerId,
-      branch_id: block.branchId,
-      day_of_week: block.dayOfWeek,
-      start_time: block.startTime,
-      end_time: block.endTime,
+  const { data, error } = await supabase.rpc('replace_provider_weekly_schedule_v131', {
+    p_provider_id: providerId,
+    p_blocks: normalized.map((block) => ({
+      branchId: block.branchId,
+      dayOfWeek: block.dayOfWeek,
+      startTime: block.startTime,
+      endTime: block.endTime,
       status: block.status,
-    })))
-    if (insertResult.error) {
-      if (previousProviderBlocks.length) {
-        await supabase.from('provider_schedule_blocks').insert(previousProviderBlocks.map((block) => ({
-          id: block.id,
-          provider_id: block.providerId,
-          branch_id: block.branchId,
-          day_of_week: block.dayOfWeek,
-          start_time: block.startTime,
-          end_time: block.endTime,
-          status: block.status,
-        })))
-      }
-      throw new Error(`Unable to save provider schedule: ${insertResult.error.message}`)
-    }
-  }
+    })),
+  })
+  if (error) throw new Error(`Unable to save provider schedule: ${error.message}`)
 
-  saveProviderScheduleBlocks([...otherProviderBlocks, ...nextBlocks])
-  return { blocks: nextBlocks, persisted: true }
+  const returned = Array.isArray(data) ? data.map((row) => mapScheduleRow(row as Record<string, any>)) : []
+  const foundation = await loadProviderFoundationFromSupabase({ strict: true })
+  const confirmed = foundation.schedules.filter((block) => block.providerId === providerId)
+  return { blocks: confirmed.length || normalized.length === 0 ? confirmed : returned, persisted: true }
 }
 
-export function createAvailabilityOverride(input: Omit<ProviderAvailabilityOverride, 'id' | 'createdAt' | 'updatedAt'>) {
-  const timestamp = nowIso()
-  const override: ProviderAvailabilityOverride = {
-    id: generateUUID(),
-    ...input,
-    createdAt: timestamp,
-    updatedAt: timestamp,
+export async function createAvailabilityOverride(input: Omit<ProviderAvailabilityOverride, 'id' | 'createdAt' | 'updatedAt'>) {
+  if (!supabase) {
+    const timestamp = nowIso()
+    const override: ProviderAvailabilityOverride = { id: generateUUID(), ...input, createdAt: timestamp, updatedAt: timestamp }
+    saveProviderAvailabilityOverrides([override, ...getProviderAvailabilityOverrides()])
+    return override
   }
 
-  saveProviderAvailabilityOverrides([override, ...getProviderAvailabilityOverrides()])
-  void insertRemoteTableRow('provider_availability_overrides', {
-    id: override.id,
-    provider_id: override.providerId,
-    branch_id: override.branchId || null,
-    override_date: override.date,
-    type: override.type,
-    start_time: override.startTime || null,
-    end_time: override.endTime || null,
-    reason: override.reason,
-    private_notes: override.privateNotes,
+  const { data, error } = await supabase.rpc('create_provider_availability_override_v131', {
+    p_provider_id: input.providerId,
+    p_branch_id: input.branchId || null,
+    p_date: input.date,
+    p_type: input.type,
+    p_start_time: input.startTime || null,
+    p_end_time: input.endTime || null,
+    p_reason: input.reason ?? '',
+    p_private_notes: input.privateNotes ?? '',
   })
+  if (error || !data) throw new Error(error?.message || 'Availability exception could not be saved.')
 
-  return override
+  const created = mapOverrideRow(data as Record<string, any>)
+  const foundation = await loadProviderFoundationFromSupabase({ strict: true })
+  return foundation.overrides.find((row) => row.id === created.id) ?? created
 }
 
 export {
