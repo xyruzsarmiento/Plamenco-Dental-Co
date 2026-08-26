@@ -33,7 +33,7 @@ export type AppointmentAvailabilityStatus =
 
 export type AppointmentAvailabilityResult = {
   status: AppointmentAvailabilityStatus
-n  slots: AvailabilitySlot[]
+  slots: AvailabilitySlot[]
   eligibleProviderCount: number
   scheduledProviderCount: number
 }
