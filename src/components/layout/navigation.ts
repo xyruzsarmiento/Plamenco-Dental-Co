@@ -57,7 +57,7 @@ export const navigationGroups: NavigationGroup[] = [
   {
     title: 'Operations',
     items: [
-      { label: 'Reports', path: '/app/reports', icon: BarChart3, anyOf: ['reports.view'] },
+      { label: 'Reports', path: '/app/reports', icon: BarChart3, anyOf: ['reports.view', 'reports.view_limited'] },
       { label: 'Data Import', path: '/app/data-import', icon: DatabaseZap, anyOf: ['patients.import'] },
       { label: 'Inventory', path: '/app/inventory', icon: PackageSearch, anyOf: ['inventory.view'] },
       { label: 'Expenses', path: '/app/expenses', icon: ReceiptText, anyOf: ['expenses.view'] },
