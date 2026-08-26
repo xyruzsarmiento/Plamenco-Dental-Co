@@ -88,7 +88,7 @@ Deno.serve(async (request) => {
   if (!inviteData.user) return json({ error: 'Supabase did not return the invited user.' }, 500)
 
   const userId = inviteData.user.id
-  const { error: profileUpsertError } = await adminClient.from('profiles').upsert({ id: userId, full_name: name, email, role, status: 'active', permissions: [] }, { onConflict: 'id' })
+  const { error: profileUpsertError } = await adminClient.from('profiles').upsert({ id: userId, full_name: name, email, role, status: 'inactive', permissions: [] }, { onConflict: 'id' })
   if (profileUpsertError) return json({ error: `Invitation sent, but account profile provisioning failed: ${profileUpsertError.message}`, invitation }, 500)
 
   if (role === 'dentist' || role === 'associate_dentist') {
