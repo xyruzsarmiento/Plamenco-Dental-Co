@@ -79,8 +79,6 @@ function SettlementModal({ branches, initialBranchId, pending, onClose, onSaved 
 export function ReportsDatabaseWorkspaceV129() {
   const { user } = useAuth()
   const { activeBranch, activeBranchId, availableBranches, isAllBranchesMode } = useBranchContext()
-  if (user?.role !== 'super_admin') return <ReportsBranchWorkspaceV124 />
-
   const initial = presetRange('this_month')
   const [preset, setPreset] = useState<ReportPreset>('this_month')
   const [startDate, setStartDate] = useState(initial.start)
@@ -96,6 +94,7 @@ export function ReportsDatabaseWorkspaceV129() {
   const scopeName = isAllBranchesMode ? 'All Branches' : activeBranch?.name ?? 'Selected branch'
 
   async function refresh() {
+    if (user?.role !== 'super_admin') return
     if (!supabase) { setError('Clinic database is not configured.'); setLoading(false); return }
     setLoading(true); setError(null)
     const [reportResult, qrphResult, config] = await Promise.all([
@@ -109,13 +108,15 @@ export function ReportsDatabaseWorkspaceV129() {
     setTaxConfig(config); setLoading(false)
   }
 
-  useEffect(() => { void refresh() }, [startDate, endDate, branchScope]) // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { if (user?.role === 'super_admin') void refresh() }, [startDate, endDate, branchScope, user?.role]) // eslint-disable-line react-hooks/exhaustive-deps
 
   function applyPreset(next: ReportPreset) { setPreset(next); if (next === 'custom') return; const range = presetRange(next); setStartDate(range.start); setEndDate(range.end) }
   function applyMonth(value: string) { setMonth(value); if (!value) return; const range = monthRange(value); setPreset('custom'); setStartDate(range.start); setEndDate(range.end) }
   const tax = estimateTax(report, taxConfig)
   const noShowPct = ((report?.operations.no_show_rate ?? 0) * 100).toFixed(1)
   const chartRows = useMemo(() => report?.trend ?? [], [report])
+
+  if (user?.role !== 'super_admin') return <ReportsBranchWorkspaceV124 />
 
   return <section className="rep129">
     <header className="rep129-hero"><div className="rep129-head"><div><span className="rep129-eyebrow">Authoritative management reporting</span><h2>Reports & Analytics</h2><p>Historical metrics are generated from persisted Supabase transactions. Changing the month does not erase earlier reports.</p></div><span className="rep129-scope"><Building2 size={13}/> {scopeName}</span></div><div className="rep129-filters"><label>Period<select value={preset} onChange={(e) => applyPreset(e.target.value as ReportPreset)}><option value="today">Today</option><option value="yesterday">Yesterday</option><option value="this_week">This Week</option><option value="last_7_days">Last 7 Days</option><option value="this_month">This Month</option><option value="last_month">Last Month</option><option value="last_3_months">Last 3 Months</option><option value="this_quarter">This Quarter</option><option value="this_year">This Year</option><option value="last_year">Last Year</option><option value="custom">Custom</option></select></label><label>Month archive<input type="month" value={month} onChange={(e) => applyMonth(e.target.value)}/></label><label>From<input type="date" value={startDate} onChange={(e) => { setPreset('custom'); setStartDate(e.target.value) }}/></label><label>To<input type="date" value={endDate} onChange={(e) => { setPreset('custom'); setEndDate(e.target.value) }}/></label></div></header>
