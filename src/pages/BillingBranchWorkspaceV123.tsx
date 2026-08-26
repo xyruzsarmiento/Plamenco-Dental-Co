@@ -14,7 +14,6 @@ import {
   getStoredPayments,
   getStoredReceipts,
   getStoredRefunds,
-  type Invoice,
   type InvoiceItem,
   type Payment,
   type PaymentMethod,
@@ -116,7 +115,7 @@ function BranchInvoiceModal({ branchId, branchName, onClose, onSuccess }: { bran
   const patient = patients.find((row) => row.id === patientId || row.patientId === patientId)
   const eligible = charges.filter((charge) => !patient || charge.patientId === patient.id || charge.patientId === patient.patientId)
   const items = useMemo<InvoiceItem[]>(() => {
-    const fromCharges = selectedCharges.flatMap((id) => {
+    const fromCharges: InvoiceItem[] = selectedCharges.flatMap((id) => {
       const charge = charges.find((row) => row.id === id)
       return charge ? [{ id: `line-${charge.id}`, chargeId: charge.id, treatmentId: charge.treatmentId, serviceId: charge.serviceId, providerId: charge.providerId, providerNameSnapshot: charge.providerNameSnapshot, branchId, description: charge.description, quantity: charge.quantity, unitPriceCents: charge.unitPriceCents, discountCents: charge.discountCents }] : []
     })
@@ -200,7 +199,7 @@ function ScopedBilling() {
     const receipt = receipts.find((row) => row.paymentId === payment.id)
     const invoice = invoices.find((row) => row.id === payment.invoiceId)
     const patient = getStoredPatients().find((row) => row.id === payment.patientId || row.patientId === payment.patientId)
-    const payload = { receipt, payment, invoice, patient: { name: patient ? `${patient.firstName} ${patient.lastName}`.trim() : patientName(payment.patientId), patientId: patient?.patientId ?? payment.patientId }, branch: activeBranch }
+    const payload = { receipt, payment, invoice, patient: { name: patient ? `${patient.firstName} ${patient.lastName}`.trim() : patientName(payment.patientId), patientId: patient?.patientId ?? payment.patientId }, branch: activeBranch ?? undefined }
     if (canPrintOfficialReceipt(payload)) openOfficialReceiptWindow(payload)
   }
   async function confirmRefund() {
@@ -222,7 +221,7 @@ function ScopedBilling() {
 
     <section className="bill123-table-card">
       {tab === 'invoices' && <div className="bill123-list">{pageItems(filteredInvoices,page).map((invoice) => <article key={invoice.id}><div><ReceiptText size={17}/><span><strong>{invoice.invoiceNumber}</strong><small>{patientName(invoice.patientId)} · {activeBranch.name} · {dateLabel(invoice.invoiceDate)}</small></span></div><div><StatusBadge status={invoice.status} variant="compact"/><strong>{formatCurrency(invoice.totalCents)}</strong><small>{formatCurrency(invoice.balanceCents)} due</small></div></article>)}{!filteredInvoices.length && <div className="bill123-empty"><FileText size={24}/><h3>No invoices for this branch</h3></div>}</div>}
-      {tab === 'payments' && <div className="bill123-list">{pageItems(filteredPayments,page).map((payment) => <article key={payment.id}><div><CircleDollarSign size={17}/><span><strong>{payment.paymentNumber}</strong><small>{patientName(payment.patientId)} · {activeBranch.name} · {dateLabel(payment.date)}</small></span></div><div><StatusBadge status={payment.status} variant="compact"/><strong>{formatCurrency(payment.amountCents)}</strong>{permissions.can('payments.refund') && payment.refundableCents > 0 && <Button size="sm" variant="secondary" onClick={() => setRefundTarget(payment)}>Refund</Button>}{canPrintOfficialReceipt({ receipt: receipts.find((row) => row.paymentId === payment.id), payment, invoice: invoices.find((row) => row.id === payment.invoiceId), patient: { name: patientName(payment.patientId), patientId: payment.patientId }, branch: activeBranch }) && <Button size="sm" variant="ghost" icon={<Printer size={13}/>} onClick={() => printReceipt(payment)}>Receipt</Button>}</div></article>)}</div>}
+      {tab === 'payments' && <div className="bill123-list">{pageItems(filteredPayments,page).map((payment) => <article key={payment.id}><div><CircleDollarSign size={17}/><span><strong>{payment.paymentNumber}</strong><small>{patientName(payment.patientId)} · {activeBranch.name} · {dateLabel(payment.date)}</small></span></div><div><StatusBadge status={payment.status} variant="compact"/><strong>{formatCurrency(payment.amountCents)}</strong>{permissions.can('payments.refund') && payment.refundableCents > 0 && <Button size="sm" variant="secondary" onClick={() => setRefundTarget(payment)}>Refund</Button>}{canPrintOfficialReceipt({ receipt: receipts.find((row) => row.paymentId === payment.id), payment, invoice: invoices.find((row) => row.id === payment.invoiceId), patient: { name: patientName(payment.patientId), patientId: payment.patientId }, branch: activeBranch ?? undefined }) && <Button size="sm" variant="ghost" icon={<Printer size={13}/>} onClick={() => printReceipt(payment)}>Receipt</Button>}</div></article>)}</div>}
       {tab === 'receivables' && <div className="bill123-list">{pageItems(outstanding,page).map((invoice) => <article key={invoice.id}><div><Landmark size={17}/><span><strong>{invoice.invoiceNumber}</strong><small>{patientName(invoice.patientId)} · {activeBranch.name}</small></span></div><div><StatusBadge status={invoice.status} variant="compact"/><strong>{formatCurrency(invoice.balanceCents)}</strong><small>Outstanding</small></div></article>)}{!outstanding.length && <div className="bill123-empty"><Landmark size={24}/><h3>No open receivables</h3></div>}</div>}
       {tab === 'receipts' && <div className="bill123-list">{pageItems(filteredReceipts,page).map((receipt) => { const payment = payments.find((row) => row.id === receipt.paymentId); return <article key={receipt.id}><div><ReceiptText size={17}/><span><strong>{receipt.receiptNumber}</strong><small>{patientName(receipt.patientId)} · {activeBranch.name} · {dateLabel(receipt.issuedAt)}</small></span></div><div><strong>{formatCurrency(receipt.amountCents)}</strong>{payment && <Button size="sm" variant="ghost" icon={<Printer size={13}/>} onClick={() => printReceipt(payment)}>Print</Button>}</div></article> })}</div>}
       {tab === 'refunds' && <div className="bill123-list">{pageItems(filteredRefunds,page).map((refund) => <article key={refund.id}><div><RotateCcw size={17}/><span><strong>{refund.refundNumber}</strong><small>{patientName(refund.patientId)} · {activeBranch.name} · {dateLabel(refund.processedAt)}</small></span></div><div><StatusBadge status={refund.status} variant="compact"/><strong>{formatCurrency(refund.amountCents)}</strong></div></article>)}</div>}
