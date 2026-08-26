@@ -59,26 +59,34 @@ export function AcceptInvitePage() {
     try {
       const { error: updateError } = await supabase.auth.updateUser({ password })
       if (updateError) throw updateError
+
+      const { data: accepted, error: activationError } = await supabase.rpc('accept_own_internal_invitation')
+      if (activationError) throw activationError
+      if (!accepted) throw new Error('The invitation could not be activated. Ask Super Admin to send a new invitation.')
+
+      const { error: signOutError } = await supabase.auth.signOut()
+      if (signOutError) throw signOutError
+
       setComplete(true)
       setPassword('')
       setConfirmPassword('')
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : 'Unable to set your password.')
+      setError(cause instanceof Error ? cause.message : 'Unable to set your password and activate the invitation.')
     } finally { setSaving(false) }
   }
 
   return <main className="auth-page"><section className="auth-card" style={{ maxWidth: 520 }}>
     <div className="auth-brand"><span className="auth-logo-mark">P</span><div><strong>Plamenco Dental Co.</strong><span>Internal account invitation</span></div></div>
     {loading ? <div className="auth-message"><ShieldCheck size={20}/><span>Verifying secure invitation…</span></div> : complete ? <div className="auth-form">
-      <div className="auth-message success"><CheckCircle2 size={20}/><span>Your password is set. Your existing role and branch assignments have been preserved.</span></div>
-      <Button onClick={() => navigate('/app', { replace: true })}>Enter clinic portal</Button>
+      <div className="auth-message success"><CheckCircle2 size={20}/><span>Your password is set and your clinic account is active. Sign in with the password you just created.</span></div>
+      <Button onClick={() => navigate('/login', { replace: true })}>Continue to sign in</Button>
     </div> : <form className="auth-form" onSubmit={submit}>
       <div><span className="eyebrow">Accept invitation</span><h1>Set your password</h1><p>Complete your account setup before entering the internal clinic portal.</p></div>
       {context && <div className="auth-message"><KeyRound size={19}/><span><strong>{context.name}</strong><br/>{context.email}<br/><span style={{ textTransform: 'capitalize' }}>{context.role}</span></span></div>}
       <label><span>New password</span><input type="password" autoComplete="new-password" value={password} onChange={(event) => setPassword(event.target.value)} minLength={8} required /></label>
       <label><span>Confirm password</span><input type="password" autoComplete="new-password" value={confirmPassword} onChange={(event) => setConfirmPassword(event.target.value)} minLength={8} required /></label>
       {error && <div className="auth-error" role="alert">{error}</div>}
-      <Button type="submit" disabled={saving || !context}>{saving ? 'Setting password…' : 'Set password & activate access'}</Button>
+      <Button type="submit" disabled={saving || !context}>{saving ? 'Activating account…' : 'Set password & activate access'}</Button>
     </form>}
   </section></main>
 }
