@@ -1,0 +1,67 @@
+.pv3-payment-history-v6,
+.pv3-history-timeline,
+.pv3-recall-list-v5,
+.pv3-treatment-cards-v4 {
+  scrollbar-gutter: stable;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+}
+
+.pv3-payment-history-v6 {
+  max-height: 520px;
+  overflow-y: auto;
+  padding-right: 6px;
+}
+
+.pv3-history-timeline {
+  max-height: 620px;
+  overflow-y: auto;
+  padding-right: 6px;
+}
+
+.pv3-recall-list-v5 {
+  max-height: 660px;
+  overflow-y: auto;
+  padding-right: 6px;
+}
+
+/* Treatment history already uses Pagination in the React view. This height cap
+   keeps a single page compact while preserving the existing page controls. */
+.pv3-treatment-cards-v4 {
+  max-height: 700px;
+  overflow-y: auto;
+  padding-right: 6px;
+}
+
+.pv3-payment-history-v6::-webkit-scrollbar,
+.pv3-history-timeline::-webkit-scrollbar,
+.pv3-recall-list-v5::-webkit-scrollbar,
+.pv3-treatment-cards-v4::-webkit-scrollbar {
+  width: 8px;
+}
+
+.pv3-payment-history-v6::-webkit-scrollbar-thumb,
+.pv3-history-timeline::-webkit-scrollbar-thumb,
+.pv3-recall-list-v5::-webkit-scrollbar-thumb,
+.pv3-treatment-cards-v4::-webkit-scrollbar-thumb {
+  background: rgba(100, 116, 139, 0.28);
+  border-radius: 999px;
+}
+
+.pv3-payment-history-v6::-webkit-scrollbar-track,
+.pv3-history-timeline::-webkit-scrollbar-track,
+.pv3-recall-list-v5::-webkit-scrollbar-track,
+.pv3-treatment-cards-v4::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+@media (max-width: 760px) {
+  .pv3-payment-history-v6,
+  .pv3-history-timeline,
+  .pv3-recall-list-v5,
+  .pv3-treatment-cards-v4 {
+    max-height: none;
+    overflow-y: visible;
+    padding-right: 0;
+  }
+}
