@@ -7,7 +7,7 @@ import { useBranchContext } from '../features/branches/BranchContext'
 import { getStoredBranches } from '../features/branches/branchStore'
 import { loadStaffBranchAssignmentsAdmin, replaceStaffBranchAssignmentsPersisted, type StaffBranchAssignmentAdminRow } from '../features/branches/branchAssignmentAdmin'
 import { supabase } from '../lib/supabase'
-import { TeamAccessPageV26 } from './TeamAccessPageV26'
+import { TeamAccessDirectoryV129 } from './TeamAccessDirectoryV129'
 
 type ProfileInfo = { id: string; role: string; status: string; permissions: string[] }
 
@@ -74,19 +74,19 @@ export function TeamAccessBranchAssignmentsV126() {
 
   return <>
     <section className="branch126-admin-card">
-      <header><div><span>TEAM & ACCESS · BRANCH AUTHORIZATION</span><h2>Staff branch assignments</h2><p>Patient identity stays clinic-wide, while operational access is limited to the branches assigned here.</p></div><Badge tone="info"><ShieldCheck size={13}/>Database enforced</Badge></header>
+      <header><div><span>TEAM & ACCESS · BRANCH AUTHORIZATION</span><h2>Staff branch assignments</h2><p>This assignment editor is for Staff accounts. Dentist branch access is managed from Dentists; all internal accounts are listed in Team & Access below.</p></div><Badge tone="info"><ShieldCheck size={13}/>Database enforced</Badge></header>
       {!staff.length ? <div className="branch126-empty"><UsersRound size={22}/><strong>No Staff accounts found</strong><p>Invite a Staff account below, then assign its clinic branch.</p></div> : <div className="branch126-layout">
         <nav aria-label="Staff accounts">{staff.map((member) => <button type="button" key={member.id} className={selected?.id === member.id ? 'is-active' : ''} onClick={() => setSelectedId(member.id)}><span>{member.name.slice(0,1).toUpperCase()}</span><div><strong>{member.name}</strong><small>{member.position || 'Clinic Staff'} · {member.status}</small></div></button>)}</nav>
         {selected && <section className="branch126-editor">
           <div className="branch126-identity"><div><span>STAFF ACCOUNT</span><h3>{selected.name}</h3><p>{selected.email}</p></div><Badge tone={selected.status === 'active' ? 'success' : 'neutral'}>{selected.status}</Badge></div>
           <div className="branch126-meta"><div><span>Role</span><strong>{selectedProfile?.role ?? selected.role}</strong></div><div><span>Status</span><strong>{selectedProfile?.status ?? selected.status}</strong></div><div><span>Primary branch</span><strong>{branches.find((branch) => branch.id === primaryBranchId)?.name ?? 'Not assigned'}</strong></div><div><span>Permissions</span><strong>{selectedProfile?.permissions.length ?? 0}</strong></div></div>
-          <div className="branch126-permissions"><KeyRound size={15}/><span>{selectedProfile?.permissions.length ? selectedProfile.permissions.join(' · ') : 'No granular permission overrides recorded.'}</span></div>
+          <div className="branch126-permissions"><KeyRound size={15}/><span>{selectedProfile?.permissions.length ? selectedProfile.permissions.join(' · ') : 'No granular permission overrides recorded; role defaults still apply.'}</span></div>
           <fieldset><legend>Assigned branches</legend>{branches.map((branch) => { const checked = draftBranches.includes(branch.id); return <label key={branch.id} className={checked ? 'is-selected' : ''}><input type="checkbox" checked={checked} onChange={() => toggleBranch(branch.id)}/><span className="branch126-check">{checked ? <Check size={14}/> : <Building2 size={14}/>}</span><span><strong>{branch.name}</strong><small>{checked && primaryBranchId === branch.id ? 'Primary branch' : checked ? 'Assigned branch' : 'No access'}</small></span>{checked && <input className="branch126-radio" type="radio" name="staff-primary-branch" checked={primaryBranchId === branch.id} onChange={() => setPrimaryBranchId(branch.id)} aria-label={`Make ${branch.name} primary`}/>}</label>})}</fieldset>
           {error && <div className="branch126-alert is-error" role="alert">{error}</div>}{message && <div className="branch126-alert is-success" role="status">{message}</div>}
           <footer><p>{draftBranches.length === 1 ? 'One branch assigned: this Staff account is automatically locked to it.' : draftBranches.length > 1 ? 'Multiple branches assigned: the workspace selector will only show these branches.' : 'No branches assigned: branch-sensitive operations remain blocked.'}</p><Button onClick={() => void save()} disabled={busy}>{busy ? 'Saving…' : 'Save branch access'}</Button></footer>
         </section>}
       </div>}
     </section>
-    <TeamAccessPageV26 />
+    <TeamAccessDirectoryV129 />
   </>
 }
