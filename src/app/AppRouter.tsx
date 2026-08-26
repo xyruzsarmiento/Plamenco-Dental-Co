@@ -13,9 +13,9 @@ import { RequireRole } from '../features/auth/RequireRole'
 import { ResetPasswordPage } from '../features/auth/ResetPasswordPage'
 import { BranchProvider } from '../features/branches/BranchContext'
 import { PatientPortalRoute } from '../features/patientPortal/PatientPortalRoute'
-import { WorkspaceBranchIsolationGuard } from '../features/security/WorkspaceIsolationGuard'
+import { WorkspaceAccountIsolationGuard, WorkspaceBranchIsolationGuard } from '../features/security/WorkspaceIsolationGuard'
 import { AppointmentsPageV38 } from '../pages/AppointmentsPageV38'
-import { BillingBranchWorkspaceV123 } from '../pages/BillingBranchWorkspaceV123'
+import { BillingLiveWorkspaceV130 } from '../pages/BillingLiveWorkspaceV130'
 import { BranchesPageV27 } from '../pages/BranchesPageV27'
 import { DataImportBranchWorkspaceV127 } from '../pages/DataImportBranchWorkspaceV127'
 import { DentalRecordsPageV11 } from '../pages/DentalRecordsPageV11'
@@ -49,7 +49,7 @@ function BookRoute() {
 }
 
 function InternalPortalShell() {
-  return <BranchProvider><WorkspaceBranchIsolationGuard /><AppLayout /></BranchProvider>
+  return <BranchProvider><WorkspaceAccountIsolationGuard /><WorkspaceBranchIsolationGuard /><AppLayout /></BranchProvider>
 }
 
 function RouteRobotsMeta() {
@@ -90,7 +90,7 @@ export function AppRouter() {
       <Route path="treatment-plans" element={<RequirePermission permission="treatments.view"><TreatmentPlansPageV44 /></RequirePermission>} />
       <Route path="prescriptions" element={<RequirePermission permission="prescriptions.view"><PrescriptionsPage /></RequirePermission>} />
       <Route path="documents" element={<RequirePermission anyOf={['documents.view', 'documents.upload']}><DocumentsBranchWorkspaceV127 /></RequirePermission>} />
-      <Route path="billing" element={<RequirePermission anyOf={['billing.view', 'payments.view']}><BillingBranchWorkspaceV123 /></RequirePermission>} />
+      <Route path="billing" element={<RequirePermission anyOf={['billing.view', 'payments.view']}><BillingLiveWorkspaceV130 /></RequirePermission>} />
       <Route path="services" element={<RequirePermission anyOf={['services.view', 'services.manage']}><ServicesPageV49 /></RequirePermission>} />
       <Route path="inventory" element={<RequirePermission permission="inventory.view"><InventoryPageV56 /></RequirePermission>} />
       <Route path="expenses" element={<RequirePermission permission="expenses.view"><ExpensesHistoricalWorkspaceV129 /></RequirePermission>} />
