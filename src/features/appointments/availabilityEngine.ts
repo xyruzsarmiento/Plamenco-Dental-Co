@@ -9,6 +9,7 @@ import {
 } from '../dentists/dentistStore'
 import type { Service } from '../services/serviceTypes'
 import { getStoredServices } from '../services/serviceStore'
+import { isBookingBusy } from './bookingBusyStore'
 import { addMinutesToTime, checkScheduleConflict, getOperatories, getScheduleConflictDetail, getStoredAppointments } from './appointmentStore'
 
 export type ProviderChoice = Provider & { label: string }
@@ -32,7 +33,7 @@ export type AppointmentAvailabilityStatus =
 
 export type AppointmentAvailabilityResult = {
   status: AppointmentAvailabilityStatus
-  slots: AvailabilitySlot[]
+n  slots: AvailabilitySlot[]
   eligibleProviderCount: number
   scheduledProviderCount: number
 }
@@ -111,9 +112,6 @@ function getProviderWindows(providerId: string, branchId: string, date: string) 
       (!override.branchId || override.branchId === branchId),
   )
 
-  // Only a timed available/special-hours override replaces the weekly schedule.
-  // An "available" marker without explicit hours must not erase an otherwise valid
-  // weekly schedule and accidentally produce an empty day.
   const timedSpecialHours = overrides.filter(
     (override) =>
       (override.type === 'special_hours' || override.type === 'available') &&
@@ -174,6 +172,7 @@ export function isProviderAvailable({
   })
   if (blockedByOverride) return false
 
+  if (isBookingBusy({ branchId, providerId, operatoryId, date, startTime, endTime, excludeAppointmentId })) return false
   if (getScheduleConflictDetail(date, startTime, endTime, excludeAppointmentId, providerId, branchId, operatoryId)) return false
 
   return !checkScheduleConflict(date, startTime, endTime, excludeAppointmentId, providerId, branchId, operatoryId)
