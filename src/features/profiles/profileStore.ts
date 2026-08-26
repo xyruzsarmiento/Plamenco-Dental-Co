@@ -110,12 +110,13 @@ export function validateAvatarFile(file: File) {
 }
 
 export async function loadOwnInternalProfile(profileId: string, options: { force?: boolean } = {}) {
-  if (!supabase) throw new Error('Supabase is not configured.')
+  const client = supabase
+  if (!client) throw new Error('Supabase is not configured.')
 
   return cachedQuery(
     `profile:${profileId}`,
     async () => {
-      const { data, error } = await supabase
+      const { data, error } = await client
         .from('profiles')
         .select('id, full_name, email, phone, role, status, job_title, address, avatar_url, created_at, updated_at')
         .eq('id', profileId)
@@ -135,12 +136,13 @@ export async function loadOwnInternalProfile(profileId: string, options: { force
 }
 
 export async function loadDentistProfessionalProfile(profileId: string, options: { force?: boolean } = {}) {
-  if (!supabase) return null
+  const client = supabase
+  if (!client) return null
 
   return cachedQuery(
     `dentist-professional:${profileId}`,
     async () => {
-      const { data, error } = await supabase
+      const { data, error } = await client
         .from('providers')
         .select('id, display_name, role, email, phone, specialization, license_number, bio, photo_url, status')
         .eq('profile_id', profileId)
