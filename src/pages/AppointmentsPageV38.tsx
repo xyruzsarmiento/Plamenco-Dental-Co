@@ -165,7 +165,7 @@ function AppointmentsPageSkeleton() {
 
 export function AppointmentsPageV38() {
   const { user } = useAuth()
-  const { activeBranch, activeBranchId, availableBranches, hasBranchAccess, isAllBranchesMode, isLoading: branchLoading } = useBranchContext()
+  const { activeBranch, activeBranchId, hasBranchAccess, isAllBranchesMode, isLoading: branchLoading } = useBranchContext()
   const [ready, setReady] = useState(false)
   const [notice, setNotice] = useState<AppointmentNotice | null>(null)
   const [renderVersion, setRenderVersion] = useState(0)
@@ -201,6 +201,7 @@ export function AppointmentsPageV38() {
 
   useEffect(() => {
     if (!ready || !user?.id) return
+    const userId = user.id
 
     function refreshRequestsWorkspace(scroll = false) {
       setRenderVersion((version) => version + 1)
@@ -212,7 +213,7 @@ export function AppointmentsPageV38() {
       if (verifyingRef.current.has(verificationKey)) return
       verifyingRef.current.add(verificationKey)
       window.setTimeout(() => {
-        void loadAppointmentsForBranchScope({ branchId: activeBranchId, isAllBranchesMode, userId: user.id, strict: true, bypassCache: true })
+        void loadAppointmentsForBranchScope({ branchId: activeBranchId, isAllBranchesMode, userId, strict: true, bypassCache: true })
           .then((rows) => {
             const remote = rows.find((entry) => entry.id === appointment.id)
             previousRef.current = new Map(rows.map((entry) => [entry.id, entry]))
