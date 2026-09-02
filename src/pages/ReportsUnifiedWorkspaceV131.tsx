@@ -1,5 +1,5 @@
-import { ReportsPremiumWorkspaceV162 } from './ReportsPremiumWorkspaceV162'
+import { ReportsPremiumWorkspaceV163 } from './ReportsPremiumWorkspaceV163'
 
 export function ReportsUnifiedWorkspaceV131() {
-  return <ReportsPremiumWorkspaceV162 />
+  return <ReportsPremiumWorkspaceV163 />
 }
