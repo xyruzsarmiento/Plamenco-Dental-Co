@@ -1,0 +1,78 @@
+/* Exact route-level overrides for the current Patient Records and Data Import headers.
+   These components use patients36-hero and data-import-v21-hero, not the legacy header classes. */
+
+.app-shell .content-area .patients36-page > .patients36-hero,
+.app-shell .content-area .data-import-v21 > .data-import-v21-hero {
+  min-height: 0 !important;
+  padding: 16px 20px !important;
+  border-radius: 18px !important;
+}
+
+.app-shell .content-area .patients36-page > .patients36-hero .patients36-hero-copy h1,
+.app-shell .content-area .data-import-v21 > .data-import-v21-hero > div:first-child h2 {
+  margin: 0 !important;
+  font-size: 1.55rem !important;
+  font-weight: 650 !important;
+  line-height: 1.15 !important;
+  letter-spacing: -0.012em !important;
+  color: #172033 !important;
+}
+
+.app-shell .content-area .patients36-page > .patients36-hero .patients36-hero-copy > span,
+.app-shell .content-area .data-import-v21 > .data-import-v21-hero .data-import-v21-kicker {
+  font-size: .62rem !important;
+  font-weight: 800 !important;
+  letter-spacing: .075em !important;
+  line-height: 1.25 !important;
+}
+
+.app-shell .content-area .patients36-page > .patients36-hero .patients36-hero-copy p,
+.app-shell .content-area .data-import-v21 > .data-import-v21-hero > div:first-child p {
+  margin-top: 5px !important;
+  font-size: .78rem !important;
+  font-weight: 450 !important;
+  line-height: 1.45 !important;
+  color: #66758a !important;
+}
+
+.app-shell .content-area .patients36-page > .patients36-hero .patients36-hero-actions .btn {
+  min-height: 36px !important;
+  padding-inline: 12px !important;
+  border-radius: 10px !important;
+  font-size: .74rem !important;
+  font-weight: 700 !important;
+}
+
+.app-shell .content-area .data-import-v21 > .data-import-v21-hero .data-import-v21-safety {
+  padding: 10px 14px !important;
+  border-radius: 14px !important;
+}
+
+.app-shell .content-area .data-import-v21 > .data-import-v21-hero .data-import-v21-safety strong {
+  font-size: .82rem !important;
+  font-weight: 700 !important;
+}
+
+.app-shell .content-area .data-import-v21 > .data-import-v21-hero .data-import-v21-safety span {
+  font-size: .7rem !important;
+}
+
+@media (max-width: 760px) {
+  .app-shell .content-area .patients36-page > .patients36-hero,
+  .app-shell .content-area .data-import-v21 > .data-import-v21-hero {
+    padding: 14px 16px !important;
+    gap: 12px !important;
+  }
+
+  .app-shell .content-area .patients36-page > .patients36-hero .patients36-hero-copy h1,
+  .app-shell .content-area .data-import-v21 > .data-import-v21-hero > div:first-child h2 {
+    font-size: 1.35rem !important;
+  }
+}
+
+@media (max-width: 520px) {
+  .app-shell .content-area .patients36-page > .patients36-hero .patients36-hero-copy h1,
+  .app-shell .content-area .data-import-v21 > .data-import-v21-hero > div:first-child h2 {
+    font-size: 1.22rem !important;
+  }
+}
