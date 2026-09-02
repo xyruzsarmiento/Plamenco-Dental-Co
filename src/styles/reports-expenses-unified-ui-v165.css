@@ -1,0 +1,225 @@
+/* V165 visual unification for Reports + Expenses across Staff and Super Admin. */
+
+/* ---------------- Reports ---------------- */
+.app-shell .rep163,
+.app-shell .rep162 {
+  --rep-ink:#172033;
+  --rep-muted:#6f7d91;
+  --rep-line:#dfe6ef;
+  --rep-soft:#f7f9fc;
+  --rep-blue:#2563eb;
+  --rep-green:#10b981;
+  --rep-shadow:0 8px 24px rgba(15,23,42,.045);
+  gap:14px;
+}
+
+.app-shell .rep163 :where(.rep162-toolbar,.rep162-filterbar,.rep162-executive,.rep162-card),
+.app-shell .rep162 :where(.rep162-toolbar,.rep162-filterbar,.rep162-executive,.rep162-card){
+  border:1px solid var(--rep-line)!important;
+  background:#fff!important;
+  box-shadow:var(--rep-shadow)!important;
+}
+
+.app-shell .rep163 .rep162-toolbar,
+.app-shell .rep162 .rep162-toolbar{
+  align-items:center;
+  min-height:112px;
+  padding:20px 22px;
+  border-radius:20px;
+  background:linear-gradient(135deg,#fff 0%,#fbfcfe 72%,#f4f7fb 100%)!important;
+}
+
+.app-shell .rep163 .rep162-title-block h2,
+.app-shell .rep162 .rep162-title-block h2{
+  color:#0f172a;
+  font-size:clamp(1.7rem,2.35vw,2.3rem);
+  letter-spacing:-.035em;
+}
+
+.app-shell .rep163 .rep162-title-block p,
+.app-shell .rep162 .rep162-title-block p{color:var(--rep-muted);font-size:.82rem}
+
+.app-shell .rep163 .rep162-eyebrow,
+.app-shell .rep162 .rep162-eyebrow{color:var(--rep-blue);font-size:.64rem;font-weight:850;letter-spacing:.09em}
+
+.app-shell .rep163 .rep162-scope,
+.app-shell .rep162 .rep162-scope{
+  border-color:#dbe3ed;
+  background:#f7f9fc;
+  color:#475569;
+  box-shadow:none;
+}
+
+.app-shell .rep163 .rep162-filterbar,
+.app-shell .rep162 .rep162-filterbar{
+  gap:12px;
+  padding:14px 16px;
+  border-radius:18px;
+}
+
+.app-shell .rep163 .rep162-filterbar :where(select,input),
+.app-shell .rep162 .rep162-filterbar :where(select,input){
+  border-color:#d8e1ec;
+  background:#fff;
+  border-radius:11px;
+}
+
+.app-shell .rep163 .rep162-period-summary,
+.app-shell .rep162 .rep162-period-summary{background:#f5f7fa;color:#64748b}
+
+.app-shell .rep163 .rep162-executive,
+.app-shell .rep162 .rep162-executive{padding:18px;border-radius:20px}
+
+.app-shell .rep163 .rep162-primary-kpis,
+.app-shell .rep162 .rep162-primary-kpis{gap:10px}
+
+.app-shell .rep163 .rep162-kpi,
+.app-shell .rep162 .rep162-kpi{
+  min-height:110px;
+  padding:14px 15px;
+  border-color:#e2e8f0;
+  border-radius:16px;
+  background:#fff;
+}
+
+.app-shell .rep163 .rep162-kpi:before,
+.app-shell .rep162 .rep162-kpi:before{width:2px;background:#cbd5e1}
+.app-shell .rep163 .rep162-kpi-good:before,.app-shell .rep162 .rep162-kpi-good:before{background:var(--rep-green)}
+.app-shell .rep163 .rep162-kpi-warn:before,.app-shell .rep162 .rep162-kpi-warn:before{background:#f59e0b}
+.app-shell .rep163 .rep162-kpi-bad:before,.app-shell .rep162 .rep162-kpi-bad:before{background:#ef4444}
+
+.app-shell .rep163 .rep162-secondary-kpis>div,
+.app-shell .rep162 .rep162-secondary-kpis>div{
+  border:1px solid #edf1f5;
+  background:#f8fafc;
+}
+
+.app-shell .rep163 .rep162-card,
+.app-shell .rep162 .rep162-card{padding:18px;border-radius:20px}
+.app-shell .rep163 .rep162-card-head,.app-shell .rep162 .rep162-card-head{margin-bottom:13px}
+.app-shell .rep163 .rep162-card-head h3,.app-shell .rep162 .rep162-card-head h3{font-size:1rem;color:var(--rep-ink)}
+
+.app-shell .rep163 .rep162-rank,
+.app-shell .rep162 .rep162-rank{
+  border-color:#e6ebf1;
+  background:#fbfcfe;
+  box-shadow:none;
+}
+
+.app-shell .rep163 :where(.rep162-patient-summary>div,.rep162-metric-grid>div,.rep162-qrph>div),
+.app-shell .rep162 :where(.rep162-patient-summary>div,.rep162-metric-grid>div,.rep162-qrph>div){
+  border:1px solid #e7ecf2;
+  background:#f8fafc;
+}
+
+.app-shell .rep163 .rep162-progress-track i,
+.app-shell .rep162 .rep162-progress-track i{background:linear-gradient(90deg,var(--rep-blue),#60a5fa)}
+
+/* Financial chart: Collections = blue, Expenses = green. */
+.app-shell .rep163 .premium-chart-series-v35.series-0 .premium-chart-line-v35{stroke:var(--rep-blue)!important}
+.app-shell .rep163 .premium-chart-series-v35.series-1 .premium-chart-line-v35{stroke:var(--rep-green)!important}
+.app-shell .rep163 .premium-chart-series-v35.series-0 .premium-chart-dot-v35{stroke:var(--rep-blue)!important}
+.app-shell .rep163 .premium-chart-series-v35.series-1 .premium-chart-dot-v35{stroke:var(--rep-green)!important}
+.app-shell .rep163 .rep163-chart-legend .is-collections{background:var(--rep-blue)!important}
+.app-shell .rep163 .rep163-chart-legend .is-expenses{background:var(--rep-green)!important}
+.app-shell .rep163-trend-card .premium-chart-v35,
+.app-shell .rep163-trend-card .premium-chart-scroll-v35{min-height:270px!important}
+.app-shell .rep163 .premium-chart-grid-v35{stroke:#e8edf3!important}
+
+/* ---------------- Expenses ---------------- */
+.app-shell .ex161-page{
+  --ex-ink:#172033;
+  --ex-muted:#667085;
+  --ex-line:#dfe6ef;
+  --ex-soft:#f8fafc;
+  --ex-blue:#2563eb;
+  --ex-green:#10b981;
+  gap:14px;
+}
+
+.app-shell .ex161-page :where(.ex161-hero,.ex161-toolbar,.ex161-kpis button,.ex161-panel,.ex161-banner){
+  border-color:var(--ex-line)!important;
+  background:#fff!important;
+  box-shadow:0 8px 24px rgba(15,23,42,.04)!important;
+}
+
+.app-shell .ex161-hero{
+  min-height:112px;
+  padding:20px 24px;
+  border-radius:20px;
+  background:linear-gradient(135deg,#fff 0%,#fbfcfe 72%,#f4f7fb 100%)!important;
+}
+
+.app-shell .ex161-hero h1{font-size:clamp(1.8rem,2.5vw,2.45rem)}
+.app-shell .ex161-hero p{color:var(--ex-muted);font-size:.82rem}
+
+.app-shell .ex161-hero > div:first-child > span,
+.app-shell .ex161-kpi-copy > span:first-child,
+.app-shell .ex161-chart-head span,
+.app-shell .ex161-side-head span,
+.app-shell .ex161-ledger-head span,
+.app-shell .ex161-toolbar label > span{color:#64748b!important;letter-spacing:.065em}
+
+.app-shell .ex161-toolbar{
+  gap:10px 12px;
+  padding:14px 16px;
+  border-radius:18px;
+}
+.app-shell .ex161-toolbar :where(input,select),
+.app-shell .ex161-search{border-color:#d8e1ec!important;background:#fff!important}
+.app-shell .ex161-range-chip{color:#7a8798}
+
+.app-shell .ex161-kpis{gap:10px}
+.app-shell .ex161-kpis button{
+  min-height:76px;
+  padding:12px 14px;
+  border-radius:16px;
+}
+.app-shell .ex161-kpis button:hover{border-color:#cbd5e1!important;box-shadow:0 10px 24px rgba(15,23,42,.06)!important}
+.app-shell .ex161-kpis button.is-active{border-color:#b9c7da!important;box-shadow:0 0 0 2px rgba(37,99,235,.06)!important}
+.app-shell .ex161-kpi-icon{background:#f1f5f9;color:#475569}
+.app-shell .ex161-kpis button:nth-child(2) .ex161-kpi-icon{background:#ecfdf5;color:#059669}
+.app-shell .ex161-kpis button.is-warn .ex161-kpi-icon{background:#fff1f2;color:#be123c}
+
+.app-shell .ex161-main{gap:12px}
+.app-shell .ex161-panel{padding:16px 18px;border-radius:18px}
+.app-shell .ex161-chart-head h3,.app-shell .ex161-side-head h3,.app-shell .ex161-ledger-head h2{font-size:1rem}
+
+.app-shell .ex161-chart-svg{max-height:260px}
+.app-shell .ex161-grid{stroke:#e6ebf1}
+.app-shell .ex161-line.is-recorded{stroke:var(--ex-blue)}
+.app-shell .ex161-line.is-paid{stroke:var(--ex-green)}
+.app-shell .ex161-legend i.is-recorded,.app-shell .ex161-dot.is-recorded{background:var(--ex-blue);fill:var(--ex-blue)}
+.app-shell .ex161-legend i.is-paid,.app-shell .ex161-dot.is-paid{background:var(--ex-green);fill:var(--ex-green)}
+
+.app-shell .ex161-cats button:hover,
+.app-shell .ex161-cats button.is-active{border-color:#d7dee8;background:#f8fafc;color:#1f2937}
+.app-shell .ex161-cats i{background:linear-gradient(90deg,#94a3b8,#64748b)}
+.app-shell .ex161-side-meta article{border-color:#e5eaf0;background:#f8fafc}
+
+.app-shell .ex161-card{
+  border-color:#e2e8f0!important;
+  background:#fff!important;
+  box-shadow:0 6px 18px rgba(15,23,42,.035)!important;
+}
+.app-shell .ex161-card:hover{border-color:#cbd5e1!important;box-shadow:0 12px 28px rgba(15,23,42,.065)!important}
+
+/* Shared responsive behavior */
+@media(max-width:1180px){
+  .app-shell .rep163 .rep162-primary-kpis,.app-shell .rep162 .rep162-primary-kpis{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .app-shell .ex161-main{grid-template-columns:1fr}
+}
+@media(max-width:860px){
+  .app-shell .rep163 .rep162-toolbar,.app-shell .rep162 .rep162-toolbar,.app-shell .ex161-hero{align-items:flex-start;flex-direction:column}
+  .app-shell .rep163 .rep162-toolbar-actions,.app-shell .rep162 .rep162-toolbar-actions,.app-shell .ex161-hero-actions{width:100%;justify-content:flex-start}
+  .app-shell .rep163 .rep162-grid,.app-shell .rep162 .rep162-grid{grid-template-columns:1fr}
+  .app-shell .ex161-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media(max-width:640px){
+  .app-shell .rep163,.app-shell .rep162,.app-shell .ex161-page{gap:10px}
+  .app-shell .rep163 .rep162-toolbar,.app-shell .rep162 .rep162-toolbar,.app-shell .rep163 .rep162-card,.app-shell .rep162 .rep162-card,.app-shell .rep163 .rep162-executive,.app-shell .rep162 .rep162-executive,.app-shell .ex161-hero,.app-shell .ex161-toolbar,.app-shell .ex161-panel{padding:14px;border-radius:16px}
+  .app-shell .rep163 .rep162-primary-kpis,.app-shell .rep162 .rep162-primary-kpis,.app-shell .rep163 .rep162-secondary-kpis,.app-shell .rep162 .rep162-secondary-kpis,.app-shell .ex161-kpis{grid-template-columns:1fr}
+  .app-shell .rep163-trend-card .premium-chart-v35,.app-shell .rep163-trend-card .premium-chart-scroll-v35{min-height:220px!important}
+  .app-shell .ex161-hero-actions{display:grid;grid-template-columns:1fr 1fr}
+  .app-shell .ex161-hero-actions .btn{width:100%;justify-content:center}
+}
