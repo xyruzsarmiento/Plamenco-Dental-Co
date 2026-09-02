@@ -1,0 +1,186 @@
+/* Unified internal page headers — match the quieter Branch Operations visual language.
+   This layer intentionally changes presentation only; no page behavior or data flow. */
+
+.app-shell .content-area {
+  --page-header-border: #dbe5f1;
+  --page-header-bg: linear-gradient(135deg, #ffffff 0%, #fbfdff 68%, #f4f8fd 100%);
+  --page-header-ink: #172033;
+  --page-header-muted: #66758a;
+  --page-header-accent: #2563eb;
+  --page-header-shadow: 0 8px 24px rgba(15, 23, 42, 0.04);
+}
+
+/* Known top-level workspace headers. */
+.app-shell .content-area :is(
+  .ex161-hero,
+  .inv121-hero,
+  .inventory56-all-hero,
+  .rep162-toolbar,
+  .premium-section-header,
+  .section-header.premium-section-header
+) {
+  min-height: 0 !important;
+  padding: 18px 22px !important;
+  border: 1px solid var(--page-header-border) !important;
+  border-radius: 18px !important;
+  background: var(--page-header-bg) !important;
+  box-shadow: var(--page-header-shadow) !important;
+}
+
+/* Catch page-level first cards used by newer workspaces without touching ordinary inner cards. */
+.app-shell .content-area > :is(section, main, div) > :first-child:has(h1, h2),
+.app-shell .content-area > :is(section, main, div) > :first-child > :first-child:has(h1, h2),
+.app-shell .content-area .page-stack > :first-child:has(h1, h2) {
+  min-height: 0 !important;
+}
+
+/* Main page titles: intentionally smaller and less heavy than the previous command-center treatment. */
+.app-shell .content-area :is(
+  .ex161-hero,
+  .inv121-hero,
+  .inventory56-all-hero,
+  .rep162-toolbar,
+  .premium-section-header,
+  .section-header.premium-section-header
+) :is(h1, h2),
+.app-shell .content-area > :is(section, main, div) > :first-child:has(h1, h2) :is(h1, h2),
+.app-shell .content-area > :is(section, main, div) > :first-child > :first-child:has(h1, h2) :is(h1, h2),
+.app-shell .content-area .page-stack > :first-child:has(h1, h2) :is(h1, h2) {
+  margin: 0 !important;
+  color: var(--page-header-ink) !important;
+  font-size: clamp(1.55rem, 2vw, 2rem) !important;
+  font-weight: 760 !important;
+  line-height: 1.12 !important;
+  letter-spacing: -0.018em !important;
+}
+
+/* Eyebrows / section labels. */
+.app-shell .content-area :is(
+  .ex161-hero,
+  .inv121-hero,
+  .inventory56-all-hero,
+  .rep162-toolbar,
+  .premium-section-header,
+  .section-header.premium-section-header
+) :is(.eyebrow, .rep162-eyebrow, > div > span:first-child),
+.app-shell .content-area > :is(section, main, div) > :first-child:has(h1, h2) :is(.eyebrow, [class*="eyebrow"]) {
+  color: var(--page-header-accent) !important;
+  font-size: 0.65rem !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.075em !important;
+  text-transform: uppercase !important;
+}
+
+/* Supporting copy should read like operational context, not another headline. */
+.app-shell .content-area :is(
+  .ex161-hero,
+  .inv121-hero,
+  .inventory56-all-hero,
+  .rep162-toolbar,
+  .premium-section-header,
+  .section-header.premium-section-header
+) p,
+.app-shell .content-area > :is(section, main, div) > :first-child:has(h1, h2) p,
+.app-shell .content-area > :is(section, main, div) > :first-child > :first-child:has(h1, h2) p,
+.app-shell .content-area .page-stack > :first-child:has(h1, h2) p {
+  margin-top: 6px !important;
+  color: var(--page-header-muted) !important;
+  font-size: 0.8rem !important;
+  font-weight: 500 !important;
+  line-height: 1.5 !important;
+}
+
+/* Header actions: compact, consistent with Branch Operations. */
+.app-shell .content-area :is(
+  .ex161-hero,
+  .inv121-hero,
+  .inventory56-all-hero,
+  .rep162-toolbar,
+  .premium-section-header,
+  .section-header.premium-section-header
+) .btn {
+  min-height: 38px !important;
+  padding-inline: 13px !important;
+  border-radius: 11px !important;
+  font-size: 0.76rem !important;
+  font-weight: 750 !important;
+  box-shadow: none !important;
+}
+
+/* Dashboard greeting/command cards use several historical class names, so normalize only
+   the large heading typography inside the first two top-level dashboard cards. */
+.app-shell.page-dashboard .content-area > :is(section, main, div) > :nth-child(-n + 2):has(h1, h2) :is(h1, h2),
+.app-shell.page-dashboard .content-area > :is(section, main, div) > :nth-child(-n + 2) :is(h1, h2) {
+  font-size: clamp(1.55rem, 2vw, 2rem) !important;
+  font-weight: 760 !important;
+  line-height: 1.12 !important;
+  letter-spacing: -0.018em !important;
+}
+
+/* Profile hero: keep identity prominent without the oversized 3rem+ treatment. */
+.app-shell .content-area [class*="profile"] > :first-child:has(h1, h2) :is(h1, h2),
+.app-shell .content-area [class*="profile-hero"] :is(h1, h2) {
+  font-size: clamp(1.7rem, 2.3vw, 2.2rem) !important;
+  font-weight: 760 !important;
+  letter-spacing: -0.02em !important;
+}
+
+@media (max-width: 900px) {
+  .app-shell .content-area :is(
+    .ex161-hero,
+    .inv121-hero,
+    .inventory56-all-hero,
+    .rep162-toolbar,
+    .premium-section-header,
+    .section-header.premium-section-header
+  ) {
+    padding: 16px 18px !important;
+    border-radius: 16px !important;
+  }
+
+  .app-shell .content-area :is(
+    .ex161-hero,
+    .inv121-hero,
+    .inventory56-all-hero,
+    .rep162-toolbar,
+    .premium-section-header,
+    .section-header.premium-section-header
+  ) :is(h1, h2),
+  .app-shell .content-area > :is(section, main, div) > :first-child:has(h1, h2) :is(h1, h2),
+  .app-shell .content-area .page-stack > :first-child:has(h1, h2) :is(h1, h2) {
+    font-size: clamp(1.4rem, 4vw, 1.75rem) !important;
+  }
+}
+
+@media (max-width: 640px) {
+  .app-shell .content-area :is(
+    .ex161-hero,
+    .inv121-hero,
+    .inventory56-all-hero,
+    .rep162-toolbar,
+    .premium-section-header,
+    .section-header.premium-section-header
+  ) {
+    padding: 14px !important;
+    border-radius: 15px !important;
+  }
+
+  .app-shell .content-area :is(
+    .ex161-hero,
+    .inv121-hero,
+    .inventory56-all-hero,
+    .rep162-toolbar
+  ) :is(.ex161-hero-actions, .inv121-hero-actions, .rep162-toolbar-actions) {
+    width: 100% !important;
+    justify-content: flex-start !important;
+  }
+
+  .app-shell .content-area :is(
+    .ex161-hero,
+    .inv121-hero,
+    .inventory56-all-hero,
+    .rep162-toolbar
+  ) .btn {
+    min-height: 38px !important;
+  }
+}
