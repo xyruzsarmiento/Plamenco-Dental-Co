@@ -168,9 +168,10 @@ html body:has(.app-shell.page-expenses):not([data-modal-scroll-locked='true']) {
   border-radius: 20px;
 }
 
-.ex161-toolbar .ex161-search-field {
+.ex161-toolbar .ex161-query-field {
   grid-column: 1 / -1;
   width: 100%;
+  min-width: 0;
 }
 
 .ex161-range-chip {

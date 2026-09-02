@@ -680,14 +680,13 @@ export function ExpensesPremiumWorkspaceV161() {
             <ChevronDown size={14} />
           </div>
         </label>
-        <label className="ex161-search-field">
-          <span>Search</span>
+        <div className="ex161-query-field">
           <div className="ex161-search">
             <Search size={15} />
-            <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Payee, reference, description…" />
+            <input aria-label="Search expenses" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search payee, reference, or description" />
             {query ? <button type="button" onClick={() => setQuery('')} aria-label="Clear search"><X size={14} /></button> : null}
           </div>
-        </label>
+        </div>
         <p className="ex161-range-chip">
           {periodLabel} · {workspaceTitle} · {chartMode === 'day' ? 'Daily' : chartMode === 'week' ? 'Weekly' : 'Monthly'} chart
         </p>
