@@ -325,7 +325,7 @@ export function PatientPortalPage() {
     if (!slot || !selectedService) return setBookingError('That time is no longer available. Please select another slot.')
     setBookingBusy(true); setBookingError(null)
     try {
-      const appointment = await createPatientPortalAppointmentPersisted({ branchId: booking.branchId, serviceId: booking.serviceId, providerId: slot.providerId, date: booking.date, startTime: booking.startTime, notes: booking.notes.trim() })
+      const appointment = await createPatientPortalAppointmentPersisted({ branchId: booking.branchId, serviceId: booking.serviceId, providerId: slot.providerId ?? '', date: booking.date, startTime: booking.startTime, notes: booking.notes.trim() })
       setBookingSuccess(appointment.appointmentNumber ?? appointment.id); setRevision((value) => value + 1)
     } catch (error) { setBookingError(error instanceof Error ? error.message : 'Unable to submit this appointment request.') }
     finally { setBookingBusy(false) }

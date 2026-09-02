@@ -96,7 +96,7 @@ export function AppointmentFormModal({
     { label: 'Patient', icon: UserRound },
     { label: 'Branch', icon: Building2 },
     { label: 'Service', icon: Stethoscope },
-    { label: 'Dentist', icon: UsersRound },
+    { label: 'Assignment', icon: UsersRound },
     { label: 'Date & Time', icon: CalendarDays },
     { label: 'Review', icon: CheckCircle2 },
   ]
@@ -135,7 +135,7 @@ export function AppointmentFormModal({
     if (step === 1) return Boolean(values.branchId)
     if (step === 2) return Boolean(values.serviceId)
     if (step === 3) return true
-    if (step === 4) return Boolean(values.date && values.startTime && values.providerId)
+    if (step === 4) return Boolean(values.date && values.startTime)
     return true
   }
 
@@ -239,10 +239,10 @@ export function AppointmentFormModal({
 
             {step === 3 && (
               <section className="appointment37-section">
-                <div className="appointment37-section-head"><div><span>Step 4</span><h3>Choose dentist</h3><p>Select a provider now or allow the scheduler to find any eligible dentist.</p></div><UsersRound size={21} /></div>
+                <div className="appointment37-section-head"><div><span>Step 4</span><h3>Dentist assignment</h3><p>Assign a dentist now or leave this request unassigned for the clinic workflow.</p></div><UsersRound size={21} /></div>
                 <div className="appointment37-card-grid">
                   <button type="button" className={`appointment37-option-card ${!values.providerId ? 'is-selected' : ''}`} onClick={() => onChange({ ...values, providerId: '', startTime: '' })}>
-                    <span className="appointment37-option-icon"><UsersRound size={18} /></span><span><strong>Any available dentist</strong><small>Recommended for flexible scheduling</small><em>Availability is calculated automatically.</em></span><i><Check size={14} /></i>
+                    <span className="appointment37-option-icon"><UsersRound size={18} /></span><span><strong>To be assigned</strong><small>Recommended for appointment requests</small><em>Staff or an eligible dentist can confirm later.</em></span><i><Check size={14} /></i>
                   </button>
                   {providers.map((provider) => <button key={provider.id} type="button" className={`appointment37-option-card ${values.providerId === provider.id ? 'is-selected' : ''}`} onClick={() => onChange({ ...values, providerId: provider.id, startTime: '' })}>
                     <span className="appointment37-option-icon"><UserRound size={18} /></span><span><strong>{provider.displayName}</strong><small>{provider.role.replaceAll('_', ' ')}</small><em>{provider.specialization || 'Dental provider'}</em></span><i><Check size={14} /></i>
@@ -254,19 +254,19 @@ export function AppointmentFormModal({
 
             {step === 4 && (
               <section className="appointment37-section">
-                <div className="appointment37-section-head"><div><span>Step 5</span><h3>Date & available time</h3><p>Select the visit date, optional chair, and a real available time slot.</p></div><CalendarDays size={21} /></div>
+                <div className="appointment37-section-head"><div><span>Step 5</span><h3>Date & time</h3><p>Select the visit date and clinic time. Dentist assignment is handled separately.</p></div><CalendarDays size={21} /></div>
                 <div className="appointment37-date-controls">
                   <Input label="Appointment date" type="date" value={values.date} onChange={(event) => onChange({ ...values, date: event.target.value, startTime: '' })} required />
                   {operatories.length > 0 && <label><span>Operatory / chair</span><select value={values.operatoryId ?? ''} onChange={(event) => onChange({ ...values, operatoryId: event.target.value || undefined, startTime: '' })}><option value="">Any available operatory</option>{operatories.map((operatory) => <option key={operatory.id} value={operatory.id}>{operatory.name}</option>)}</select></label>}
                 </div>
                 {values.branchId && values.serviceId && values.date ? (
                   <div className="appointment37-slot-grid">
-                    {availableSlots.map((slot) => <button key={`${slot.providerId}-${slot.operatoryId ?? 'any'}-${slot.startTime}`} type="button" className={values.startTime === slot.startTime && values.providerId === slot.providerId ? 'is-selected' : ''} onClick={() => chooseSlot(slot.startTime, slot.providerId, slot.operatoryId)}>
+                    {availableSlots.map((slot) => <button key={`${slot.providerId ?? 'unassigned'}-${slot.operatoryId ?? 'any'}-${slot.startTime}`} type="button" className={values.startTime === slot.startTime && values.providerId === (slot.providerId ?? '') ? 'is-selected' : ''} onClick={() => chooseSlot(slot.startTime, slot.providerId ?? '', slot.operatoryId)}>
                       <Clock3 size={16} /><span><strong>{formatAppointmentTime(slot.startTime)}</strong><small>{slot.providerName}{slot.operatoryName ? ` · ${slot.operatoryName}` : ''}</small></span><i><Check size={14} /></i>
                     </button>)}
-                    {availableSlots.length === 0 && <div className="appointment37-empty appointment37-empty-wide"><CalendarDays size={22} /><strong>No available slots</strong><span>Try another date, dentist, or operatory.</span></div>}
+                    {availableSlots.length === 0 && <div className="appointment37-empty appointment37-empty-wide"><CalendarDays size={22} /><strong>No clinic times available</strong><span>Try another date or operatory.</span></div>}
                   </div>
-                ) : <div className="appointment37-empty appointment37-empty-wide"><CalendarDays size={22} /><strong>Availability needs more information</strong><span>Choose a branch, service, and date to calculate real scheduling options.</span></div>}
+                ) : <div className="appointment37-empty appointment37-empty-wide"><CalendarDays size={22} /><strong>Time selection needs more information</strong><span>Choose a branch, service, and date to show clinic times.</span></div>}
               </section>
             )}
 
@@ -276,7 +276,7 @@ export function AppointmentFormModal({
                 <div className="appointment37-review-hero"><span className="appointment37-review-icon"><CalendarDays size={22} /></span><div><span>{selectedPatient ? `${selectedPatient.firstName} ${selectedPatient.lastName}` : 'Patient'}</span><strong>{selectedService?.name ?? 'Service not selected'}</strong><small>{values.date} · {values.startTime ? `${formatAppointmentTime(values.startTime)}–${formatAppointmentTime(values.endTime)}` : 'No time selected'}</small></div></div>
                 <div className="appointment37-review-grid">
                   <div><span>Branch</span><strong>{selectedBranch?.name ?? 'No branch selected'}</strong></div>
-                  <div><span>Dentist</span><strong>{selectedProvider?.displayName ?? 'Assigned from availability'}</strong></div>
+                  <div><span>Dentist</span><strong>{selectedProvider?.displayName ?? 'To be assigned'}</strong></div>
                   <div><span>Operatory</span><strong>{selectedOperatory?.name ?? 'Any available'}</strong></div>
                   <div><span>Duration</span><strong>{values.durationMinutes ?? selectedService?.duration ?? 0} minutes</strong></div>
                   <div><span>Estimated price</span><strong>{selectedService ? formatServicePrice(selectedService.price) : 'Price to be confirmed'}</strong></div>

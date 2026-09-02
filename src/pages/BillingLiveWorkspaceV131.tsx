@@ -1,8 +1,18 @@
 import { useEffect, useState } from 'react'
+import { Skeleton, SkeletonCard, SkeletonList, SkeletonText } from '../components/ui/DesignSystem'
 import { useAuth } from '../features/auth/AuthContext'
 import { hydrateBranchBillingFromDatabase } from '../features/billing/billingHydration'
 import { useBranchContext } from '../features/branches/BranchContext'
 import { BillingBranchWorkspaceV123 } from './BillingBranchWorkspaceV123'
+
+function BillingWorkspaceSkeleton() {
+  return <section className="bill123-page bill123-skeleton" aria-busy="true" aria-label="Loading billing workspace">
+    <SkeletonCard className="bill123-skeleton-hero"><Skeleton width={190} height={12}/><Skeleton width="44%" height={34} radius={12}/><SkeletonText lines={2} widths={['62%','48%']}/></SkeletonCard>
+    <div className="bill123-skeleton-kpis">{Array.from({length:4},(_,index)=><SkeletonCard key={index} compact />)}</div>
+    <SkeletonCard className="bill123-skeleton-command" compact><Skeleton width="100%" height={42} radius={14}/><Skeleton width="100%" height={42} radius={14}/></SkeletonCard>
+    <SkeletonCard className="bill123-skeleton-table"><Skeleton width="26%" height={14}/><SkeletonList items={6} withAvatar /></SkeletonCard>
+  </section>
+}
 
 export function BillingLiveWorkspaceV131() {
   const { user } = useAuth()
@@ -50,7 +60,7 @@ export function BillingLiveWorkspaceV131() {
   }, [activeBranchId, isAllBranchesMode, user?.id])
 
   if (state === 'loading') {
-    return <section className="bill123-page"><div className="bill123-empty" role="status"><h3>Loading live billing</h3><p>Refreshing invoices, payments and unbilled charges from the clinic database.</p></div></section>
+    return <BillingWorkspaceSkeleton />
   }
 
   if (state === 'error') {

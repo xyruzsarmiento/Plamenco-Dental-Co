@@ -17,18 +17,21 @@ export function PremiumLineChartV35({
   labels,
   series,
   ariaLabel,
+  variant = 'default',
 }: {
   labels: string[]
   series: Series[]
   ariaLabel: string
+  variant?: 'default' | 'blueFinance'
 }) {
   const [tooltip, setTooltip] = useState<Tooltip>(null)
-  const width = 900
-  const height = 300
-  const left = 44
-  const right = 22
-  const top = 24
-  const bottom = 42
+  const isBlueFinance = variant === 'blueFinance'
+  const width = isBlueFinance ? 1080 : 900
+  const height = isBlueFinance ? 340 : 300
+  const left = isBlueFinance ? 52 : 44
+  const right = isBlueFinance ? 28 : 22
+  const top = isBlueFinance ? 28 : 24
+  const bottom = isBlueFinance ? 48 : 42
   const usableWidth = width - left - right
   const usableHeight = height - top - bottom
   const max = Math.max(1, ...series.flatMap((item) => item.values))
@@ -36,13 +39,24 @@ export function PremiumLineChartV35({
   const points = useMemo(() => labels.map((_, index) => ({
     x: labels.length <= 1 ? left + usableWidth / 2 : left + (usableWidth * index) / Math.max(1, labels.length - 1),
     index,
-  })), [labels, usableWidth])
+  })), [labels, left, usableWidth])
 
   const yFor = (value: number) => top + usableHeight - (value / max) * usableHeight
-  const pathFor = (values: number[]) => values.map((value, index) => {
+  const linePathFor = (values: number[]) => values.map((value, index) => {
     const x = points[index]?.x ?? left
-    return `${index === 0 ? 'M' : 'L'} ${x} ${yFor(value)}`
+    const y = yFor(value)
+    if (!isBlueFinance || index === 0) return `${index === 0 ? 'M' : 'L'} ${x} ${y}`
+    const previousX = points[index - 1]?.x ?? x
+    const previousY = yFor(values[index - 1] ?? 0)
+    const midX = (previousX + x) / 2
+    return `C ${midX} ${previousY} ${midX} ${y} ${x} ${y}`
   }).join(' ')
+
+  const areaPathFor = (values: number[]) => {
+    const line = linePathFor(values)
+    const lastX = points[values.length - 1]?.x ?? left
+    return `${line} L ${lastX} ${top + usableHeight} L ${points[0]?.x ?? left} ${top + usableHeight} Z`
+  }
 
   function show(index: number, clientX: number, clientY: number) {
     setTooltip({
@@ -54,22 +68,35 @@ export function PremiumLineChartV35({
   }
 
   return (
-    <div className="premium-chart-v35" onMouseLeave={() => setTooltip(null)}>
+    <div className={`premium-chart-v35 ${isBlueFinance ? 'premium-chart-blue-finance-v35' : ''}`} onMouseLeave={() => setTooltip(null)}>
       <div className="premium-chart-scroll-v35">
         <svg viewBox={`0 0 ${width} ${height}`} role="img" aria-label={ariaLabel} className="premium-line-chart-v35">
+          {isBlueFinance && (
+            <defs>
+              <linearGradient id="premium-finance-area-0" x1="0" x2="0" y1="0" y2="1">
+                <stop offset="0%" stopColor="#2563eb" stopOpacity=".22" />
+                <stop offset="100%" stopColor="#2563eb" stopOpacity="0" />
+              </linearGradient>
+              <linearGradient id="premium-finance-area-1" x1="0" x2="0" y1="0" y2="1">
+                <stop offset="0%" stopColor="#60a5fa" stopOpacity=".18" />
+                <stop offset="100%" stopColor="#60a5fa" stopOpacity="0" />
+              </linearGradient>
+            </defs>
+          )}
           {[0, .25, .5, .75, 1].map((ratio) => {
             const y = top + usableHeight * ratio
             return <line key={ratio} x1={left} x2={width - right} y1={y} y2={y} className="premium-chart-grid-v35" />
           })}
           {series.map((item, seriesIndex) => (
             <g key={item.key} className={`premium-chart-series-v35 series-${seriesIndex}`}>
-              <path d={pathFor(item.values)} className="premium-chart-line-v35" />
+              {isBlueFinance && <path d={areaPathFor(item.values)} className="premium-chart-area-v35" />}
+              <path d={linePathFor(item.values)} className="premium-chart-line-v35" />
               {item.values.map((value, index) => (
                 <circle
                   key={`${item.key}-${index}`}
                   cx={points[index]?.x ?? left}
                   cy={yFor(value)}
-                  r="5"
+                  r={isBlueFinance ? 4 : 5}
                   className="premium-chart-dot-v35"
                   tabIndex={0}
                   onMouseEnter={(event) => show(index, event.clientX, event.clientY)}

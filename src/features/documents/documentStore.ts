@@ -43,6 +43,7 @@ export type DocumentAccessRole = 'super_admin' | 'staff'
 
 export type CreateDocumentInput = {
   patientId: string
+  file?: File
   clinicalVisitId?: string
   treatmentId?: string
   fileName: string
@@ -122,10 +123,25 @@ function sanitizeFileName(fileName: string) {
   return cleaned || 'document'
 }
 
+function inferMimeType(fileName: string, fileType: string) {
+  if (fileType && fileType !== 'application/octet-stream') return fileType
+  const lowerName = fileName.toLowerCase()
+  if (lowerName.endsWith('.pdf')) return 'application/pdf'
+  if (lowerName.endsWith('.png')) return 'image/png'
+  if (lowerName.endsWith('.jpg') || lowerName.endsWith('.jpeg')) return 'image/jpeg'
+  if (lowerName.endsWith('.gif')) return 'image/gif'
+  if (lowerName.endsWith('.webp')) return 'image/webp'
+  if (lowerName.endsWith('.doc')) return 'application/msword'
+  if (lowerName.endsWith('.docx')) return 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+  if (lowerName.endsWith('.txt')) return 'text/plain'
+  return 'application/octet-stream'
+}
+
 async function dataUrlToBlob(content: string, fileType: string) {
   const response = await fetch(content)
   if (!response.ok) throw new Error('The selected file could not be prepared for upload.')
   const blob = await response.blob()
+  if (blob.size <= 0) throw new Error('The selected file is empty. Choose a valid patient document.')
   if (blob.size > 10 * 1024 * 1024) throw new Error('Document must be 10 MB or smaller.')
   return blob.type ? blob : new Blob([blob], { type: fileType })
 }
@@ -135,6 +151,32 @@ export async function createPatientDocumentSignedUrl(storagePath: string, expire
   const { data, error } = await supabase.storage.from(PATIENT_DOCUMENT_BUCKET).createSignedUrl(storagePath, expiresIn)
   if (error) return ''
   return data?.signedUrl ?? ''
+}
+
+export async function getFreshPatientDocumentUrl(document: PatientDocument, expiresIn = 300) {
+  if (document.storagePath) {
+    const url = await createPatientDocumentSignedUrl(document.storagePath, expiresIn)
+    if (!url) throw new Error('Document download is unavailable.')
+    return url
+  }
+  if (document.content) return document.content
+  throw new Error('This document file is no longer available.')
+}
+
+export async function downloadPatientDocumentFile(document: PatientDocument) {
+  const url = await getFreshPatientDocumentUrl(document, 300)
+  const response = await fetch(url)
+  if (!response.ok) throw new Error(response.status === 404 ? 'This document file is no longer available.' : 'Document download is unavailable.')
+  const blob = await response.blob()
+  if (!blob.size) throw new Error('Document download is unavailable.')
+  const objectUrl = URL.createObjectURL(blob)
+  const anchor = window.document.createElement('a')
+  anchor.href = objectUrl
+  anchor.download = sanitizeFileName(document.fileName || 'patient-document')
+  window.document.body.appendChild(anchor)
+  anchor.click()
+  anchor.remove()
+  window.setTimeout(() => URL.revokeObjectURL(objectUrl), 1000)
 }
 
 function mapDocumentRow(row: Record<string, any>, content = ''): PatientDocument {
@@ -213,11 +255,14 @@ export async function createDocumentPersisted(input: CreateDocumentInput): Promi
 
   const patientDbId = resolvePatientDatabaseId(input.patientId)
   if (!patientDbId) throw new Error('The patient database record could not be resolved. Refresh and try again.')
-  const blob = await dataUrlToBlob(input.content, input.fileType)
-  const storagePath = `${patientDbId}/${createUuid()}-${sanitizeFileName(input.fileName)}`
+  const mimeType = inferMimeType(input.fileName, input.file?.type || input.fileType)
+  const blob = input.file ?? await dataUrlToBlob(input.content, mimeType)
+  if (blob.size <= 0) throw new Error('The selected file is empty. Choose a valid patient document.')
+  if (blob.size > 10 * 1024 * 1024) throw new Error('Document must be 10 MB or smaller.')
+  const storagePath = `patient-documents/${patientDbId}/${createUuid()}-${sanitizeFileName(input.fileName)}`
 
   const { error: uploadError } = await supabase.storage.from(PATIENT_DOCUMENT_BUCKET).upload(storagePath, blob, {
-    contentType: input.fileType || blob.type || 'application/octet-stream',
+    contentType: mimeType,
     cacheControl: '3600',
     upsert: false,
   })
@@ -232,7 +277,7 @@ export async function createDocumentPersisted(input: CreateDocumentInput): Promi
       p_clinical_visit_id: input.clinicalVisitId ?? null,
       p_treatment_id: input.treatmentId ?? null,
       p_name: input.fileName.trim(),
-      p_file_type: input.fileType || blob.type || 'application/octet-stream',
+      p_file_type: mimeType,
       p_category: input.category,
       p_description: input.description?.trim() ?? '',
       p_storage_path: storagePath,

@@ -1,4 +1,4 @@
-import { useMemo, useState, type KeyboardEvent } from 'react'
+import { useEffect, useMemo, useState, type KeyboardEvent } from 'react'
 import { createPortal } from 'react-dom'
 import { useNavigate } from 'react-router-dom'
 import {
@@ -38,7 +38,9 @@ import {
   resendAppointmentCommunicationPersisted,
 } from '../features/appointments/appointmentStore'
 import {
+  assignAppointmentProviderPersisted,
   createAppointmentPersisted,
+  loadAppointmentsFromSupabase,
   rescheduleAppointmentPersisted,
   transitionAppointmentStatusPersisted,
 } from '../features/appointments/appointmentPersistence'
@@ -51,6 +53,7 @@ import type { Branch } from '../features/branches/branchTypes'
 import { getStoredProviders } from '../features/dentists/dentistStore'
 import type { Provider } from '../features/dentists/dentistTypes'
 import { getStoredPatients } from '../features/patients/patientStore'
+import { loadPatientsFromSupabase } from '../features/patients/patientPersistence'
 import type { Patient } from '../features/patients/patientTypes'
 import { getStoredServices } from '../features/services/serviceStore'
 import type { Service } from '../features/services/serviceTypes'
@@ -213,8 +216,9 @@ export function AppointmentsPage() {
   const navigate = useNavigate()
   const { user } = useAuth()
   const permissions = usePermissions()
+  const canAssignDentist = permissions.can('appointments.assign_dentist')
   const [appointments, setAppointments] = useState<Appointment[]>(getStoredAppointments())
-  const [patients] = useState<Patient[]>(getStoredPatients())
+  const [patients, setPatients] = useState<Patient[]>(getStoredPatients())
   const [services] = useState<Service[]>(getStoredServices())
   const [branches] = useState<Branch[]>(getStoredBranches().filter((branch) => branch.status === 'active'))
   const [providers] = useState<Provider[]>(getStoredProviders())
@@ -258,9 +262,34 @@ export function AppointmentsPage() {
   const [clinicalRecord, setClinicalRecord] = useState<DentalRecord | null>(null)
   const [pendingFollowUpRecall, setPendingFollowUpRecall] = useState<RecallQueueItem | null>(null)
   const [selectedFollowUpRecommendation, setSelectedFollowUpRecommendation] = useState<RecallQueueItem | null>(null)
+
+  useEffect(() => {
+    let active = true
+    void loadPatientsFromSupabase()
+      .then((rows) => {
+        if (active) setPatients(rows)
+      })
+      .catch((error) => {
+        if (import.meta.env.DEV) console.warn('[appointments] patient refresh failed', error)
+      })
+    return () => { active = false }
+  }, [])
+
+  useEffect(() => {
+    let active = true
+    void loadAppointmentsFromSupabase({ strict: true })
+      .then((rows) => {
+        if (active) setAppointments(rows)
+      })
+      .catch((error) => {
+        if (active) setOperationError(error instanceof Error ? error.message : 'Unable to load appointments from Supabase.')
+      })
+    return () => { active = false }
+  }, [user?.id])
   const [isAppointmentSaving, setIsAppointmentSaving] = useState(false)
   const [communicationPendingKey, setCommunicationPendingKey] = useState<string | null>(null)
   const [communicationFeedback, setCommunicationFeedback] = useState<CommunicationFeedback>(null)
+  const [requestProviderDrafts, setRequestProviderDrafts] = useState<Record<string, string>>({})
 
   const confirmedCount = appointments.filter((appointment) => appointment.status === 'confirmed').length
   const pendingCount = appointments.filter((appointment) => appointment.status === 'pending').length
@@ -314,6 +343,22 @@ export function AppointmentsPage() {
   const branchMap = useMemo(() => new Map(branches.map((branch) => [branch.id, branch])), [branches])
   const providerMap = useMemo(() => new Map(providers.map((provider) => [provider.id, provider])), [providers])
   const operatoryMap = useMemo(() => new Map(getOperatories().map((operatory) => [operatory.id, operatory])), [])
+
+  function openPatientRecordForAppointment(appointment: Appointment) {
+    const patient = patientMap.get(appointment.patientId)
+    if (!patient) {
+      if (import.meta.env.DEV) {
+        console.warn('[appointments] unresolved appointment patient reference', {
+          appointmentId: appointment.id,
+          appointmentNumber: appointment.appointmentNumber,
+          patientId: appointment.patientId,
+        })
+      }
+      window.alert('Patient record could not be found.')
+      return
+    }
+    navigate(`/app/patients/${encodeURIComponent(patient.patientId)}`)
+  }
 
   const trendData = useMemo(() => Array.from({ length: 7 }, (_, index) => {
     const date = manilaDateOffset(index - 6)
@@ -409,12 +454,12 @@ export function AppointmentsPage() {
     setFormValues(values)
 
     if (values.date && values.startTime && values.endTime) {
-      const conflict = getScheduleConflictDetail(values.date, values.startTime, values.endTime, undefined, values.providerId, values.branchId, values.operatoryId)
+      const conflict = values.providerId || values.operatoryId
+        ? getScheduleConflictDetail(values.date, values.startTime, values.endTime, undefined, values.providerId, values.branchId, values.operatoryId)
+        : null
       if (conflict && 'appointment' in conflict) {
         const provider = conflict.appointment.providerId ? providerMap.get(conflict.appointment.providerId) : undefined
         setConflictError(`${provider?.displayName ?? 'The selected resource'} already has an appointment from ${formatAppointmentTime(conflict.appointment.startTime)} to ${formatAppointmentTime(conflict.appointment.endTime)}.`)
-      } else if (conflict && 'block' in conflict) {
-        setConflictError(`This time is blocked for ${conflict.block.reason || conflict.block.type.replace('_', ' ')}.`)
       } else if (checkScheduleConflict(values.date, values.startTime, values.endTime, undefined, values.providerId, values.branchId, values.operatoryId)) {
         setConflictError('This time overlaps an existing appointment. Please choose another slot.')
       } else {
@@ -437,10 +482,6 @@ export function AppointmentsPage() {
       setFormError('Please select a branch')
       return
     }
-    if (!formValues.providerId) {
-      setFormError('Please select a dentist or available time slot')
-      return
-    }
     if (!formValues.date) {
       setFormError('Please select a date')
       return
@@ -458,13 +499,13 @@ export function AppointmentsPage() {
     const endTime = selectedService ? addMinutesToTime(formValues.startTime, selectedService.duration) : formValues.endTime
     const availableSlot = getAvailableAppointmentSlots({
       branchId: formValues.branchId,
-      providerId: formValues.providerId,
+      providerId: formValues.providerId || undefined,
       serviceId: formValues.serviceId,
       date: formValues.date,
-    }).some((slot) => slot.startTime === formValues.startTime && slot.providerId === formValues.providerId)
+    }).some((slot) => slot.startTime === formValues.startTime && (!formValues.providerId || slot.providerId === formValues.providerId))
 
     if (!availableSlot) {
-      setFormError('That dentist is not available for the selected branch, date, time and service duration.')
+      setFormError('That clinic time is no longer available. Please choose another time.')
       return
     }
 
@@ -498,6 +539,10 @@ export function AppointmentsPage() {
 
   async function handleStatusChange(status: AppointmentStatus) {
     if (!selectedAppointment || isAppointmentSaving) return
+    if (status === 'confirmed' && !selectedAppointment.providerId) {
+      alert('Assign a dentist before confirming this appointment.')
+      return
+    }
     setIsAppointmentSaving(true)
     try {
       const updated = await transitionAppointmentStatusPersisted(selectedAppointment.id, status, {
@@ -514,25 +559,38 @@ export function AppointmentsPage() {
     }
   }
 
-  async function handleApproveRequest(appointmentId: string) {
+  async function handleAssignRequestProvider(appointmentId: string) {
     if (isAppointmentSaving) return
     const appointment = appointments.find((entry) => entry.id === appointmentId)
     if (!appointment) return
+    const providerId = requestProviderDrafts[appointmentId] || appointment.proposedProviderId || ''
+    if (!providerId) {
+      setOperationError('Choose an eligible dentist before confirming this appointment request.')
+      return
+    }
     setIsAppointmentSaving(true)
     try {
-      await transitionAppointmentStatusPersisted(appointmentId, 'confirmed', {
+      const updated = await assignAppointmentProviderPersisted({
+        appointmentId,
+        providerId,
         actor: user?.email ?? 'clinic-user',
         expectedUpdatedAt: appointment.updatedAt,
       })
-      setAppointments(getStoredAppointments())
+      setAppointments(await loadAppointmentsFromSupabase({ strict: true }))
+      setOperationError(`Appointment ${updated.appointmentNumber ?? updated.id} confirmed.`)
+      setRequestProviderDrafts((current) => {
+        const next = { ...current }
+        delete next[appointmentId]
+        return next
+      })
     } catch (cause) {
-      setOperationError(cause instanceof Error ? cause.message : 'The request could not be approved.')
+      setOperationError(cause instanceof Error ? cause.message : 'The dentist could not be assigned.')
     } finally {
       setIsAppointmentSaving(false)
     }
   }
 
-  async function handleDisapproveRequest(appointmentId: string) {
+  async function handleRejectRequest(appointmentId: string) {
     if (isAppointmentSaving) return
     const appointment = appointments.find((entry) => entry.id === appointmentId)
     if (!appointment) return
@@ -750,7 +808,7 @@ export function AppointmentsPage() {
         <div className="sa-appointments-header-copy">
           <span className="sa-appointments-kicker">Scheduling command center</span>
           <h2>Appointments</h2>
-          <p>Coordinate multi-branch schedules, patient flow, requests, and dentist availability from one operational workspace.</p>
+          <p>Coordinate multi-branch appointments, patient flow, requests, and dentist assignments from one operational workspace.</p>
         </div>
         <div className="sa-appointments-header-actions">
           <button type="button" className="sa-appointments-date-chip" onClick={() => setViewTab('calendar')}>
@@ -995,7 +1053,7 @@ export function AppointmentsPage() {
                 <select id="appointment-status-filter" value={statusFilter} onChange={(event) => setStatusFilter(event.target.value as AppointmentStatus | 'all')}>
                   <option value="all">All statuses</option>
                   <option value="pending">Pending</option>
-                  <option value="confirmed">Approved</option>
+                  <option value="confirmed">Confirmed</option>
                   <option value="checked_in">Checked in</option>
                   <option value="waiting">Waiting</option>
                   <option value="in_progress">In treatment</option>
@@ -1056,9 +1114,22 @@ export function AppointmentsPage() {
                 const patient = patientMap.get(request.patientId)
                 const service = serviceMap.get(request.serviceId)
                 const branch = request.branchId ? branchMap.get(request.branchId) : undefined
-                const provider = request.providerId ? providerMap.get(request.providerId) : undefined
+                const eligibleDentists = request.branchId ? getEligibleProviders(request.branchId) : []
+                const selectedRequestProviderId = requestProviderDrafts[request.id] || request.proposedProviderId || ''
                 return (
-                  <article key={request.id} className="request-card sa-appointments-request-card">
+                  <article
+                    key={request.id}
+                    className="request-card sa-appointments-request-card"
+                    role="button"
+                    tabIndex={0}
+                    onClick={() => setSelectedAppointment(request)}
+                    onKeyDown={(event: KeyboardEvent<HTMLElement>) => {
+                      if (event.key === 'Enter' || event.key === ' ') {
+                        event.preventDefault()
+                        setSelectedAppointment(request)
+                      }
+                    }}
+                  >
                     <div className="request-header">
                       <div className="request-main">
                         <div className="request-patient"><strong>{patient?.firstName} {patient?.lastName}</strong><small>{patient?.patientId}</small></div>
@@ -1073,14 +1144,41 @@ export function AppointmentsPage() {
                       <div className="detail-col"><span className="detail-label">Price</span><strong>{service ? formatCurrency(service.price) : '—'}</strong></div>
                       <div className="detail-col"><span className="detail-label">Contact</span><p>{patient?.phone}</p></div>
                       <div className="detail-col"><span className="detail-label">Branch</span><p>{branch?.name ?? 'No branch'}</p></div>
-                      <div className="detail-col"><span className="detail-label">Dentist</span><p>{provider?.displayName ?? 'Any available'}</p></div>
+                      <div className="detail-col"><span className="detail-label">Assigned dentist</span><p>None yet</p></div>
                     </div>
+
+                    {canAssignDentist ? (
+                      <label className="request-provider-select">
+                        <span>Assign dentist</span>
+                        <select
+                          value={selectedRequestProviderId}
+                          disabled={isAppointmentSaving || !eligibleDentists.length}
+                          onClick={(event) => event.stopPropagation()}
+                          onChange={(event) => {
+                            event.stopPropagation()
+                            const value = event.target.value
+                            setRequestProviderDrafts((current) => ({ ...current, [request.id]: value }))
+                            setOperationError(null)
+                          }}
+                        >
+                          <option value="">{eligibleDentists.length ? 'Choose dentist' : 'No active dentist assigned to this branch'}</option>
+                          {eligibleDentists.map((dentist) => <option key={dentist.id} value={dentist.id}>{dentist.displayName}</option>)}
+                        </select>
+                        <small>Active dentists assigned to this branch are shown. Supabase checks appointment conflicts before confirming.</small>
+                      </label>
+                    ) : (
+                      <div className="request-provider-select" aria-label="Dentist assignment status">
+                        <span>Dentist assignment</span>
+                        <strong>Not assigned yet</strong>
+                        <small>An authorized staff member can accept and assign this request.</small>
+                      </div>
+                    )}
 
                     {request.notes && <div className="request-notes"><span className="detail-label">Notes</span><p>{request.notes}</p></div>}
 
                     <div className="request-actions">
-                      <Button disabled={isAppointmentSaving} onClick={() => void handleApproveRequest(request.id)} className="btn-success"><CheckCircle2 size={16} />Approve</Button>
-                      <Button disabled={isAppointmentSaving} variant="secondary" onClick={() => void handleDisapproveRequest(request.id)} className="btn-danger"><XCircle size={16} />Disapprove</Button>
+                      {canAssignDentist && <Button disabled={isAppointmentSaving || !selectedRequestProviderId} onClick={(event) => { event.stopPropagation(); void handleAssignRequestProvider(request.id) }}><CheckCircle2 size={16} />Accept & Assign Dentist</Button>}
+                      {permissions.can('appointments.reject') && <Button disabled={isAppointmentSaving} variant="secondary" onClick={(event) => { event.stopPropagation(); void handleRejectRequest(request.id) }} className="btn-danger"><XCircle size={16} />Reject request</Button>}
                     </div>
                   </article>
                 )
@@ -1121,7 +1219,7 @@ export function AppointmentsPage() {
           onManualResend={handleManualResend}
           communicationPendingKey={communicationPendingKey}
           communicationFeedback={communicationFeedback?.appointmentId === selectedAppointment.id ? communicationFeedback : null}
-          onOpenPatientRecord={(appointment) => navigate(`/app/patients/${encodeURIComponent(appointment.patientId)}`)}
+          onOpenPatientRecord={openPatientRecordForAppointment}
           onOpenClinicalRecord={(appointment) => void openClinicalRecord(appointment)}
           onBookFollowUp={handleBookFollowUpAppointment}
           onViewFollowUpRecommendation={setSelectedFollowUpRecommendation}
@@ -1206,7 +1304,7 @@ export function AppointmentsPage() {
             const title = isReschedule ? 'Reschedule appointment' : isCancel ? 'Cancel appointment' : isNoShow ? 'Mark as no show' : operationAction.label
             const kicker = isReschedule ? 'Schedule change' : isCancel ? 'Destructive action' : isNoShow ? 'Attendance exception' : 'Appointment operation'
             const explanation = isReschedule
-              ? 'Choose a new date, time, and dentist. The system will check availability before saving.'
+              ? 'Choose a new date, time, and dentist. The system will check appointment conflicts before saving.'
               : isCancel
                 ? 'This will cancel the appointment and remove it from active clinic flow. Keep the reason clear for audit history.'
                 : isNoShow

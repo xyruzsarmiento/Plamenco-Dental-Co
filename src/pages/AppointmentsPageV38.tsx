@@ -114,34 +114,38 @@ function AppointmentSuccessModal({ notice, onClose, onContinue }: { notice: Appo
     <div className="modal-backdrop appointment-success-backdrop" role="presentation" onMouseDown={(event) => { if (event.currentTarget === event.target) onClose() }}>
       <section className="appointment-success-modal appointment-success-modal-v42" role="dialog" aria-modal="true" aria-labelledby="appointment-success-title">
         <button className="appointment-success-close" type="button" aria-label="Close confirmation" onClick={onClose}><X size={18} /></button>
-        <div className="appointment-success-hero">
-          <div className="appointment-success-orb"><Check size={28} strokeWidth={2.4} /></div>
-          <div className="appointment-success-status-row">
-            <span className="appointment-success-status"><ShieldCheck size={13} />{approved ? 'CONFIRMED' : 'SAVED TO DATABASE'}</span>
-            <span className="appointment-success-number">{appointment.appointmentNumber ?? 'Appointment'}</span>
+        <header className="appointment-success-hero">
+          <div className="appointment-success-orb" aria-hidden="true"><Check size={28} strokeWidth={2.4} /></div>
+          <div className="appointment-success-heading">
+            <div className="appointment-success-status-row">
+              <span className="appointment-success-status"><ShieldCheck size={13} />{approved ? 'Confirmed' : 'Saved'}</span>
+              <span className="appointment-success-number">{appointment.appointmentNumber ?? 'Appointment'}</span>
+            </div>
+            <p className="appointment-success-kicker">{approved ? 'Scheduling complete' : 'New booking request'}</p>
+            <h2 id="appointment-success-title">{approved ? 'Appointment confirmed' : 'Appointment request created'}</h2>
+            <p className="appointment-success-copy">{approved ? `This visit is now confirmed and will appear in ${isToday ? "Today's flow" : 'the calendar'} at its scheduled time.` : 'The booking request is safely stored in Supabase and ready for clinic review.'}</p>
           </div>
-          <p className="appointment-success-kicker">{approved ? 'Scheduling decision complete' : 'New booking request'}</p>
-          <h2 id="appointment-success-title">{approved ? 'Appointment confirmed' : 'Appointment request created'}</h2>
-          <p className="appointment-success-copy">{approved ? `This visit is now confirmed and will appear in ${isToday ? "Today's flow" : 'the calendar'} at its scheduled time.` : 'The booking request is safely stored in Supabase and ready for clinic review.'}</p>
+        </header>
+        <div className="appointment-success-body">
+          <section className="appointment-success-schedule-card" aria-label="Scheduled visit">
+            <div className="appointment-success-date-icon"><CalendarDays size={21} /></div>
+            <div className="appointment-success-schedule-copy"><span>Scheduled visit</span><strong>{formatDate(appointment.date)}</strong><small><Clock3 size={13} />{formatTime(appointment.startTime)} – {formatTime(appointment.endTime)}</small></div>
+            <span className={`appointment-success-state ${approved ? 'is-confirmed' : 'is-pending'}`}><CheckCircle2 size={13} />{approved ? 'Confirmed' : 'Pending review'}</span>
+          </section>
+          <section className="appointment-success-primary-grid" aria-label="Appointment details">
+            <article className="appointment-success-person-card"><span className="appointment-success-detail-icon"><UserRound size={17} /></span><div><small>Patient</small><strong>{patient ? `${patient.firstName} ${patient.lastName}` : appointment.patientId}</strong><span>{patient?.patientId ?? appointment.patientId}</span></div></article>
+            <article className="appointment-success-person-card"><span className="appointment-success-detail-icon"><Stethoscope size={17} /></span><div><small>Service</small><strong>{service?.name ?? 'Dental service'}</strong><span>{service?.duration ? `${service.duration} minute visit` : 'Scheduled service'}</span></div></article>
+          </section>
+          <section className="appointment-success-meta-grid" aria-label="Clinic details">
+            <div><span><Building2 size={14} />Clinic branch</span><strong>{branch?.name ?? 'Clinic branch'}</strong></div>
+            <div><span><Stethoscope size={14} />Dentist</span><strong>{provider?.displayName ?? 'Assigned dentist'}</strong></div>
+            <div className="appointment-success-meta-wide"><span><MapPin size={14} />Location</span><strong>{[branch?.city, branch?.province].filter(Boolean).join(', ') || branch?.address || 'Clinic location'}</strong></div>
+          </section>
         </div>
-        <div className="appointment-success-schedule-card">
-          <div className="appointment-success-date-icon"><CalendarDays size={21} /></div>
-          <div className="appointment-success-schedule-copy"><span>Scheduled visit</span><strong>{formatDate(appointment.date)}</strong><small><Clock3 size={13} />{formatTime(appointment.startTime)} – {formatTime(appointment.endTime)}</small></div>
-          <span className={`appointment-success-state ${approved ? 'is-confirmed' : 'is-pending'}`}><CheckCircle2 size={13} />{approved ? 'Confirmed' : 'Pending review'}</span>
-        </div>
-        <div className="appointment-success-primary-grid">
-          <article className="appointment-success-person-card"><span className="appointment-success-detail-icon"><UserRound size={17} /></span><div><small>Patient</small><strong>{patient ? `${patient.firstName} ${patient.lastName}` : appointment.patientId}</strong><span>{patient?.patientId ?? appointment.patientId}</span></div></article>
-          <article className="appointment-success-person-card"><span className="appointment-success-detail-icon"><Stethoscope size={17} /></span><div><small>Service</small><strong>{service?.name ?? 'Dental service'}</strong><span>{service?.duration ? `${service.duration} minute visit` : 'Scheduled service'}</span></div></article>
-        </div>
-        <div className="appointment-success-meta-grid">
-          <div><span><Building2 size={14} />Clinic branch</span><strong>{branch?.name ?? 'Clinic branch'}</strong></div>
-          <div><span><Stethoscope size={14} />Dentist</span><strong>{provider?.displayName ?? 'Assigned dentist'}</strong></div>
-          <div className="appointment-success-meta-wide"><span><MapPin size={14} />Location</span><strong>{[branch?.city, branch?.province].filter(Boolean).join(', ') || branch?.address || 'Clinic location'}</strong></div>
-        </div>
-        <div className="appointment-success-footer">
+        <footer className="appointment-success-footer">
           <button type="button" className="appointment-success-secondary" onClick={onClose}>Close</button>
           <Button onClick={onContinue}>{approved ? (isToday ? "View today's flow" : 'View in calendar') : 'Open requests'}<ArrowRight size={15} /></Button>
-        </div>
+        </footer>
       </section>
     </div>
   )

@@ -11,6 +11,7 @@ import { roleLabels, usePermissions } from '../../features/auth/permissions'
 import { useBranchContext } from '../../features/branches/BranchContext'
 import { TopbarNotificationBell } from '../../features/notifications/TopbarNotificationBell'
 import { getAvatarDisplayUrl, getInitials, loadOwnInternalProfile } from '../../features/profiles/profileStore'
+import { clearModalScrollLocks } from '../../lib/modalScrollLock'
 import { Button } from '../ui/Button'
 import { BranchContextIndicator } from './BranchContextIndicator'
 import { navigationGroups, navigationItems } from './navigation'
@@ -71,6 +72,10 @@ export function AppLayout() {
     return () => document.body.classList.remove('pv3-nav-lock')
   }, [isMobileNavOpen])
 
+  useEffect(() => {
+    clearModalScrollLocks()
+  }, [location.pathname])
+
   const currentPage =
     navigationItems.find(
       (item) =>
@@ -83,6 +88,7 @@ export function AppLayout() {
     .map((group) => ({
       ...group,
       items: group.items.filter((item) => {
+        if (item.roles && (!user?.role || !item.roles.includes(user.role))) return false
         return !item.anyOf || canAny(item.anyOf)
       }),
     }))

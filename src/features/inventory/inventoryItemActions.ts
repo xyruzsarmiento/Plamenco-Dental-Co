@@ -105,6 +105,29 @@ export async function removeInventoryItemRecord(itemId: string) {
   return current
 }
 
-// Compatibility name used by the current modal. This performs a guarded permanent removal only
-// when the item has no stock/history references; otherwise it throws and preserves the record.
-export const archiveInventoryItemRecord = removeInventoryItemRecord
+export async function archiveInventoryItemRecord(itemId: string) {
+  const items = readItems()
+  const current = items.find((item) => item.id === itemId)
+  if (!current) throw new Error('Inventory item not found.')
+  if (current.status === 'archived') return current
+
+  const archived: InventoryItem = {
+    ...current,
+    status: 'archived',
+    updatedAt: new Date().toISOString(),
+  }
+
+  if (isSupabaseConfigured && supabase) {
+    const { data, error } = await supabase
+      .from('inventory_items')
+      .update(mapItem(archived))
+      .eq('id', itemId)
+      .select('id')
+      .maybeSingle()
+    if (error) throw new Error(`Database archive failed: ${error.message}`)
+    if (!data) throw new Error('Database archive could not be confirmed for this inventory item.')
+  }
+
+  writeItems(items.map((item) => item.id === itemId ? archived : item))
+  return archived
+}

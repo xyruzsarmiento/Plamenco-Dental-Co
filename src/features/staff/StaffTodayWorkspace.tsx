@@ -1,4 +1,4 @@
-import { CalendarPlus, CheckCircle2, Clock3, CreditCard, Search, UserPlus, UsersRound } from 'lucide-react'
+import { CalendarPlus, CheckCircle2, Clock3, CreditCard, FileText, PackageSearch, RefreshCw, Search, UserPlus, UsersRound } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Badge, StatusBadge } from '../../components/ui/Badge'
@@ -6,9 +6,16 @@ import { Button } from '../../components/ui/Button'
 import { DashboardBarChart, DashboardTrendChart } from '../../components/ui/DashboardChart'
 import { Pagination } from '../../components/ui/DesignSystem'
 import { getStoredAppointments } from '../appointments/appointmentStore'
+import { loadAppointmentsForBranchScope } from '../appointments/appointmentBranchLoader'
+import { getStoredInvoices, getStoredPayments } from '../billing/billingStore'
+import { useAuth } from '../auth/AuthContext'
+import { useBranchContext } from '../branches/BranchContext'
 import { getStoredBranches } from '../branches/branchStore'
 import { getStoredProviders } from '../dentists/dentistStore'
+import { getStoredDocuments } from '../documents/documentStore'
+import { getBranchInventory, getStockStatus } from '../inventory/inventoryStore'
 import { getPatientDisplayName, getStoredPatients } from '../patients/patientStore'
+import { getStoredPatientRecalls } from '../recalls/recallStore'
 import { getStoredServices } from '../services/serviceStore'
 
 function manilaToday() {
@@ -44,14 +51,27 @@ function formatTime(value: string) {
 const DASHBOARD_PAGE_SIZE = 8
 const QUEUE_PAGE_SIZE = 5
 
+function documentBranchId(document: unknown) {
+  return (document as { branchId?: string }).branchId
+}
+
 export function StaffTodayWorkspace() {
   const navigate = useNavigate()
+  const { user } = useAuth()
+  const { activeBranchId, activeBranch, isAllBranchesMode } = useBranchContext()
   const [query, setQuery] = useState('')
   const [appointmentPage, setAppointmentPage] = useState(1)
   const [queuePage, setQueuePage] = useState(1)
+  const [revision, setRevision] = useState(0)
+  const [isLoading, setIsLoading] = useState(true)
+  const [loadError, setLoadError] = useState('')
   const today = manilaToday()
 
-  const appointments = useMemo(() => getStoredAppointments(), [])
+  const branchId = isAllBranchesMode ? null : activeBranchId
+  const appointments = useMemo(() => {
+    void revision
+    return getStoredAppointments().filter((appointment) => branchId ? appointment.branchId === branchId : true)
+  }, [branchId, revision])
   const patients = useMemo(() => getStoredPatients(), [])
   const services = useMemo(() => new Map(getStoredServices().map((row) => [row.id, row])), [])
   const providers = useMemo(() => new Map(getStoredProviders().map((row) => [row.id, row])), [])
@@ -64,8 +84,30 @@ export function StaffTodayWorkspace() {
   )
   const queue = todayAppointments.filter((row) => ['checked_in', 'waiting', 'in_progress'].includes(row.status))
   const pending = todayAppointments.filter((row) => row.status === 'pending')
-  const walkIns = todayAppointments.filter((row) => row.bookingSource === 'walk_in')
+  const confirmed = todayAppointments.filter((row) => row.status === 'confirmed')
   const completed = todayAppointments.filter((row) => row.status === 'completed')
+  const invoices = useMemo(() => { void revision; return getStoredInvoices().filter((invoice) => branchId ? invoice.branchId === branchId : true) }, [branchId, revision])
+  const payments = useMemo(() => { void revision; return getStoredPayments().filter((payment) => branchId ? payment.branchId === branchId : true) }, [branchId, revision])
+  const lowStockCount = useMemo(() => {
+    void revision
+    return getBranchInventory().filter((stock) => (!branchId || stock.branchId === branchId) && ['low_stock', 'out_of_stock'].includes(getStockStatus(stock))).length
+  }, [branchId, revision])
+  const recentDocuments = useMemo(() => {
+    void revision
+    return getStoredDocuments()
+      .filter((document) => !document.archivedAt && (!branchId || documentBranchId(document) === branchId))
+      .sort((a, b) => new Date(b.createdAt ?? b.uploadDate).getTime() - new Date(a.createdAt ?? a.uploadDate).getTime())
+      .slice(0, 3)
+  }, [branchId, revision])
+  const upcomingFollowUps = useMemo(() => {
+    void revision
+    const limit = manilaDateOffset(14)
+    return getStoredPatientRecalls()
+      .filter((recall) => (!branchId || recall.branchId === branchId) && recall.dueDate && recall.dueDate >= today && recall.dueDate <= limit && !['booked', 'completed', 'dismissed', 'cancelled'].includes(recall.status))
+      .length
+  }, [branchId, revision, today])
+  const receivablesCents = invoices.reduce((sum, invoice) => sum + Math.max(0, invoice.balanceCents), 0)
+  const paymentsNeedingAction = payments.filter((payment) => ['processing', 'pending', 'failed'].includes(payment.status)).length
   const trendData = useMemo(() => Array.from({ length: 7 }, (_, index) => {
     const date = manilaDateOffset(index - 6)
     return { label: dayLabel(date), value: appointments.filter((row) => row.date === date).length }
@@ -95,25 +137,52 @@ export function StaffTodayWorkspace() {
     setQueuePage((page) => Math.min(page, queuePageCount))
   }, [appointmentPageCount, queuePageCount])
 
+  useEffect(() => {
+    if (!user?.id) return
+    let active = true
+    setIsLoading(true)
+    setLoadError('')
+    void loadAppointmentsForBranchScope({
+      branchId,
+      isAllBranchesMode: !branchId,
+      userId: user.id,
+      strict: false,
+      bypassCache: true,
+    })
+      .then(() => { if (active) setRevision((value) => value + 1) })
+      .catch((cause) => { if (active) setLoadError(cause instanceof Error ? cause.message : 'Dashboard data could not be refreshed.') })
+      .finally(() => { if (active) setIsLoading(false) })
+    return () => { active = false }
+  }, [branchId, user?.id])
+
   return (
     <div className="staff-today-workspace">
       <section className="staff-today-header">
         <div>
           <p className="eyebrow">Front desk operations</p>
           <h1>Today at a glance</h1>
-          <p>Appointments, queue activity, patient lookup, and front-desk handoffs in one operational workspace.</p>
+          <p>{activeBranch?.name ? `${activeBranch.name} appointments, queue activity, patient lookup, and front-desk handoffs.` : 'Appointments, queue activity, patient lookup, and front-desk handoffs in one operational workspace.'}</p>
         </div>
         <div className="staff-primary-actions">
+          {isLoading && <Badge tone="info">Refreshing live data</Badge>}
           <Button onClick={() => navigate('/app/appointments')}><CalendarPlus size={16} /> New appointment</Button>
           <Button variant="secondary" onClick={() => navigate('/app/patients')}><UserPlus size={16} /> Add patient</Button>
         </div>
       </section>
+      {loadError && <div className="staff-empty-state compact"><RefreshCw size={18} /><span>{loadError}</span></div>}
 
       <section className="staff-metric-grid" aria-label="Today summary">
-        <article><span className="staff-metric-icon"><Clock3 size={18} /></span><div><strong>{todayAppointments.length}</strong><span>Appointments today</span></div></article>
+        <article><span className="staff-metric-icon"><CalendarPlus size={18} /></span><div><strong>{pending.length}</strong><span>Pending requests</span></div></article>
+        <article><span className="staff-metric-icon"><Clock3 size={18} /></span><div><strong>{confirmed.length}</strong><span>Confirmed today</span></div></article>
         <article><span className="staff-metric-icon"><UsersRound size={18} /></span><div><strong>{queue.length}</strong><span>In clinic / queue</span></div></article>
-        <article><span className="staff-metric-icon"><CalendarPlus size={18} /></span><div><strong>{walkIns.length}</strong><span>Walk-ins</span></div></article>
         <article><span className="staff-metric-icon"><CheckCircle2 size={18} /></span><div><strong>{completed.length}</strong><span>Completed visits</span></div></article>
+      </section>
+
+      <section className="staff-metric-grid" aria-label="Operational attention">
+        <article><span className="staff-metric-icon"><CreditCard size={18} /></span><div><strong>{paymentsNeedingAction}</strong><span>Payments needing action</span></div></article>
+        <article><span className="staff-metric-icon"><CreditCard size={18} /></span><div><strong>PHP {(receivablesCents / 100).toLocaleString('en-PH')}</strong><span>Outstanding receivables</span></div></article>
+        <article><span className="staff-metric-icon"><PackageSearch size={18} /></span><div><strong>{lowStockCount}</strong><span>Low-stock items</span></div></article>
+        <article><span className="staff-metric-icon"><FileText size={18} /></span><div><strong>{recentDocuments.length}</strong><span>Recent documents</span></div></article>
       </section>
 
       <div className="dashboard-chart-grid">
@@ -172,6 +241,8 @@ export function StaffTodayWorkspace() {
       <section className="staff-quick-actions">
         <button type="button" onClick={() => navigate('/app/appointments')}><CalendarPlus size={18} /><span><strong>Book / walk-in</strong><small>Create or manage appointments</small></span></button>
         <button type="button" onClick={() => navigate('/app/billing')}><CreditCard size={18} /><span><strong>Payment handoff</strong><small>Open billing and payment records</small></span></button>
+        <button type="button" onClick={() => navigate('/app/inventory')}><PackageSearch size={18} /><span><strong>Stock attention</strong><small>{lowStockCount} low-stock item{lowStockCount === 1 ? '' : 's'}</small></span></button>
+        <button type="button" onClick={() => navigate('/app/appointments')}><Clock3 size={18} /><span><strong>Follow-ups due</strong><small>{upcomingFollowUps} due in the next 14 days</small></span></button>
       </section>
     </div>
   )

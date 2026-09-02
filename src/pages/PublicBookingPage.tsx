@@ -8,7 +8,6 @@ import {
   MapPin,
   ShieldCheck,
   Sparkles,
-  Stethoscope,
   UserRound,
 } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
@@ -17,7 +16,6 @@ import { Button } from '../components/ui/Button'
 import { PortalSkeleton } from '../components/ui/DesignSystem'
 import { Input } from '../components/ui/Input'
 import { Textarea } from '../components/ui/Textarea'
-import { getEligibleProviders } from '../features/appointments/availabilityEngine'
 import { useAuth } from '../features/auth/AuthContext'
 import { getStoredBranches, loadBranchesFromSupabase } from '../features/branches/branchStore'
 import { createPublicBooking, getAvailableBookingTimes } from '../features/patientPortal/patientPortalStore'
@@ -25,7 +23,7 @@ import { getStoredServices, loadServicesFromSupabase } from '../features/service
 
 type ServiceLoadState = 'loading' | 'loaded' | 'no-services' | 'error'
 
-const steps = ['Branch', 'Service', 'Dentist', 'Date', 'Time', 'Details', 'Confirm']
+const steps = ['Service', 'Branch', 'Date', 'Time', 'Details', 'Confirm']
 
 type BookingForm = {
   branchId: string
@@ -133,20 +131,18 @@ export function PublicBookingPage() {
 
   const selectedBranch = useMemo(() => branches.find((branch) => branch.id === form.branchId), [branches, form.branchId])
   const selectedService = useMemo(() => services.find((service) => service.id === form.serviceId), [form.serviceId, services])
-  const eligibleProviders = useMemo(() => form.branchId ? getEligibleProviders(form.branchId) : [], [form.branchId])
-  const selectedProvider = useMemo(() => eligibleProviders.find((provider) => provider.id === form.providerId), [eligibleProviders, form.providerId])
   const availableTimes = useMemo(() => {
     if (!form.date || !form.serviceId || !form.branchId) return []
-    return getAvailableBookingTimes(form.serviceId, form.date, form.branchId, form.providerId || undefined)
-  }, [form.branchId, form.date, form.providerId, form.serviceId])
+    return getAvailableBookingTimes(form.serviceId, form.date, form.branchId)
+  }, [form.branchId, form.date, form.serviceId])
 
   const nextDisabled = (() => {
     if (isSubmitting) return true
-    if (step === 0) return !form.branchId
-    if (step === 1) return !form.serviceId
-    if (step === 3) return !form.date
-    if (step === 4) return !form.startTime
-    if (step === 5) return !form.firstName.trim() || !form.lastName.trim() || !form.email.trim() || !form.phone.trim()
+    if (step === 0) return !form.serviceId
+    if (step === 1) return !form.branchId
+    if (step === 2) return !form.date
+    if (step === 3) return !form.startTime
+    if (step === 4) return !form.firstName.trim() || !form.lastName.trim() || !form.email.trim() || !form.phone.trim()
     return false
   })()
 
@@ -182,7 +178,7 @@ export function PublicBookingPage() {
       const appointment = await createPublicBooking({
         branchId: form.branchId,
         serviceId: form.serviceId,
-        providerId: form.providerId,
+        providerId: undefined,
         date: form.date,
         startTime: form.startTime,
         firstName: form.firstName,
@@ -264,6 +260,20 @@ export function PublicBookingPage() {
 
                 {step === 0 && (
                   <div className="booking-section">
+                    <div className="section-title-row"><FileText size={18} /><h2>Select service</h2></div>
+                    <div className="service-option-list">
+                      {services.map((service) => (
+                        <button key={service.id} type="button" disabled={isSubmitting} className={`service-option ${form.serviceId === service.id ? 'is-selected' : ''}`} onClick={() => updateForm('serviceId', service.id)}>
+                          <div className="service-option-copy"><strong>{service.name}</strong><small>{service.description || service.category}</small></div>
+                          <div className="service-option-meta"><strong>{formatPrice(service.price)}</strong><small>{service.duration} min</small></div>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {step === 1 && (
+                  <div className="booking-section">
                     <div className="section-title-row"><MapPin size={18} /><h2>Choose clinic branch</h2></div>
                     <div className="branch-choice-grid">
                       {branches.map((branch) => (
@@ -277,46 +287,14 @@ export function PublicBookingPage() {
                   </div>
                 )}
 
-                {step === 1 && (
-                  <div className="booking-section">
-                    <div className="section-title-row"><FileText size={18} /><h2>Select service</h2></div>
-                    <div className="service-option-list">
-                      {services.map((service) => (
-                        <button key={service.id} type="button" disabled={isSubmitting} className={`service-option ${form.serviceId === service.id ? 'is-selected' : ''}`} onClick={() => updateForm('serviceId', service.id)}>
-                          <div className="service-option-copy"><strong>{service.name}</strong><small>{service.description || service.category}</small></div>
-                          <div className="service-option-meta"><strong>{formatPrice(service.price)}</strong><small>{service.duration} min</small></div>
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
                 {step === 2 && (
-                  <div className="booking-section">
-                    <div className="section-title-row"><Stethoscope size={18} /><h2>Choose dentist</h2></div>
-                    <div className="branch-choice-grid">
-                      <button type="button" disabled={isSubmitting} className={`branch-choice ${!form.providerId ? 'is-selected' : ''}`} onClick={() => updateForm('providerId', '')}>
-                        <strong>Any available dentist</strong>
-                        <small>The clinic will assign an eligible dentist for your chosen slot.</small>
-                      </button>
-                      {eligibleProviders.map((provider) => (
-                        <button key={provider.id} type="button" disabled={isSubmitting} className={`branch-choice ${form.providerId === provider.id ? 'is-selected' : ''}`} onClick={() => updateForm('providerId', provider.id)}>
-                          <strong>{provider.displayName}</strong>
-                          <small>{provider.specialization || (provider.role === 'associate_dentist' ? 'Associate Dentist' : 'Dentist')}</small>
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {step === 3 && (
                   <div className="booking-section">
                     <div className="section-title-row"><CalendarDays size={18} /><h2>Select date</h2></div>
                     <Input label="Preferred date" type="date" value={form.date} disabled={isSubmitting} onChange={(event) => updateForm('date', event.target.value)} />
                   </div>
                 )}
 
-                {step === 4 && (
+                {step === 3 && (
                   <div className="booking-section">
                     <div className="section-title-row"><Clock3 size={18} /><h2>Select available time</h2></div>
                     {availableTimes.length === 0 ? (
@@ -331,7 +309,7 @@ export function PublicBookingPage() {
                   </div>
                 )}
 
-                {step === 5 && (
+                {step === 4 && (
                   <div className="booking-section">
                     <div className="section-title-row"><UserRound size={18} /><h2>Enter patient information</h2></div>
                     <div className="form-grid">
@@ -344,17 +322,18 @@ export function PublicBookingPage() {
                   </div>
                 )}
 
-                {step === 6 && (
+                {step === 5 && (
                   <div className="booking-section">
                     <div className="section-title-row"><ShieldCheck size={18} /><h2>Confirm booking</h2></div>
                     <div className="confirmation-card">
                       <div className="confirm-row"><span>Branch</span><strong>{selectedBranch?.name ?? 'Clinic branch'}</strong></div>
                       <div className="confirm-row"><span>Service</span><strong>{selectedService?.name ?? 'Service'}</strong></div>
-                      <div className="confirm-row"><span>Dentist</span><strong>{selectedProvider?.displayName ?? 'Any available dentist'}</strong></div>
+                      <div className="confirm-row"><span>Dentist</span><strong>Any available dentist</strong></div>
                       <div className="confirm-row"><span>Date</span><strong>{formatDate(form.date)}</strong></div>
                       <div className="confirm-row"><span>Time</span><strong>{form.startTime ? formatTime(form.startTime) : 'Time'}</strong></div>
                       <div className="confirm-row"><span>Patient</span><strong>{form.firstName} {form.lastName}</strong></div>
                       <div className="confirm-row"><span>Estimated fee</span><strong>{selectedService ? formatPrice(selectedService.price) : 'To be confirmed'}</strong></div>
+                      <p className="muted-label">The clinic will assign an available dentist when your appointment is confirmed.</p>
                       <p className="muted-label">Final cost may vary depending on your treatment needs.</p>
                     </div>
                   </div>
@@ -374,7 +353,7 @@ export function PublicBookingPage() {
                   <h3>Your visit snapshot</h3>
                 </div>
                 <div className="summary-card"><span className="summary-label">Selected treatment</span><strong>{selectedService?.name ?? 'Choose a service'}</strong><small>{selectedService ? `${selectedService.duration} minute appointment` : 'We will tailor the time to your needs.'}</small></div>
-                <div className="summary-card"><span className="summary-label">Clinic branch</span><strong>{selectedBranch?.name ?? 'Choose a branch'}</strong><small>{selectedProvider?.displayName ?? 'Any available dentist'}</small></div>
+                <div className="summary-card"><span className="summary-label">Clinic branch</span><strong>{selectedBranch?.name ?? 'Choose a branch'}</strong><small>Any available dentist</small></div>
                 <div className="summary-grid">
                   <div><span>Date</span><strong>{form.date ? new Date(`${form.date}T00:00:00`).toLocaleDateString('en-PH', { month: 'short', day: 'numeric' }) : '-'}</strong></div>
                   <div><span>Time</span><strong>{form.startTime ? formatTime(form.startTime) : '-'}</strong></div>

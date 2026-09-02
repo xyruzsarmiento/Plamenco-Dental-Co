@@ -11,6 +11,20 @@ type CachedPatientDocument = {
 const DOCUMENT_STORAGE_KEY = 'plamenco.documents'
 const PATIENT_DOCUMENT_BUCKET = 'patient-documents'
 
+async function downloadSignedFile(url: string, fileName: string) {
+  const response = await fetch(url)
+  if (!response.ok) throw new Error('Document download is unavailable.')
+  const blob = await response.blob()
+  const objectUrl = URL.createObjectURL(blob)
+  const anchor = document.createElement('a')
+  anchor.href = objectUrl
+  anchor.download = fileName || 'patient-document'
+  document.body.appendChild(anchor)
+  anchor.click()
+  anchor.remove()
+  window.setTimeout(() => URL.revokeObjectURL(objectUrl), 1000)
+}
+
 function cachedDocuments(): CachedPatientDocument[] {
   if (typeof window === 'undefined') return []
   try {
@@ -42,19 +56,22 @@ export function PatientDocumentLinkInterceptor() {
       event.stopPropagation()
 
       void (async () => {
-        const opened = window.open('', '_blank', 'noopener,noreferrer')
         const { data, error } = await supabase.storage
           .from(PATIENT_DOCUMENT_BUCKET)
           .createSignedUrl(document.storagePath!, 300)
 
         if (error || !data?.signedUrl) {
-          opened?.close()
-          window.alert('This document could not be opened. Please refresh the portal and try again.')
+          window.alert(error?.message?.toLowerCase().includes('not found')
+            ? 'This document file is no longer available.'
+            : 'Document download is unavailable.')
           return
         }
 
-        if (opened) opened.location.href = data.signedUrl
-        else window.open(data.signedUrl, '_blank', 'noopener,noreferrer')
+        try {
+          await downloadSignedFile(data.signedUrl, document.fileName || fileName || 'patient-document')
+        } catch (cause) {
+          window.alert(cause instanceof Error ? cause.message : 'Document download is unavailable.')
+        }
       })()
     }
 

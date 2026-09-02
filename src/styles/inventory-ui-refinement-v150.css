@@ -1,0 +1,598 @@
+.app-shell :where(.inventory56-page, .inv121-page) {
+  --inventory-card-bg: rgba(255, 255, 255, 0.94);
+  --inventory-soft-bg: #f7fbff;
+  --inventory-line: #dbe7f5;
+  --inventory-line-strong: #bdd4f6;
+  --inventory-ink: #172033;
+  --inventory-muted: #66758c;
+  --inventory-blue: #2563eb;
+  --inventory-blue-dark: #1d4ed8;
+  --inventory-shadow: 0 14px 34px rgba(15, 23, 42, 0.055);
+  --inventory-shadow-soft: 0 8px 22px rgba(15, 23, 42, 0.035);
+  gap: 14px;
+}
+
+.app-shell .inventory56-scope-banner {
+  margin-bottom: 2px;
+  padding: 10px 12px;
+  border-radius: 14px;
+  background: #f8fbff;
+  box-shadow: none;
+}
+
+.app-shell :where(.inventory56-scope-banner strong, .inventory56-scope-banner span) {
+  font-weight: 650;
+}
+
+.app-shell :where(.inv121-hero, .inventory56-all-hero) {
+  min-height: 108px !important;
+  align-items: center !important;
+  padding: 20px 24px !important;
+  border-color: var(--inventory-line-strong) !important;
+  border-radius: 22px !important;
+  background:
+    radial-gradient(circle at 91% 20%, rgba(37, 99, 235, 0.11), transparent 22%),
+    linear-gradient(135deg, #ffffff 0%, #f9fcff 58%, #edf5ff 100%) !important;
+  box-shadow: var(--inventory-shadow) !important;
+  overflow: visible !important;
+}
+
+.app-shell :where(.inv121-hero, .inventory56-all-hero) > div:first-child {
+  max-width: 760px;
+}
+
+.app-shell :where(.inv121-hero, .inventory56-all-hero) span:first-child {
+  margin-bottom: 5px !important;
+  color: var(--inventory-blue) !important;
+  font-size: 0.64rem !important;
+  font-weight: 850 !important;
+  letter-spacing: 0.08em !important;
+}
+
+.app-shell :where(.inv121-hero, .inventory56-all-hero) h1,
+.app-shell :where(.inv121-hero, .inventory56-all-hero) h2 {
+  margin: 0 !important;
+  color: #0f172a !important;
+  font-size: clamp(1.65rem, 2.2vw, 2.35rem) !important;
+  line-height: 1.08 !important;
+}
+
+.app-shell :where(.inv121-hero, .inventory56-all-hero) p {
+  max-width: 760px !important;
+  margin-top: 8px !important;
+  color: var(--inventory-muted) !important;
+  font-size: 0.84rem !important;
+  line-height: 1.55 !important;
+}
+
+.app-shell .inventory56-all-hero-meta {
+  min-width: 210px;
+  padding: 12px 14px;
+  border-color: #d8e7ff;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.88);
+  box-shadow: var(--inventory-shadow-soft);
+}
+
+.app-shell .inventory56-executive-strip {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 10px;
+  min-width: 0;
+}
+
+.app-shell .inventory56-executive-strip article {
+  min-width: 0;
+  padding: 13px 14px;
+  border: 1px solid var(--inventory-line);
+  border-radius: 16px;
+  background: var(--inventory-card-bg);
+  box-shadow: var(--inventory-shadow-soft);
+}
+
+.app-shell .inventory56-executive-strip span,
+.app-shell :where(.inventory56-branch-stats span, .inv121-ops-snapshot span, .inv121-metrics article span) {
+  color: #718096 !important;
+  font-size: 0.64rem !important;
+  font-weight: 750 !important;
+  letter-spacing: 0.04em !important;
+}
+
+.app-shell .inventory56-executive-strip strong {
+  display: block;
+  margin-top: 5px;
+  color: var(--inventory-ink);
+  font-size: 1.28rem;
+  line-height: 1;
+}
+
+.app-shell .inventory56-executive-strip small {
+  display: block;
+  margin-top: 5px;
+  color: #8996a8;
+  font-size: 0.68rem;
+}
+
+.app-shell .inventory56-executive-strip article.tone-warning {
+  border-color: #fed7aa;
+  background: #fffaf2;
+}
+
+.app-shell .inventory56-executive-strip article.tone-danger {
+  border-color: #fecaca;
+  background: #fff7f7;
+}
+
+.app-shell .inventory56-branch-grid {
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 12px;
+}
+
+.app-shell .inventory56-branch-card {
+  gap: 13px;
+  padding: 16px;
+  border-color: var(--inventory-line);
+  border-radius: 18px;
+  background: var(--inventory-card-bg);
+  box-shadow: var(--inventory-shadow-soft);
+}
+
+.app-shell .inventory56-branch-card header {
+  align-items: center;
+}
+
+.app-shell .inventory56-branch-card h2 {
+  font-size: 1rem;
+  letter-spacing: 0;
+}
+
+.app-shell .inventory56-branch-stats {
+  gap: 8px;
+}
+
+.app-shell .inventory56-branch-stats div {
+  padding: 10px;
+  border-radius: 13px;
+  background: #f8fbff;
+}
+
+.app-shell .inventory56-branch-card footer {
+  gap: 10px;
+  padding-top: 12px;
+}
+
+.app-shell .inventory56-branch-card footer .btn {
+  min-width: 132px;
+  justify-content: center;
+}
+
+.app-shell .inventory56-overview-grid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.app-shell .inventory56-overview-card {
+  min-height: 0;
+  padding: 15px;
+  border-color: var(--inventory-line);
+  border-radius: 18px;
+  background: var(--inventory-card-bg);
+  box-shadow: var(--inventory-shadow-soft);
+}
+
+.app-shell .inventory56-overview-card header {
+  align-items: flex-start;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.app-shell .inventory56-overview-card header h2 {
+  margin-top: 3px;
+  color: var(--inventory-ink);
+  font-size: 0.98rem;
+  letter-spacing: 0;
+}
+
+.app-shell .inventory56-alert-row {
+  min-height: 56px;
+  padding: 9px 0;
+}
+
+.app-shell .inventory56-alert-row strong,
+.app-shell .inventory56-alert-row b {
+  font-weight: 760;
+}
+
+.app-shell .inventory56-calm-empty {
+  min-height: 92px;
+  display: grid;
+  place-items: center;
+  margin: 0;
+  padding: 16px;
+  border: 1px dashed #d7e3f1;
+  border-radius: 14px;
+  background: #fbfdff;
+  color: #7a8798;
+  text-align: center;
+}
+
+.app-shell :where(.inventory56-maintenance, .inventory56-intelligence) {
+  gap: 12px;
+  padding: 16px;
+  border-color: var(--inventory-line);
+  border-radius: 18px;
+  background: var(--inventory-card-bg);
+  box-shadow: var(--inventory-shadow-soft);
+}
+
+.app-shell .inventory56-section-head {
+  gap: 14px;
+  padding: 0 0 8px;
+}
+
+.app-shell .inventory56-section-head h2 {
+  font-size: 1.12rem;
+  letter-spacing: 0;
+}
+
+.app-shell .inventory56-maintenance-grid,
+.app-shell .inventory56-chart-grid {
+  gap: 10px;
+}
+
+.app-shell .inventory56-maintenance-card,
+.app-shell .inventory56-risk-card,
+.app-shell .inventory56-chart-card {
+  border-color: #e3ebf5;
+  border-radius: 15px;
+  box-shadow: none;
+}
+
+.app-shell .inventory-action-toolbar {
+  align-items: center;
+  gap: 9px;
+  max-width: 680px;
+  isolation: isolate;
+  z-index: 4;
+}
+
+.app-shell .inventory-action-toolbar .btn,
+.app-shell .inventory-action-toolbar .inv121-more-trigger {
+  min-height: 42px;
+  width: auto;
+  min-width: 126px;
+  padding: 0 15px;
+  border-radius: 13px;
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0;
+  white-space: nowrap;
+}
+
+.app-shell .inventory-action-toolbar .inventory-action-primary {
+  color: #fff !important;
+  background: linear-gradient(135deg, #2563eb, #1d4ed8) !important;
+  box-shadow: 0 12px 26px rgba(37, 99, 235, 0.24);
+}
+
+.app-shell .inventory-action-toolbar .inventory-action-primary :where(span, svg) {
+  color: #fff !important;
+}
+
+.app-shell .inventory-action-toolbar .inv121-more-trigger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border: 1px solid #c9d9ee;
+  background: rgba(255, 255, 255, 0.96);
+  color: #344054;
+  box-shadow: var(--inventory-shadow-soft);
+}
+
+.app-shell .inventory-action-toolbar .inv121-more-trigger:hover,
+.app-shell .inventory-action-toolbar .inv121-more-trigger:focus-visible {
+  border-color: #a9c7f5;
+  color: var(--inventory-blue-dark);
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.11), var(--inventory-shadow-soft);
+}
+
+.app-shell .inventory-action-toolbar .inv121-more-menu {
+  right: 0;
+  top: calc(100% + 10px);
+  z-index: 80;
+  width: min(260px, calc(100vw - 48px));
+  padding: 8px;
+  border: 1px solid #dbe5f1;
+  border-radius: 16px;
+  background: #fff;
+  box-shadow: 0 24px 56px rgba(15, 23, 42, 0.18);
+}
+
+.app-shell .inventory-action-toolbar .inv121-more-menu button {
+  min-height: 40px;
+  padding: 9px 10px;
+  border-radius: 11px;
+  color: #344054;
+}
+
+.app-shell .inventory-action-toolbar .inv121-more-menu button:hover {
+  background: #f4f8ff;
+  color: var(--inventory-blue-dark);
+}
+
+.app-shell .inv121-page {
+  display: grid;
+  gap: 14px;
+}
+
+.app-shell .inv121-ops-snapshot {
+  order: 2;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 9px;
+  padding: 12px;
+  border-radius: 17px;
+}
+
+.app-shell .inv121-metrics {
+  order: 3;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.app-shell .inv121-metrics article {
+  min-height: 78px;
+  padding: 12px;
+  border-color: var(--inventory-line);
+  border-radius: 16px;
+  box-shadow: var(--inventory-shadow-soft);
+}
+
+.app-shell .inv121-command {
+  order: 4;
+  gap: 10px;
+  padding: 12px;
+  border-radius: 18px;
+  box-shadow: var(--inventory-shadow-soft);
+}
+
+.app-shell .inv121-list {
+  order: 5;
+  gap: 9px;
+}
+
+.app-shell .inv121-page > .ui-pagination {
+  order: 6;
+}
+
+.app-shell .inv121-tabs {
+  gap: 7px;
+  padding: 2px;
+}
+
+.app-shell .inv121-tabs button {
+  min-height: 36px;
+  padding: 0 13px;
+  border-radius: 11px;
+  font-size: 0.76rem;
+  font-weight: 780;
+}
+
+.app-shell .inv121-tabs button.is-active {
+  background: #fff;
+  box-shadow: 0 6px 16px rgba(37, 99, 235, 0.08);
+}
+
+.app-shell .inv121-toolbar {
+  display: grid;
+  grid-template-columns: minmax(260px, 1fr) minmax(0, 2fr);
+  align-items: center;
+  gap: 10px;
+}
+
+.app-shell .inv121-search {
+  width: 100%;
+  max-width: none;
+}
+
+.app-shell .inv121-filters {
+  justify-content: flex-end;
+  gap: 8px;
+  overflow: visible;
+}
+
+.app-shell .inv121-filters select {
+  min-width: 142px;
+}
+
+.app-shell .inv121-stock-card {
+  display: grid;
+  grid-template-columns: minmax(250px, 1.35fr) minmax(150px, 0.55fr) minmax(128px, 0.45fr) minmax(250px, auto);
+  align-items: center;
+  gap: 12px;
+  min-height: 82px;
+  padding: 13px;
+  border-color: #e2ebf5;
+  border-radius: 17px;
+  box-shadow: var(--inventory-shadow-soft);
+}
+
+.app-shell .inv121-stock-main {
+  min-width: 0;
+}
+
+.app-shell .inv121-stock-quantity {
+  min-width: 0;
+  padding-left: 12px;
+}
+
+.app-shell .inv121-row-actions {
+  max-width: none;
+  justify-content: flex-end;
+  gap: 6px;
+}
+
+.app-shell .inv121-row-actions .btn {
+  min-height: 34px;
+  padding: 0 10px;
+  border-radius: 10px;
+  font-size: 0.72rem;
+}
+
+.app-shell .inv121-row-actions > svg {
+  flex: 0 0 auto;
+  color: #9aa7b8;
+}
+
+.app-shell .inv121-section-heading {
+  padding: 3px 2px 6px;
+}
+
+.app-shell .inv121-simple-row {
+  min-height: 70px;
+  border-radius: 16px;
+  box-shadow: var(--inventory-shadow-soft);
+}
+
+.app-shell .inv121-empty {
+  min-height: 150px;
+  border-radius: 17px;
+  background: #fbfdff;
+}
+
+@media (max-width: 1280px) {
+  .app-shell .inventory56-executive-strip {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .app-shell .inventory56-overview-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .app-shell .inv121-stock-card {
+    grid-template-columns: minmax(260px, 1fr) minmax(150px, auto);
+  }
+
+  .app-shell .inv121-stock-status,
+  .app-shell .inv121-row-actions {
+    grid-column: 1 / -1;
+  }
+
+  .app-shell .inv121-row-actions {
+    justify-content: flex-start;
+  }
+}
+
+@media (max-width: 980px) {
+  .app-shell :where(.inv121-hero, .inventory56-all-hero) {
+    align-items: flex-start !important;
+    flex-direction: column !important;
+    padding: 18px !important;
+  }
+
+  .app-shell .inventory56-all-hero-meta,
+  .app-shell .inventory-action-toolbar {
+    width: 100%;
+    max-width: none;
+  }
+
+  .app-shell .inv121-ops-snapshot {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .app-shell .inv121-metrics {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .app-shell .inv121-toolbar {
+    grid-template-columns: 1fr;
+  }
+
+  .app-shell .inv121-filters {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    justify-content: stretch;
+  }
+
+  .app-shell .inv121-filters > span {
+    grid-column: 1 / -1;
+  }
+
+  .app-shell .inv121-filters select {
+    width: 100%;
+    min-width: 0;
+  }
+}
+
+@media (max-width: 720px) {
+  .app-shell .inventory56-executive-strip,
+  .app-shell .inventory56-overview-grid,
+  .app-shell .inventory56-branch-grid,
+  .app-shell .inv121-ops-snapshot,
+  .app-shell .inv121-metrics {
+    grid-template-columns: 1fr;
+  }
+
+  .app-shell .inventory-action-toolbar {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .app-shell .inventory-action-toolbar .btn,
+  .app-shell .inventory-action-toolbar .inv121-more-trigger {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .app-shell .inventory-action-toolbar .inv121-more-menu {
+    right: auto;
+    left: 0;
+  }
+
+  .app-shell .inv121-filters {
+    grid-template-columns: 1fr;
+  }
+
+  .app-shell .inv121-stock-card {
+    grid-template-columns: 1fr;
+  }
+
+  .app-shell .inv121-stock-quantity {
+    padding: 10px 0 0;
+    border-top: 1px solid #edf2f7;
+    border-left: 0;
+  }
+
+  .app-shell .inv121-row-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .app-shell .inv121-row-actions .btn {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+@media (max-width: 440px) {
+  .app-shell :where(.inv121-hero, .inventory56-all-hero),
+  .app-shell :where(.inventory56-maintenance, .inventory56-intelligence, .inv121-command) {
+    padding: 14px !important;
+    border-radius: 18px !important;
+  }
+
+  .app-shell .inventory-action-toolbar,
+  .app-shell .inv121-row-actions {
+    grid-template-columns: 1fr;
+  }
+
+  .app-shell .inventory56-branch-card footer {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .app-shell .inventory56-branch-card footer .btn {
+    width: 100%;
+  }
+}

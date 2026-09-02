@@ -3,7 +3,6 @@ import { createPortal } from 'react-dom'
 import {
   Archive,
   Download,
-  Eye,
   FileBadge,
   FileImage,
   FilePlus2,
@@ -31,6 +30,7 @@ import { DocumentUploadPanel } from '../features/documents/DocumentUploadPanel'
 import {
   archiveDocumentPersisted,
   createDocumentPersisted,
+  downloadPatientDocumentFile,
   getStoredDocuments,
   loadDocumentsFromSupabase,
   updateDocumentVisibilityPersisted,
@@ -192,6 +192,18 @@ export function DocumentsPage() {
     }
   }
 
+  async function handleDownload(document: PatientDocument) {
+    setBusyId(document.id)
+    setError(null)
+    try {
+      await downloadPatientDocumentFile(document)
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : 'Unable to download document.')
+    } finally {
+      setBusyId(null)
+    }
+  }
+
   function openUpload() {
     if (!selectedPatientId && patients[0]?.patientId) setSelectedPatientId(patients[0].patientId)
     setUploadOpen(true)
@@ -327,8 +339,7 @@ export function DocumentsPage() {
                   <small>Uploaded by {document.uploadedBy || 'Clinic user'}</small>
                 </div>
                 <div className="documents-row-actions">
-                  {document.content && <a href={document.content} target="_blank" rel="noreferrer" aria-label={`Preview ${document.fileName}`}><Eye size={16} /></a>}
-                  {document.content && <a href={document.content} download={document.fileName} aria-label={`Download ${document.fileName}`}><Download size={16} /></a>}
+                  {document.content && <button type="button" disabled={busyId === document.id} aria-label={`Download ${document.fileName}`} onClick={() => void handleDownload(document)}><Download size={16} /></button>}
                   {canUpload && (
                     <Button size="sm" variant="secondary" onClick={() => void handleToggle(document.id, !document.patientVisible)} disabled={busyId === document.id} icon={<ShieldCheck size={14} />}>
                       {document.patientVisible ? 'Make private' : 'Share'}

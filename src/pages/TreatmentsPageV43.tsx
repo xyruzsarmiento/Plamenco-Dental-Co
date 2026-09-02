@@ -204,9 +204,9 @@ export function TreatmentsPageV43() {
     <section className="tx43-page">
       <header className="tx43-hero">
         <div className="tx43-hero-copy">
-          <span className="tx43-eyebrow"><Sparkles size={14} /> Clinical operations</span>
-          <h2>Treatment management</h2>
-          <p>Coordinate procedures, monitor care progress, and review treatment value from one focused clinical workspace.</p>
+          <span className="tx43-eyebrow"><Sparkles size={14} /> Procedure execution</span>
+          <h2>Treatments</h2>
+          <p>Track actual procedures that are planned, in progress, or completed. Proposed care belongs in Treatment Plans; visit notes belong in Dental Records.</p>
         </div>
         <Button onClick={openCreate} icon={<Plus size={17} />} disabled={!selectedPatient || isMutating}>New treatment</Button>
       </header>
@@ -272,7 +272,7 @@ export function TreatmentsPageV43() {
 
             <section className="tx43-management">
               <div className="tx43-management-head">
-                <div><span className="tx43-eyebrow">Treatment management</span><h3>Patient treatment registry</h3><p>Review, filter, edit, and advance this patient's treatment records.</p></div>
+                <div><span className="tx43-eyebrow">Actual care items</span><h3>Patient treatment registry</h3><p>Review procedure status, appointment link, dentist, branch, amount, and notes for care that is happening or has happened.</p></div>
                 <Button onClick={openCreate} icon={<Plus size={16} />} disabled={isMutating}>Add treatment</Button>
               </div>
 

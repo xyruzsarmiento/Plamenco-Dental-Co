@@ -1,0 +1,365 @@
+/* Super Admin card unification.
+   Source of truth: Executive dashboard sav56-card / sav56-metric visual language. */
+
+.app-shell.role-super_admin {
+  --sa-card-bg: #ffffff;
+  --sa-card-soft: #f8fbff;
+  --sa-card-border: #e3e9f1;
+  --sa-card-border-blue: #dbeafe;
+  --sa-card-shadow: 0 9px 28px rgba(15, 23, 42, .045);
+  --sa-card-shadow-hover: 0 16px 36px rgba(37, 99, 235, .08);
+  --sa-card-radius: 20px;
+  --sa-card-radius-sm: 16px;
+  --sa-card-ink: #172033;
+  --sa-card-muted: #6b7280;
+  --sa-card-blue: #2563eb;
+  --sa-card-blue-dark: #1d4ed8;
+}
+
+.app-shell.role-super_admin .content-area :where(
+  .panel,
+  .card,
+  .workspace-panel,
+  .dashboard-panel,
+  .dashboard-list-panel,
+  .table-panel,
+  .analytics-card,
+  .report-card,
+  .settings-card,
+  .profile-card,
+  .stat-card,
+  .metric-card,
+  .page-card,
+  .sav56-card,
+  .sav56-shortcuts,
+  .sav56-metric,
+  .apt-modern-card,
+  .appt-workspace-card,
+  .patients-v36-card,
+  .patient-workspace-card,
+  .doc132-hero,
+  .doc132-stats article,
+  .doc132-control-panel,
+  .doc132-library,
+  .doc132-card,
+  .shared-document-card,
+  .billing-card,
+  .bill14-card,
+  .bill123-card,
+  .services-card,
+  .svc15-card,
+  .dentists133-card,
+  .dentists133-empty,
+  .dentists133-modal-column > section,
+  .rv56-card,
+  .report-card-v54,
+  .data-import-card,
+  .di21-card,
+  .inventory-card,
+  .inv121-card,
+  .ex57-hero,
+  .ex57-context,
+  .ex57-kpis article,
+  .ex57-trend-card,
+  .ex57-command,
+  .ex57-list-panel,
+  .ex57-detail,
+  .ex57-section,
+  .ex57-mini,
+  .team-v26-hero,
+  .team-v26-directory,
+  .team-v26-detail,
+  .team-v26-section,
+  .team-v26-command,
+  .branch126-admin-card,
+  .branches-v27-directory,
+  .branches-v27-detail,
+  .branches-v27-card,
+  .forms-v28-card,
+  .fc28-card,
+  .system-card,
+  .sys29-card,
+  .settings30-card
+) {
+  border: 1px solid var(--sa-card-border) !important;
+  border-radius: var(--sa-card-radius) !important;
+  background: var(--sa-card-bg) !important;
+  box-shadow: var(--sa-card-shadow) !important;
+  color: var(--sa-card-ink) !important;
+}
+
+.app-shell.role-super_admin .content-area :where(
+  .sav56-hero,
+  .dashboard-greeting-v2,
+  .doc132-hero,
+  .ex57-hero,
+  .team-v26-hero,
+  .dentists133-hero,
+  .branches-v27-hero,
+  .forms-v28-hero,
+  .page-hero,
+  .portal-page-header
+) {
+  border-color: var(--sa-card-border-blue) !important;
+  background: linear-gradient(135deg, #ffffff 0%, #f8fbff 58%, #eef5ff 100%) !important;
+  box-shadow: 0 14px 38px rgba(37, 99, 235, .07) !important;
+}
+
+.app-shell.role-super_admin .content-area :where(
+  .sav56-card,
+  .sav56-shortcuts,
+  .sav56-metric,
+  .doc132-card,
+  .shared-document-card,
+  .ex57-mini,
+  .dentists133-card,
+  .team-v26-row,
+  .branches-v27-row,
+  .inventory-card,
+  .inv121-card,
+  .bill14-card,
+  .services-card
+) {
+  transition: border-color .16s ease, box-shadow .16s ease, transform .16s ease, background .16s ease;
+}
+
+.app-shell.role-super_admin .content-area :where(
+  .doc132-card,
+  .shared-document-card,
+  .ex57-mini,
+  .dentists133-card,
+  .team-v26-row,
+  .branches-v27-row,
+  .sav56-pulse-list > a,
+  .sav56-shortcut-grid > a
+):hover {
+  border-color: #c7daf9 !important;
+  background: #fbfdff !important;
+  box-shadow: var(--sa-card-shadow-hover) !important;
+  transform: translateY(-1px);
+}
+
+.app-shell.role-super_admin .content-area :where(
+  .sav56-eyebrow,
+  .page-kicker,
+  .section-kicker,
+  .dv16-kicker,
+  .dv51-hero > div:first-child > span,
+  .dentists133-hero span,
+  .dentists133-drawer-header > div > span,
+  .doc132-panel-head span,
+  .doc132-library header span,
+  .ex57-hero span,
+  .ex57-trend-card header span,
+  .ex57-section > header span,
+  .team-v26-kicker,
+  .branch126-admin-card header span,
+  .branches-v27-kicker,
+  .forms-v28-kicker
+) {
+  color: var(--sa-card-blue-dark) !important;
+  font-size: .67rem !important;
+  font-weight: 850 !important;
+  letter-spacing: .1em !important;
+  text-transform: uppercase !important;
+}
+
+.app-shell.role-super_admin .content-area :where(
+  .sav56-card-head h2,
+  .sav56-section-head h2,
+  .panel h2,
+  .card h2,
+  .workspace-panel h2,
+  .doc132-library h2,
+  .ex57-trend-card h2,
+  .ex57-section h3,
+  .team-v26-detail h2,
+  .dentists133-card h2,
+  .branches-v27-detail h2
+) {
+  color: var(--sa-card-ink) !important;
+  letter-spacing: 0 !important;
+}
+
+.app-shell.role-super_admin .content-area :where(
+  .sav56-card-head p,
+  .panel p,
+  .card p,
+  .workspace-panel p,
+  .doc132-library p,
+  .doc132-file-main p,
+  .ex57-trend-card p,
+  .ex57-section p,
+  .team-v26-detail p,
+  .branches-v27-detail p
+) {
+  color: var(--sa-card-muted) !important;
+  line-height: 1.55 !important;
+}
+
+.app-shell.role-super_admin .content-area :where(
+  .stats-grid,
+  .dashboard-stats-grid,
+  .sav56-metrics,
+  .doc132-stats,
+  .ex57-kpis,
+  .team-v26-metrics,
+  .branch126-summary-strip,
+  .inventory-summary-grid,
+  .billing-kpi-grid,
+  .report-summary-grid
+) {
+  gap: 11px !important;
+}
+
+.app-shell.role-super_admin .content-area :where(
+  .sav56-metric,
+  .doc132-stats article,
+  .ex57-kpis article,
+  .stat-card,
+  .metric-card,
+  .dashboard-metric
+) {
+  min-height: 104px !important;
+  padding: 15px !important;
+  border-radius: 17px !important;
+}
+
+.app-shell.role-super_admin .content-area :where(
+  .sav56-metric strong,
+  .doc132-stats strong,
+  .ex57-kpis article strong,
+  .stat-card strong,
+  .metric-card strong,
+  .dashboard-metric strong
+) {
+  color: var(--sa-card-ink) !important;
+  letter-spacing: 0 !important;
+}
+
+.app-shell.role-super_admin .content-area :where(
+  .sav56-metric-icon,
+  .doc132-hero-icon,
+  .doc132-stats i,
+  .doc132-file-icon,
+  .ex57-kpis article i,
+  .sav56-pulse-icon,
+  .sav56-workforce-icon
+) {
+  border: 1px solid #d7e6ff !important;
+  background: #eaf2ff !important;
+  color: var(--sa-card-blue) !important;
+}
+
+.app-shell.role-super_admin .content-area :where(
+  .table-scroll,
+  .list-scroll,
+  .doc132-library,
+  .ex57-list-panel,
+  .team-v26-detail,
+  .branches-v27-detail
+) {
+  overflow: hidden;
+}
+
+.app-shell.role-super_admin .content-area :where(
+  .doc132-list,
+  .ex57-list,
+  .team-v26-list,
+  .branches-v27-list
+) {
+  background: var(--sa-card-soft) !important;
+}
+
+.app-shell.role-super_admin .content-area :where(
+  .doc132-card,
+  .shared-document-card,
+  .ex57-mini,
+  .team-v26-row,
+  .branches-v27-row,
+  .sav56-pulse-list > a,
+  .sav56-shortcut-grid > a
+) {
+  border-radius: var(--sa-card-radius-sm) !important;
+}
+
+@media (max-width: 900px) {
+  .app-shell.role-super_admin .content-area :where(
+    .sav56-card,
+    .sav56-shortcuts,
+    .panel,
+    .card,
+    .workspace-panel,
+    .doc132-hero,
+    .doc132-control-panel,
+    .doc132-library,
+    .ex57-hero,
+    .ex57-trend-card,
+    .ex57-command,
+    .ex57-list-panel,
+    .ex57-detail,
+    .ex57-section,
+    .team-v26-hero,
+    .team-v26-directory,
+    .team-v26-detail,
+    .branch126-admin-card,
+    .dentists133-modal-column > section
+  ) {
+    border-radius: 18px !important;
+  }
+}
+
+@media (max-width: 560px) {
+  .app-shell.role-super_admin .content-area :where(
+    .sav56-card,
+    .sav56-shortcuts,
+    .panel,
+    .card,
+    .workspace-panel,
+    .doc132-hero,
+    .doc132-control-panel,
+    .doc132-library,
+    .ex57-hero,
+    .ex57-trend-card,
+    .ex57-command,
+    .ex57-list-panel,
+    .ex57-detail,
+    .ex57-section,
+    .team-v26-hero,
+    .team-v26-directory,
+    .team-v26-detail,
+    .branch126-admin-card,
+    .dentists133-modal-column > section
+  ) {
+    border-radius: 16px !important;
+    box-shadow: 0 8px 22px rgba(15, 23, 42, .04) !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .app-shell.role-super_admin .content-area :where(
+    .doc132-card,
+    .shared-document-card,
+    .ex57-mini,
+    .dentists133-card,
+    .team-v26-row,
+    .branches-v27-row,
+    .sav56-pulse-list > a,
+    .sav56-shortcut-grid > a
+  ) {
+    transition: none !important;
+  }
+
+  .app-shell.role-super_admin .content-area :where(
+    .doc132-card,
+    .shared-document-card,
+    .ex57-mini,
+    .dentists133-card,
+    .team-v26-row,
+    .branches-v27-row,
+    .sav56-pulse-list > a,
+    .sav56-shortcut-grid > a
+  ):hover {
+    transform: none;
+  }
+}

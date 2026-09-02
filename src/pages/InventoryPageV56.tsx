@@ -1,16 +1,17 @@
-import { AlertTriangle, Boxes, Building2, CircleDollarSign, Package, PackageCheck, PackageX, PencilLine, Trash2 } from 'lucide-react'
-import { useEffect, useMemo, useState } from 'react'
+import { AlertTriangle, ArrowRightLeft, Boxes, Building2, ChevronRight, CircleDollarSign, ClipboardCheck, ClipboardList, Package, PackageCheck, PackageX, PencilLine, Trash2 } from 'lucide-react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { Button } from '../components/ui/Button'
-import { Pagination } from '../components/ui/DesignSystem'
+import { Pagination, Skeleton, SkeletonCard, SkeletonList, SkeletonText } from '../components/ui/DesignSystem'
 import { ReportRankedBarsV54 } from '../components/ui/ReportsAnalyticsV54'
 import { useBranchContext } from '../features/branches/BranchContext'
 import { getStoredBranches } from '../features/branches/branchStore'
 import { InventoryActionModal, type InventoryDialog } from '../features/inventory/InventoryActionModal'
-import { getBranchInventory, getInventoryItems, getInventoryUnits, getSuppliers } from '../features/inventory/inventoryStore'
+import { refreshInventoryOperationalCaches } from '../features/inventory/inventoryPersistence'
+import { getBranchInventory, getInventoryItems, getInventoryUnits, getPurchaseOrders, getStockCounts, getStockStatus, getStockTransfers, getSuppliers } from '../features/inventory/inventoryStore'
 import { buildEnterpriseReportSnapshot, formatReportCurrency } from '../features/reports/reportStore'
+import { isSupabaseConfigured, supabase } from '../lib/supabase'
 import '../styles/internal-inventory-branch-v121.css'
 import { InventoryBranchWorkspaceV121 } from './InventoryBranchWorkspaceV121'
-import { InventoryPageV22 } from './InventoryPageV22'
 
 function unitLabel(unitId: string) {
   const unit = getInventoryUnits().find((entry) => entry.id === unitId)
@@ -19,6 +20,19 @@ function unitLabel(unitId: string) {
 
 const CATALOG_PAGE_SIZE = 6
 const CHART_PAGE_SIZE = 8
+
+function InventoryWorkspaceSkeleton() {
+  return <section className="inventory56-page inv121-page inventory56-skeleton" aria-busy="true" aria-label="Loading inventory workspace">
+    <SkeletonCard className="inventory56-skeleton-hero"><Skeleton width={190} height={12}/><Skeleton width="42%" height={32} radius={12}/><SkeletonText lines={2} widths={['64%','46%']}/></SkeletonCard>
+    <div className="inventory56-skeleton-kpis">{Array.from({length:4},(_,index)=><SkeletonCard key={index} compact />)}</div>
+    <SkeletonCard className="inventory56-skeleton-toolbar" compact><Skeleton width="100%" height={42} radius={14}/><Skeleton width="100%" height={42} radius={14}/></SkeletonCard>
+    <SkeletonCard><Skeleton width="24%" height={14}/><SkeletonList items={6} withAvatar /></SkeletonCard>
+  </section>
+}
+
+function labelize(value: string) {
+  return value.replace(/_/g, ' ').replace(/\b\w/g, (match) => match.toUpperCase())
+}
 
 export function InventoryPageV56() {
   const {
@@ -29,8 +43,13 @@ export function InventoryPageV56() {
     hasBranchAccess,
     isAllBranchesMode,
     isLoading: branchScopeLoading,
+    setActiveBranch,
   } = useBranchContext()
+  const inventoryRequestRef = useRef(0)
   const [refreshKey, setRefreshKey] = useState(0)
+  const [reloadRequest, setReloadRequest] = useState(0)
+  const [inventoryLoading, setInventoryLoading] = useState(isSupabaseConfigured)
+  const [inventoryError, setInventoryError] = useState<string | null>(null)
   const [dialog, setDialog] = useState<InventoryDialog | null>(null)
   const [catalogPage, setCatalogPage] = useState(1)
   const [valuationPage, setValuationPage] = useState(1)
@@ -39,6 +58,42 @@ export function InventoryPageV56() {
   const stocks = useMemo(() => { void refreshKey; return getBranchInventory() }, [refreshKey])
   const suppliers = useMemo(() => { void refreshKey; return getSuppliers() }, [refreshKey])
   const branches = useMemo(() => { void refreshKey; return getStoredBranches() }, [refreshKey])
+  const purchaseOrders = useMemo(() => { void refreshKey; return getPurchaseOrders() }, [refreshKey])
+  const transfers = useMemo(() => { void refreshKey; return getStockTransfers() }, [refreshKey])
+  const stockCounts = useMemo(() => { void refreshKey; return getStockCounts() }, [refreshKey])
+  const branchMap = useMemo(() => new Map(branches.map((branch) => [branch.id, branch.name])), [branches])
+  const itemMap = useMemo(() => new Map(items.map((item) => [item.id, item])), [items])
+  const inventoryBranchIds = useMemo(() => {
+    if (isAllBranchesMode) return authorizedBranchIds
+    return activeBranchId ? [activeBranchId] : []
+  }, [activeBranchId, authorizedBranchIds, isAllBranchesMode])
+  const inventoryScopeSignature = `${isAllBranchesMode ? 'all' : activeBranchId ?? 'none'}:${inventoryBranchIds.slice().sort().join(',')}:${reloadRequest}`
+
+  useEffect(() => {
+    if (!isSupabaseConfigured || !supabase || branchScopeLoading || !inventoryBranchIds.length) {
+      setInventoryLoading(false)
+      return undefined
+    }
+    const requestId = inventoryRequestRef.current + 1
+    inventoryRequestRef.current = requestId
+    setInventoryLoading(true)
+    setInventoryError(null)
+    void refreshInventoryOperationalCaches({ branchIds: isAllBranchesMode ? undefined : inventoryBranchIds })
+      .then(() => {
+        if (inventoryRequestRef.current !== requestId) return
+        setRefreshKey((current) => current + 1)
+      })
+      .catch((cause) => {
+        if (inventoryRequestRef.current !== requestId) return
+        const message = cause instanceof Error ? cause.message : 'Inventory could not be loaded from the database.'
+        console.error('[inventory load]', cause)
+        setInventoryError(message)
+      })
+      .finally(() => {
+        if (inventoryRequestRef.current === requestId) setInventoryLoading(false)
+      })
+    return undefined
+  }, [branchScopeLoading, inventoryBranchIds, inventoryScopeSignature, isAllBranchesMode])
 
   const risk = [
     { label: 'Active items', value: snapshot.inventory.activeItems, helper: 'Tracked catalog items', icon: Boxes, tone: 'normal' },
@@ -69,6 +124,35 @@ export function InventoryPageV56() {
     displayValue: formatReportCurrency(row.valuationCents),
     meta: `${row.quantityOnHand} on hand - ${row.branchName}`,
   }))
+  const comparisonBranches = availableBranches.length ? availableBranches : branches
+  const branchSummaries = comparisonBranches.map((branch) => {
+    const branchStocks = stocks.filter((stock) => stock.branchId === branch.id)
+    const stockRows = branchStocks.map((stock) => ({ stock, item: itemMap.get(stock.itemId) })).filter((row) => row.item)
+    const lowStock = branchStocks.filter((stock) => getStockStatus(stock) === 'low_stock').length
+    const outOfStock = branchStocks.filter((stock) => getStockStatus(stock) === 'out_of_stock').length
+    const valueCents = branchStocks.reduce((sum, stock) => sum + Number(stock.quantityOnHand || 0) * Number(stock.averageUnitCostCents || 0), 0)
+    const pendingOrders = purchaseOrders.filter((order) => order.branchId === branch.id && ['ordered', 'partially_received'].includes(order.status)).length
+    const openCounts = stockCounts.filter((count) => count.branchId === branch.id && ['draft', 'reviewed'].includes(count.status)).length
+    return {
+      branch,
+      itemCount: stockRows.length,
+      lowStock,
+      outOfStock,
+      valueCents,
+      pendingOrders,
+      openCounts,
+    }
+  })
+  const lowStockAlerts = stocks
+    .filter((stock) => ['low_stock', 'out_of_stock'].includes(getStockStatus(stock)))
+    .slice(0, 8)
+  const allLowStock = stocks.filter((stock) => getStockStatus(stock) === 'low_stock').length
+  const allOutOfStock = stocks.filter((stock) => getStockStatus(stock) === 'out_of_stock').length
+  const allPendingTransfers = transfers.filter((transfer) => ['draft', 'in_transit'].includes(transfer.status))
+  const allPendingOrders = purchaseOrders.filter((order) => ['ordered', 'partially_received'].includes(order.status))
+  const allOpenCounts = stockCounts.filter((count) => ['draft', 'reviewed'].includes(count.status))
+  const pendingTransfers = allPendingTransfers.slice(0, 6)
+  const pendingOrders = allPendingOrders.slice(0, 6)
 
   useEffect(() => {
     setCatalogPage((page) => Math.min(page, catalogPageCount))
@@ -76,11 +160,16 @@ export function InventoryPageV56() {
   }, [catalogPageCount, valuationPageCount])
 
   function refresh() {
-    setRefreshKey((current) => current + 1)
+    if (isSupabaseConfigured && supabase) setReloadRequest((current) => current + 1)
+    else setRefreshKey((current) => current + 1)
   }
 
-  if (branchScopeLoading) {
-    return <section className="inventory56-page"><div className="inventory56-no-branch" role="status"><Building2 size={28}/><h2>Loading inventory workspace</h2><p>Resolving your authorized clinic branch before inventory data is shown.</p></div></section>
+  if (branchScopeLoading || inventoryLoading) {
+    return <InventoryWorkspaceSkeleton />
+  }
+
+  if (inventoryError) {
+    return <section className="inventory56-page"><div className="inventory56-no-branch" role="alert"><AlertTriangle size={28}/><h2>Inventory could not be loaded</h2><p>{inventoryError}</p><Button onClick={refresh}>Retry</Button></div></section>
   }
 
   if (!isAllBranchesMode && (!hasBranchAccess || !activeBranch || !activeBranchId)) {
@@ -106,7 +195,95 @@ export function InventoryPageV56() {
       <div><strong>All Branches · comparison workspace</strong><span>Clinic-wide totals are shown below. Branch-owned actions must explicitly choose a destination/source branch before saving. Switch to Pulilan or Plaridel for normal day-to-day stock operations.</span></div>
     </div>
 
-    <InventoryPageV22 key={`${inventoryCacheKey}:${refreshKey}`} />
+    <header className="inventory56-all-hero">
+      <div>
+        <span>All branches inventory</span>
+        <h1>Inventory overview</h1>
+        <p>Compare branch stock health, purchasing pressure and pending movement. Open a branch workspace to make stock changes.</p>
+      </div>
+      <div className="inventory56-all-hero-meta">
+        <span><Building2 size={15}/> {comparisonBranches.length} active locations</span>
+        <strong>{formatReportCurrency(snapshot.inventory.inventoryValuationCents)}</strong>
+        <small>recorded inventory value</small>
+      </div>
+    </header>
+
+    <section className="inventory56-executive-strip" aria-label="All branches inventory summary">
+      <article><span>Active branches</span><strong>{comparisonBranches.length}</strong><small>locations in scope</small></article>
+      <article><span>Stock positions</span><strong>{stocks.length.toLocaleString('en-PH')}</strong><small>branch item records</small></article>
+      <article className={allLowStock ? 'tone-warning' : ''}><span>Low stock</span><strong>{allLowStock}</strong><small>needs review</small></article>
+      <article className={allOutOfStock ? 'tone-danger' : ''}><span>Out of stock</span><strong>{allOutOfStock}</strong><small>replenish soon</small></article>
+      <article><span>Pending orders</span><strong>{allPendingOrders.length}</strong><small>awaiting receipt</small></article>
+      <article><span>Movement queue</span><strong>{allPendingTransfers.length + allOpenCounts.length}</strong><small>transfers and counts</small></article>
+    </section>
+
+    <section className="inventory56-branch-grid" aria-label="Branch inventory comparison">
+      {branchSummaries.map((summary) => <article key={summary.branch.id} className="inventory56-branch-card">
+        <header>
+          <span><Building2 size={16}/></span>
+          <div><h2>{summary.branch.name}</h2><p>{summary.branch.city || summary.branch.code}</p></div>
+        </header>
+        <div className="inventory56-branch-stats">
+          <div><span>Items</span><strong>{summary.itemCount}</strong></div>
+          <div className={summary.lowStock ? 'is-warning' : ''}><span>Low</span><strong>{summary.lowStock}</strong></div>
+          <div className={summary.outOfStock ? 'is-danger' : ''}><span>Out</span><strong>{summary.outOfStock}</strong></div>
+          <div><span>Value</span><strong>{formatReportCurrency(summary.valueCents)}</strong></div>
+        </div>
+        <footer>
+          <span>{summary.pendingOrders} pending orders · {summary.openCounts} open counts</span>
+          <Button size="sm" variant="secondary" icon={<ChevronRight size={14}/>} onClick={() => setActiveBranch(summary.branch.id)}>Open workspace</Button>
+        </footer>
+      </article>)}
+    </section>
+
+    <section className="inventory56-overview-grid" aria-label="All branches inventory operations">
+      <article className="inventory56-overview-card">
+        <header><div><span>Stock risk</span><h2>Low and out-of-stock items</h2></div><AlertTriangle size={18}/></header>
+        <div className="inventory56-overview-list">
+          {lowStockAlerts.length ? lowStockAlerts.map((stock) => {
+            const item = itemMap.get(stock.itemId)
+            const status = getStockStatus(stock)
+            return <div key={stock.id} className="inventory56-alert-row">
+              <span className={status === 'out_of_stock' ? 'is-danger' : 'is-warning'}><PackageX size={15}/></span>
+              <div><strong>{item?.name ?? stock.itemId}</strong><small>{branchMap.get(stock.branchId) ?? stock.branchId} · {labelize(status)}</small></div>
+              <b>{Number(stock.quantityOnHand || 0).toLocaleString('en-PH')} {item ? unitLabel(item.unitId) : ''}</b>
+            </div>
+          }) : <p className="inventory56-calm-empty">No low-stock or out-of-stock records across active branches.</p>}
+        </div>
+      </article>
+
+      <article className="inventory56-overview-card">
+        <header><div><span>Purchasing</span><h2>Pending purchase orders</h2></div><ClipboardList size={18}/></header>
+        <div className="inventory56-overview-list">
+          {pendingOrders.length ? pendingOrders.map((order) => <div key={order.id} className="inventory56-alert-row">
+            <span><ClipboardList size={15}/></span>
+            <div><strong>{order.poNumber}</strong><small>{branchMap.get(order.branchId) ?? order.branchId} · {labelize(order.status)}</small></div>
+            <b>{formatReportCurrency(order.totalCents)}</b>
+          </div>) : <p className="inventory56-calm-empty">No pending purchase orders need attention.</p>}
+        </div>
+      </article>
+
+      <article className="inventory56-overview-card">
+        <header><div><span>Movements</span><h2>Transfer queue</h2></div><ArrowRightLeft size={18}/></header>
+        <div className="inventory56-overview-list">
+          {pendingTransfers.length ? pendingTransfers.map((transfer) => <div key={transfer.id} className="inventory56-alert-row">
+            <span><ArrowRightLeft size={15}/></span>
+            <div><strong>{transfer.transferNumber}</strong><small>{branchMap.get(transfer.fromBranchId) ?? transfer.fromBranchId} to {branchMap.get(transfer.toBranchId) ?? transfer.toBranchId}</small></div>
+            <b>{labelize(transfer.status)}</b>
+          </div>) : <p className="inventory56-calm-empty">No branch transfers are waiting.</p>}
+        </div>
+      </article>
+
+      <article className="inventory56-overview-card">
+        <header><div><span>Management</span><h2>Operations snapshot</h2></div><ClipboardCheck size={18}/></header>
+        <div className="inventory56-snapshot-stack">
+          <div><span>Active suppliers</span><strong>{suppliers.filter((supplier) => supplier.status === 'active').length}</strong></div>
+          <div><span>Open stock counts</span><strong>{stockCounts.filter((count) => ['draft', 'reviewed'].includes(count.status)).length}</strong></div>
+          <div><span>Pending transfers</span><strong>{transfers.filter((transfer) => ['draft', 'in_transit'].includes(transfer.status)).length}</strong></div>
+          <div><span>Catalog items</span><strong>{items.length}</strong></div>
+        </div>
+      </article>
+    </section>
 
     <section className="inventory56-maintenance" aria-label="Inventory catalog maintenance">
       <header className="inventory56-section-head">

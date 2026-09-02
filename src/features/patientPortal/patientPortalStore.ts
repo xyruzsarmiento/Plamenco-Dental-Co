@@ -26,7 +26,8 @@ export type PublicBookingResult = {
 
 export function getAvailableBookingTimes(serviceId: string, date: string, branchId?: string, providerId?: string): string[] {
   if (branchId) {
-    return getAvailableAppointmentSlots({ branchId, providerId, serviceId, date }).map((slot) => slot.startTime)
+    void providerId
+    return Array.from(new Set(getAvailableAppointmentSlots({ branchId, serviceId, date }).map((slot) => slot.startTime)))
   }
 
   const service = getStoredServices().find((item) => item.id === serviceId)
@@ -70,7 +71,7 @@ export async function createPublicBooking(input: PublicBookingInput): Promise<Pu
   const { data, error } = await supabase.rpc('create_public_booking', {
     p_branch_id: input.branchId,
     p_service_id: input.serviceId,
-    p_provider_id: input.providerId || null,
+    p_provider_id: null,
     p_appointment_date: input.date,
     p_start_time: input.startTime,
     p_first_name: input.firstName.trim(),

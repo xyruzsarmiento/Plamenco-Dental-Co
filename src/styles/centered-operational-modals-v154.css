@@ -1,0 +1,207 @@
+/*
+  Final operational modal layer.
+  These detail views used to inherit right-drawer positioning from older page CSS.
+  Keep the route-specific class names, but normalize them as centered dialogs.
+*/
+
+.bp153-drawer-layer,
+.bp153-dialog-layer,
+.app-shell .doc149-modal-backdrop,
+.app-shell .doc149-drawer-backdrop,
+.app-shell.role-super_admin .team-v26-modal-backdrop,
+.app-shell.role-super_admin .team-v26-drawer-backdrop {
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: 16000 !important;
+  display: grid !important;
+  place-items: center !important;
+  justify-content: normal !important;
+  align-items: center !important;
+  padding: 24px !important;
+  overflow: hidden !important;
+  background: rgba(15, 23, 42, 0.52) !important;
+  backdrop-filter: blur(10px) !important;
+  -webkit-backdrop-filter: blur(10px) !important;
+}
+
+.bp153-drawer,
+.app-shell .doc149-drawer,
+.app-shell.role-super_admin .team-v26-drawer.team-v26-account-modal-v153 {
+  position: relative !important;
+  inset: auto !important;
+  display: grid !important;
+  grid-template-rows: auto minmax(0, 1fr) auto !important;
+  width: min(860px, calc(100vw - 48px)) !important;
+  max-width: min(860px, calc(100vw - 48px)) !important;
+  height: auto !important;
+  max-height: calc(100dvh - 48px) !important;
+  margin: 0 !important;
+  overflow: hidden !important;
+  border: 1px solid rgba(191, 219, 254, 0.92) !important;
+  border-radius: 24px !important;
+  background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%) !important;
+  box-shadow: 0 34px 92px rgba(15, 23, 42, 0.34) !important;
+  transform: none !important;
+}
+
+.bp153-dialog,
+.app-shell .doc149-upload-modal,
+.app-shell.role-super_admin .team-v26-modal {
+  width: min(820px, calc(100vw - 48px)) !important;
+  max-width: min(820px, calc(100vw - 48px)) !important;
+  max-height: calc(100dvh - 48px) !important;
+  overflow: hidden !important;
+}
+
+.bp153-drawer-head,
+.app-shell .doc149-drawer > header,
+.app-shell.role-super_admin .team-v26-drawer.team-v26-account-modal-v153 > header {
+  position: sticky !important;
+  top: 0 !important;
+  z-index: 3 !important;
+  border-bottom: 1px solid #dbeafe !important;
+  background:
+    radial-gradient(circle at 98% 0%, rgba(37, 99, 235, 0.1), transparent 32%),
+    linear-gradient(135deg, #ffffff 0%, #f7fbff 100%) !important;
+}
+
+.bp153-drawer-body,
+.app-shell .doc149-detail-body,
+.app-shell.role-super_admin .team-v26-drawer-body {
+  min-width: 0 !important;
+  min-height: 0 !important;
+  overflow-x: hidden !important;
+  overflow-y: auto !important;
+}
+
+.app-shell .doc149-upload-modal {
+  display: grid !important;
+  grid-template-rows: auto minmax(0, auto) minmax(0, 1fr) !important;
+}
+
+.app-shell .doc149-upload-modal .document-upload-panel,
+.app-shell .doc149-upload-modal form,
+.app-shell.role-super_admin .team-v26-modal form {
+  min-height: 0 !important;
+  overflow-y: auto !important;
+}
+
+.app-shell .doc149-drawer footer,
+.app-shell.role-super_admin .team-v26-account-footer-v153 {
+  position: sticky !important;
+  bottom: 0 !important;
+  z-index: 3 !important;
+  border-top: 1px solid #dbeafe !important;
+  background: rgba(255, 255, 255, 0.96) !important;
+  backdrop-filter: blur(14px) !important;
+  -webkit-backdrop-filter: blur(14px) !important;
+}
+
+.bp153-drawer *,
+.app-shell .doc149-drawer *,
+.app-shell .doc149-upload-modal *,
+.app-shell.role-super_admin .team-v26-drawer *,
+.app-shell.role-super_admin .team-v26-modal * {
+  min-width: 0;
+}
+
+.bp153-detail-grid strong,
+.bp153-detail-kpis strong,
+.bp153-lines strong,
+.app-shell .doc149-drawer h2,
+.app-shell .doc149-detail-grid strong,
+.app-shell .doc149-description p,
+.app-shell.role-super_admin .team-v26-drawer h3,
+.app-shell.role-super_admin .team-v26-drawer h4,
+.app-shell.role-super_admin .team-v26-drawer strong,
+.app-shell.role-super_admin .team-v26-drawer p {
+  overflow-wrap: anywhere !important;
+  white-space: normal !important;
+}
+
+.app-shell .doc149-detail-grid strong {
+  overflow: visible !important;
+  text-overflow: clip !important;
+}
+
+@media (max-width: 900px) {
+  .bp153-drawer,
+  .app-shell .doc149-drawer,
+  .app-shell.role-super_admin .team-v26-drawer.team-v26-account-modal-v153 {
+    width: min(760px, calc(100vw - 32px)) !important;
+    max-width: min(760px, calc(100vw - 32px)) !important;
+    max-height: calc(100dvh - 32px) !important;
+  }
+
+  .bp153-detail-kpis,
+  .bp153-detail-grid,
+  .app-shell .doc149-detail-grid,
+  .app-shell.role-super_admin .team-v26-detail-grid,
+  .app-shell.role-super_admin .team-v26-branch-editor,
+  .app-shell.role-super_admin .team-v26-context-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+@media (max-width: 700px) {
+  .bp153-drawer-layer,
+  .app-shell .doc149-modal-backdrop,
+  .app-shell .doc149-drawer-backdrop,
+  .app-shell.role-super_admin .team-v26-modal-backdrop,
+  .app-shell.role-super_admin .team-v26-drawer-backdrop {
+    place-items: stretch !important;
+    padding: 0 !important;
+  }
+
+  .bp153-drawer,
+  .bp153-dialog,
+  .app-shell .doc149-drawer,
+  .app-shell .doc149-upload-modal,
+  .app-shell.role-super_admin .team-v26-modal,
+  .app-shell.role-super_admin .team-v26-drawer.team-v26-account-modal-v153 {
+    width: 100vw !important;
+    max-width: 100vw !important;
+    height: 100dvh !important;
+    max-height: none !important;
+    border-radius: 0 !important;
+    border-inline: 0 !important;
+  }
+
+  .bp153-drawer-head,
+  .app-shell .doc149-drawer > header,
+  .app-shell .doc149-upload-modal > header,
+  .app-shell.role-super_admin .team-v26-modal > header,
+  .app-shell.role-super_admin .team-v26-drawer.team-v26-account-modal-v153 > header {
+    padding: 16px !important;
+  }
+
+  .bp153-drawer-body,
+  .app-shell .doc149-detail-body,
+  .app-shell.role-super_admin .team-v26-drawer-body {
+    padding: 14px 16px !important;
+  }
+
+  .bp153-drawer-actions,
+  .app-shell .doc149-drawer footer,
+  .app-shell.role-super_admin .team-v26-account-footer-v153,
+  .app-shell.role-super_admin .team-v26-account-footer-v153 > div {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    align-items: stretch !important;
+  }
+
+  .bp153-drawer-actions .btn,
+  .app-shell .doc149-drawer footer .btn,
+  .app-shell.role-super_admin .team-v26-account-footer-v153 .btn {
+    width: 100% !important;
+  }
+}
+
+@media (max-width: 430px) {
+  .bp153-drawer-head h2,
+  .app-shell .doc149-drawer h2,
+  .app-shell.role-super_admin .team-v26-drawer h3 {
+    font-size: 1.35rem !important;
+    line-height: 1.16 !important;
+  }
+}

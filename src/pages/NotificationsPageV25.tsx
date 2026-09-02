@@ -12,6 +12,9 @@ import {
   Send,
   Sparkles,
   Stethoscope,
+  FileText,
+  PackageSearch,
+  ReceiptText,
 } from 'lucide-react'
 import { Badge } from '../components/ui/Badge'
 import { Button } from '../components/ui/Button'
@@ -26,19 +29,24 @@ import {
 import { previewEligibleAppointmentReminders, queueAppointmentReminders } from '../features/communications/reminderScheduler'
 import {
   getNotificationsByUser,
-  getUnreadNotifications,
   markAllNotificationsAsRead,
   markNotificationAsRead,
 } from '../features/notifications/notificationStore'
+import { loadCurrentUserNotifications, markAllLiveNotificationsRead, markLiveNotificationRead } from '../features/notifications/notificationLiveStore'
 import type { AppNotification, NotificationKind } from '../features/notifications/notificationTypes'
 
 const kindConfig: Record<NotificationKind, { label: string; icon: typeof Bell }> = {
   appointment: { label: 'Appointment', icon: CalendarClock },
   payment: { label: 'Payment', icon: CreditCard },
   treatment: { label: 'Treatment', icon: Stethoscope },
+  clinical: { label: 'Clinical', icon: Stethoscope },
+  financial: { label: 'Financial', icon: ReceiptText },
+  document: { label: 'Document', icon: FileText },
+  inventory: { label: 'Inventory', icon: PackageSearch },
+  expense: { label: 'Expense', icon: ReceiptText },
 }
 
-type NotificationFilter = 'all' | 'unread' | NotificationKind
+type NotificationFilter = 'all' | 'unread' | 'financial_group' | NotificationKind
 const INBOX_PAGE_SIZE = 10
 
 function labelize(value: string) {
@@ -73,15 +81,16 @@ export function NotificationsPageV25() {
   const [isQueueing, setIsQueueing] = useState(false)
   const [queueFeedback, setQueueFeedback] = useState<{ tone: 'success' | 'warning' | 'danger' | 'info'; message: string } | null>(null)
   const [inboxPage, setInboxPage] = useState(1)
+  const [liveNotifications, setLiveNotifications] = useState<AppNotification[] | null>(null)
+  const [isLoadingNotifications, setIsLoadingNotifications] = useState(true)
+  const [notificationError, setNotificationError] = useState('')
 
-  const notifications = useMemo(() => {
+  const fallbackNotifications = useMemo(() => {
     void refreshKey
     return getNotificationsByUser(userId)
   }, [refreshKey, userId])
-  const unread = useMemo(() => {
-    void refreshKey
-    return getUnreadNotifications(userId)
-  }, [refreshKey, userId])
+  const notifications = liveNotifications ?? fallbackNotifications
+  const unread = notifications.filter((notification) => !notification.isRead)
   const settings = useMemo(() => {
     void refreshKey
     return getCommunicationSettings()
@@ -108,6 +117,7 @@ export function NotificationsPageV25() {
   const filtered = notifications.filter((notification) => {
     if (filter === 'all') return true
     if (filter === 'unread') return !notification.isRead
+    if (filter === 'financial_group') return notification.kind === 'payment' || notification.kind === 'financial'
     return notification.kind === filter
   })
   const inboxPageCount = Math.max(1, Math.ceil(filtered.length / INBOX_PAGE_SIZE))
@@ -122,17 +132,65 @@ export function NotificationsPageV25() {
     setInboxPage((page) => Math.min(page, inboxPageCount))
   }, [inboxPageCount])
 
+  useEffect(() => {
+    let active = true
+    async function loadLive() {
+      setIsLoadingNotifications(true)
+      try {
+        const rows = await loadCurrentUserNotifications(100)
+        if (!active) return
+        setLiveNotifications(rows)
+        setNotificationError('')
+      } catch (cause) {
+        if (!active) return
+        setLiveNotifications(null)
+        setNotificationError(cause instanceof Error ? cause.message : 'Notifications could not be loaded.')
+      } finally {
+        if (active) setIsLoadingNotifications(false)
+      }
+    }
+    void loadLive()
+    const onRefresh = () => { void loadLive() }
+    window.addEventListener('plamenco:notifications-refresh', onRefresh)
+    return () => {
+      active = false
+      window.removeEventListener('plamenco:notifications-refresh', onRefresh)
+    }
+  }, [refreshKey])
+
   function refresh() {
     setRefreshKey((key) => key + 1)
   }
 
-  function markRead(id: string) {
-    markNotificationAsRead(id)
+  async function markRead(id: string) {
+    if (liveNotifications) {
+      try {
+        await markLiveNotificationRead(id)
+      } catch (cause) {
+        setNotificationError(cause instanceof Error ? cause.message : 'Could not mark this notification as read.')
+        return
+      }
+    } else {
+      markNotificationAsRead(id)
+    }
+    setLiveNotifications((current) => current ? current.map((row) => row.id === id ? { ...row, isRead: true, readAt: new Date().toISOString() } : row) : current)
+    window.dispatchEvent(new Event('plamenco:notifications-refresh'))
     refresh()
   }
 
-  function markAllRead() {
-    markAllNotificationsAsRead(userId)
+  async function markAllRead() {
+    if (liveNotifications) {
+      try {
+        await markAllLiveNotificationsRead()
+      } catch (cause) {
+        setNotificationError(cause instanceof Error ? cause.message : 'Could not mark notifications as read.')
+        return
+      }
+    } else {
+      markAllNotificationsAsRead(userId)
+    }
+    setLiveNotifications((current) => current ? current.map((row) => ({ ...row, isRead: true, readAt: row.readAt ?? new Date().toISOString() })) : current)
+    window.dispatchEvent(new Event('plamenco:notifications-refresh'))
     refresh()
   }
 
@@ -201,17 +259,20 @@ export function NotificationsPageV25() {
       <div className="notifications-v25-grid">
         <section className="notifications-v25-inbox">
           <header className="notifications-v25-section-head">
-            <div><span>Your inbox</span><h3>Clinic notifications</h3><p>Internal updates from the existing notification source.</p></div>
-            <div><Badge tone={unread.length ? 'warning' : 'neutral'}>{unread.length} unread</Badge><Button size="sm" variant="secondary" disabled={!unread.length} onClick={markAllRead}>Mark all read</Button></div>
+            <div><span>Your inbox</span><h3>Clinic notifications</h3><p>Database-backed updates scoped to your account and authorized branches.</p></div>
+            <div><Badge tone={unread.length ? 'warning' : 'neutral'}>{unread.length} unread</Badge><Button size="sm" variant="secondary" disabled={!unread.length} onClick={() => void markAllRead()}>Mark all read</Button></div>
           </header>
+          {notificationError && <div className="notifications-v25-feedback is-warning">{notificationError} Showing local fallback notifications if available.</div>}
 
           <div className="notifications-v25-tabs" role="tablist" aria-label="Notification filters">
-            {(['all', 'unread', 'appointment', 'payment', 'treatment'] as NotificationFilter[]).map((entry) => (
-              <button key={entry} type="button" className={filter === entry ? 'is-active' : ''} onClick={() => setFilter(entry)}>{labelize(entry)}</button>
+            {(['all', 'unread', 'appointment', 'clinical', 'financial_group', 'document'] as NotificationFilter[]).map((entry) => (
+              <button key={entry} type="button" className={filter === entry ? 'is-active' : ''} onClick={() => setFilter(entry)}>{entry === 'financial_group' ? 'Financial' : labelize(entry)}</button>
             ))}
           </div>
 
-          {filtered.length === 0 ? (
+          {isLoadingNotifications ? (
+            <div className="notifications-v25-empty"><Bell size={28} /><h3>Loading notifications</h3><p>Checking your authorized inbox.</p></div>
+          ) : filtered.length === 0 ? (
             <div className="notifications-v25-empty"><Sparkles size={28} /><h3>You're all caught up</h3><p>No notifications match this view.</p></div>
           ) : (
             <div className="notifications-v25-list">
@@ -242,7 +303,7 @@ export function NotificationsPageV25() {
                 <article><span>Status</span><strong>{selected.isRead ? 'Read' : 'Unread'}</strong></article>
                 <article><span>Published</span><strong>{selected.publishedAt ? formatDate(selected.publishedAt) : 'Not recorded'}</strong></article>
               </section>
-              {!selected.isRead && <Button onClick={() => markRead(selected.id)}><CheckCheck size={16} /> Mark as read</Button>}
+              {!selected.isRead && <Button onClick={() => void markRead(selected.id)}><CheckCheck size={16} /> Mark as read</Button>}
             </>
           ) : <div className="notifications-v25-empty"><Bell size={28} /><h3>Select a notification</h3><p>Choose an inbox item to review its details.</p></div>}
         </aside>

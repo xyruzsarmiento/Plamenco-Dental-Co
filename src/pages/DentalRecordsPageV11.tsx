@@ -28,6 +28,8 @@ import {
 } from '../features/dentalRecords/dentalRecordStore'
 import type { DentalRecord, DentalRecordFormValues } from '../features/dentalRecords/dentalRecordTypes'
 import { getAppointmentsByPatient } from '../features/appointments/appointmentStore'
+import { getStoredBranches } from '../features/branches/branchStore'
+import { getStoredProviders } from '../features/dentists/dentistStore'
 import { getStoredPatients } from '../features/patients/patientStore'
 import { getTreatmentsByPatient } from '../features/treatments/treatmentStore'
 
@@ -80,6 +82,8 @@ function initials(firstName: string, lastName: string) {
 
 export function DentalRecordsPageV11() {
   const patients = useMemo(() => [...getStoredPatients()].sort((a, b) => a.lastName.localeCompare(b.lastName)), [])
+  const branchMap = useMemo(() => new Map(getStoredBranches().map((branch) => [branch.id, branch.name])), [])
+  const providerMap = useMemo(() => new Map(getStoredProviders().map((provider) => [provider.id, provider.displayName])), [])
   const [patientSearch, setPatientSearch] = useState('')
   const [selectedPatientId, setSelectedPatientId] = useState<string>(patients[0]?.patientId ?? '')
   const [recordDraft, setRecordDraft] = useState<DentalRecordFormValues>(() => createEmptyRecordValues(patients[0]?.patientId ?? ''))
@@ -113,11 +117,14 @@ export function DentalRecordsPageV11() {
       id: `record-${record.id}`,
       date: record.recordDate || record.createdAt,
       kind: 'record' as const,
-      heading: record.chiefComplaint || 'Clinical record',
-      summary: record.diagnosis || record.assessment || 'General assessment',
-      description: record.treatmentPerformed || record.treatmentNotes || record.findings || record.treatmentPlan || 'No detailed notes available.',
+      heading: record.chiefComplaint || 'Clinical visit documentation',
+      summary: record.diagnosis || record.assessment || 'Clinical assessment',
+      description: record.clinicalFindings || record.findings || record.clinicalNotes || record.treatmentPerformed || 'No detailed notes available.',
       status: record.status,
-      provider: record.createdBy || 'Clinical team',
+      provider: record.providerNameSnapshot || (record.providerId ? providerMap.get(record.providerId) : '') || record.createdBy || 'Clinical team',
+      branch: record.branchId ? branchMap.get(record.branchId) ?? 'Unknown branch' : 'Branch not recorded',
+      appointment: record.appointmentNumber || record.relatedAppointmentId || '',
+      linkedTreatments: patientTreatments.filter((treatment) => treatment.dentalRecordId === record.id).length,
     }))
     const appointments = patientAppointments.map((appointment) => ({
       id: `appointment-${appointment.id}`,
@@ -139,14 +146,16 @@ export function DentalRecordsPageV11() {
       status: treatment.status,
       provider: 'Treatment history',
     }))
-    return [...records, ...appointments, ...treatments].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
-  }, [patientAppointments, patientRecords, patientTreatments])
+    void appointments
+    void treatments
+    return records.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+  }, [branchMap, patientAppointments, patientRecords, patientTreatments, providerMap])
 
   const mostRecentVisit = useMemo(() => {
-    const dates = [...patientRecords.map((record) => record.recordDate), ...patientAppointments.map((appointment) => appointment.date), ...patientTreatments.map((treatment) => treatment.treatmentDate)].filter(Boolean)
+    const dates = patientRecords.map((record) => record.recordDate).filter(Boolean)
     if (!dates.length) return 'No visit yet'
     return formatDate(dates.reduce((latest, current) => current > latest ? current : latest, dates[0]))
-  }, [patientAppointments, patientRecords, patientTreatments])
+  }, [patientRecords])
 
   const nextAppointment = patientAppointments.find((appointment) => appointment.date >= new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Manila' }) && !['cancelled', 'no_show', 'completed', 'rejected'].includes(appointment.status))
   const followUps = patientRecords.filter((record) => record.followUpRequired || record.followUpDate)
@@ -259,13 +268,13 @@ export function DentalRecordsPageV11() {
   }
 
   return (
-    <PageScaffold title="Dental Records" description="Clinical documentation, visit history, follow-up, and care continuity.">
+    <PageScaffold title="Dental Records" description="Clinical visit documentation: findings, diagnosis, notes, and finalized care summaries.">
       <section className="dr11-page">
         <header className="dr11-command-header">
           <div>
             <span className="dr11-kicker">Clinical records workspace</span>
-            <h2>Patient clinical record</h2>
-            <p>Review medical context, visit documentation, appointments and treatment history from one clinical workspace.</p>
+            <h2>Visit documentation</h2>
+            <p>Document what happened clinically during a visit. Treatment plans and procedure execution stay in their own workspaces.</p>
           </div>
           <Button onClick={openCreateRecord} icon={<ClipboardPlus size={17} />}>New clinical record</Button>
         </header>
@@ -368,7 +377,7 @@ export function DentalRecordsPageV11() {
 
             <section className="dr11-timeline-card">
               <div className="dr11-section-head dr11-timeline-head">
-                <div><span className="dr11-kicker">Longitudinal history</span><h3>Clinical timeline</h3><p>Appointments, clinical records and completed treatment activity in chronological context.</p></div>
+              <div><span className="dr11-kicker">Longitudinal history</span><h3>Clinical record timeline</h3><p>Visit documentation only: complaint, findings, diagnosis, notes, and finalized/amended status.</p></div>
                 <span className="dr11-count-pill">{timeline.length} entries</span>
               </div>
 
@@ -394,7 +403,7 @@ export function DentalRecordsPageV11() {
                           </div>
                           <strong className="dr11-event-summary">{entry.summary}</strong>
                           <p>{entry.description}</p>
-                          <div className="dr11-event-footer"><span>{entry.provider}</span>{record && <button type="button" onClick={(event) => { event.stopPropagation(); setSelectedRecord(record) }}>View record</button>}</div>
+                          <div className="dr11-event-footer"><span>{entry.provider}</span><span>{entry.branch}</span>{entry.appointment && <span>Appointment {entry.appointment}</span>}{entry.linkedTreatments > 0 && <span>{entry.linkedTreatments} linked treatment{entry.linkedTreatments === 1 ? '' : 's'}</span>}{record && <button type="button" onClick={(event) => { event.stopPropagation(); setSelectedRecord(record) }}>View record</button>}</div>
                         </div>
                       </article>
                     )

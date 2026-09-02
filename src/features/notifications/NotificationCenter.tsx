@@ -1,4 +1,4 @@
-import { Bell, CalendarClock, CheckCheck, CreditCard, Sparkles, Stethoscope, UserRound } from 'lucide-react'
+import { Bell, CalendarClock, CheckCheck, CreditCard, FileText, PackageSearch, ReceiptText, Sparkles, Stethoscope, UserRound } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { Badge } from '../../components/ui/Badge'
 import { Button } from '../../components/ui/Button'
@@ -18,6 +18,11 @@ const kindConfig: Record<NotificationKind, { label: string; icon: typeof Bell }>
   appointment: { label: 'Appointment', icon: CalendarClock },
   payment: { label: 'Payment', icon: CreditCard },
   treatment: { label: 'Treatment', icon: Stethoscope },
+  clinical: { label: 'Clinical', icon: Stethoscope },
+  financial: { label: 'Financial', icon: ReceiptText },
+  document: { label: 'Document', icon: FileText },
+  inventory: { label: 'Inventory', icon: PackageSearch },
+  expense: { label: 'Expense', icon: ReceiptText },
 }
 
 function formatDate(value: string) {

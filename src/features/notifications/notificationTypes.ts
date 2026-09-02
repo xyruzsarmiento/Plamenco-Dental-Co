@@ -1,4 +1,4 @@
-export type NotificationKind = 'appointment' | 'payment' | 'treatment'
+export type NotificationKind = 'appointment' | 'payment' | 'treatment' | 'clinical' | 'financial' | 'document' | 'inventory' | 'expense'
 export type NotificationAction =
   | 'booking_received'
   | 'appointment_requested'
@@ -10,6 +10,11 @@ export type NotificationAction =
   | 'appointment_no_show'
   | 'no_show_follow_up'
   | 'payment_received'
+  | 'receipt_issued'
+  | 'refund_completed'
+  | 'document_uploaded'
+  | 'inventory_alert'
+  | 'expense_alert'
   | 'outstanding_balance'
   | 'treatment_reminder'
   | 'follow_up_reminder'

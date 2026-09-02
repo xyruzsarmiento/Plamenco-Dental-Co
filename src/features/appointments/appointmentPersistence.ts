@@ -26,6 +26,11 @@ export function mapAppointmentRow(row: Record<string, any>): Appointment {
     patientId: patientReferenceFromDatabaseId(String(row.patient_id ?? '')),
     branchId: row.branch_id ?? undefined,
     providerId: row.provider_id ?? undefined,
+    proposedProviderId: row.proposed_provider_id ?? undefined,
+    providerAcceptedAt: row.provider_accepted_at ?? undefined,
+    providerAcceptedBy: row.provider_accepted_by ?? undefined,
+    providerDeclinedAt: row.provider_declined_at ?? undefined,
+    providerDeclinedBy: row.provider_declined_by ?? undefined,
     serviceId: String(row.service_id ?? ''),
     operatoryId: row.operatory_id ?? undefined,
     date: row.appointment_date ?? '',
@@ -69,10 +74,71 @@ function replaceCachedAppointment(confirmed: Appointment) {
 
 function mutationError(message: string, cause?: { message?: string; code?: string } | null) {
   if (import.meta.env.DEV && cause) console.error('[appointment persistence]', cause)
-  if (cause?.code === '23P01' || String(cause?.message ?? '').toLowerCase().includes('overlap')) {
+  const rawMessage = String(cause?.message ?? '')
+  const normalized = rawMessage.toLowerCase()
+  if (cause?.code === 'PGRST202' || normalized.includes('assign_appointment_provider') || normalized.includes('nominate_appointment_provider') || normalized.includes('accept_nominated_appointment') || normalized.includes('decline_nominated_appointment')) {
+    return new Error('Dentist assignment and acceptance are not installed in the clinic database yet. No changes were saved.')
+  }
+  if (cause?.code === '42501') {
+    return new Error(rawMessage || 'You do not have permission to perform this appointment action.')
+  }
+  if (cause?.code === '23P01' || normalized.includes('overlap')) {
     return new Error('The appointment could not be saved because that time slot is no longer available.')
   }
+  if (normalized.includes('not assigned to the selected branch') || normalized.includes('appointment branch')) {
+    return new Error('This dentist is not assigned to the selected branch.')
+  }
+  if (normalized.includes('already has another appointment at this time') || normalized.includes('already has an appointment during this time')) {
+    return new Error('This dentist already has an appointment during this time.')
+  }
+  if (normalized.includes('only the assigned dentist can update')) {
+    return new Error('Only the assigned dentist can update this clinical appointment step.')
+  }
+  if (normalized.includes('not assigned to this appointment branch')) {
+    return new Error('This dentist is not assigned to the appointment branch.')
+  }
+  if (normalized.includes('choose and confirm a dentist')) {
+    return new Error('Choose and confirm a dentist before confirming this appointment.')
+  }
+  if (normalized.includes('use the reschedule workflow')) {
+    return new Error('Use the reschedule workflow to change appointment date or time.')
+  }
+  if (normalized.includes('matching appointment')) {
+    return new Error('This patient already has a matching appointment at this time.')
+  }
+  if (normalized.includes('not available at the requested time')) {
+    return new Error('This dentist is not available at the requested time.')
+  }
+  if (normalized.includes('not available for that date and time')) {
+    return new Error('The selected dentist is not available for that date and time.')
+  }
+  if (normalized.includes('inactive and cannot be assigned')) {
+    return new Error('This dentist is inactive and cannot be assigned.')
+  }
+  if (normalized.includes('already been updated')) {
+    return new Error('This appointment has already been updated.')
+  }
+  if (normalized.includes('missing a branch')) {
+    return new Error('This appointment request is missing a branch. No changes were saved.')
+  }
   return new Error(message)
+}
+
+function patientBookingError(cause?: { message?: string; code?: string } | null) {
+  if (import.meta.env.DEV && cause) console.error('[patient appointment request]', cause)
+  const message = String(cause?.message ?? '').toLowerCase()
+  if (cause?.code === '42501' || message.includes('authentication') || message.includes('session expired')) {
+    return new Error('Your session expired. Please sign in again.')
+  }
+  if (message.includes('closed')) return new Error('The clinic is closed at the selected time.')
+  if (message.includes('already') || message.includes('duplicate')) return new Error('This appointment request already exists.')
+  if (message.includes('no longer available') || message.includes('operatory') || message.includes('slot') || cause?.code === '23P01') {
+    return new Error('This time is no longer available. Please choose another slot.')
+  }
+  if (message.includes('service')) return new Error('Selected service is not available for patient booking at this branch.')
+  if (message.includes('branch')) return new Error('Selected branch is not available.')
+  if (message.includes('time') || message.includes('date')) return new Error('Choose a valid appointment date and time.')
+  return new Error('Appointment request could not be saved. No appointment was created.')
 }
 
 async function appendHistoryAfterPersistence(input: {
@@ -200,36 +266,34 @@ export async function createPatientPortalAppointmentPersisted(input: {
 }): Promise<Appointment> {
   if (!supabase) throw new Error('Clinic database is not configured. Appointment requests cannot be submitted safely.')
 
-  const { data, error } = await supabase.rpc('create_patient_portal_appointment', {
+  let { data, error } = await supabase.rpc('create_patient_appointment_request', {
     p_branch_id: input.branchId,
     p_service_id: input.serviceId,
-    p_provider_id: input.providerId || null,
     p_appointment_date: input.date,
     p_start_time: input.startTime,
     p_notes: input.notes?.trim() ?? '',
   })
 
-  if (error || !data) throw mutationError('The appointment request could not be submitted.', error)
+  if (error && (error.code === 'PGRST202' || String(error.message ?? '').toLowerCase().includes('create_patient_appointment_request'))) {
+    const fallback = await supabase.rpc('create_patient_portal_appointment', {
+      p_branch_id: input.branchId,
+      p_service_id: input.serviceId,
+      p_provider_id: null,
+      p_appointment_date: input.date,
+      p_start_time: input.startTime,
+      p_notes: input.notes?.trim() ?? '',
+    })
+    data = fallback.data
+    error = fallback.error
+  }
+
+  if (error || !data) throw patientBookingError(error)
   const row = Array.isArray(data) ? data[0] : data
-  if (!row) throw new Error('The clinic database did not return the saved appointment.')
+  if (!row) throw new Error('Appointment request could not be saved. No appointment was created.')
 
   const confirmed = mapAppointmentRow(row as Record<string, any>)
   replaceCachedAppointment(confirmed)
   return confirmed
-}
-
-function operationalFields(nextStatus: AppointmentStatus, actor: string) {
-  const now = new Date().toISOString()
-  switch (nextStatus) {
-    case 'checked_in': return { checked_in_at: now, checked_in_by: actor }
-    case 'waiting': return { waiting_at: now }
-    case 'in_progress': return { started_at: now, started_by: actor }
-    case 'completed': return { completed_at: now, completed_by: actor }
-    case 'cancelled': return { cancelled_at: now, cancelled_by: actor }
-    case 'no_show': return { no_show_at: now, no_show_by: actor }
-    case 'rescheduled': return { rescheduled_at: now, rescheduled_by: actor }
-    default: return {}
-  }
 }
 
 function statusEventType(nextStatus: AppointmentStatus) {
@@ -256,35 +320,194 @@ export async function transitionAppointmentStatusPersisted(
     throw new Error(`This appointment cannot move from ${current.status.replaceAll('_', ' ')} to ${nextStatus.replaceAll('_', ' ')}.`)
   }
 
-  let request = supabase
-    .from('appointments')
-    .update({ status: nextStatus, ...operationalFields(nextStatus, context.actor) })
-    .eq('id', id)
-    .eq('status', current.status)
-
-  if (context.expectedUpdatedAt) request = request.eq('updated_at', context.expectedUpdatedAt)
-
-  const { data, error } = await request.select('*').maybeSingle()
-  if (error) throw mutationError('The appointment status could not be changed.', error)
-  if (!data) throw new Error('This appointment has already changed. Refresh and try again.')
-
-  const confirmed = mapAppointmentRow(data as Record<string, any>)
-  replaceCachedAppointment(confirmed)
-  await appendHistoryAfterPersistence({
-    appointment: confirmed,
-    eventType: statusEventType(nextStatus),
-    actor: context.actor,
-    fromStatus: current.status,
-    toStatus: nextStatus,
-    reason: context.reason,
-    notes: context.notes,
+  const { data, error } = await supabase.rpc('transition_appointment_status_v134', {
+    p_appointment_id: id,
+    p_next_status: nextStatus,
+    p_actor: context.actor,
+    p_reason: context.reason ?? '',
+    p_notes: context.notes ?? '',
+    p_expected_updated_at: context.expectedUpdatedAt ?? null,
   })
+  if (error || !data) throw mutationError('The appointment status could not be changed.', error)
+  const row = Array.isArray(data) ? data[0] : data
+  if (!row) throw new Error('This appointment has already changed. Refresh and try again.')
+
+  const confirmed = mapAppointmentRow(row as Record<string, any>)
+  replaceCachedAppointment(confirmed)
   recordAuditEntry({
     user: context.actor,
     action: 'appointment_status_changed',
     entity: 'appointment',
     entityId: confirmed.appointmentNumber ?? confirmed.id,
     metadata: { appointmentId: confirmed.id, fromStatus: current.status, toStatus: nextStatus, reason: context.reason },
+  })
+  return confirmed
+}
+
+export async function assignAppointmentProviderPersisted(input: {
+  appointmentId: string
+  providerId: string
+  actor: string
+  expectedUpdatedAt?: string
+}): Promise<Appointment> {
+  if (!supabase) throw new Error('Clinic database is not configured. Appointment assignment cannot be saved safely.')
+  const current = getStoredAppointments().find((appointment) => appointment.id === input.appointmentId)
+  if (!current) throw new Error('Appointment was not found.')
+
+  const { data, error } = await supabase.rpc('assign_appointment_provider', {
+    p_appointment_id: input.appointmentId,
+    p_provider_id: input.providerId,
+    p_actor: input.actor,
+    p_expected_updated_at: input.expectedUpdatedAt ?? null,
+  })
+
+  if (error || !data) throw mutationError('The dentist could not be assigned for this appointment request.', error)
+  const row = Array.isArray(data) ? data[0] : data
+  if (!row) throw new Error('The clinic database did not return the confirmed appointment request.')
+
+  const confirmed = mapAppointmentRow(row as Record<string, any>)
+  replaceCachedAppointment(confirmed)
+  if (current.proposedProviderId !== confirmed.proposedProviderId) {
+    await appendHistoryAfterPersistence({
+      appointment: confirmed,
+      eventType: 'provider_changed',
+      actor: input.actor,
+      notes: confirmed.notes,
+    })
+  }
+  if (current.status !== confirmed.status) {
+    await appendHistoryAfterPersistence({
+      appointment: confirmed,
+      eventType: statusEventType(confirmed.status),
+      actor: input.actor,
+      fromStatus: current.status,
+      toStatus: confirmed.status,
+      notes: confirmed.notes,
+    })
+  }
+  recordAuditEntry({
+    user: input.actor,
+    action: 'appointment_status_changed',
+    entity: 'appointment',
+    entityId: confirmed.appointmentNumber ?? confirmed.id,
+    metadata: { appointmentId: confirmed.id, providerId: confirmed.providerId, status: confirmed.status },
+  })
+  return confirmed
+}
+
+export async function acceptNominatedAppointmentPersisted(input: {
+  appointmentId: string
+  actor: string
+  expectedUpdatedAt?: string
+}): Promise<Appointment> {
+  if (!supabase) throw new Error('Clinic database is not configured. Appointment acceptance cannot be saved safely.')
+  const current = getStoredAppointments().find((appointment) => appointment.id === input.appointmentId)
+  if (!current) throw new Error('Appointment was not found.')
+
+  const { data, error } = await supabase.rpc('accept_nominated_appointment', {
+    p_appointment_id: input.appointmentId,
+    p_expected_updated_at: input.expectedUpdatedAt ?? null,
+  })
+
+  if (error || !data) throw mutationError('The appointment request could not be accepted.', error)
+  const row = Array.isArray(data) ? data[0] : data
+  if (!row) throw new Error('The clinic database did not return the accepted appointment.')
+
+  const confirmed = mapAppointmentRow(row as Record<string, any>)
+  replaceCachedAppointment(confirmed)
+  if (current.providerId !== confirmed.providerId) {
+    await appendHistoryAfterPersistence({
+      appointment: confirmed,
+      eventType: 'provider_changed',
+      actor: input.actor,
+      notes: confirmed.notes,
+    })
+  }
+  if (current.status !== confirmed.status) {
+    await appendHistoryAfterPersistence({
+      appointment: confirmed,
+      eventType: statusEventType(confirmed.status),
+      actor: input.actor,
+      fromStatus: current.status,
+      toStatus: confirmed.status,
+      notes: confirmed.notes,
+    })
+  }
+  recordAuditEntry({
+    user: input.actor,
+    action: 'appointment_status_changed',
+    entity: 'appointment',
+    entityId: confirmed.appointmentNumber ?? confirmed.id,
+    metadata: { appointmentId: confirmed.id, providerId: confirmed.providerId, status: confirmed.status },
+  })
+  return confirmed
+}
+
+export async function declineNominatedAppointmentPersisted(input: {
+  appointmentId: string
+  actor: string
+  expectedUpdatedAt?: string
+}): Promise<Appointment> {
+  if (!supabase) throw new Error('Clinic database is not configured. Appointment decline cannot be saved safely.')
+  const current = getStoredAppointments().find((appointment) => appointment.id === input.appointmentId)
+  if (!current) throw new Error('Appointment was not found.')
+
+  const { data, error } = await supabase.rpc('decline_nominated_appointment', {
+    p_appointment_id: input.appointmentId,
+    p_expected_updated_at: input.expectedUpdatedAt ?? null,
+  })
+
+  if (error || !data) throw mutationError('The appointment request could not be declined.', error)
+  const row = Array.isArray(data) ? data[0] : data
+  if (!row) throw new Error('The clinic database did not return the declined appointment request.')
+
+  const confirmed = mapAppointmentRow(row as Record<string, any>)
+  replaceCachedAppointment(confirmed)
+  if (current.proposedProviderId !== confirmed.proposedProviderId) {
+    await appendHistoryAfterPersistence({
+      appointment: confirmed,
+      eventType: 'provider_changed',
+      actor: input.actor,
+      notes: confirmed.notes,
+    })
+  }
+  recordAuditEntry({
+    user: input.actor,
+    action: 'appointment_status_changed',
+    entity: 'appointment',
+    entityId: confirmed.appointmentNumber ?? confirmed.id,
+    metadata: { appointmentId: confirmed.id, declinedProviderId: current.proposedProviderId, status: confirmed.status },
+  })
+  return confirmed
+}
+
+export async function acceptUnassignedAppointmentPersisted(input: {
+  appointmentId: string
+  providerId?: string
+  actor: string
+  expectedUpdatedAt?: string
+}): Promise<Appointment> {
+  if (!supabase) throw new Error('Clinic database is not configured. Appointment acceptance cannot be saved safely.')
+
+  const { data, error } = await supabase.rpc('accept_unassigned_appointment', {
+    p_appointment_id: input.appointmentId,
+    p_provider_id: input.providerId ?? null,
+    p_actor: input.actor,
+    p_expected_updated_at: input.expectedUpdatedAt ?? null,
+  })
+
+  if (error || !data) throw mutationError('The appointment request could not be accepted.', error)
+  const row = Array.isArray(data) ? data[0] : data
+  if (!row) throw new Error('The clinic database did not return the accepted appointment.')
+
+  const confirmed = mapAppointmentRow(row as Record<string, any>)
+  replaceCachedAppointment(confirmed)
+  recordAuditEntry({
+    user: input.actor,
+    action: 'appointment_status_changed',
+    entity: 'appointment',
+    entityId: confirmed.appointmentNumber ?? confirmed.id,
+    metadata: { appointmentId: confirmed.id, providerId: confirmed.providerId, status: confirmed.status },
   })
   return confirmed
 }
@@ -302,37 +525,24 @@ export async function rescheduleAppointmentPersisted(
     throw new Error(`This appointment cannot move from ${current.status.replaceAll('_', ' ')} to rescheduled.`)
   }
 
-  let request = supabase
-    .from('appointments')
-    .update({
-      appointment_date: values.date,
-      start_time: values.startTime,
-      end_time: values.endTime,
-      branch_id: values.branchId || null,
-      provider_id: values.providerId || null,
-      status: 'rescheduled',
-      ...operationalFields('rescheduled', context.actor),
-    })
-    .eq('id', id)
-    .eq('status', current.status)
-
-  if (context.expectedUpdatedAt) request = request.eq('updated_at', context.expectedUpdatedAt)
-
-  const { data, error } = await request.select('*').maybeSingle()
-  if (error) throw mutationError('The appointment could not be rescheduled.', error)
-  if (!data) throw new Error('This appointment has already changed. Refresh and try again.')
-
-  const confirmed = mapAppointmentRow(data as Record<string, any>)
-  replaceCachedAppointment(confirmed)
-  await appendHistoryAfterPersistence({
-    appointment: confirmed,
-    eventType: 'rescheduled',
-    actor: context.actor,
-    fromStatus: current.status,
-    toStatus: 'rescheduled',
-    reason: context.reason,
-    notes: context.notes,
+  const { data, error } = await supabase.rpc('reschedule_appointment_v134', {
+    p_appointment_id: id,
+    p_branch_id: values.branchId || null,
+    p_provider_id: values.providerId || null,
+    p_appointment_date: values.date,
+    p_start_time: values.startTime,
+    p_end_time: values.endTime,
+    p_actor: context.actor,
+    p_reason: context.reason ?? '',
+    p_notes: context.notes ?? '',
+    p_expected_updated_at: context.expectedUpdatedAt ?? null,
   })
+  if (error || !data) throw mutationError('The appointment could not be rescheduled.', error)
+  const row = Array.isArray(data) ? data[0] : data
+  if (!row) throw new Error('This appointment has already changed. Refresh and try again.')
+
+  const confirmed = mapAppointmentRow(row as Record<string, any>)
+  replaceCachedAppointment(confirmed)
   recordAuditEntry({
     user: context.actor,
     action: 'appointment_status_changed',

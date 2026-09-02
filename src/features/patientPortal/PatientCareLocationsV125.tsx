@@ -19,7 +19,7 @@ export function PatientCareLocationsV125() {
 
   useEffect(() => {
     if (!patientId) return
-    const sync = () => setTarget(document.querySelector<HTMLElement>('.pv3-content, .pv3-main, main.pv3-content'))
+    const sync = () => setTarget(document.querySelector<HTMLElement>('.pv125-care-locations-slot'))
     sync()
     const observer = new MutationObserver(sync)
     observer.observe(document.body, { childList: true, subtree: true })

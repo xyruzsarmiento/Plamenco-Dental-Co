@@ -1,0 +1,834 @@
+.pv3-prescriptions-v4 {
+  width: min(100%, 1420px);
+  margin: 0 auto;
+  gap: 18px !important;
+}
+
+.pv3-prescriptions-v4 .pv3-rx-hero-redesign {
+  position: relative;
+  display: grid !important;
+  grid-template-columns: 54px minmax(0, 1fr) auto !important;
+  align-items: center !important;
+  gap: 18px !important;
+  min-height: 0 !important;
+  padding: 22px 24px !important;
+  border: 1px solid #cfe0ff !important;
+  border-radius: 22px !important;
+  background:
+    linear-gradient(135deg, rgba(239, 246, 255, .98), rgba(255, 255, 255, .98) 56%, rgba(248, 251, 255, .96)),
+    #fff !important;
+  box-shadow: 0 18px 48px rgba(15, 23, 42, .06) !important;
+  overflow: hidden !important;
+}
+
+.pv3-prescriptions-v4 .pv3-rx-hero-redesign::before {
+  content: none !important;
+  display: none !important;
+}
+
+.pv3-prescriptions-v4 .pv3-rx-hero-icon,
+.pv3-prescriptions-v4 .pv3-rx-record-icon {
+  display: grid;
+  place-items: center;
+  color: #2563eb;
+  border: 1px solid #cfe0ff;
+  background: linear-gradient(145deg, #eef5ff, #fff);
+  box-shadow: 0 12px 26px rgba(37, 99, 235, .1);
+}
+
+.pv3-prescriptions-v4 .pv3-rx-hero-icon {
+  width: 54px;
+  height: 54px;
+  border-radius: 18px;
+}
+
+.pv3-prescriptions-v4 .pv3-rx-hero-redesign > div:nth-child(2) {
+  display: grid !important;
+  gap: 6px !important;
+  min-width: 0 !important;
+}
+
+.pv3-prescriptions-v4 .pv3-rx-hero-redesign > div:nth-child(2) > span {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 7px !important;
+  width: max-content !important;
+  max-width: 100% !important;
+  padding: 0 !important;
+  border: 0 !important;
+  background: transparent !important;
+  color: #2563eb !important;
+  font-size: .68rem !important;
+  font-weight: 900 !important;
+  letter-spacing: .08em !important;
+  line-height: 1.1 !important;
+  text-transform: uppercase !important;
+}
+
+.pv3-prescriptions-v4 .pv3-rx-hero-redesign h2 {
+  margin: 0 !important;
+  color: #0f172a !important;
+  font-size: clamp(1.75rem, 2.5vw, 2.35rem) !important;
+  line-height: 1.06 !important;
+  letter-spacing: 0 !important;
+}
+
+.pv3-prescriptions-v4 .pv3-rx-hero-redesign p,
+.pv3-prescriptions-v4 .pv3-rx-hero-redesign small {
+  max-width: 720px !important;
+  margin: 0 !important;
+  color: #5f7088 !important;
+  line-height: 1.55 !important;
+}
+
+.pv3-prescriptions-v4 .pv3-rx-hero-redesign p {
+  font-size: .9rem !important;
+}
+
+.pv3-prescriptions-v4 .pv3-rx-hero-redesign small {
+  font-size: .78rem !important;
+}
+
+.pv3-prescriptions-v4 .pv3-rx-hero-redesign aside {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-end !important;
+  gap: 10px !important;
+  min-width: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.pv3-prescriptions-v4 .pv3-rx-hero-redesign aside div {
+  display: grid !important;
+  align-content: center !important;
+  gap: 3px !important;
+  min-width: 104px !important;
+  min-height: 64px !important;
+  padding: 11px 13px !important;
+  border: 1px solid #dbe7f6 !important;
+  border-radius: 16px !important;
+  background: rgba(255, 255, 255, .9) !important;
+  box-shadow: 0 12px 28px rgba(15, 23, 42, .045) !important;
+}
+
+.pv3-prescriptions-v4 .pv3-rx-hero-redesign aside strong {
+  max-width: 126px !important;
+  color: #111827 !important;
+  font-size: 1.15rem !important;
+  line-height: 1.05 !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+
+.pv3-prescriptions-v4 .pv3-rx-hero-redesign aside span {
+  color: #718096 !important;
+  font-size: .63rem !important;
+  font-weight: 900 !important;
+  letter-spacing: .05em !important;
+  text-transform: uppercase !important;
+}
+
+.pv3-prescriptions-v4 .pv3-rx-summary-redesign {
+  display: grid !important;
+  grid-template-columns: 42px minmax(0, 1fr) auto !important;
+  align-items: center !important;
+  gap: 12px !important;
+  padding: 14px 16px !important;
+  border: 1px solid #dbe7f6 !important;
+  border-radius: 18px !important;
+  background: #fff !important;
+  box-shadow: 0 12px 32px rgba(15, 23, 42, .045) !important;
+}
+
+.pv3-prescriptions-v4 .pv3-rx-summary-redesign > svg {
+  width: 42px;
+  height: 42px;
+  padding: 11px;
+  color: #2563eb;
+  border: 1px solid #dbeafe;
+  border-radius: 14px;
+  background: #eff6ff;
+}
+
+.pv3-prescriptions-v4 .pv3-rx-summary-redesign > div {
+  display: grid !important;
+  gap: 3px !important;
+  min-width: 0 !important;
+  margin: 0 !important;
+}
+
+.pv3-prescriptions-v4 .pv3-rx-summary-redesign strong {
+  color: #111827 !important;
+  font-size: .98rem !important;
+  line-height: 1.25 !important;
+}
+
+.pv3-prescriptions-v4 .pv3-rx-summary-redesign span {
+  color: #64748b !important;
+  font-size: .8rem !important;
+  line-height: 1.45 !important;
+  overflow-wrap: anywhere !important;
+}
+
+.pv3-prescriptions-v4 .pv3-rx-toolbar-redesign {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 12px !important;
+  flex-wrap: wrap !important;
+  padding: 10px !important;
+  border: 1px solid #dbe7f6 !important;
+  border-radius: 18px !important;
+  background: #fff !important;
+  box-shadow: 0 10px 26px rgba(15, 23, 42, .035) !important;
+}
+
+.pv3-prescriptions-v4 .pv3-rx-filter-tabs {
+  display: flex !important;
+  gap: 6px !important;
+  padding: 4px !important;
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 14px !important;
+  background: #f8fafc !important;
+  overflow-x: auto;
+}
+
+.pv3-prescriptions-v4 .pv3-rx-filter-tabs button {
+  min-height: 34px !important;
+  padding: 0 12px !important;
+  border: 0 !important;
+  border-radius: 10px !important;
+  background: transparent !important;
+  color: #64748b !important;
+  font-size: .76rem !important;
+  font-weight: 900 !important;
+  white-space: nowrap !important;
+  cursor: pointer !important;
+}
+
+.pv3-prescriptions-v4 .pv3-rx-filter-tabs button.is-active {
+  color: #fff !important;
+  background: #2563eb !important;
+  box-shadow: 0 9px 20px rgba(37, 99, 235, .22) !important;
+}
+
+.pv3-prescriptions-v4 .pv3-rx-toolbar-redesign label {
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  width: min(320px, 100%) !important;
+  min-height: 42px !important;
+  padding: 0 13px !important;
+  border: 1px solid #d8e2ee !important;
+  border-radius: 14px !important;
+  background: #fff !important;
+  color: #64748b !important;
+}
+
+.pv3-prescriptions-v4 .pv3-rx-toolbar-redesign input {
+  width: 100% !important;
+  min-width: 0 !important;
+  border: 0 !important;
+  outline: 0 !important;
+  background: transparent !important;
+  color: #111827 !important;
+  font: inherit !important;
+  font-size: .84rem !important;
+}
+
+.pv3-prescriptions-v4 .pv3-rx-registry-redesign {
+  display: grid !important;
+  gap: 14px !important;
+  padding: 16px !important;
+  border: 1px solid #dbe7f6 !important;
+  border-radius: 22px !important;
+  background: linear-gradient(180deg, #fff, #f9fbff) !important;
+  box-shadow: 0 18px 46px rgba(15, 23, 42, .055) !important;
+}
+
+.pv3-prescriptions-v4 .pv3-rx-registry-redesign > header {
+  display: flex !important;
+  align-items: flex-end !important;
+  justify-content: space-between !important;
+  gap: 14px !important;
+  padding: 2px 2px 4px !important;
+}
+
+.pv3-prescriptions-v4 .pv3-rx-registry-redesign > header span {
+  color: #2563eb !important;
+  font-size: .67rem !important;
+  font-weight: 900 !important;
+  letter-spacing: .09em !important;
+  text-transform: uppercase !important;
+}
+
+.pv3-prescriptions-v4 .pv3-rx-registry-redesign > header h3 {
+  margin: 4px 0 0 !important;
+  color: #111827 !important;
+  font-size: 1.18rem !important;
+  line-height: 1.2 !important;
+}
+
+.pv3-prescriptions-v4 .pv3-rx-registry-redesign > header p {
+  max-width: 680px;
+  margin: 4px 0 0;
+  color: #64748b;
+  font-size: .8rem;
+  line-height: 1.5;
+}
+
+.pv3-prescriptions-v4 .pv3-rx-registry-redesign > header small {
+  flex: 0 0 auto;
+  color: #64748b !important;
+  font-size: .75rem !important;
+  font-weight: 900 !important;
+}
+
+.pv3-prescriptions-v4 .pv3-rx-card-grid-redesign {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  min-width: 0;
+}
+
+.pv3-prescriptions-v4 .pv3-rx-record-redesign {
+  display: grid !important;
+  grid-template-columns: 42px minmax(0, 1fr) auto !important;
+  grid-template-rows: none !important;
+  align-items: stretch !important;
+  gap: 14px !important;
+  min-width: 0 !important;
+  min-height: 0 !important;
+  width: 100% !important;
+  padding: 16px !important;
+  border: 1px solid #dbe5f4 !important;
+  border-radius: 20px !important;
+  background: #fff !important;
+  color: inherit !important;
+  text-align: left !important;
+  box-shadow: 0 14px 34px rgba(15, 23, 42, .055) !important;
+  cursor: pointer !important;
+  transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease, background .18s ease !important;
+}
+
+.pv3-prescriptions-v4 .pv3-rx-record-redesign:hover {
+  transform: translateY(-2px);
+  border-color: #b9d0ff !important;
+  box-shadow: 0 20px 42px rgba(37, 99, 235, .12) !important;
+}
+
+.pv3-prescriptions-v4 .pv3-rx-record-redesign:focus-visible {
+  outline: 3px solid rgba(37, 99, 235, .24) !important;
+  outline-offset: 3px !important;
+}
+
+.pv3-prescriptions-v4 .pv3-rx-record-icon {
+  width: 42px;
+  height: 42px;
+  border-radius: 14px;
+}
+
+.pv3-prescriptions-v4 .pv3-rx-record-main {
+  display: grid;
+  gap: 10px;
+  min-width: 0;
+}
+
+.pv3-prescriptions-v4 .pv3-rx-record-main header {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 10px !important;
+  min-width: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  background: transparent !important;
+}
+
+.pv3-prescriptions-v4 .pv3-rx-record-main header small {
+  color: #64748b !important;
+  font-size: .74rem !important;
+  font-weight: 800 !important;
+  white-space: nowrap !important;
+}
+
+.pv3-prescriptions-v4 .pv3-rx-record-main h3 {
+  margin: 0 !important;
+  color: #111827 !important;
+  font-size: 1.08rem !important;
+  line-height: 1.25 !important;
+  overflow-wrap: anywhere !important;
+}
+
+.pv3-prescriptions-v4 .pv3-rx-strength {
+  margin: -3px 0 0 !important;
+  color: #52647a !important;
+  font-size: .82rem !important;
+  line-height: 1.35 !important;
+}
+
+.pv3-prescriptions-v4 .pv3-rx-dose-grid {
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  gap: 9px !important;
+  min-width: 0 !important;
+}
+
+.pv3-prescriptions-v4 .pv3-rx-instruction,
+.pv3-prescriptions-v4 .pv3-rx-duration {
+  display: grid !important;
+  gap: 5px !important;
+  min-width: 0 !important;
+  padding: 11px 12px !important;
+  border: 1px solid #e1e9f5 !important;
+  border-left: 3px solid #2563eb !important;
+  border-radius: 14px !important;
+  background: #f8fbff !important;
+}
+
+.pv3-prescriptions-v4 .pv3-rx-instruction span,
+.pv3-prescriptions-v4 .pv3-rx-duration span {
+  color: #8a98ac !important;
+  font-size: .62rem !important;
+  font-weight: 900 !important;
+  letter-spacing: .08em !important;
+  text-transform: uppercase !important;
+}
+
+.pv3-prescriptions-v4 .pv3-rx-instruction strong,
+.pv3-prescriptions-v4 .pv3-rx-duration strong {
+  color: #111827 !important;
+  font-size: .9rem !important;
+  line-height: 1.3 !important;
+  overflow-wrap: anywhere !important;
+}
+
+.pv3-prescriptions-v4 .pv3-rx-directions {
+  margin: 0 !important;
+  color: #52647a !important;
+  font-size: .82rem !important;
+  line-height: 1.55 !important;
+  overflow-wrap: anywhere !important;
+}
+
+.pv3-prescriptions-v4 .pv3-rx-more {
+  display: inline-flex;
+  width: max-content;
+  max-width: 100%;
+  padding: 6px 9px;
+  border: 1px solid #dbeafe;
+  border-radius: 999px;
+  background: #eff6ff;
+  color: #1d4ed8;
+  font-size: .7rem;
+  font-weight: 850;
+}
+
+.pv3-prescriptions-v4 .pv3-rx-record-redesign footer {
+  display: flex !important;
+  align-items: center !important;
+  flex-wrap: wrap !important;
+  gap: 8px 13px !important;
+  min-width: 0 !important;
+  margin: 2px 0 0 !important;
+  padding-top: 10px !important;
+  border-top: 1px solid #e8eef7 !important;
+  color: #64748b !important;
+  font-size: .76rem !important;
+  font-weight: 800 !important;
+}
+
+.pv3-prescriptions-v4 .pv3-rx-record-redesign footer span {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 5px !important;
+  min-width: 0 !important;
+  overflow-wrap: anywhere !important;
+}
+
+.pv3-prescriptions-v4 .pv3-rx-record-redesign aside {
+  display: grid !important;
+  align-content: center !important;
+  justify-items: end !important;
+  gap: 6px !important;
+  min-width: max-content !important;
+  color: #1d4ed8 !important;
+}
+
+.pv3-prescriptions-v4 .pv3-rx-record-redesign aside b {
+  color: #1d4ed8 !important;
+  font-size: .76rem !important;
+  line-height: 1.2 !important;
+  white-space: nowrap !important;
+}
+
+.pv3-prescriptions-v4 .pv3-rx-pagination-redesign {
+  padding-top: 0 !important;
+}
+
+.pv3-prescriptions-v4 .pv3-rx-care-context-redesign {
+  padding-top: 0 !important;
+}
+
+.pv3-prescriptions-v4 .pv3-rx-care-context-redesign .pv125-care-locations {
+  padding: 15px 16px !important;
+  border: 1px solid #dbe7f6 !important;
+  border-radius: 20px !important;
+  background: #fff !important;
+  box-shadow: 0 14px 34px rgba(15, 23, 42, .045) !important;
+}
+
+.pv3-prescriptions-v4 .pv3-rx-care-context-redesign .pv125-care-locations h2 {
+  margin: 2px 0 !important;
+  font-size: 1.02rem !important;
+  line-height: 1.2 !important;
+}
+
+.pv3-prescriptions-v4 .pv3-rx-care-context-redesign .pv125-care-locations p {
+  font-size: .76rem !important;
+}
+
+.pv3-prescriptions-v4 .pv3-rx-care-context-redesign .pv125-care-locations > div {
+  grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+  gap: 9px !important;
+  margin-top: 12px !important;
+}
+
+.pv3-prescriptions-v4 .pv3-rx-care-context-redesign .pv125-care-locations article {
+  min-height: 60px !important;
+  padding: 10px !important;
+  border-radius: 14px !important;
+  box-shadow: none !important;
+}
+
+.pv3-prescriptions-v4 .pv3-rx-detail-redesign {
+  width: min(820px, calc(100vw - 32px)) !important;
+}
+
+.pv3-prescriptions-v4 .pv3-rx-detail-hero-redesign {
+  display: flex !important;
+  align-items: flex-start !important;
+  gap: 14px !important;
+  padding: 16px !important;
+  border: 1px solid #cfe0ff !important;
+  border-radius: 18px !important;
+  background: linear-gradient(135deg, #eff6ff, #fff) !important;
+}
+
+.pv3-prescriptions-v4 .pv3-rx-detail-hero-redesign > span {
+  display: grid !important;
+  place-items: center !important;
+  flex: 0 0 auto !important;
+  width: 46px !important;
+  height: 46px !important;
+  border-radius: 15px !important;
+  background: #2563eb !important;
+  color: #fff !important;
+}
+
+.pv3-prescriptions-v4 .pv3-rx-detail-hero-redesign h3 {
+  margin: 7px 0 0 !important;
+  color: #111827 !important;
+  font-size: 1.2rem !important;
+  line-height: 1.25 !important;
+  overflow-wrap: anywhere !important;
+}
+
+.pv3-prescriptions-v4 .pv3-rx-detail-hero-redesign p {
+  margin: 4px 0 0 !important;
+  color: #52647a !important;
+  font-size: .84rem !important;
+  line-height: 1.5 !important;
+}
+
+.pv3-prescriptions-v4 .pv3-rx-detail-meta-redesign {
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  gap: 10px !important;
+}
+
+.pv3-prescriptions-v4 .pv3-rx-detail-meta-redesign > div {
+  display: grid !important;
+  gap: 4px !important;
+  min-width: 0 !important;
+  padding: 12px !important;
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 14px !important;
+  background: #fff !important;
+}
+
+.pv3-prescriptions-v4 .pv3-rx-detail-meta-redesign span,
+.pv3-prescriptions-v4 .pv3-rx-detail-redesign .pv3-rx-detail-list section header span {
+  color: #718096 !important;
+  font-size: .63rem !important;
+  font-weight: 900 !important;
+  letter-spacing: .08em !important;
+  text-transform: uppercase !important;
+}
+
+.pv3-prescriptions-v4 .pv3-rx-detail-meta-redesign strong {
+  color: #111827 !important;
+  font-size: .84rem !important;
+  line-height: 1.35 !important;
+  overflow-wrap: anywhere !important;
+}
+
+.pv3-prescriptions-v4 .pv3-rx-detail-redesign .pv3-rx-detail-list {
+  display: grid !important;
+  gap: 12px !important;
+}
+
+.pv3-prescriptions-v4 .pv3-rx-detail-redesign .pv3-rx-detail-list section {
+  border-color: #dbe5f4 !important;
+  border-radius: 18px !important;
+  background: linear-gradient(180deg, #fff, #fbfdff) !important;
+}
+
+.pv3-prescriptions-v4 .pv3-rx-detail-redesign .pv3-rx-detail-list section header {
+  padding: 0 !important;
+  border: 0 !important;
+  background: transparent !important;
+}
+
+.pv3-rx-detail-redesign {
+  width: min(820px, calc(100vw - 32px)) !important;
+}
+
+.pv3-rx-detail-hero-redesign {
+  display: flex !important;
+  align-items: flex-start !important;
+  gap: 14px !important;
+  padding: 16px !important;
+  border: 1px solid #cfe0ff !important;
+  border-radius: 18px !important;
+  background: linear-gradient(135deg, #eff6ff, #fff) !important;
+}
+
+.pv3-rx-detail-hero-redesign > span {
+  display: grid !important;
+  place-items: center !important;
+  flex: 0 0 auto !important;
+  width: 46px !important;
+  height: 46px !important;
+  border-radius: 15px !important;
+  background: #2563eb !important;
+  color: #fff !important;
+}
+
+.pv3-rx-detail-hero-redesign h3 {
+  margin: 7px 0 0 !important;
+  color: #111827 !important;
+  font-size: 1.2rem !important;
+  line-height: 1.25 !important;
+  overflow-wrap: anywhere !important;
+}
+
+.pv3-rx-detail-hero-redesign p {
+  margin: 4px 0 0 !important;
+  color: #52647a !important;
+  font-size: .84rem !important;
+  line-height: 1.5 !important;
+}
+
+.pv3-rx-detail-meta-redesign {
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  gap: 10px !important;
+}
+
+.pv3-rx-detail-meta-redesign > div {
+  display: grid !important;
+  gap: 4px !important;
+  min-width: 0 !important;
+  padding: 12px !important;
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 14px !important;
+  background: #fff !important;
+}
+
+.pv3-rx-detail-meta-redesign span,
+.pv3-rx-detail-redesign .pv3-rx-detail-list section header span {
+  color: #718096 !important;
+  font-size: .63rem !important;
+  font-weight: 900 !important;
+  letter-spacing: .08em !important;
+  text-transform: uppercase !important;
+}
+
+.pv3-rx-detail-meta-redesign strong {
+  color: #111827 !important;
+  font-size: .84rem !important;
+  line-height: 1.35 !important;
+  overflow-wrap: anywhere !important;
+}
+
+.pv3-rx-detail-redesign .pv3-rx-detail-list {
+  display: grid !important;
+  gap: 12px !important;
+}
+
+.pv3-rx-detail-redesign .pv3-rx-detail-list section {
+  border-color: #dbe5f4 !important;
+  border-radius: 18px !important;
+  background: linear-gradient(180deg, #fff, #fbfdff) !important;
+}
+
+.pv3-rx-detail-redesign .pv3-rx-detail-list section header {
+  padding: 0 !important;
+  border: 0 !important;
+  background: transparent !important;
+}
+
+@media (max-width: 1180px) {
+  .pv3-prescriptions-v4 .pv3-rx-hero-redesign {
+    grid-template-columns: 50px minmax(0, 1fr) !important;
+  }
+
+  .pv3-prescriptions-v4 .pv3-rx-hero-redesign aside {
+    grid-column: 1 / -1;
+    justify-content: flex-start !important;
+    flex-wrap: wrap !important;
+  }
+
+  .pv3-prescriptions-v4 .pv3-rx-hero-redesign aside div {
+    flex: 1 1 150px;
+  }
+
+  .pv3-prescriptions-v4 .pv3-rx-card-grid-redesign {
+    grid-template-columns: 1fr;
+  }
+
+  .pv3-prescriptions-v4 .pv3-rx-care-context-redesign .pv125-care-locations > div {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  }
+}
+
+@media (max-width: 860px) {
+  .pv3-prescriptions-v4 .pv3-rx-registry-redesign > header {
+    align-items: flex-start !important;
+    flex-direction: column !important;
+  }
+
+  .pv3-prescriptions-v4 .pv3-rx-record-redesign {
+    grid-template-columns: 40px minmax(0, 1fr) !important;
+  }
+
+  .pv3-prescriptions-v4 .pv3-rx-record-redesign aside {
+    grid-column: 2;
+    justify-items: start !important;
+    grid-auto-flow: column;
+    justify-content: start;
+  }
+
+  .pv3-prescriptions-v4 .pv3-rx-care-context-redesign .pv125-care-locations > div {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+}
+
+@media (max-width: 640px) {
+  .pv3-prescriptions-v4 {
+    gap: 14px !important;
+  }
+
+  .pv3-prescriptions-v4 .pv3-rx-hero-redesign {
+    grid-template-columns: 1fr !important;
+    padding: 18px !important;
+    border-radius: 18px !important;
+  }
+
+  .pv3-prescriptions-v4 .pv3-rx-hero-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 16px;
+  }
+
+  .pv3-prescriptions-v4 .pv3-rx-hero-redesign aside {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    width: 100% !important;
+  }
+
+  .pv3-prescriptions-v4 .pv3-rx-hero-redesign aside div {
+    min-width: 0 !important;
+  }
+
+  .pv3-prescriptions-v4 .pv3-rx-hero-redesign aside div:last-child {
+    grid-column: 1 / -1;
+  }
+
+  .pv3-prescriptions-v4 .pv3-rx-summary-redesign {
+    grid-template-columns: 38px minmax(0, 1fr) !important;
+    align-items: start !important;
+  }
+
+  .pv3-prescriptions-v4 .pv3-rx-summary-redesign .btn {
+    grid-column: 1 / -1;
+    width: 100%;
+  }
+
+  .pv3-prescriptions-v4 .pv3-rx-toolbar-redesign {
+    align-items: stretch !important;
+    flex-direction: column !important;
+  }
+
+  .pv3-prescriptions-v4 .pv3-rx-toolbar-redesign label,
+  .pv3-prescriptions-v4 .pv3-rx-filter-tabs {
+    width: 100% !important;
+  }
+
+  .pv3-prescriptions-v4 .pv3-rx-record-redesign {
+    grid-template-columns: 1fr !important;
+    padding: 15px !important;
+    border-radius: 18px !important;
+  }
+
+  .pv3-prescriptions-v4 .pv3-rx-record-main header {
+    align-items: flex-start !important;
+    flex-direction: column !important;
+  }
+
+  .pv3-prescriptions-v4 .pv3-rx-record-redesign aside {
+    grid-column: auto;
+    justify-items: start !important;
+    justify-content: start !important;
+  }
+
+  .pv3-prescriptions-v4 .pv3-rx-detail-redesign {
+    width: 100% !important;
+    max-height: 94vh !important;
+    border-radius: 18px 18px 0 0 !important;
+  }
+
+  .pv3-prescriptions-v4 .pv3-rx-detail-meta-redesign {
+    grid-template-columns: 1fr !important;
+  }
+
+  .pv3-rx-detail-redesign {
+    width: 100% !important;
+    max-height: 94vh !important;
+    border-radius: 18px 18px 0 0 !important;
+  }
+
+  .pv3-rx-detail-meta-redesign {
+    grid-template-columns: 1fr !important;
+  }
+
+  .pv3-prescriptions-v4 .pv3-rx-care-context-redesign .pv125-care-locations > div {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+@media (max-width: 460px) {
+  .pv3-prescriptions-v4 .pv3-rx-hero-redesign aside,
+  .pv3-prescriptions-v4 .pv3-rx-dose-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .pv3-prescriptions-v4 .pv3-rx-hero-redesign aside div:last-child {
+    grid-column: auto;
+  }
+}

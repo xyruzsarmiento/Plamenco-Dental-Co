@@ -2,6 +2,7 @@ import { supabase } from '../../lib/supabase'
 import { createUuid } from '../../lib/id'
 import { getStoredPatients } from '../patients/patientStore'
 import {
+  calculateInvoiceTotals,
   getStoredInvoices,
   getStoredPayments,
   getStoredReceipts,
@@ -96,6 +97,67 @@ export async function createInvoicePersisted(input: { patientDbId: string; branc
   const { data, error } = await db.rpc('create_invoice_from_items', { p_patient_id: input.patientDbId, p_branch_id: input.branchId || null, p_invoice_date: input.invoiceDate, p_due_date: input.dueDate || null, p_items: input.items, p_notes: input.notes ?? '', p_client_request_id: clientRequestId })
   if (error || !data?.invoice) throw rpcError('Unable to create the invoice. No financial changes were committed.', error)
   const invoice = mapInvoiceRow(data.invoice as Record<string, any>); replaceInvoice(invoice); signalBillingMutation(invoice.branchId); return invoice
+}
+
+export async function updateDraftInvoicePersisted(input: { invoiceId: string; invoiceDate: string; dueDate?: string; items: InvoiceItem[]; notes?: string }): Promise<Invoice> {
+  const db = requireDatabase()
+  const current = getStoredInvoices().find((invoice) => invoice.id === input.invoiceId)
+  if (!current) throw new Error('Invoice not found.')
+  const relatedPayments = getStoredPayments().filter((payment) => payment.invoiceId === input.invoiceId)
+  const relatedReceipts = getStoredReceipts().filter((receipt) => receipt.invoiceIds.includes(input.invoiceId) || relatedPayments.some((payment) => payment.id === receipt.paymentId))
+  const hasCompletedPayment = relatedPayments.some((payment) => ['completed', 'partially_refunded', 'refunded'].includes(payment.status))
+  if (!['draft', 'unpaid'].includes(current.status) || current.amountPaidCents > 0 || hasCompletedPayment || relatedReceipts.length > 0) {
+    throw new Error('This invoice has accounting activity and can no longer be edited. Void or reverse it through audited controls.')
+  }
+  if (!input.invoiceDate) throw new Error('Invoice date is required.')
+  if (!input.items.length) throw new Error('Add at least one invoice line.')
+
+  const items = input.items.map((item) => ({ ...item, amountCents: Math.max(item.quantity * item.unitPriceCents - (item.discountCents ?? 0), 0) }))
+  const totals = calculateInvoiceTotals(items)
+  const { data: remotePayments, error: paymentError } = await db.from('payments')
+    .select('id,status')
+    .eq('invoice_id', input.invoiceId)
+    .in('status', ['completed', 'partially_refunded', 'refunded'])
+    .limit(1)
+  if (paymentError) throw rpcError('Unable to verify invoice payment state.', paymentError)
+  if ((remotePayments ?? []).length > 0) throw new Error('This invoice has a completed payment and cannot be edited.')
+
+  const { data: remoteReceipts, error: receiptError } = await db.from('receipts')
+    .select('id')
+    .contains('invoice_ids', [input.invoiceId])
+    .limit(1)
+  if (receiptError) throw rpcError('Unable to verify invoice receipt state.', receiptError)
+  if ((remoteReceipts ?? []).length > 0) throw new Error('This invoice has a receipt and cannot be edited.')
+
+  const { data, error } = await db.from('invoices')
+    .update({
+      invoice_date: input.invoiceDate,
+      due_date: input.dueDate || null,
+      items,
+      subtotal_cents: totals.subtotalCents,
+      discount_cents: totals.discountCents,
+      total_cents: totals.totalCents,
+      balance_cents: totals.totalCents,
+      notes: input.notes ?? '',
+      status: current.status === 'draft' ? 'draft' : 'unpaid',
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', input.invoiceId)
+    .select('*')
+    .maybeSingle()
+  if (error || !data) throw rpcError('The invoice could not be updated. It remains unchanged.', error)
+
+  const invoice = mapInvoiceRow(data as Record<string, any>)
+  replaceInvoice(invoice)
+  await db.from('audit_logs').insert({
+    user_name: 'Billing workspace',
+    action: 'invoice_updated',
+    entity: 'invoice',
+    entity_id: invoice.id,
+    metadata: { invoiceNumber: invoice.invoiceNumber, totalCents: invoice.totalCents, reason: 'draft_invoice_edit' },
+  })
+  signalBillingMutation(invoice.branchId)
+  return invoice
 }
 
 export async function recordManualPaymentPersisted(input: { invoiceId: string; amountCents: number; paymentMethod: PaymentMethod; date: string; referenceNumber?: string; notes?: string; clientRequestId?: string }): Promise<{ payment: Payment; invoice: Invoice; receipt: Receipt }> {

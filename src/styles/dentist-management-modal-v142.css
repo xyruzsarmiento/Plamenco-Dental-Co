@@ -1,0 +1,52 @@
+/* Unavailable Days card containment fix. */
+
+.dentists133-modal-column-secondary .dentists133-exception-form {
+  grid-template-columns: minmax(130px, .78fr) minmax(150px, .95fr) !important;
+  gap: 10px !important;
+  align-items: stretch !important;
+  overflow: hidden !important;
+}
+
+.dentists133-modal-column-secondary .dentists133-exception-form input[aria-label='Unavailable reason'] {
+  grid-column: 1 / -1;
+}
+
+.dentists133-modal-column-secondary .dentists133-exception-form .btn {
+  grid-column: 1 / -1;
+  width: 100% !important;
+  justify-content: center !important;
+}
+
+.dentists133-modal-column-secondary .dentists133-exceptions article {
+  grid-template-columns: minmax(0, 1fr) auto auto !important;
+  overflow: hidden !important;
+}
+
+.dentists133-modal-column-secondary .dentists133-exceptions article > div {
+  min-width: 0;
+}
+
+.dentists133-modal-column-secondary .dentists133-exceptions article strong,
+.dentists133-modal-column-secondary .dentists133-exceptions article small {
+  overflow-wrap: anywhere;
+}
+
+.dentists133-modal-column-secondary .dentists133-exceptions article .badge,
+.dentists133-modal-column-secondary .dentists133-exceptions article [class*='badge'] {
+  max-width: 128px !important;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+@media (max-width: 760px) {
+  .dentists133-modal-column-secondary .dentists133-exception-form,
+  .dentists133-modal-column-secondary .dentists133-exceptions article {
+    grid-template-columns: 1fr !important;
+  }
+
+  .dentists133-modal-column-secondary .dentists133-exceptions article .badge,
+  .dentists133-modal-column-secondary .dentists133-exceptions article [class*='badge'] {
+    max-width: 100% !important;
+    justify-self: start;
+  }
+}

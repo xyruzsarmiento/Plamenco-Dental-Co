@@ -5,6 +5,7 @@ import { Button } from '../../components/ui/Button'
 import { EmptyState } from '../../components/ui/EmptyState'
 import { useAuth } from '../auth/AuthContext'
 import { usePermissions } from '../auth/permissions'
+import { useOptionalBranchContext } from '../branches/BranchContext'
 import {
   getInvoicesByPatient,
   getOutstandingBalanceByPatient,
@@ -99,6 +100,7 @@ export function PatientProfile({
   patient,
 }: PatientProfileProps) {
   const { user } = useAuth()
+  const branchContext = useOptionalBranchContext()
   const permissions = usePermissions()
   const [activeTab, setActiveTab] = useState<TabKey>('overview')
   const [prescriptionDraft, setPrescriptionDraft] = useState(emptyPrescriptionDraft)
@@ -120,6 +122,7 @@ export function PatientProfile({
   const outstandingBalance = useMemo(() => getOutstandingBalanceByPatient(patient.patientId), [patient.patientId])
   const prescribingProvider = useMemo(() => getStoredProviders().find((provider) => provider.profileId === user?.id && provider.status === 'active' && ['dentist', 'associate_dentist'].includes(provider.role)), [user?.id])
   const prescriberName = prescribingProvider?.displayName ?? ''
+  const prescriptionBranchId = branchContext?.activeBranchId ?? undefined
   const canAuthorPrescription = Boolean(prescribingProvider && permissions.can('prescriptions.create'))
   const canUploadDocuments = permissions.can('documents.upload')
   const documentActor = user?.name || user?.email || 'Clinic user'
@@ -141,6 +144,10 @@ export function PatientProfile({
       setPrescriptionError('Only an active dentist profile may create prescriptions.')
       return
     }
+    if (!prescriptionBranchId || branchContext?.isAllBranchesMode) {
+      setPrescriptionError('Choose a specific clinic branch before creating this prescription.')
+      return
+    }
     setPrescriptionError(null)
     setPrescriptionMessage(null)
     setIsPrescriptionSaving(true)
@@ -149,6 +156,7 @@ export function PatientProfile({
         patientId: patient.patientId,
         providerId: prescribingProvider?.id,
         providerNameSnapshot: prescriberName,
+        branchId: prescriptionBranchId,
         prescribedBy: prescriberName,
         prescriptionDate: prescriptionDraft.prescriptionDate,
         notes: prescriptionDraft.notes,

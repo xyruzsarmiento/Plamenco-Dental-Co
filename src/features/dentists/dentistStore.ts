@@ -258,8 +258,18 @@ export function saveProviderAssignments(providerId: string, branchIds: string[])
 
 export async function saveScheduleBlocks(providerId: string, blocks: Omit<ProviderScheduleBlock, 'id' | 'providerId' | 'createdAt' | 'updatedAt'>[]) {
   const normalized = blocks
-    .filter((block) => block.branchId && block.startTime && block.endTime && block.startTime < block.endTime)
     .map((block) => ({ ...block, status: block.status ?? 'active' as const }))
+
+  const invalid = normalized.find((block) =>
+    !block.branchId ||
+    !Number.isInteger(block.dayOfWeek) ||
+    block.dayOfWeek < 0 ||
+    block.dayOfWeek > 6 ||
+    !block.startTime ||
+    !block.endTime ||
+    block.startTime >= block.endTime
+  )
+  if (invalid) throw new Error('Schedule contains an invalid branch, day, or time range. Nothing was saved.')
 
   if (!supabase) {
     const timestamp = nowIso()

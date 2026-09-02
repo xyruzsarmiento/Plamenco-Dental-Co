@@ -223,9 +223,9 @@ export function SuperAdminOverview() {
           <ExecutiveTrendChart data={report.trend.map((row) => ({ label: row.label, collectionsCents: row.collectionsCents, expensesCents: row.expensesCents }))} />
           <div className="sa-finance-footer">
             <div><span>Billed amount</span><strong>{formatCurrency(report.executive.billedRevenueCents)}</strong></div>
-            <div><span>Refunds</span><strong>{formatCurrency(report.executive.refundsCents)}</strong></div>
+            <div><span>Net cash movement</span><strong>{formatCurrency(report.executive.collectedCashCents - report.executive.expensePaymentsCents - report.executive.refundsCents)}</strong></div>
             <div><span>Recorded expenses</span><strong>{formatCurrency(report.executive.operatingExpensesCents)}</strong></div>
-            <div><span>Net cash movement</span><strong>{formatCurrency(report.executive.collectedCashCents - report.executive.expensePaymentsCents)}</strong></div>
+            <div><span>Collected cash</span><strong>{formatCurrency(report.executive.collectedCashCents)}</strong></div>
           </div>
         </section>
 

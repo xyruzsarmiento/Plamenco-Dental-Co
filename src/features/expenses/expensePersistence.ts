@@ -5,7 +5,9 @@ import {
   getExpenses,
   getExpenseVendors,
   getRecurringExpenseTemplates,
+  replaceExpenseWorkspaceCache,
   type Expense,
+  type ExpenseCategory,
   type ExpensePayment,
   type ExpenseScope,
   type ExpenseSourceType,
@@ -62,7 +64,7 @@ export function mapExpense(row: Record<string, any>): Expense {
   }
 }
 
-function mapPayment(row: Record<string, any>): ExpensePayment {
+export function mapPayment(row: Record<string, any>): ExpensePayment {
   return {
     id: String(row.id),
     expenseId: String(row.expense_id),
@@ -93,23 +95,32 @@ function mapVendor(row: Record<string, any>): ExpenseVendor {
   }
 }
 
-function mapRecurring(row: Record<string, any>): RecurringExpenseTemplate {
+function mapCategory(row: Record<string, unknown>): ExpenseCategory {
+  return {
+    id: String(row.id ?? ''),
+    name: String(row.name ?? ''),
+    parentId: row.parent_id ? String(row.parent_id) : undefined,
+    status: row.status === 'inactive' ? 'inactive' : 'active',
+  }
+}
+
+function mapRecurring(row: Record<string, unknown>): RecurringExpenseTemplate {
   return {
     id: String(row.id),
     name: String(row.name ?? ''),
-    scope: (row.scope ?? 'branch') as ExpenseScope,
-    branchId: row.branch_id ?? undefined,
+    scope: (row.scope as RecurringExpenseTemplate['scope']) ?? 'branch',
+    branchId: row.branch_id ? String(row.branch_id) : undefined,
     categoryId: String(row.category_id ?? ''),
-    vendorId: row.vendor_id ?? undefined,
+    vendorId: row.vendor_id ? String(row.vendor_id) : undefined,
     payeeName: String(row.payee_name ?? ''),
-    frequency: row.frequency as RecurringFrequency,
-    defaultAmountCents: row.default_amount_cents == null ? undefined : Number(row.default_amount_cents),
+    frequency: (row.frequency as RecurringExpenseTemplate['frequency']) ?? 'monthly',
+    defaultAmountCents: Number(row.default_amount_cents ?? row.amount_cents ?? 0),
     nextDueDate: String(row.next_due_date ?? ''),
-    autoCreate: Boolean(row.auto_create),
-    status: row.status ?? 'active',
-    createdBy: String(row.created_by ?? ''),
-    createdAt: row.created_at ?? new Date().toISOString(),
-    updatedAt: row.updated_at ?? row.created_at ?? new Date().toISOString(),
+    autoCreate: Boolean(row.auto_create ?? false),
+    status: (row.status as RecurringExpenseTemplate['status']) ?? 'active',
+    createdBy: row.created_by ? String(row.created_by) : '',
+    createdAt: String(row.created_at ?? new Date().toISOString()),
+    updatedAt: String(row.updated_at ?? row.created_at ?? new Date().toISOString()),
   }
 }
 
@@ -350,3 +361,50 @@ export async function generateExpenseFromPurchaseReceiptPersisted(receiptId: str
   cacheExpense(expense)
   return expense
 }
+
+export async function hydrateExpenseWorkspaceFromSupabase(): Promise<{
+  expenses: Expense[]
+  payments: ExpensePayment[]
+  vendors: ExpenseVendor[]
+  recurringTemplates: RecurringExpenseTemplate[]
+  categories: ExpenseCategory[]
+  source: 'supabase'
+}> {
+  const db = requireDatabase()
+
+  const [expensesRes, paymentsRes, vendorsRes, recurringRes, categoriesRes] = await Promise.all([
+    db.from('expenses').select('*').order('expense_date', { ascending: false }).limit(5000),
+    db.from('expense_payments').select('*').order('payment_date', { ascending: false }).limit(8000),
+    db.from('expense_vendors').select('*').order('name', { ascending: true }).limit(2000),
+    db.from('expense_recurring_templates').select('*').order('next_due_date', { ascending: true }).limit(2000),
+    db.from('expense_categories').select('*').order('name', { ascending: true }).limit(500),
+  ])
+
+  if (expensesRes.error) throw new Error(expensesRes.error.message || 'Unable to load expenses from the clinic database.')
+  if (paymentsRes.error) throw new Error(paymentsRes.error.message || 'Unable to load expense payments from the clinic database.')
+  if (vendorsRes.error) throw new Error(vendorsRes.error.message || 'Unable to load vendors from the clinic database.')
+  if (recurringRes.error && !/does not exist|relation|permission denied/i.test(recurringRes.error.message ?? '')) {
+    throw new Error(recurringRes.error.message)
+  }
+
+  const expenses = (expensesRes.data ?? []).map((row) => mapExpense(row as Record<string, unknown>))
+  const payments = (paymentsRes.data ?? []).map((row) => mapPayment(row as Record<string, unknown>))
+  const vendors = (vendorsRes.data ?? []).map((row) => mapVendor(row as Record<string, unknown>))
+  const categories = categoriesRes.error
+    ? []
+    : (categoriesRes.data ?? []).map((row) => mapCategory(row as Record<string, unknown>))
+  const recurringTemplates = recurringRes.error
+    ? []
+    : (recurringRes.data ?? []).map((row) => mapRecurring(row as Record<string, unknown>))
+
+  replaceExpenseWorkspaceCache({
+    expenses,
+    payments,
+    vendors,
+    recurringTemplates,
+    categories: categories.length ? categories : undefined,
+  })
+
+  return { expenses, payments, vendors, recurringTemplates, categories, source: 'supabase' }
+}
+

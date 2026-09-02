@@ -1,6 +1,9 @@
 import { supabase } from '../../lib/supabase'
+import { getStoredAppointments } from '../appointments/appointmentStore'
 import { getStoredBranches } from '../branches/branchStore'
+import { getStoredDentalRecords } from '../dentalRecords/dentalRecordStore'
 import { getStoredProviders } from '../dentists/dentistStore'
+import { getStoredPatients } from '../patients/patientStore'
 import { recordAuditEntry } from '../security/auditLogStore'
 
 export type PrescriptionStatus = 'active' | 'completed' | 'voided'
@@ -113,6 +116,30 @@ function normalizePrescription(prescription: Prescription): Prescription {
   }
 }
 
+function getPatientReferences(patientRef: string) {
+  const references = new Set<string>()
+  const normalized = patientRef.trim()
+  if (normalized) references.add(normalized)
+
+  try {
+    const patient = getStoredPatients().find((entry) => entry.id === normalized || entry.patientId === normalized)
+    if (patient?.id) references.add(patient.id)
+    if (patient?.patientId) references.add(patient.patientId)
+  } catch {
+    // Non-browser tests may import this store without seeded patient storage.
+  }
+
+  return references
+}
+
+function patientPublicReference(patientRef: string) {
+  try {
+    return getStoredPatients().find((entry) => entry.id === patientRef || entry.patientId === patientRef)?.patientId ?? patientRef
+  } catch {
+    return patientRef
+  }
+}
+
 function mapPrescriptionRow(row: Record<string, any>): Prescription {
   const rawItems = Array.isArray(row.items) ? row.items : []
   const items: PrescriptionItem[] = rawItems.map((item: Record<string, any>, index: number) => ({
@@ -126,7 +153,7 @@ function mapPrescriptionRow(row: Record<string, any>): Prescription {
   }))
   return normalizePrescription({
     id: String(row.id),
-    patientId: String(row.patient_id ?? ''),
+    patientId: patientPublicReference(String(row.patient_id ?? '')),
     dentalRecordId: row.dental_record_id ?? undefined,
     appointmentId: row.appointment_id ?? undefined,
     branchId: row.branch_id ?? undefined,
@@ -174,6 +201,33 @@ function cleanPrescriptionItems(input: PrescriptionInput): PrescriptionItem[] {
   return cleanItems
 }
 
+function normalizeId(value?: string | null) {
+  const normalized = value?.trim()
+  return normalized || undefined
+}
+
+function resolvePrescriptionBranchId(input: PrescriptionInput) {
+  const explicitBranchId = normalizeId(input.branchId)
+  const linkedAppointment = input.appointmentId
+    ? getStoredAppointments().find((appointment) => appointment.id === input.appointmentId || appointment.appointmentNumber === input.appointmentId)
+    : undefined
+  const linkedRecord = input.dentalRecordId
+    ? getStoredDentalRecords().find((record) => record.id === input.dentalRecordId)
+    : undefined
+  const branchId = explicitBranchId ?? normalizeId(linkedAppointment?.branchId) ?? normalizeId(linkedRecord?.branchId)
+
+  if (!branchId) throw new Error('Choose the clinic branch for this prescription before saving.')
+  const branch = getStoredBranches().find((entry) => entry.id === branchId && entry.status === 'active')
+  if (!branch) throw new Error('Choose an active clinic branch for this prescription before saving.')
+  if (explicitBranchId && linkedAppointment?.branchId && explicitBranchId !== linkedAppointment.branchId) {
+    throw new Error('This prescription branch must match the linked appointment branch.')
+  }
+  if (explicitBranchId && linkedRecord?.branchId && explicitBranchId !== linkedRecord.branchId) {
+    throw new Error('This prescription branch must match the linked clinical visit branch.')
+  }
+  return branchId
+}
+
 export function getStoredPrescriptions(): Prescription[] {
   const stored = safeParse<Prescription[]>(getStorage().getItem(PRESCRIPTION_STORAGE_KEY))
   if (stored?.length) return stored.map(normalizePrescription)
@@ -186,8 +240,9 @@ export function saveStoredPrescriptions(prescriptions: Prescription[]) {
 }
 
 export function getPrescriptionsByPatient(patientId: string): Prescription[] {
+  const patientReferences = getPatientReferences(patientId)
   return getStoredPrescriptions()
-    .filter((prescription) => prescription.patientId === patientId && prescription.status !== 'voided')
+    .filter((prescription) => patientReferences.has(prescription.patientId) && prescription.status !== 'voided')
     .sort((a, b) => new Date(b.prescriptionDate).getTime() - new Date(a.prescriptionDate).getTime())
 }
 
@@ -206,13 +261,15 @@ export function getPrescriptionsByClinicalVisit(dentalRecordId: string): Prescri
 export async function createPrescriptionPersisted(input: PrescriptionInput): Promise<Prescription> {
   if (!supabase) throw new Error('Clinic database is not configured. Prescriptions cannot be saved safely.')
   if (!input.patientId.trim()) throw new Error('Patient is required.')
+  if (!input.prescribedBy.trim() && !input.providerNameSnapshot?.trim()) throw new Error('Prescriber is required.')
   const cleanItems = cleanPrescriptionItems(input)
+  const branchId = resolvePrescriptionBranchId(input)
 
   const { data, error } = await supabase.rpc('create_prescription', {
     p_patient_id: input.patientId,
     p_dental_record_id: input.dentalRecordId ?? null,
     p_appointment_id: input.appointmentId ?? null,
-    p_branch_id: input.branchId ?? null,
+    p_branch_id: branchId,
     p_items: cleanItems,
     p_notes: input.notes?.trim() ?? '',
     p_prescription_date: input.prescriptionDate ?? new Date().toISOString().slice(0, 10),
@@ -220,7 +277,11 @@ export async function createPrescriptionPersisted(input: PrescriptionInput): Pro
 
   if (error || !data) {
     if (import.meta.env.DEV && error?.message) console.error('[prescription persistence]', error)
-    throw new Error(error?.message || 'Prescription could not be saved. Your changes were not submitted.')
+    const message = error?.message ?? ''
+    if (message.toLowerCase().includes('branch is required')) {
+      throw new Error('Choose the clinic branch for this prescription before saving.')
+    }
+    throw new Error(message || 'Prescription could not be saved. Your changes were not submitted.')
   }
 
   const confirmed = mapPrescriptionRow(data as Record<string, any>)

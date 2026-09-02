@@ -21,8 +21,10 @@ function manilaDate(offsetDays = 0) {
   return date.toISOString().slice(0, 10)
 }
 
-export async function hydratePatientBookingFoundation() {
+export async function hydratePatientBookingFoundation(options: { startDate?: string; endDate?: string } = {}) {
   const db = requireDatabase()
+  const startDate = options.startDate ?? manilaDate()
+  const endDate = options.endDate ?? manilaDate(180)
 
   const foundationPromise = Promise.all([
     loadBranchesFromSupabase({ strict: true }),
@@ -32,8 +34,8 @@ export async function hydratePatientBookingFoundation() {
 
   const [operatoryResult, blockResult, busyResult] = await Promise.all([
     db.from('operatories').select('*').eq('status', 'active'),
-    db.from('schedule_blocks').select('*').gte('block_date', manilaDate()).lte('block_date', manilaDate(180)),
-    db.rpc('get_patient_booking_busy_windows_v130', { p_start_date: manilaDate(), p_end_date: manilaDate(180) }),
+    db.from('schedule_blocks').select('*').gte('block_date', startDate).lte('block_date', endDate),
+    db.rpc('get_patient_booking_busy_windows_v130', { p_start_date: startDate, p_end_date: endDate }),
     foundationPromise,
   ])
 
@@ -82,4 +84,9 @@ export async function hydratePatientBookingFoundation() {
   })))
 
   window.dispatchEvent(new Event('plamenco:booking-foundation-hydrated'))
+}
+
+export async function refreshPatientBookingAvailability(date: string) {
+  const safeDate = date && date >= manilaDate() ? date : manilaDate()
+  await hydratePatientBookingFoundation({ startDate: safeDate, endDate: safeDate })
 }

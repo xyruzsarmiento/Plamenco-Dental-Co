@@ -18,6 +18,7 @@ import {
   UsersRound,
 } from 'lucide-react'
 import type { ComponentType } from 'react'
+import type { UserRole } from '../../features/auth/authTypes'
 import type { PermissionKey } from '../../features/auth/permissions'
 
 export type NavigationItem = {
@@ -25,6 +26,7 @@ export type NavigationItem = {
   path: string
   icon: ComponentType<{ size?: number }>
   anyOf?: PermissionKey[]
+  roles?: UserRole[]
 }
 
 export type NavigationGroup = {
@@ -64,7 +66,7 @@ export const navigationGroups: NavigationGroup[] = [
       { label: 'Team & Access', path: '/app/staff', icon: UserRoundCog, anyOf: ['staff.manage', 'dentists.manage'] },
       { label: 'Branches', path: '/app/branches', icon: Building2, anyOf: ['branches.view', 'branches.manage'] },
       { label: 'Forms & Consent', path: '/app/forms-consent', icon: FileSignature, anyOf: ['settings.manage'] },
-      { label: 'System Administration', path: '/app/system-admin', icon: ShieldCheck, anyOf: ['system_admin.view'] },
+      { label: 'System Administration', path: '/app/system-admin', icon: ShieldCheck, anyOf: ['system_admin.view'], roles: ['super_admin'] },
     ],
   },
   {

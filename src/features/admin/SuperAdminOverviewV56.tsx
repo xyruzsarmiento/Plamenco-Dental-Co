@@ -168,7 +168,7 @@ export function SuperAdminOverviewV56() {
           <div className="sav56-finance-summary">
             <div><span>Recorded expenses</span><strong>{formatReportCurrency(report.executive.operatingExpensesCents)}</strong></div>
             <div><span>Expense payments</span><strong>{formatReportCurrency(report.executive.expensePaymentsCents)}</strong></div>
-            <div><span>Refunds</span><strong>{formatReportCurrency(report.executive.refundsCents)}</strong></div>
+            <div><span>Net cash movement</span><strong>{formatReportCurrency(report.executive.collectedCashCents - report.executive.expensePaymentsCents - report.executive.refundsCents)}</strong></div>
             <div><span>Completion rate</span><strong>{formatPercent(report.executive.completionRate)}</strong></div>
           </div>
         </section>

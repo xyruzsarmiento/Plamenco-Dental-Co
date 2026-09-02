@@ -41,12 +41,11 @@ Deno.serve(async (request) => {
   const { data: authUser, error: authError } = await userClient.auth.getUser()
   if (authError || !authUser.user) return json({ error: 'Authentication required.' }, 401)
 
-  const { data: profile, error: profileError } = await adminClient.from('profiles').select('id, role, status, permissions').eq('id', authUser.user.id).maybeSingle()
+  const { data: profile, error: profileError } = await adminClient.from('profiles').select('id, role, status').eq('id', authUser.user.id).maybeSingle()
   if (profileError) return json({ error: `Could not verify inviter permissions: ${profileError.message}` }, 500)
 
-  const permissions = Array.isArray(profile?.permissions) ? profile.permissions : []
-  const canInvite = profile?.role === 'super_admin' || permissions.includes('system_admin.manage') || permissions.includes('staff.manage')
-  if (!canInvite || profile?.status !== 'active') return json({ error: 'Not authorized to invite internal accounts.' }, 403)
+  const canInvite = profile?.role === 'super_admin' && profile?.status === 'active'
+  if (!canInvite) return json({ error: 'Only an active Super Admin can invite internal accounts.' }, 403)
 
   let payload: InvitePayload
   try { payload = await request.json() as InvitePayload } catch { return json({ error: 'Invalid invitation payload.' }, 400) }

@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { ClipboardCheck, ClipboardList, Plus, Truck } from 'lucide-react'
-import { Button } from '../ui/Button'
+import { InventoryActionToolbar } from '../inventory/InventoryActionToolbar'
 import { useAuth } from '../../features/auth/AuthContext'
+import { usePermissions } from '../../features/auth/permissions'
 import { getStoredBranches } from '../../features/branches/branchStore'
 import type { Branch } from '../../features/branches/branchTypes'
 import { InventoryActionModal, type InventoryDialog } from '../../features/inventory/InventoryActionModal'
@@ -10,6 +10,7 @@ import { supabase } from '../../lib/supabase'
 
 export function InternalUiActionsEnhancerV116() {
   const { user } = useAuth()
+  const permissions = usePermissions()
   const [target, setTarget] = useState<HTMLElement | null>(null)
   const [dialog, setDialog] = useState<InventoryDialog | null>(null)
   const [assignedBranchIds, setAssignedBranchIds] = useState<string[] | null>(null)
@@ -57,7 +58,7 @@ export function InternalUiActionsEnhancerV116() {
     if (assignedBranchIds === null) return []
     const allowed = new Set(assignedBranchIds)
     return branches.filter((branch) => allowed.has(String(branch.id)))
-  }, [assignedBranchIds, user?.role, target])
+  }, [assignedBranchIds, user?.role])
 
   if (!target || user?.role !== 'staff') return null
 
@@ -65,10 +66,21 @@ export function InternalUiActionsEnhancerV116() {
 
   const actions = (
     <>
-      <Button disabled={noAssignedBranch} icon={<Plus size={16} />} onClick={() => setDialog({ type: 'add_item' })}>Add Item</Button>
-      <Button variant="secondary" icon={<Truck size={16} />} onClick={() => setDialog({ type: 'add_supplier' })}>Add Supplier</Button>
-      <Button disabled={noAssignedBranch} variant="secondary" icon={<ClipboardList size={16} />} onClick={() => setDialog({ type: 'purchase_order' })}>Purchase Order</Button>
-      <Button disabled={noAssignedBranch} variant="secondary" icon={<ClipboardCheck size={16} />} onClick={() => setDialog({ type: 'stock_count' })}>Stock Count</Button>
+      <InventoryActionToolbar
+        canCreateItem={permissions.can('inventory.create_item')}
+        canRecordMovement={permissions.canAny(['inventory.stock_in', 'inventory.stock_out', 'inventory.adjust'])}
+        canAdjustStock={permissions.can('inventory.adjust')}
+        canManageSuppliers={permissions.can('suppliers.manage')}
+        canCreatePurchaseOrder={permissions.canAny(['purchase_orders.create', 'purchases.create'])}
+        disableItemCreation={noAssignedBranch}
+        disableBranchRequiredActions={noAssignedBranch}
+        disabledReason="This staff account needs an assigned branch before creating branch-owned inventory records."
+        onAddItem={() => setDialog({ type: 'add_item' })}
+        onStockMovement={() => setDialog({ type: 'stock_count' })}
+        onStockCount={() => setDialog({ type: 'stock_count' })}
+        onPurchaseOrder={() => setDialog({ type: 'purchase_order' })}
+        onAddSupplier={() => setDialog({ type: 'add_supplier' })}
+      />
       {dialog && createPortal(
         <InventoryActionModal
           dialog={dialog}

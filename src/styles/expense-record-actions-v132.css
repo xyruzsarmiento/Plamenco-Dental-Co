@@ -1,0 +1,43 @@
+.ex122-expense-modal > header {
+  align-items: flex-start;
+  gap: 16px;
+}
+
+.ex122-expense-header-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  flex: 0 0 auto;
+}
+
+.ex122-expense-header-actions .button,
+.ex122-expense-header-actions .btn {
+  min-height: 38px;
+  border-radius: 12px;
+}
+
+.ex122-expense-header-actions .expense-modal-close {
+  margin-left: 2px;
+}
+
+@media (max-width: 720px) {
+  .ex122-expense-modal > header {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .ex122-expense-header-actions {
+    width: 100%;
+    justify-content: stretch;
+  }
+
+  .ex122-expense-header-actions .button,
+  .ex122-expense-header-actions .btn {
+    flex: 1 1 auto;
+  }
+
+  .ex122-expense-header-actions .expense-modal-close {
+    flex: 0 0 42px;
+  }
+}

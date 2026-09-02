@@ -1,0 +1,460 @@
+/* Expenses + internal Documents polish pass. Loaded late to standardize Staff/Super Admin/Dentist workspaces. */
+
+.ex57-page,
+.doc132-page {
+  --surface: #ffffff;
+  --surface-soft: #f8fbff;
+  --blue: #2563eb;
+  --blue-dark: #1d4ed8;
+  --ink: #111827;
+  --muted: #64748b;
+  --line: #dbe7f6;
+  --line-soft: #e8eef7;
+}
+
+/* Expenses */
+.ex57-page {
+  max-width: 1560px !important;
+  gap: 14px !important;
+}
+
+.ex57-hero {
+  min-height: 0 !important;
+  padding: 20px 22px !important;
+  border-radius: 20px !important;
+}
+
+.ex57-hero h1 {
+  font-size: clamp(1.65rem, 2.4vw, 2.2rem) !important;
+}
+
+.ex57-actions {
+  max-width: 560px;
+}
+
+.ex57-kpis {
+  grid-template-columns: repeat(4, minmax(180px, 1fr)) !important;
+}
+
+.ex57-kpis article {
+  min-height: 96px !important;
+  padding: 15px !important;
+  border-radius: 16px !important;
+}
+
+.ex57-kpis article strong {
+  font-size: clamp(1.25rem, 1.7vw, 1.55rem) !important;
+  letter-spacing: 0 !important;
+}
+
+.ex57-trend-card {
+  padding: 18px 20px 14px !important;
+  border-radius: 20px !important;
+}
+
+.ex57-trend-card header {
+  align-items: center !important;
+}
+
+.ex57-trend-card h2 {
+  font-size: 1.18rem !important;
+  letter-spacing: 0 !important;
+}
+
+.ex57-trend-card p {
+  max-width: 720px;
+  color: var(--muted) !important;
+  line-height: 1.45 !important;
+}
+
+.ex57-trend-total {
+  min-width: 166px;
+  padding: 12px 14px !important;
+  border: 1px solid #dbeafe !important;
+  border-radius: 16px !important;
+  background: #f8fbff !important;
+}
+
+.ex57-trend {
+  min-height: 0 !important;
+  padding: 0 !important;
+}
+
+.ex57-trend-scroll {
+  width: 100%;
+  overflow-x: auto;
+  scrollbar-gutter: stable;
+}
+
+.ex57-trend-scroll svg {
+  display: block;
+  width: 100%;
+  min-width: 720px;
+  height: 250px !important;
+}
+
+.ex57-gridline {
+  stroke: #dce8f8 !important;
+  stroke-dasharray: 4 8;
+}
+
+.ex57-line {
+  fill: none !important;
+  stroke: var(--blue) !important;
+  stroke-width: 5 !important;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  filter: drop-shadow(0 7px 10px rgba(37, 99, 235, .16));
+}
+
+.ex57-dot {
+  fill: #ffffff !important;
+  stroke: var(--blue) !important;
+  stroke-width: 4 !important;
+}
+
+.ex57-axis {
+  fill: #66758b !important;
+  font-size: 12px !important;
+  font-weight: 750 !important;
+}
+
+.ex57-command {
+  padding: 10px !important;
+}
+
+.ex57-tabs {
+  grid-template-columns: repeat(6, minmax(150px, 1fr)) !important;
+}
+
+.ex57-tabs button strong,
+.ex57-mini h4,
+.ex57-section h3 {
+  letter-spacing: 0 !important;
+}
+
+.ex57-filters {
+  align-items: stretch;
+}
+
+.ex57-card-grid,
+.ex57-vendor-grid {
+  grid-template-columns: repeat(auto-fit, minmax(270px, 1fr)) !important;
+}
+
+.ex57-mini {
+  min-height: 142px !important;
+  padding: 15px !important;
+}
+
+.ex57-mini h4 {
+  font-size: 1rem !important;
+  line-height: 1.25 !important;
+}
+
+/* Documents */
+.doc132-page {
+  max-width: 1540px !important;
+  gap: 14px !important;
+}
+
+.doc132-hero {
+  grid-template-columns: auto minmax(0, 1fr) auto !important;
+  gap: 16px !important;
+  padding: 22px !important;
+  border-radius: 20px !important;
+  box-shadow: 0 16px 36px rgba(15, 23, 42, .055) !important;
+}
+
+.doc132-hero::after {
+  display: none !important;
+}
+
+.doc132-hero-icon {
+  width: 50px !important;
+  height: 50px !important;
+  border-radius: 15px !important;
+}
+
+.doc132-hero-copy h1 {
+  margin: 5px 0 !important;
+  font-size: clamp(1.8rem, 2.5vw, 2.35rem) !important;
+  line-height: 1.08 !important;
+  letter-spacing: 0 !important;
+  font-weight: 820 !important;
+}
+
+.doc132-hero-copy p {
+  color: #52647a !important;
+  font-size: .95rem !important;
+}
+
+.doc132-context,
+.doc132-hero-actions .btn,
+.doc132-hero-actions .button {
+  min-height: 42px !important;
+  border-radius: 13px !important;
+}
+
+.doc132-stats {
+  grid-template-columns: repeat(4, minmax(180px, 1fr)) !important;
+}
+
+.doc132-stats article {
+  min-height: 86px !important;
+  padding: 14px !important;
+  border-radius: 16px !important;
+}
+
+.doc132-stats strong {
+  font-size: 1.35rem !important;
+  font-weight: 820 !important;
+}
+
+.doc132-workspace {
+  grid-template-columns: minmax(300px, 370px) minmax(0, 1fr) !important;
+  gap: 14px !important;
+}
+
+.doc132-control-panel,
+.doc132-library {
+  border-radius: 20px !important;
+  box-shadow: 0 14px 34px rgba(15, 23, 42, .045) !important;
+}
+
+.doc132-control-panel {
+  gap: 12px !important;
+  padding: 16px !important;
+}
+
+.doc132-panel-head h2,
+.doc132-upload-card h3,
+.doc132-library h2 {
+  font-size: clamp(1.35rem, 2vw, 1.8rem) !important;
+  font-weight: 800 !important;
+  letter-spacing: 0 !important;
+}
+
+.doc132-upload-card {
+  gap: 12px !important;
+  padding: 14px !important;
+  border-radius: 16px !important;
+}
+
+.doc132-upload-card .form-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+}
+
+.doc132-library > header {
+  padding: 18px 20px !important;
+}
+
+.doc132-library > header > strong {
+  min-width: 40px !important;
+  height: 40px !important;
+  border-radius: 13px !important;
+}
+
+.doc132-list {
+  gap: 9px !important;
+  padding: 12px !important;
+}
+
+.doc132-card {
+  grid-template-columns: 42px minmax(220px, 1fr) minmax(220px, .72fr) auto !important;
+  gap: 12px !important;
+  padding: 13px 14px !important;
+  border-radius: 16px !important;
+}
+
+.doc132-file-main strong,
+.shared-document-main strong {
+  color: var(--ink) !important;
+  font-size: .98rem !important;
+  font-weight: 760 !important;
+  line-height: 1.25 !important;
+  letter-spacing: 0 !important;
+}
+
+.doc132-file-main p,
+.shared-document-main p {
+  color: #52647a !important;
+  font-size: .82rem !important;
+  line-height: 1.45 !important;
+}
+
+.doc132-category {
+  font-weight: 800 !important;
+}
+
+.doc132-actions button,
+.doc132-icon-action {
+  min-height: 36px !important;
+  border-radius: 11px !important;
+  font-size: .78rem !important;
+  font-weight: 760 !important;
+}
+
+.shared-document-card {
+  display: grid !important;
+  grid-template-columns: 42px minmax(220px, 1fr) minmax(220px, .75fr) auto !important;
+  align-items: center !important;
+  gap: 12px !important;
+  padding: 14px !important;
+  border: 1px solid var(--line-soft) !important;
+  border-radius: 16px !important;
+  background: #fff !important;
+  box-shadow: 0 8px 22px rgba(15, 23, 42, .035) !important;
+}
+
+.shared-document-main,
+.shared-document-meta {
+  min-width: 0;
+}
+
+.shared-document-meta {
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  gap: 7px 12px !important;
+  color: #52647a !important;
+}
+
+.shared-document-actions {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  justify-content: flex-end !important;
+  gap: 8px !important;
+}
+
+@media (max-width: 1240px) {
+  .ex57-kpis,
+  .doc132-stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+
+  .ex57-filters,
+  .ex122-page .ex57-filters {
+    grid-template-columns: minmax(220px, 1fr) repeat(2, minmax(150px, .5fr)) !important;
+  }
+
+  .doc132-workspace {
+    grid-template-columns: 1fr !important;
+  }
+
+  .doc132-control-panel {
+    position: static !important;
+  }
+}
+
+@media (max-width: 900px) {
+  .ex57-hero,
+  .doc132-hero {
+    grid-template-columns: 1fr !important;
+    padding: 18px !important;
+  }
+
+  .ex57-actions,
+  .doc132-hero-actions {
+    justify-content: flex-start !important;
+  }
+
+  .ex57-trend-card header {
+    align-items: stretch !important;
+    flex-direction: column !important;
+  }
+
+  .ex57-trend-total {
+    width: 100%;
+  }
+
+  .doc132-card,
+  .shared-document-card {
+    grid-template-columns: 42px minmax(0, 1fr) !important;
+  }
+
+  .doc132-meta,
+  .doc132-actions,
+  .shared-document-meta,
+  .shared-document-actions {
+    grid-column: 2 !important;
+  }
+
+  .doc132-actions,
+  .shared-document-actions {
+    justify-content: flex-start !important;
+  }
+}
+
+@media (max-width: 640px) {
+  .ex57-page,
+  .doc132-page {
+    gap: 12px !important;
+  }
+
+  .ex57-hero,
+  .doc132-hero,
+  .ex57-trend-card,
+  .doc132-control-panel,
+  .doc132-library {
+    border-radius: 16px !important;
+  }
+
+  .ex57-actions,
+  .doc132-hero-actions,
+  .doc132-upload-card .modal-actions {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    width: 100%;
+  }
+
+  .ex57-actions .btn,
+  .doc132-hero-actions .btn,
+  .doc132-hero-actions .button {
+    width: 100%;
+  }
+
+  .ex57-kpis,
+  .doc132-stats,
+  .ex57-filters,
+  .ex122-page .ex57-filters,
+  .doc132-upload-card .form-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .ex57-tabs {
+    display: flex !important;
+    overflow-x: auto;
+  }
+
+  .ex57-tabs button {
+    flex: 0 0 min(78vw, 230px);
+  }
+
+  .ex57-trend-scroll svg {
+    min-width: 620px;
+    height: 220px !important;
+  }
+
+  .doc132-card,
+  .shared-document-card {
+    grid-template-columns: 1fr !important;
+  }
+
+  .doc132-file-icon,
+  .doc132-meta,
+  .doc132-actions,
+  .shared-document-meta,
+  .shared-document-actions {
+    grid-column: 1 !important;
+  }
+
+  .shared-document-meta {
+    grid-template-columns: 1fr !important;
+  }
+
+  .doc132-actions button,
+  .shared-document-actions .btn,
+  .shared-document-actions .button {
+    flex: 1 1 140px;
+  }
+}

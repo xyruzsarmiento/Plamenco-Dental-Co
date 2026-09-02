@@ -8,9 +8,10 @@ import { RegisterPage } from '../features/auth/RegisterPage'
 import { useAuth } from '../features/auth/AuthContext'
 import { RequireAuth } from '../features/auth/RequireAuth'
 import { RequirePatientAuth } from '../features/auth/RequirePatientAuth'
-import { RequirePermission } from '../features/auth/RequirePermission'
+import { RequirePermission, RequireSuperAdmin } from '../features/auth/RequirePermission'
 import { RequireRole } from '../features/auth/RequireRole'
 import { ResetPasswordPage } from '../features/auth/ResetPasswordPage'
+import type { AuthUser } from '../features/auth/authTypes'
 import { BranchProvider } from '../features/branches/BranchContext'
 import { PatientPortalRoute } from '../features/patientPortal/PatientPortalRoute'
 import { WorkspaceAccountIsolationGuard, WorkspaceBranchIsolationGuard } from '../features/security/WorkspaceIsolationGuard'
@@ -21,7 +22,7 @@ import { DataImportBranchWorkspaceV127 } from '../pages/DataImportBranchWorkspac
 import { DentalRecordsPageV11 } from '../pages/DentalRecordsPageV11'
 import { DentistsScheduleWorkspaceV131 } from '../pages/DentistsScheduleWorkspaceV131'
 import { DocumentsLiveWorkspaceV131 } from '../pages/DocumentsLiveWorkspaceV131'
-import { ExpensesHistoricalWorkspaceV129 } from '../pages/ExpensesHistoricalWorkspaceV129'
+import { ExpensesPremiumWorkspaceV161 } from '../pages/ExpensesPremiumWorkspaceV161'
 import { FormsConsentBranchWorkspaceV127 } from '../pages/FormsConsentBranchWorkspaceV127'
 import { InventoryPageV56 } from '../pages/InventoryPageV56'
 import { LandingPage } from '../pages/LandingPage'
@@ -48,6 +49,25 @@ function BookRoute() {
   return <Navigate to="/login" replace state={{ from: { pathname: '/book' } }} />
 }
 
+function getAuthenticatedDestination(user: AuthUser | null) {
+  if (!user) return '/app'
+  if (user.role === 'patient') return user.patientId ? `/portal/${user.patientId}` : '/login'
+  if (user.role === 'super_admin') return '/app/system-admin'
+  return '/app'
+}
+
+function RootRoute() {
+  const { user, isAuthenticated, isLoading } = useAuth()
+  const hasSupabaseCallbackHash = typeof window !== 'undefined' && /(?:^|[&#])(?:access_token|refresh_token|error|error_description)=/.test(window.location.hash)
+  if (!isLoading && isAuthenticated && hasSupabaseCallbackHash) {
+    return <Navigate to={getAuthenticatedDestination(user)} replace />
+  }
+  if (!isLoading && !isAuthenticated && hasSupabaseCallbackHash) {
+    return <Navigate to="/login" replace />
+  }
+  return <LandingPage />
+}
+
 function InternalPortalShell() {
   return <BranchProvider><WorkspaceAccountIsolationGuard /><WorkspaceBranchIsolationGuard /><AppLayout /></BranchProvider>
 }
@@ -68,7 +88,7 @@ function RouteRobotsMeta() {
 
 export function AppRouter() {
   return <Router><RouteRobotsMeta /><Routes>
-    <Route path="/" element={<LandingPage />} />
+    <Route path="/" element={<RootRoute />} />
     <Route path="/login" element={<LoginPage />} />
     <Route path="/register" element={<RegisterPage />} />
     <Route path="/forgot-password" element={<ForgotPasswordPage />} />
@@ -93,8 +113,8 @@ export function AppRouter() {
       <Route path="billing" element={<RequirePermission anyOf={['billing.view', 'payments.view']}><BillingLiveWorkspaceV131 /></RequirePermission>} />
       <Route path="services" element={<RequirePermission anyOf={['services.view', 'services.manage']}><ServicesPageV49 /></RequirePermission>} />
       <Route path="inventory" element={<RequirePermission permission="inventory.view"><InventoryPageV56 /></RequirePermission>} />
-      <Route path="expenses" element={<RequirePermission permission="expenses.view"><ExpensesHistoricalWorkspaceV129 /></RequirePermission>} />
-      <Route path="staff" element={<RequirePermission anyOf={['staff.manage', 'dentists.manage']}><TeamAccessBranchAssignmentsV126 /></RequirePermission>} />
+      <Route path="expenses" element={<RequirePermission permission="expenses.view"><ExpensesPremiumWorkspaceV161 /></RequirePermission>} />
+      <Route path="staff" element={<RequireSuperAdmin><TeamAccessBranchAssignmentsV126 /></RequireSuperAdmin>} />
       <Route path="dentists" element={<RequirePermission permission="dentists.manage"><DentistsScheduleWorkspaceV131 /></RequirePermission>} />
       <Route path="branches" element={<RequirePermission anyOf={['branches.view', 'branches.manage']}><BranchesPageV27 /></RequirePermission>} />
       <Route path="reports" element={<RequirePermission anyOf={['reports.view', 'reports.view_limited']}><ReportsUnifiedWorkspaceV131 /></RequirePermission>} />

@@ -214,10 +214,10 @@ export function TreatmentPlansPageV80() {
   }
 
   return (
-    <PageScaffold title="Treatment Plans" description="Recommended care, estimates, patient decisions, and scheduling handoff.">
+    <PageScaffold title="Treatment Plans" description="Recommended care and planned procedures. Estimates and patient decisions stay separate from performed treatments.">
       <section className="tp80-page">
         <header className="tp80-hero">
-          <div><span className="tp80-eyebrow"><Sparkles size={14} /> Care planning</span><h2>Structured treatment planning</h2><p>Build clear care recommendations, quote procedures accurately, and keep every plan connected to the patient record.</p></div>
+          <div><span className="tp80-eyebrow"><Sparkles size={14} /> Care roadmap</span><h2>Treatment plans</h2><p>Propose future care, organize recommended procedures, and present estimates without marking actual treatment complete.</p></div>
           {can('treatments.create') && <Button icon={<Plus size={16} />} onClick={openCreate} disabled={!selectedPatient}>Create treatment plan</Button>}
         </header>
 
@@ -238,7 +238,7 @@ export function TreatmentPlansPageV80() {
 
               {error && <div className="tp80-error" role="alert">{error}</div>}
               <section className="tp80-registry">
-                <div className="tp80-section-head"><div><span className="tp80-eyebrow">Care recommendations</span><h3>Treatment plan registry</h3><p>Review quoted procedures, current decision state, and scheduling readiness.</p></div><span>{plans.length} plan{plans.length === 1 ? '' : 's'}</span></div>
+                <div className="tp80-section-head"><div><span className="tp80-eyebrow">Care recommendations</span><h3>Treatment plan registry</h3><p>Plans represent proposed care. Accepted items may later link to treatments, but acceptance is not procedure completion.</p></div><span>{plans.length} plan{plans.length === 1 ? '' : 's'}</span></div>
                 {loading ? <SkeletonList items={5} withAvatar /> : plans.length ? (
                   <>
                     <div className="tp80-plan-grid">

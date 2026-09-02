@@ -8,6 +8,7 @@ import type { Service } from '../services/serviceTypes'
 import type { Appointment } from './appointmentTypes'
 import { formatAppointmentTime, getCalendarOperatingHours } from './availabilityEngine'
 import { getProviderBranchAssignments } from '../dentists/dentistStore'
+import { getPatientDisplayName } from '../patients/patientStore'
 
 type CalendarViewType = 'day' | 'week' | 'month' | 'agenda'
 
@@ -30,7 +31,7 @@ function formatDate(date: Date): string {
 }
 
 function getPatientName(patient?: Patient) {
-  return patient ? `${patient.firstName} ${patient.lastName}`.trim() : 'Patient'
+  return patient ? getPatientDisplayName(patient) : 'Patient record unavailable'
 }
 
 function getDateLabel(value: string) {

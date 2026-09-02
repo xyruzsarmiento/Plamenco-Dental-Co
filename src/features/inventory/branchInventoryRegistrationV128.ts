@@ -12,7 +12,7 @@ function saveLocalBranchPosition(row: BranchInventory) {
 
 export async function ensureItemRegisteredToBranchV128(branchId: string, item: InventoryItem) {
   if (!branchId || !item.id) return
-  if (getBranchInventory().some((entry) => entry.branchId === branchId && entry.itemId === item.id)) return
+  if (!supabase && getBranchInventory().some((entry) => entry.branchId === branchId && entry.itemId === item.id)) return
 
   const localRow: BranchInventory = {
     id: `branch-stock-${crypto.randomUUID()}`,

@@ -21,7 +21,9 @@ export type BranchScopedExpenseDialog = 'add_expense' | 'petty_cash' | 'add_vend
 
 type Props = {
   type: BranchScopedExpenseDialog
-  branch: Branch
+  branch?: Branch | null
+  allowClinicWide?: boolean
+  availableBranches?: Branch[]
   onClose: () => void
   onSuccess: () => void
 }
@@ -32,11 +34,18 @@ function todayManila() {
   }).format(new Date())
 }
 
-export function BranchScopedExpenseActionModal({ type, branch, onClose, onSuccess }: Props) {
+export function BranchScopedExpenseActionModal({ type, branch, allowClinicWide = false, availableBranches = [], onClose, onSuccess }: Props) {
   const categories = useMemo(() => getExpenseCategories().filter((category) => category.status === 'active'), [])
   const vendors = useMemo(() => getExpenseVendors().filter((vendor) => vendor.status === 'active'), [])
+  const branchOptions = useMemo(() => {
+    if (branch && !availableBranches.some((entry) => entry.id === branch.id)) return [branch, ...availableBranches]
+    return availableBranches.length ? availableBranches : branch ? [branch] : []
+  }, [availableBranches, branch])
+  const defaultScope = !branch && allowClinicWide && type === 'add_expense' ? 'clinic_wide' : 'branch'
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [scope, setScope] = useState<'branch' | 'clinic_wide'>(defaultScope)
+  const [branchId, setBranchId] = useState(branch?.id ?? branchOptions[0]?.id ?? '')
   const [categoryId, setCategoryId] = useState(categories[0]?.id ?? 'miscellaneous')
   const [vendorId, setVendorId] = useState('')
   const [payeeName, setPayeeName] = useState('')
@@ -57,6 +66,13 @@ export function BranchScopedExpenseActionModal({ type, branch, onClose, onSucces
   const [nextDueDate, setNextDueDate] = useState(todayManila())
   const [autoCreate, setAutoCreate] = useState(false)
 
+  const selectedBranch = branchOptions.find((entry) => entry.id === branchId) ?? branch ?? null
+  const costCenterLabel = type === 'add_vendor'
+    ? 'Clinic-wide vendor directory'
+    : scope === 'clinic_wide' && type === 'add_expense'
+      ? 'Clinic-wide operating cost'
+      : selectedBranch?.name ?? 'Select a branch'
+  const canPickCostCenter = type !== 'add_vendor' && (allowClinicWide || !branch || branchOptions.length > 1)
   const title = type === 'add_expense' ? 'Add Expense'
     : type === 'petty_cash' ? 'Record Small Cash Purchase'
       : type === 'add_vendor' ? 'Add Vendor'
@@ -78,8 +94,9 @@ export function BranchScopedExpenseActionModal({ type, branch, onClose, onSucces
         await createExpenseVendorPersisted({ name: vendorName.trim(), contactPerson, phone, email, address, notes })
       } else if (type === 'petty_cash') {
         if (!payeeName.trim() || !description.trim()) throw new Error('Payee and purpose are required.')
+        if (!branchId) throw new Error('Choose a branch for petty cash.')
         await recordPettyCashPersisted({
-          branchId: branch.id,
+          branchId,
           amountCents: money(amount, 'Small cash amount'),
           paymentDate: expenseDate,
           payeeName: payeeName.trim(),
@@ -88,10 +105,12 @@ export function BranchScopedExpenseActionModal({ type, branch, onClose, onSucces
         })
       } else if (type === 'recurring') {
         if (!templateName.trim() || !payeeName.trim()) throw new Error('Template name and payee are required.')
+        const recurringScope = allowClinicWide ? scope : 'branch'
+        if (recurringScope === 'branch' && !branchId) throw new Error('Choose a branch for this recurring expense.')
         await createRecurringExpenseTemplatePersisted({
           name: templateName.trim(),
-          scope: 'branch',
-          branchId: branch.id,
+          scope: recurringScope,
+          branchId: recurringScope === 'branch' ? branchId : undefined,
           categoryId,
           vendorId: vendorId || undefined,
           payeeName: payeeName.trim(),
@@ -102,9 +121,11 @@ export function BranchScopedExpenseActionModal({ type, branch, onClose, onSucces
         })
       } else {
         if (!payeeName.trim() || !description.trim()) throw new Error('Payee and description are required.')
+        const expenseScope = allowClinicWide ? scope : 'branch'
+        if (expenseScope === 'branch' && !branchId) throw new Error('Choose a branch for this expense.')
         await createExpensePersisted({
-          scope: 'branch',
-          branchId: branch.id,
+          scope: expenseScope,
+          branchId: expenseScope === 'branch' ? branchId : undefined,
           categoryId,
           vendorId: vendorId || undefined,
           payeeName: payeeName.trim(),
@@ -129,7 +150,7 @@ export function BranchScopedExpenseActionModal({ type, branch, onClose, onSucces
   return <div className="expense-modal-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget && !busy) onClose() }}>
     <section className="expense-modal" role="dialog" aria-modal="true" aria-labelledby="branch-expense-dialog-title">
       <header className="expense-modal-header">
-        <div><h2 id="branch-expense-dialog-title">{title}</h2><p className="ex122-modal-branch"><strong>{branch.name}</strong><span>Branch-owned financial record</span></p></div>
+        <div><h2 id="branch-expense-dialog-title">{title}</h2><p className="ex122-modal-branch"><strong>{costCenterLabel}</strong><span>Saved to the clinic database, not the browser.</span></p></div>
         <button type="button" className="expense-modal-close" aria-label="Close" onClick={onClose} disabled={busy}><X size={20}/></button>
       </header>
       <div className="expense-modal-body">
@@ -142,7 +163,36 @@ export function BranchScopedExpenseActionModal({ type, branch, onClose, onSucces
           <div className="expense-form-full"><Textarea label="Address" value={address} onChange={(e)=>setAddress(e.target.value)} rows={2}/></div>
           <div className="expense-form-full"><Textarea label="Notes" value={notes} onChange={(e)=>setNotes(e.target.value)} rows={3}/></div>
         </div> : <div className="expense-form-grid">
-          <div className="ex122-locked-branch"><span>Branch</span><strong>{branch.name}</strong><small>This workflow is locked to the active workspace.</small></div>
+          {canPickCostCenter ? (
+            type === 'petty_cash' ? (
+              <Select
+                label="Branch"
+                value={branchId}
+                onChange={(event) => setBranchId(event.target.value)}
+                options={branchOptions.map((entry) => ({ value: entry.id, label: entry.name }))}
+              />
+            ) : (
+              <Select
+                label="Cost center"
+                value={scope === 'clinic_wide' ? 'clinic_wide' : branchId}
+                onChange={(event) => {
+                  const value = event.target.value
+                  if (value === 'clinic_wide') {
+                    setScope('clinic_wide')
+                    return
+                  }
+                  setScope('branch')
+                  setBranchId(value)
+                }}
+                options={[
+                  ...(allowClinicWide ? [{ value: 'clinic_wide', label: 'Clinic-wide' }] : []),
+                  ...branchOptions.map((entry) => ({ value: entry.id, label: entry.name })),
+                ]}
+              />
+            )
+          ) : (
+            <div className="ex122-locked-branch"><span>Branch</span><strong>{selectedBranch?.name ?? 'Clinic-wide'}</strong><small>This workflow is locked to the active workspace.</small></div>
+          )}
           {type === 'recurring' && <Input label="Template name" value={templateName} onChange={(e)=>setTemplateName(e.target.value)} required/>}
           {type !== 'petty_cash' && <Select label="Category" value={categoryId} onChange={(e)=>setCategoryId(e.target.value)} options={categories.map((c)=>({value:c.id,label:c.name}))}/>} 
           {type !== 'petty_cash' && <Select label="Vendor record" value={vendorId} onChange={(e)=>{setVendorId(e.target.value);const vendor=vendors.find((v)=>v.id===e.target.value);if(vendor)setPayeeName(vendor.name)}} options={[{value:'',label:'No linked vendor'},...vendors.map((v)=>({value:v.id,label:v.name}))]}/>} 

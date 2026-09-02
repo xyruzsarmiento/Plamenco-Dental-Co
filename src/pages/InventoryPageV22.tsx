@@ -10,7 +10,6 @@ import {
   PackageCheck,
   PackageMinus,
   PackagePlus,
-  Plus,
   RotateCcw,
   Search,
   Truck,
@@ -18,6 +17,7 @@ import {
   Warehouse,
 } from 'lucide-react'
 import { StatusBadge } from '../components/ui/Badge'
+import { InventoryActionToolbar } from '../components/inventory/InventoryActionToolbar'
 import { Button } from '../components/ui/Button'
 import { Pagination } from '../components/ui/DesignSystem'
 import { usePermissions } from '../features/auth/permissions'
@@ -245,12 +245,20 @@ export function InventoryPageV22() {
           <h2>Inventory Control Center</h2>
           <p>Monitor clinic supplies, branch stock, purchasing, transfers and count reconciliation from one operational workspace.</p>
         </div>
-        <div className="inventory-v22-hero-actions">
-          {permissions.can('inventory.create_item') && <Button icon={<Plus size={16} />} onClick={() => setDialog({ type: 'add_item' })}>Add Item</Button>}
-          {permissions.can('suppliers.manage') && <Button variant="secondary" icon={<Truck size={16} />} onClick={() => setDialog({ type: 'add_supplier' })}>Add Supplier</Button>}
-          {permissions.canAny(['purchase_orders.create', 'purchases.create']) && <Button variant="secondary" icon={<ClipboardList size={16} />} onClick={() => setDialog({ type: 'purchase_order' })}>Purchase Order</Button>}
-          {permissions.can('inventory.adjust') && <Button variant="secondary" icon={<ClipboardCheck size={16} />} onClick={() => setDialog({ type: 'stock_count' })}>Stock Count</Button>}
-        </div>
+        <InventoryActionToolbar
+          canCreateItem={permissions.can('inventory.create_item')}
+          canRecordMovement={permissions.canAny(['inventory.stock_in', 'inventory.stock_out', 'inventory.adjust'])}
+          canAdjustStock={permissions.can('inventory.adjust')}
+          canManageSuppliers={permissions.can('suppliers.manage')}
+          canCreatePurchaseOrder={permissions.canAny(['purchase_orders.create', 'purchases.create'])}
+          disableBranchRequiredActions={selectedBranchId === 'all'}
+          disabledReason="Select one branch in the inventory filters before creating branch-owned records."
+          onAddItem={() => setDialog({ type: 'add_item' })}
+          onStockMovement={() => setActionError('Choose an inventory item from the Stock list, then use Stock In, Stock Out, or Adjust.')}
+          onStockCount={() => setDialog({ type: 'stock_count' })}
+          onPurchaseOrder={() => setDialog({ type: 'purchase_order' })}
+          onAddSupplier={() => setDialog({ type: 'add_supplier' })}
+        />
       </section>
 
       <section className="inventory-v22-metrics">
@@ -340,7 +348,7 @@ export function InventoryPageV22() {
 
       {activeTab === 'stock_counts' && <section className="inventory-v22-data-panel"><header><div><span>Reconciliation</span><h3>Physical Stock Counts</h3></div><strong>{stockCounts.length}</strong></header>{stockCounts.length === 0 ? <div className="inventory-v22-empty"><ClipboardCheck size={28} /><h3>No stock counts</h3><p>Create a count session to compare shelf quantities with the system ledger.</p></div> : <div className="inventory-v22-record-list">{visibleStockCounts.map((count) => { const differences = count.items.filter((entry) => entry.difference !== 0); return <article key={count.id}><div><strong>{count.countNumber}</strong><span>{branchName(count.branchId)} · {dateLabel(count.countDate)}</span><small>{count.items.length} lines · {differences.length} variances</small></div><div><StatusBadge status={count.status} variant="compact" />{permissions.can('inventory.adjust') && count.status === 'draft' && count.items[0] && <Button size="sm" variant="secondary" onClick={() => setDialog({ type: 'count_item', countId: count.id, itemId: count.items[0].itemId, currentQuantity: count.items[0].physicalQuantity })}>Count First Item</Button>}{permissions.can('inventory.adjust') && count.status === 'draft' && <Button size="sm" onClick={() => runDirectAction(() => reviewStockCount(count.id, actor))}>Review</Button>}{permissions.can('inventory.adjust') && count.status === 'reviewed' && <Button size="sm" onClick={() => runDirectAction(() => postStockCountReconciliation(count.id, actor))}>Reconcile</Button>}</div></article> })}</div>}<Pagination page={countPage} pageCount={countPageCount} totalItems={stockCounts.length} pageSize={pageSize} pageSizeOptions={INVENTORY_PAGE_SIZE_OPTIONS} onPageChange={setCountPage} onPageSizeChange={setPageSize} label="Reconciliation pages" /></section>}
 
-      {dialog && <InventoryActionModal dialog={dialog} branches={branches} preferredBranchId={selectedBranchId} onClose={() => setDialog(null)} onSuccess={refresh} />}
+      {dialog && <InventoryActionModal dialog={dialog} branches={branches} preferredBranchId={selectedBranchId === 'all' ? undefined : selectedBranchId} onClose={() => setDialog(null)} onSuccess={refresh} />}
     </div>
   )
 }

@@ -1,5 +1,5 @@
 import type { FormEvent } from 'react'
-import { X } from 'lucide-react'
+import { AlertTriangle, Building2, HeartPulse, Phone, ShieldCheck, UserPlus, UserRound, X } from 'lucide-react'
 import { Button } from '../../components/ui/Button'
 import { Input } from '../../components/ui/Input'
 import { Select } from '../../components/ui/Select'
@@ -7,6 +7,7 @@ import { Textarea } from '../../components/ui/Textarea'
 import { getStoredBranches } from '../branches/branchStore'
 import type { PotentialPatientDuplicate } from './patientStore'
 import type { PatientFormMode, PatientFormValues } from './patientTypes'
+import '../../styles/patient-intake-modal-part3.css'
 
 const duplicateSignalLabels: Record<string, string> = {
   patient_number: 'patient number',
@@ -41,6 +42,8 @@ export function PatientFormModal({
   values,
 }: PatientFormModalProps) {
   const branches = getStoredBranches()
+  const selectedBranch = branches.find((branch) => branch.id === values.preferredBranchId)
+  const isAddMode = mode === 'add'
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -48,27 +51,38 @@ export function PatientFormModal({
   }
 
   return (
-    <div className="modal-backdrop" role="presentation">
+    <div className="modal-backdrop patient-intake-backdrop-v3" role="presentation">
       <section
-        className="modal patient-modal"
+        className="modal patient-modal patient-intake-modal-v3"
         aria-labelledby="patient-modal-title"
         role="dialog"
         aria-modal="true"
       >
-        <div className="modal-header">
+        <div className="modal-header patient-intake-header-v3">
+          <span className="patient-intake-header-icon-v3" aria-hidden="true">
+            {isAddMode ? <UserPlus size={22} /> : <UserRound size={22} />}
+          </span>
           <div>
-            <p className="eyebrow">{mode === 'add' ? 'New patient' : 'Edit patient'}</p>
-            <h2 id="patient-modal-title">{mode === 'add' ? 'Add patient' : 'Edit patient'}</h2>
+            <p className="eyebrow">{isAddMode ? 'Patient intake' : 'Patient profile'}</p>
+            <h2 id="patient-modal-title">{isAddMode ? 'Add patient' : 'Edit patient'}</h2>
+            <p>{isAddMode ? 'Create a clean patient record with contact, branch, and clinical context.' : 'Update the patient record while preserving its existing clinical history.'}</p>
           </div>
-          <button className="icon-button" type="button" aria-label="Close patient form" onClick={onClose}>
+          <button className="icon-button patient-intake-close-v3" type="button" aria-label="Close patient form" onClick={onClose}>
             <X size={18} />
           </button>
         </div>
 
-        <form className="form-stack" onSubmit={handleSubmit}>
-          <div className="form-section">
-            <h3>Personal information</h3>
-            <div className="form-grid">
+        <form className="form-stack patient-intake-form-v3" onSubmit={handleSubmit}>
+          <div className="patient-intake-body-v3">
+            <section className="form-section patient-intake-section-v3">
+              <header className="patient-intake-section-head-v3">
+                <span><UserRound size={17} /></span>
+                <div>
+                  <h3>Personal information</h3>
+                  <p>Name, birth date, and patient record status.</p>
+                </div>
+              </header>
+              <div className="form-grid patient-intake-grid-v3">
               <Input
                 label="First name"
                 value={values.firstName}
@@ -117,12 +131,18 @@ export function PatientFormModal({
                   { label: 'Inactive', value: 'inactive' },
                 ]}
               />
-            </div>
-          </div>
+              </div>
+            </section>
 
-          <div className="form-section">
-            <h3>Contact information</h3>
-            <div className="form-grid">
+            <section className="form-section patient-intake-section-v3">
+              <header className="patient-intake-section-head-v3">
+                <span><Phone size={17} /></span>
+                <div>
+                  <h3>Contact information</h3>
+                  <p>Primary contact details and emergency contact support.</p>
+                </div>
+              </header>
+              <div className="form-grid patient-intake-grid-v3">
               <Input
                 label="Phone"
                 value={values.phone}
@@ -160,17 +180,25 @@ export function PatientFormModal({
                 value={values.province ?? ''}
                 onChange={(event) => onChange({ ...values, province: event.target.value })}
               />
-            </div>
-            <Textarea
-              label="Address"
-              value={values.address}
-              onChange={(event) => onChange({ ...values, address: event.target.value })}
-            />
-          </div>
+                <div className="patient-intake-wide-v3">
+                  <Textarea
+                    label="Address"
+                    value={values.address}
+                    onChange={(event) => onChange({ ...values, address: event.target.value })}
+                  />
+                </div>
+              </div>
+            </section>
 
-          <div className="form-section">
-            <h3>Clinic</h3>
-            <div className="form-grid">
+            <section className="form-section patient-intake-section-v3">
+              <header className="patient-intake-section-head-v3">
+                <span><Building2 size={17} /></span>
+                <div>
+                  <h3>Clinic context</h3>
+                  <p>Branch preference and how this record entered the clinic workflow.</p>
+                </div>
+              </header>
+              <div className="form-grid patient-intake-grid-v3">
               <Select
                 label="Preferred branch"
                 value={values.preferredBranchId ?? ''}
@@ -193,17 +221,29 @@ export function PatientFormModal({
                   { label: 'Historical Import', value: 'historical_import' },
                 ]}
               />
-            </div>
-            <Textarea
-              label="Administrative notes"
-              value={values.administrativeNotes ?? ''}
-              onChange={(event) => onChange({ ...values, administrativeNotes: event.target.value })}
-            />
-          </div>
+                <div className="patient-intake-note-v3">
+                  <ShieldCheck size={16} />
+                  <span>{selectedBranch ? `${selectedBranch.name} will appear as the preferred clinic branch.` : 'No branch is required to create the record; it can be assigned later.'}</span>
+                </div>
+                <div className="patient-intake-wide-v3">
+                  <Textarea
+                    label="Administrative notes"
+                    value={values.administrativeNotes ?? ''}
+                    onChange={(event) => onChange({ ...values, administrativeNotes: event.target.value })}
+                  />
+                </div>
+              </div>
+            </section>
 
-          <div className="form-section">
-            <h3>Medical information</h3>
-            <div className="form-grid">
+            <section className="form-section patient-intake-section-v3">
+              <header className="patient-intake-section-head-v3">
+                <span><HeartPulse size={17} /></span>
+                <div>
+                  <h3>Medical information</h3>
+                  <p>Important clinical context stays visible after the patient is created.</p>
+                </div>
+              </header>
+              <div className="form-grid patient-intake-grid-v3">
               <Textarea
                 label="Allergies"
                 value={values.allergies}
@@ -224,48 +264,58 @@ export function PatientFormModal({
                 value={values.previousSurgeries}
                 onChange={(event) => onChange({ ...values, previousSurgeries: event.target.value })}
               />
-            </div>
-            <Textarea
-              label="Medical notes"
-              value={values.medicalNotes}
-              onChange={(event) => onChange({ ...values, medicalNotes: event.target.value })}
-            />
+                <div className="patient-intake-wide-v3">
+                  <Textarea
+                    label="Medical notes"
+                    value={values.medicalNotes}
+                    onChange={(event) => onChange({ ...values, medicalNotes: event.target.value })}
+                  />
+                </div>
+              </div>
+            </section>
+
+            {error && (
+              <div className="inline-alert patient-intake-alert-v3" role="alert">
+                <AlertTriangle size={17} />
+                <span>{error}</span>
+              </div>
+            )}
+
+            {duplicateMatches.length > 0 && (
+              <div className="duplicate-warning-panel patient-intake-duplicates-v3">
+                <div className="patient-intake-duplicate-head-v3">
+                  <AlertTriangle size={18} />
+                  <div>
+                    <h3>Possible existing patient</h3>
+                    <p>Review these matches before creating another patient record.</p>
+                  </div>
+                </div>
+                <div className="duplicate-match-list">
+                  {duplicateMatches.map((match) => (
+                    <div key={match.patient.id} className="duplicate-match-row">
+                      <div>
+                        <strong>{match.patient.firstName} {match.patient.lastName}</strong>
+                        <span>{match.patient.patientId} - {match.signals.map((signal) => duplicateSignalLabels[signal] ?? signal).join(', ')}</span>
+                      </div>
+                      <button type="button" className="text-button" onClick={() => onOpenDuplicate?.(match.patient.id)}>
+                        Open existing
+                      </button>
+                    </div>
+                  ))}
+                </div>
+                <button type="button" className="btn btn-secondary btn-sm" onClick={onContinueDuplicate}>
+                  Continue creating new patient
+                </button>
+              </div>
+            )}
           </div>
 
-          {error && (
-            <div className="inline-alert" role="alert">
-              <span>{error}</span>
-            </div>
-          )}
-
-          {duplicateMatches.length > 0 && (
-            <div className="duplicate-warning-panel">
-              <h3>Possible existing patient</h3>
-              <p>Review these matches before creating another patient record.</p>
-              <div className="duplicate-match-list">
-                {duplicateMatches.map((match) => (
-                  <div key={match.patient.id} className="duplicate-match-row">
-                    <div>
-                      <strong>{match.patient.firstName} {match.patient.lastName}</strong>
-                      <span>{match.patient.patientId} - {match.signals.map((signal) => duplicateSignalLabels[signal] ?? signal).join(', ')}</span>
-                    </div>
-                    <button type="button" className="text-button" onClick={() => onOpenDuplicate?.(match.patient.id)}>
-                      Open existing
-                    </button>
-                  </div>
-                ))}
-              </div>
-              <button type="button" className="btn btn-secondary btn-sm" onClick={onContinueDuplicate}>
-                Continue creating new patient
-              </button>
-            </div>
-          )}
-
-          <div className="modal-actions">
+          <div className="modal-actions patient-intake-actions-v3">
+            <span>{isAddMode ? 'Required fields include name, birth date, and phone.' : 'Changes save to the existing patient profile.'}</span>
             <Button variant="secondary" type="button" onClick={onClose}>
               Cancel
             </Button>
-            <Button type="submit">{mode === 'add' ? 'Create patient' : 'Save changes'}</Button>
+            <Button type="submit">{isAddMode ? 'Create patient' : 'Save changes'}</Button>
           </div>
         </form>
       </section>

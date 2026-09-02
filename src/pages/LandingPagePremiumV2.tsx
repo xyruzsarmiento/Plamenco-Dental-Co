@@ -16,10 +16,11 @@ import {
   UsersRound,
   X,
 } from 'lucide-react'
-import { getStoredStaff } from '../features/auth/staffStore'
 import { getStoredBranches } from '../features/branches/branchStore'
 import { getStoredProviders } from '../features/dentists/dentistStore'
 import { getStoredServices } from '../features/services/serviceStore'
+import { INTERNAL_AVATAR_BUCKET } from '../features/profiles/profileStore'
+import { supabase } from '../lib/supabase'
 import '../styles/landing-premium-v2.css'
 
 const patientJourney = [
@@ -48,6 +49,17 @@ const faqItems = [
   },
 ]
 
+type PublicTeamMember = {
+  id: string
+  displayName: string
+  role: string
+  specialization: string
+  bio: string
+  branchNames: string[]
+  photoUrl: string
+  photoPath: string
+}
+
 function formatTime(value: string) {
   const [hourValue, minuteValue] = value.split(':').map(Number)
   const date = new Date(2000, 0, 1, Number.isFinite(hourValue) ? hourValue : 9, Number.isFinite(minuteValue) ? minuteValue : 0)
@@ -58,19 +70,67 @@ export function LandingPagePremiumV2() {
   const [menuOpen, setMenuOpen] = useState(false)
   const [expandedFaq, setExpandedFaq] = useState<number | null>(0)
   const [scrolled, setScrolled] = useState(false)
+  const [publicTeam, setPublicTeam] = useState<PublicTeamMember[]>(() =>
+    getStoredProviders()
+      .filter((item) => item.status === 'active')
+      .slice(0, 5)
+      .map((provider) => ({
+        id: provider.id,
+        displayName: provider.displayName,
+        role: provider.role,
+        specialization: provider.specialization,
+        bio: provider.bio,
+        branchNames: [],
+        photoUrl: /^(https?:|data:|blob:)/i.test(provider.photoUrl) ? provider.photoUrl : '',
+        photoPath: provider.photoUrl,
+      })),
+  )
 
   const services = useMemo(() => getStoredServices().filter((item) => item.status === 'active').slice(0, 6), [])
   const branches = useMemo(() => getStoredBranches().filter((item) => item.status === 'active'), [])
-  const providers = useMemo(() => getStoredProviders().filter((item) => item.status === 'active').slice(0, 5), [])
-  const staff = useMemo(() => getStoredStaff().filter((item) => item.status === 'active').slice(0, 4), [])
-  const leadProvider = providers.find((provider) => provider.role === 'dentist') ?? providers[0]
-  const supportingProviders = providers.filter((provider) => provider.id !== leadProvider?.id)
+  const leadProvider = publicTeam.find((provider) => provider.role === 'dentist' || provider.role === 'clinic_leadership') ?? publicTeam[0]
+  const supportingProviders = publicTeam.filter((provider) => provider.id !== leadProvider?.id)
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 18)
     onScroll()
     window.addEventListener('scroll', onScroll, { passive: true })
     return () => window.removeEventListener('scroll', onScroll)
+  }, [])
+
+  useEffect(() => {
+    let active = true
+    async function loadPublicTeam() {
+      const client = supabase
+      if (!client) return
+      const { data, error } = await client.rpc('get_public_clinic_team_v133')
+      if (error || !Array.isArray(data)) {
+        if (import.meta.env.DEV && error) console.warn('[landing public team]', error)
+        return
+      }
+      const rows = await Promise.all(data.map(async (row: Record<string, unknown>): Promise<PublicTeamMember> => {
+        const photoUrl = String(row.photo_url ?? '')
+        const photoPath = String(row.photo_path ?? '')
+        let resolvedPhoto = photoUrl
+        if (!resolvedPhoto && photoPath && !/^(https?:|data:|blob:)/i.test(photoPath)) {
+          const signed = await client.storage.from(INTERNAL_AVATAR_BUCKET).createSignedUrl(photoPath, 60 * 60)
+          resolvedPhoto = signed.data?.signedUrl ?? ''
+        }
+        return {
+          id: String(row.id ?? ''),
+          displayName: String(row.display_name ?? ''),
+          role: String(row.role ?? ''),
+          specialization: String(row.specialization ?? ''),
+          bio: String(row.bio ?? ''),
+          branchNames: Array.isArray(row.branch_names) ? row.branch_names.map(String) : [],
+          photoUrl: resolvedPhoto,
+          photoPath,
+        }
+      }))
+      if (active && rows.length) setPublicTeam(rows.filter((row) => row.displayName))
+    }
+    void loadPublicTeam()
+    return () => { active = false }
   }, [])
 
   return (
@@ -151,13 +211,27 @@ export function LandingPagePremiumV2() {
             <div className="lpv2-heading team"><div><span className="lpv2-section-label">Care team</span><h2>Meet the people behind your care.</h2></div><p>Featuring clinic leadership, active dentists and the patient-facing staff who help coordinate your visit.</p></div>
             <div className="lpv2-team-layout">
               <article className="lpv2-team-feature">
-                <div className="lpv2-team-photo">{leadProvider?.photoUrl ? <img src={leadProvider.photoUrl} alt={leadProvider.displayName}/> : <img src="/assets/images/clinic.png" alt="Plamenco Dental Co. clinical team"/>}</div>
-                <div className="lpv2-team-feature-copy"><span>{leadProvider?.role === 'dentist' ? 'Owner / Lead Dentist' : 'Featured Dentist'}</span><h3>{leadProvider?.displayName ?? 'Plamenco Dental Co. Clinical Team'}</h3><p>{leadProvider?.specialization || leadProvider?.bio || 'Patient-focused dental care supported by a coordinated clinic team.'}</p><small><Stethoscope size={15}/> Clinical care & treatment planning</small></div>
+                <div className="lpv2-team-photo">
+                  {leadProvider?.photoUrl
+                    ? <img src={leadProvider.photoUrl} alt={leadProvider.displayName}/>
+                    : <div className="lpv2-team-initials">{leadProvider?.displayName ? leadProvider.displayName.split(/\s+/).slice(0,2).map((part) => part.charAt(0)).join('') : 'P'}</div>}
+                </div>
+                <div className="lpv2-team-feature-copy">
+                  <span>{leadProvider?.role === 'clinic_leadership' ? 'Clinic leadership' : leadProvider?.role === 'dentist' ? 'Lead Dentist' : 'Featured Dentist'}</span>
+                  <h3>{leadProvider?.displayName ?? 'Plamenco Dental Co. Clinical Team'}</h3>
+                  <p>{leadProvider?.specialization || leadProvider?.bio || 'Patient-focused dental care supported by a coordinated clinic team.'}</p>
+                  <small><Stethoscope size={15}/> Clinical care & treatment planning</small>
+                </div>
               </article>
 
               <div className="lpv2-team-side">
-                {supportingProviders.slice(0,2).map((provider) => <article className="lpv2-person-card" key={provider.id}><div>{provider.photoUrl ? <img src={provider.photoUrl} alt={provider.displayName}/> : <span>{provider.displayName.charAt(0)}</span>}</div><section><span>{provider.role === 'associate_dentist' ? 'Associate Dentist' : 'Dentist'}</span><h3>{provider.displayName}</h3><p>{provider.specialization || provider.bio || 'Dental care provider at Plamenco Dental Co.'}</p></section></article>)}
-                <article className="lpv2-staff-card"><img src="/assets/images/cashier.jpg" alt="Plamenco Dental Co. clinic staff"/><div><span>Clinic staff</span><h3>Patient coordination team</h3><p>{staff.length ? staff.map((member) => `${member.name}${member.position ? ` · ${member.position}` : ''}`).join('  •  ') : 'Front-desk coordination, patient support and clinic operations.'}</p><small><UsersRound size={15}/> Here to help before and after your visit</small></div></article>
+                {supportingProviders.slice(0,2).map((provider) => (
+                  <article className="lpv2-person-card" key={provider.id}>
+                    <div>{provider.photoUrl ? <img src={provider.photoUrl} alt={provider.displayName}/> : <span>{provider.displayName.split(/\s+/).slice(0,2).map((part) => part.charAt(0)).join('')}</span>}</div>
+                    <section><span>{provider.role === 'associate_dentist' ? 'Associate Dentist' : provider.role === 'clinic_leadership' ? 'Clinic leadership' : 'Dentist'}</span><h3>{provider.displayName}</h3><p>{provider.specialization || provider.bio || 'Dental care provider at Plamenco Dental Co.'}</p></section>
+                  </article>
+                ))}
+                <article className="lpv2-staff-card"><img src="/assets/images/cashier.jpg" alt="Plamenco Dental Co. clinic staff"/><div><span>Clinic staff</span><h3>Patient coordination team</h3><p>Front-desk coordination, patient support and clinic operations.</p><small><UsersRound size={15}/> Here to help before and after your visit</small></div></article>
               </div>
             </div>
           </div>

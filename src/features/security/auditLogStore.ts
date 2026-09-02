@@ -21,6 +21,7 @@ export type AuditAction =
   | 'treatment_updated'
   | 'charge_added'
   | 'invoice_created'
+  | 'invoice_updated'
   | 'invoice_voided'
   | 'discount_applied'
   | 'payment_submitted'
@@ -97,6 +98,7 @@ export function formatAuditAction(action: AuditAction) {
     treatment_updated: { label: 'Treatment updated', description: 'An existing treatment record was changed or voided.' },
     charge_added: { label: 'Charge added', description: 'A financial charge was created from authorized clinic work.' },
     invoice_created: { label: 'Invoice created', description: 'A billing invoice was created.' },
+    invoice_updated: { label: 'Invoice updated', description: 'An editable draft or unpaid invoice was revised.' },
     invoice_voided: { label: 'Invoice voided', description: 'An unpaid invoice was voided with a reason.' },
     discount_applied: { label: 'Discount applied', description: 'An authorized discount was applied to a billing line item.' },
     payment_submitted: { label: 'Payment submitted', description: 'A payment was submitted for processing or verification.' },

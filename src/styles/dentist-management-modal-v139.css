@@ -1,0 +1,377 @@
+/* Centered dentist management modal polish. */
+
+.dentists133-drawer-backdrop {
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: 120 !important;
+  display: grid !important;
+  place-items: center !important;
+  justify-content: initial !important;
+  padding: clamp(14px, 2vw, 28px) !important;
+  overflow: hidden !important;
+  background: rgba(15, 23, 42, .46) !important;
+  backdrop-filter: blur(8px) !important;
+}
+
+.dentists133-drawer {
+  display: grid !important;
+  grid-template-rows: auto minmax(0, 1fr) !important;
+  width: min(1120px, calc(100vw - 32px)) !important;
+  height: min(850px, calc(100dvh - 32px)) !important;
+  max-height: calc(100dvh - 32px) !important;
+  overflow: hidden !important;
+  border: 1px solid rgba(191, 219, 254, .9) !important;
+  border-radius: 28px !important;
+  background: #f7faff !important;
+  box-shadow: 0 34px 95px rgba(15, 23, 42, .26) !important;
+}
+
+.dentists133-drawer-header {
+  position: relative;
+  display: grid !important;
+  grid-template-columns: auto minmax(0, 1fr) auto !important;
+  align-items: center !important;
+  gap: 18px !important;
+  padding: 24px 28px !important;
+  border-bottom: 1px solid #dfe8f5 !important;
+  background:
+    linear-gradient(135deg, rgba(255,255,255,.98), rgba(239,246,255,.94)),
+    #fff !important;
+}
+
+.dentists133-drawer-header .dentists133-avatar.is-lg {
+  width: 76px !important;
+  height: 76px !important;
+  border-radius: 24px !important;
+  border-color: #bfdbfe !important;
+  background: #eaf2ff !important;
+  color: #1d4ed8 !important;
+  box-shadow: 0 15px 36px rgba(37, 99, 235, .12) !important;
+}
+
+.dentists133-drawer-header h2 {
+  margin: 4px 0 5px !important;
+  max-width: 100%;
+  color: #0f172a !important;
+  font-size: clamp(1.85rem, 3vw, 2.45rem) !important;
+  line-height: 1.03 !important;
+  letter-spacing: 0 !important;
+  overflow-wrap: anywhere;
+}
+
+.dentists133-drawer-header p {
+  color: #516175 !important;
+  font-size: .98rem !important;
+}
+
+.dentists133-drawer-header .modal-close-button {
+  align-self: start !important;
+  justify-self: end !important;
+}
+
+.dentists133-drawer-body {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) minmax(340px, .85fr) !important;
+  align-items: start !important;
+  gap: 16px !important;
+  min-width: 0 !important;
+  min-height: 0 !important;
+  padding: 18px !important;
+  overflow-x: hidden !important;
+  overflow-y: auto !important;
+  scrollbar-gutter: stable !important;
+}
+
+.dentists133-drawer-body > section {
+  min-width: 0 !important;
+  padding: 17px !important;
+  border: 1px solid #dfe8f5 !important;
+  border-radius: 20px !important;
+  background: #fff !important;
+  box-shadow: 0 16px 36px rgba(15, 23, 42, .055) !important;
+}
+
+.dentists133-drawer-body > section:first-child,
+.dentists133-drawer-body > section:nth-child(3),
+.dentists133-drawer-body > section:nth-child(5) {
+  grid-column: 1 !important;
+}
+
+.dentists133-drawer-body > section:nth-child(2),
+.dentists133-drawer-body > section:nth-child(4),
+.dentists133-drawer-body > section:nth-child(6) {
+  grid-column: 2 !important;
+}
+
+.dentists133-drawer-body > section:nth-child(3) {
+  position: static !important;
+}
+
+.dentists133-drawer h3 {
+  margin-bottom: 2px !important;
+  color: #111827 !important;
+  font-size: 1rem !important;
+  letter-spacing: 0 !important;
+}
+
+.dentists133-info-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+}
+
+.dentists133-info-grid article {
+  min-width: 0 !important;
+  padding: 12px !important;
+  border-radius: 14px !important;
+}
+
+.dentists133-info-grid strong,
+.dentists133-branch-list strong {
+  overflow-wrap: anywhere;
+  line-height: 1.25 !important;
+}
+
+.dentists133-branch-list {
+  grid-template-columns: 1fr !important;
+}
+
+.dentists133-branch-list label {
+  min-height: 66px !important;
+  padding: 13px !important;
+  border-radius: 15px !important;
+}
+
+.dentists133-week {
+  max-height: min(430px, 45dvh) !important;
+  overflow: auto !important;
+  padding-right: 4px !important;
+  scrollbar-gutter: stable !important;
+}
+
+.dentists133-week article {
+  gap: 10px !important;
+  padding: 13px !important;
+  border-radius: 15px !important;
+}
+
+.dentists133-week article > header {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) auto !important;
+  align-items: center !important;
+  padding-bottom: 8px !important;
+  border-bottom: 1px solid #edf2f7 !important;
+}
+
+.dentists133-week article > header .btn {
+  min-width: 136px;
+}
+
+.dentists133-period {
+  grid-template-columns: minmax(170px, 1fr) 112px auto 112px 38px !important;
+  gap: 8px !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  padding: 9px !important;
+  border: 1px solid #e7edf5 !important;
+  border-radius: 14px !important;
+  background: #f8fbff !important;
+}
+
+.dentists133-period select,
+.dentists133-period input,
+.dentists133-exception-form input,
+.dentists133-exception-form select {
+  min-width: 0 !important;
+  height: 40px !important;
+  min-height: 40px !important;
+  border-color: #d8e2f0 !important;
+  border-radius: 12px !important;
+}
+
+.dentists133-period > span {
+  color: #64748b;
+  font-size: .82rem;
+  font-weight: 760;
+}
+
+.dentists133-period button,
+.dentists133-exceptions article > button {
+  width: 38px !important;
+  height: 38px !important;
+  min-height: 38px !important;
+  border: 1px solid #fecaca !important;
+  border-radius: 12px !important;
+  background: #fff5f5 !important;
+  color: #dc2626 !important;
+}
+
+.dentists133-drawer section > .btn {
+  width: 100%;
+  min-height: 44px !important;
+  border-radius: 14px !important;
+}
+
+.dentists133-exception-form {
+  grid-template-columns: minmax(130px, .7fr) minmax(150px, .9fr) minmax(140px, 1fr) auto !important;
+  gap: 9px !important;
+}
+
+.dentists133-exception-form .btn {
+  min-height: 40px !important;
+  white-space: nowrap;
+}
+
+.dentists133-exceptions {
+  padding: 0 !important;
+  border: 0 !important;
+  box-shadow: none !important;
+}
+
+.dentists133-exceptions article,
+.dentists133-next-list article {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) auto auto !important;
+  align-items: center !important;
+  gap: 10px !important;
+  padding: 11px 12px !important;
+  border: 1px solid #edf2f7 !important;
+  border-radius: 14px !important;
+  background: #fbfdff !important;
+}
+
+.dentists133-next-list {
+  display: grid;
+  gap: 8px;
+}
+
+.dentists133-contact-line {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  gap: 9px !important;
+}
+
+@media (max-width: 1180px) {
+  .dentists133-drawer {
+    width: min(940px, calc(100vw - 28px)) !important;
+  }
+
+  .dentists133-drawer-body {
+    grid-template-columns: 1fr !important;
+  }
+
+  .dentists133-drawer-body > section,
+  .dentists133-drawer-body > section:first-child,
+  .dentists133-drawer-body > section:nth-child(2),
+  .dentists133-drawer-body > section:nth-child(3),
+  .dentists133-drawer-body > section:nth-child(4),
+  .dentists133-drawer-body > section:nth-child(5),
+  .dentists133-drawer-body > section:nth-child(6) {
+    grid-column: 1 !important;
+  }
+
+  .dentists133-week {
+    max-height: 360px !important;
+  }
+}
+
+@media (max-width: 760px) {
+  .dentists133-drawer-backdrop {
+    align-items: end !important;
+    place-items: end center !important;
+    padding: 10px !important;
+  }
+
+  .dentists133-drawer {
+    width: 100% !important;
+    height: min(92dvh, 920px) !important;
+    max-height: 92dvh !important;
+    border-radius: 22px 22px 0 0 !important;
+  }
+
+  .dentists133-drawer-header {
+    grid-template-columns: auto minmax(0, 1fr) auto !important;
+    gap: 12px !important;
+    padding: 18px !important;
+  }
+
+  .dentists133-drawer-header .dentists133-avatar.is-lg {
+    width: 58px !important;
+    height: 58px !important;
+    border-radius: 18px !important;
+  }
+
+  .dentists133-drawer-header h2 {
+    font-size: 1.45rem !important;
+  }
+
+  .dentists133-drawer-body {
+    padding: 12px !important;
+  }
+
+  .dentists133-info-grid,
+  .dentists133-exception-form {
+    grid-template-columns: 1fr !important;
+  }
+
+  .dentists133-week {
+    max-height: none !important;
+  }
+
+  .dentists133-week article > header {
+    grid-template-columns: 1fr !important;
+  }
+
+  .dentists133-week article > header .btn {
+    width: 100%;
+  }
+
+  .dentists133-period {
+    grid-template-columns: 1fr 1fr !important;
+  }
+
+  .dentists133-period select {
+    grid-column: 1 / -1;
+  }
+
+  .dentists133-period > span {
+    align-self: center;
+    text-align: center;
+  }
+
+  .dentists133-period button {
+    width: 100% !important;
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 460px) {
+  .dentists133-drawer-backdrop {
+    padding: 0 !important;
+  }
+
+  .dentists133-drawer {
+    height: 100dvh !important;
+    max-height: 100dvh !important;
+    border-radius: 0 !important;
+  }
+
+  .dentists133-drawer-header {
+    grid-template-columns: minmax(0, 1fr) auto !important;
+  }
+
+  .dentists133-drawer-header .dentists133-avatar.is-lg {
+    display: none !important;
+  }
+
+  .dentists133-period {
+    grid-template-columns: 1fr !important;
+  }
+
+  .dentists133-period > span {
+    display: none;
+  }
+
+  .dentists133-exceptions article,
+  .dentists133-next-list article {
+    grid-template-columns: 1fr !important;
+  }
+}

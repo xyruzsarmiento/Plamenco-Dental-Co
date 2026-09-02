@@ -24,3 +24,14 @@ export function RequirePermission({ anyOf, children, permission }: RequirePermis
 
   return children
 }
+
+export function RequireSuperAdmin({ children }: { children: React.ReactNode }) {
+  const location = useLocation()
+  const { user } = useAuth()
+
+  if (!user || user.status !== 'active' || user.role !== 'super_admin') {
+    return <Navigate to="/unauthorized" state={{ from: location }} replace />
+  }
+
+  return children
+}

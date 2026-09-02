@@ -1,0 +1,181 @@
+/* Compact premium financial-history chart for Super Admin and Staff reports. */
+
+.app-shell :where(.role-super_admin, .role-staff) .rep129-financial-history-card,
+.app-shell.role-super_admin .rep129-financial-history-card,
+.app-shell.role-staff .rep129-financial-history-card {
+  display: grid !important;
+  gap: 16px !important;
+  padding: 20px !important;
+}
+
+.app-shell.role-super_admin .rep129-financial-history-card .rep129-card-head,
+.app-shell.role-staff .rep129-financial-history-card .rep129-card-head {
+  align-items: center !important;
+  margin: 0 !important;
+  padding-bottom: 12px !important;
+  border-bottom: 1px solid #eef3f8 !important;
+}
+
+.app-shell.role-super_admin .rep129-financial-history-card .rep129-card-head h3,
+.app-shell.role-staff .rep129-financial-history-card .rep129-card-head h3 {
+  margin-top: 4px !important;
+  color: #172033 !important;
+  font-size: clamp(1.1rem, 1.5vw, 1.35rem) !important;
+  line-height: 1.12 !important;
+  letter-spacing: 0 !important;
+}
+
+.app-shell.role-super_admin .rep129-financial-history-card .rep129-card-head p,
+.app-shell.role-staff .rep129-financial-history-card .rep129-card-head p {
+  max-width: 680px !important;
+  margin-top: 6px !important;
+  color: #667085 !important;
+  font-size: .76rem !important;
+  line-height: 1.45 !important;
+}
+
+.app-shell.role-super_admin .rep129-financial-history-card .rep129-card-head > svg,
+.app-shell.role-staff .rep129-financial-history-card .rep129-card-head > svg {
+  width: 38px !important;
+  height: 38px !important;
+  padding: 10px !important;
+  border: 1px solid #dbeafe !important;
+  border-radius: 12px !important;
+  background: #f8fbff !important;
+  color: #1d4ed8 !important;
+}
+
+.app-shell.role-super_admin .rep129-financial-history-card .premium-chart-v35,
+.app-shell.role-staff .rep129-financial-history-card .premium-chart-v35 {
+  min-width: 0 !important;
+}
+
+.app-shell.role-super_admin .rep129-financial-history-card .premium-chart-scroll-v35,
+.app-shell.role-staff .rep129-financial-history-card .premium-chart-scroll-v35 {
+  overflow-x: auto !important;
+  overflow-y: hidden !important;
+  padding: 14px 14px 10px !important;
+  border: 1px solid #edf2f7 !important;
+  border-radius: 18px !important;
+  background:
+    linear-gradient(180deg, rgba(248, 251, 255, .98) 0%, rgba(255, 255, 255, 1) 100%),
+    radial-gradient(circle at 18% 4%, rgba(37, 99, 235, .08), transparent 36%) !important;
+  scrollbar-width: thin !important;
+}
+
+.app-shell.role-super_admin .rep129-financial-history-card .premium-line-chart-v35,
+.app-shell.role-staff .rep129-financial-history-card .premium-line-chart-v35 {
+  display: block !important;
+  width: 100% !important;
+  min-width: 760px !important;
+  height: 290px !important;
+  max-height: 290px !important;
+}
+
+.app-shell.role-super_admin .rep129-financial-history-card .premium-chart-grid-v35,
+.app-shell.role-staff .rep129-financial-history-card .premium-chart-grid-v35 {
+  stroke: #e8eef6 !important;
+  stroke-width: 1 !important;
+  stroke-dasharray: 4 8 !important;
+}
+
+.app-shell.role-super_admin .rep129-financial-history-card .premium-chart-line-v35,
+.app-shell.role-staff .rep129-financial-history-card .premium-chart-line-v35 {
+  fill: none !important;
+  stroke-width: 3.6 !important;
+  stroke-linecap: round !important;
+  stroke-linejoin: round !important;
+  filter: drop-shadow(0 5px 5px rgba(37, 99, 235, .12)) !important;
+}
+
+.app-shell.role-super_admin .rep129-financial-history-card .premium-chart-area-v35,
+.app-shell.role-staff .rep129-financial-history-card .premium-chart-area-v35 {
+  pointer-events: none !important;
+}
+
+.app-shell.role-super_admin .rep129-financial-history-card .premium-chart-series-v35.series-0 .premium-chart-area-v35,
+.app-shell.role-staff .rep129-financial-history-card .premium-chart-series-v35.series-0 .premium-chart-area-v35 {
+  fill: url("#premium-finance-area-0") !important;
+}
+
+.app-shell.role-super_admin .rep129-financial-history-card .premium-chart-series-v35.series-1 .premium-chart-area-v35,
+.app-shell.role-staff .rep129-financial-history-card .premium-chart-series-v35.series-1 .premium-chart-area-v35 {
+  fill: url("#premium-finance-area-1") !important;
+}
+
+.app-shell.role-super_admin .rep129-financial-history-card .premium-chart-series-v35.series-0 .premium-chart-line-v35,
+.app-shell.role-staff .rep129-financial-history-card .premium-chart-series-v35.series-0 .premium-chart-line-v35 {
+  stroke: #2563eb !important;
+}
+
+.app-shell.role-super_admin .rep129-financial-history-card .premium-chart-series-v35.series-1 .premium-chart-line-v35,
+.app-shell.role-staff .rep129-financial-history-card .premium-chart-series-v35.series-1 .premium-chart-line-v35 {
+  stroke: #60a5fa !important;
+  filter: drop-shadow(0 5px 5px rgba(96, 165, 250, .12)) !important;
+}
+
+.app-shell.role-super_admin .rep129-financial-history-card .premium-chart-dot-v35,
+.app-shell.role-staff .rep129-financial-history-card .premium-chart-dot-v35 {
+  fill: #ffffff !important;
+  stroke-width: 3 !important;
+}
+
+.app-shell.role-super_admin .rep129-financial-history-card .premium-chart-series-v35.series-0 .premium-chart-dot-v35,
+.app-shell.role-staff .rep129-financial-history-card .premium-chart-series-v35.series-0 .premium-chart-dot-v35 {
+  stroke: #2563eb !important;
+}
+
+.app-shell.role-super_admin .rep129-financial-history-card .premium-chart-series-v35.series-1 .premium-chart-dot-v35,
+.app-shell.role-staff .rep129-financial-history-card .premium-chart-series-v35.series-1 .premium-chart-dot-v35 {
+  stroke: #60a5fa !important;
+}
+
+.app-shell.role-super_admin .rep129-financial-history-card .premium-chart-dot-v35:hover,
+.app-shell.role-super_admin .rep129-financial-history-card .premium-chart-dot-v35:focus-visible,
+.app-shell.role-staff .rep129-financial-history-card .premium-chart-dot-v35:hover,
+.app-shell.role-staff .rep129-financial-history-card .premium-chart-dot-v35:focus-visible {
+  r: 6px !important;
+  fill: #eff6ff !important;
+  outline: none !important;
+}
+
+.app-shell.role-super_admin .rep129-financial-history-card .premium-chart-axis-v35,
+.app-shell.role-staff .rep129-financial-history-card .premium-chart-axis-v35 {
+  fill: #667085 !important;
+  font-size: 11px !important;
+  font-weight: 700 !important;
+}
+
+@media (max-width: 760px) {
+  .app-shell.role-super_admin .rep129-financial-history-card,
+  .app-shell.role-staff .rep129-financial-history-card {
+    padding: 16px !important;
+  }
+
+  .app-shell.role-super_admin .rep129-financial-history-card .rep129-card-head,
+  .app-shell.role-staff .rep129-financial-history-card .rep129-card-head {
+    align-items: flex-start !important;
+  }
+
+  .app-shell.role-super_admin .rep129-financial-history-card .premium-chart-scroll-v35,
+  .app-shell.role-staff .rep129-financial-history-card .premium-chart-scroll-v35 {
+    margin-inline: -2px !important;
+    padding: 11px 9px 8px !important;
+  }
+
+  .app-shell.role-super_admin .rep129-financial-history-card .premium-line-chart-v35,
+  .app-shell.role-staff .rep129-financial-history-card .premium-line-chart-v35 {
+    min-width: 680px !important;
+    height: 250px !important;
+    max-height: 250px !important;
+  }
+}
+
+@media (max-width: 430px) {
+  .app-shell.role-super_admin .rep129-financial-history-card .premium-line-chart-v35,
+  .app-shell.role-staff .rep129-financial-history-card .premium-line-chart-v35 {
+    min-width: 620px !important;
+    height: 230px !important;
+    max-height: 230px !important;
+  }
+}

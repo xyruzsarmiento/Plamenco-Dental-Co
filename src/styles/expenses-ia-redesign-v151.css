@@ -1,0 +1,920 @@
+.expenses-ia-shell {
+  gap: 16px;
+}
+
+.app-shell :where(.ex57-page, .ex122-page) {
+  --expense-ink: #172033;
+  --expense-muted: #66758c;
+  --expense-line: #dbe7f5;
+  --expense-line-strong: #bfd6f6;
+  --expense-blue: #2563eb;
+  --expense-blue-dark: #1d4ed8;
+  --expense-card: rgba(255, 255, 255, 0.95);
+  --expense-soft: #f8fbff;
+  --expense-shadow: 0 12px 30px rgba(15, 23, 42, 0.05);
+  display: grid;
+  gap: 14px;
+}
+
+.app-shell :where(.ex57-hero, .ex122-company-scope, .ex122-branch-context, .ex129-history) {
+  border-color: var(--expense-line-strong) !important;
+  border-radius: 22px !important;
+  background:
+    radial-gradient(circle at 91% 18%, rgba(37, 99, 235, 0.11), transparent 23%),
+    linear-gradient(135deg, #ffffff 0%, #fbfdff 58%, #edf5ff 100%) !important;
+  box-shadow: var(--expense-shadow) !important;
+}
+
+.app-shell .ex57-hero {
+  order: 1;
+  min-height: 104px !important;
+  align-items: center !important;
+  padding: 20px 24px !important;
+  overflow: visible !important;
+}
+
+.app-shell .ex57-hero > div:first-child {
+  max-width: 740px;
+}
+
+.app-shell .ex57-hero span {
+  margin-bottom: 5px !important;
+  color: var(--expense-blue) !important;
+  font-size: 0.64rem !important;
+  font-weight: 850 !important;
+  letter-spacing: 0.08em !important;
+}
+
+.app-shell .ex57-hero h1 {
+  margin: 0 !important;
+  color: #0f172a !important;
+  font-size: clamp(1.65rem, 2.2vw, 2.35rem) !important;
+  line-height: 1.08 !important;
+}
+
+.app-shell .ex57-hero p {
+  margin-top: 8px !important;
+  color: var(--expense-muted) !important;
+  font-size: 0.84rem !important;
+  line-height: 1.55 !important;
+}
+
+.app-shell .ex57-actions {
+  display: flex !important;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 9px !important;
+  width: auto !important;
+  min-width: 0 !important;
+  max-width: 520px;
+}
+
+.app-shell .ex57-actions .btn {
+  min-height: 42px !important;
+  width: auto !important;
+  min-width: 126px !important;
+  padding: 0 15px !important;
+  border-radius: 13px !important;
+  font-size: 0.78rem !important;
+  font-weight: 800 !important;
+  letter-spacing: 0 !important;
+  white-space: nowrap;
+}
+
+.app-shell .ex57-actions .btn-primary,
+.app-shell .ex57-actions .btn:first-child {
+  color: #fff !important;
+  background: linear-gradient(135deg, var(--expense-blue), var(--expense-blue-dark)) !important;
+  box-shadow: 0 12px 26px rgba(37, 99, 235, 0.24) !important;
+}
+
+.app-shell .ex57-actions .btn-primary :where(span, svg),
+.app-shell .ex57-actions .btn:first-child :where(span, svg) {
+  color: #fff !important;
+  stroke: #fff !important;
+}
+
+.app-shell .ex122-company-scope,
+.app-shell .ex122-branch-context {
+  order: 2;
+  padding: 12px 14px;
+}
+
+.app-shell .ex57-context {
+  order: 3;
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: 15px;
+  background: #f8fbff;
+  box-shadow: none;
+}
+
+.app-shell .ex57-context strong {
+  font-weight: 720;
+}
+
+.app-shell .ex57-kpis {
+  order: 4;
+  grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+  gap: 10px !important;
+}
+
+.app-shell .ex57-kpis article {
+  min-height: 86px !important;
+  padding: 13px 14px !important;
+  border-color: var(--expense-line) !important;
+  border-radius: 16px !important;
+  background: var(--expense-card) !important;
+  box-shadow: 0 8px 22px rgba(15, 23, 42, 0.035) !important;
+}
+
+.app-shell .ex57-kpis article span {
+  color: #718096 !important;
+  font-size: 0.64rem !important;
+  font-weight: 750 !important;
+  letter-spacing: 0.04em !important;
+}
+
+.app-shell .ex57-kpis article strong {
+  color: var(--expense-ink) !important;
+  font-size: 1.18rem !important;
+  line-height: 1.05 !important;
+}
+
+.app-shell .ex57-kpis article small {
+  color: #8996a8 !important;
+  font-size: 0.68rem !important;
+}
+
+.app-shell .ex57-command {
+  order: 5;
+  gap: 10px !important;
+  padding: 12px !important;
+  border-color: var(--expense-line) !important;
+  border-radius: 18px !important;
+  background: var(--expense-card) !important;
+  box-shadow: var(--expense-shadow) !important;
+}
+
+.app-shell .ex57-tabs {
+  display: flex !important;
+  gap: 7px !important;
+  padding: 2px !important;
+  border: 0 !important;
+  background: transparent !important;
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
+
+.app-shell .ex57-tabs button {
+  flex: 0 0 auto;
+  min-height: 38px !important;
+  min-width: 120px !important;
+  padding: 0 13px !important;
+  border: 1px solid transparent !important;
+  border-radius: 12px !important;
+  background: transparent !important;
+  color: #5f6f84 !important;
+  text-align: left;
+}
+
+.app-shell .ex57-tabs button strong {
+  display: block;
+  color: inherit !important;
+  font-size: 0.76rem !important;
+  font-weight: 780 !important;
+  letter-spacing: 0 !important;
+}
+
+.app-shell .ex57-tabs button span {
+  display: none !important;
+}
+
+.app-shell .ex57-tabs button.is-active {
+  border-color: #cfe0f7 !important;
+  background: #fff !important;
+  color: var(--expense-blue-dark) !important;
+  box-shadow: 0 6px 16px rgba(37, 99, 235, 0.08) !important;
+}
+
+.app-shell .ex57-filters {
+  display: grid !important;
+  grid-template-columns: minmax(280px, 1.4fr) repeat(3, minmax(145px, 0.5fr)) minmax(130px, 0.45fr) !important;
+  gap: 9px !important;
+  padding: 0 !important;
+}
+
+.app-shell :where(.ex57-search, .ex57-filters select, .ex122-filter-branch) {
+  min-height: 42px !important;
+  border: 1px solid #d8e3f0 !important;
+  border-radius: 12px !important;
+  background: #fbfdff !important;
+  color: #344054 !important;
+  box-shadow: none !important;
+}
+
+.app-shell .ex57-search input {
+  min-height: 40px !important;
+  font-size: 0.8rem !important;
+}
+
+.app-shell .ex57-workspace,
+.app-shell .ex57-section {
+  order: 6;
+}
+
+.app-shell .ex57-workspace {
+  grid-template-columns: minmax(0, 1.35fr) minmax(320px, 0.65fr) !important;
+  gap: 12px !important;
+}
+
+.app-shell :where(.ex57-list-panel, .ex57-detail, .ex57-section) {
+  border-color: var(--expense-line) !important;
+  border-radius: 18px !important;
+  background: var(--expense-card) !important;
+  box-shadow: var(--expense-shadow) !important;
+  overflow: hidden;
+}
+
+.app-shell :where(.ex57-list-panel > header, .ex57-section > header) {
+  padding: 14px 16px !important;
+  border-bottom: 1px solid #edf2f7 !important;
+  background: #fbfdff !important;
+}
+
+.app-shell :where(.ex57-list-panel > header h3, .ex57-section > header h3, .ex57-detail h3) {
+  color: var(--expense-ink) !important;
+  font-size: 1rem !important;
+  letter-spacing: 0 !important;
+}
+
+.app-shell .ex57-list {
+  gap: 7px !important;
+  padding: 10px !important;
+}
+
+.app-shell .ex57-row {
+  display: grid !important;
+  grid-template-columns: 38px minmax(0, 1fr) auto !important;
+  gap: 11px !important;
+  min-height: 68px !important;
+  padding: 11px 12px !important;
+  border-color: #e4edf7 !important;
+  border-radius: 14px !important;
+  background: #fff !important;
+  text-align: left;
+}
+
+.app-shell .ex57-row:hover,
+.app-shell .ex57-row.is-selected {
+  border-color: #bdd4f6 !important;
+  background: #f8fbff !important;
+  box-shadow: 0 10px 24px rgba(37, 99, 235, 0.07) !important;
+}
+
+.app-shell .ex57-avatar {
+  width: 36px !important;
+  height: 36px !important;
+  border-radius: 12px !important;
+  background: #eff6ff !important;
+  color: var(--expense-blue-dark) !important;
+}
+
+.app-shell .ex57-row-main strong {
+  color: var(--expense-ink) !important;
+  font-size: 0.88rem !important;
+  font-weight: 760 !important;
+}
+
+.app-shell .ex57-row-main :where(span, small) {
+  color: var(--expense-muted) !important;
+  font-size: 0.72rem !important;
+  font-weight: 520 !important;
+}
+
+.app-shell .ex57-row-end {
+  gap: 8px !important;
+}
+
+.app-shell .ex57-row-end strong {
+  color: var(--expense-ink) !important;
+  font-size: 0.9rem !important;
+  font-weight: 780 !important;
+}
+
+.app-shell .ex57-card-grid,
+.app-shell .ex57-vendor-grid {
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)) !important;
+  gap: 10px !important;
+  padding: 12px !important;
+}
+
+.app-shell .ex57-mini,
+.app-shell .ex57-vendor-grid article {
+  min-height: 132px !important;
+  padding: 14px !important;
+  border-color: #e3ebf5 !important;
+  border-radius: 16px !important;
+  background: #fff !important;
+  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.035) !important;
+}
+
+.app-shell .ex57-mini h4,
+.app-shell .ex57-vendor-grid h4 {
+  color: var(--expense-ink) !important;
+  font-size: 0.92rem !important;
+  font-weight: 760 !important;
+}
+
+.app-shell .ex57-mini p,
+.app-shell .ex57-mini footer span,
+.app-shell .ex57-vendor-grid :where(p, small) {
+  color: var(--expense-muted) !important;
+  font-size: 0.74rem !important;
+}
+
+.app-shell .ex57-detail {
+  position: sticky;
+  top: 14px;
+  align-self: start;
+}
+
+.app-shell .ex57-detail :where(.ex57-detail-kpis, .ex57-info-grid) {
+  gap: 8px !important;
+}
+
+.app-shell .ex57-history,
+.app-shell .ex57-correction {
+  border-radius: 15px !important;
+}
+
+.app-shell .ex57-trend-card {
+  order: 9;
+  padding: 16px !important;
+  border-color: var(--expense-line) !important;
+  border-radius: 18px !important;
+  background: var(--expense-card) !important;
+  box-shadow: var(--expense-shadow) !important;
+}
+
+.app-shell .ex57-trend-card > header {
+  align-items: center !important;
+  gap: 12px !important;
+  margin-bottom: 8px !important;
+  padding-bottom: 10px !important;
+  border-bottom: 1px solid #edf2f7;
+}
+
+.app-shell .ex57-trend-card h2 {
+  font-size: 1rem !important;
+  letter-spacing: 0 !important;
+}
+
+.app-shell .ex57-trend-card p {
+  font-size: 0.74rem !important;
+}
+
+.app-shell .ex57-trend-total {
+  min-width: 170px !important;
+  padding: 9px 11px !important;
+  border-radius: 14px !important;
+}
+
+.app-shell .ex57-trend {
+  min-height: 0 !important;
+  padding: 0 !important;
+}
+
+.app-shell .ex57-trend-scroll {
+  min-height: 0 !important;
+  overflow-x: auto !important;
+}
+
+.app-shell .ex57-trend svg {
+  width: 100% !important;
+  min-width: 720px !important;
+  height: 250px !important;
+}
+
+.app-shell .ex57-line {
+  stroke: var(--expense-blue) !important;
+  stroke-width: 3 !important;
+}
+
+.app-shell .ex57-dot {
+  fill: #fff !important;
+  stroke: var(--expense-blue) !important;
+  stroke-width: 3 !important;
+}
+
+.app-shell .ex129-history {
+  padding: 16px !important;
+}
+
+.app-shell .ex129-history-head {
+  margin-bottom: 12px;
+}
+
+.app-shell .ex129-controls {
+  grid-template-columns: minmax(180px, 0.8fr) minmax(180px, 0.8fr) repeat(2, minmax(150px, 0.6fr)) !important;
+  gap: 10px !important;
+}
+
+.app-shell .ex129-range-note {
+  grid-column: 1 / -1;
+  min-height: 38px;
+  padding: 0 12px;
+  border-radius: 12px;
+}
+
+.app-shell .ex129-period-summary {
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  gap: 10px !important;
+}
+
+@media (max-width: 1180px) {
+  .app-shell .ex57-kpis {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+
+  .app-shell .ex57-workspace {
+    grid-template-columns: 1fr !important;
+  }
+
+  .app-shell .ex57-detail {
+    position: static;
+  }
+
+  .app-shell .ex57-filters {
+    grid-template-columns: minmax(260px, 1fr) repeat(2, minmax(145px, 0.55fr)) !important;
+  }
+
+  .app-shell .ex57-search {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 820px) {
+  .app-shell .ex57-hero,
+  .app-shell .ex57-trend-card > header {
+    align-items: flex-start !important;
+    flex-direction: column !important;
+  }
+
+  .app-shell .ex57-actions {
+    width: 100% !important;
+    max-width: none;
+  }
+
+  .app-shell .ex57-actions .btn {
+    flex: 1 1 0;
+    min-width: 0 !important;
+  }
+
+  .app-shell .ex57-filters,
+  .app-shell .ex129-controls,
+  .app-shell .ex129-period-summary {
+    grid-template-columns: 1fr !important;
+  }
+
+  .app-shell .ex57-search {
+    grid-column: auto;
+  }
+
+  .app-shell .ex57-row {
+    grid-template-columns: 36px minmax(0, 1fr) !important;
+  }
+
+  .app-shell .ex57-row-end {
+    grid-column: 2;
+    justify-content: space-between;
+    width: 100%;
+  }
+
+  .app-shell .ex57-trend svg {
+    min-width: 680px !important;
+    height: 235px !important;
+  }
+}
+
+@media (max-width: 560px) {
+  .app-shell .ex57-hero,
+  .app-shell :where(.ex57-command, .ex57-trend-card, .ex57-list-panel, .ex57-detail, .ex57-section, .ex129-history) {
+    padding: 14px !important;
+    border-radius: 18px !important;
+  }
+
+  .app-shell .ex57-actions {
+    display: grid !important;
+    grid-template-columns: 1fr;
+  }
+
+  .app-shell .ex57-kpis {
+    grid-template-columns: 1fr !important;
+  }
+
+  .app-shell .ex57-list,
+  .app-shell .ex57-card-grid,
+  .app-shell .ex57-vendor-grid {
+    padding: 8px !important;
+  }
+
+  .app-shell .ex57-row {
+    grid-template-columns: 1fr !important;
+  }
+
+  .app-shell .ex57-row-end {
+    grid-column: auto;
+  }
+
+  .app-shell .ex57-avatar {
+    display: none !important;
+  }
+
+  .app-shell .ex57-trend svg {
+    min-width: 620px !important;
+    height: 220px !important;
+  }
+}
+
+/* V154 - premium expenses workspace and report exports */
+.app-shell .expenses-ia-shell {
+  gap: 18px !important;
+}
+
+.app-shell .expenses-ia-shell > .ex129-history {
+  order: 0;
+}
+
+.app-shell .expenses-ia-shell > .ex57-page,
+.app-shell .expenses-ia-shell > .ex122-all-branches {
+  order: 1;
+}
+
+.app-shell .ex129-history-premium {
+  padding: 22px !important;
+  border: 1px solid #cfe0f7 !important;
+  border-radius: 24px !important;
+  background:
+    radial-gradient(circle at 90% 4%, rgba(37, 99, 235, .12), transparent 28%),
+    linear-gradient(135deg, #fff 0%, #fbfdff 58%, #eef6ff 100%) !important;
+  box-shadow: 0 18px 45px rgba(15, 23, 42, .06) !important;
+}
+
+.app-shell .ex129-history-premium .ex129-history-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+  margin-bottom: 16px;
+}
+
+.app-shell .ex129-history-premium .ex129-title {
+  min-width: 0;
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+}
+
+.app-shell .ex129-history-premium .ex129-icon {
+  width: 46px;
+  height: 46px;
+  display: grid;
+  place-items: center;
+  border: 1px solid #bfdbfe;
+  border-radius: 15px;
+  background: #eff6ff;
+  color: #2563eb;
+}
+
+.app-shell .ex129-history-premium .ex129-eyebrow {
+  margin: 0 0 5px;
+  color: #2563eb;
+  font-size: .68rem;
+  font-weight: 900;
+  letter-spacing: .09em;
+  text-transform: uppercase;
+}
+
+.app-shell .ex129-history-premium h2 {
+  margin: 0;
+  color: #0f172a;
+  font-size: clamp(1.8rem, 2.8vw, 2.55rem);
+  line-height: 1.02;
+  letter-spacing: 0;
+}
+
+.app-shell .ex129-history-premium p {
+  max-width: 700px;
+  margin: 7px 0 0;
+  color: #5b6b82;
+  font-size: .88rem;
+  line-height: 1.55;
+}
+
+.app-shell .ex129-export-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.app-shell .ex129-export-actions .btn {
+  min-height: 40px !important;
+  min-width: 104px !important;
+  border-color: #bfd6f6 !important;
+  border-radius: 13px !important;
+  background: rgba(255, 255, 255, .92) !important;
+  color: #1d4ed8 !important;
+  font-weight: 900 !important;
+}
+
+.app-shell .ex129-controls {
+  display: grid !important;
+  grid-template-columns: minmax(190px, .9fr) minmax(180px, .8fr) repeat(2, minmax(150px, .65fr)) !important;
+  gap: 10px !important;
+}
+
+.app-shell .ex129-controls label {
+  min-width: 0;
+  display: grid;
+  gap: 6px;
+}
+
+.app-shell .ex129-controls label > span {
+  color: #65758b;
+  font-size: .66rem;
+  font-weight: 900;
+  letter-spacing: .07em;
+  text-transform: uppercase;
+}
+
+.app-shell .ex129-controls :where(select, input) {
+  width: 100%;
+  min-height: 43px;
+  border: 1px solid #d6e4f5;
+  border-radius: 13px;
+  background: rgba(255, 255, 255, .92);
+  color: #172033;
+  font: inherit;
+  font-size: .84rem;
+  font-weight: 760;
+  padding: 9px 12px;
+}
+
+.app-shell .ex129-report-strip {
+  display: grid;
+  grid-template-columns: minmax(220px, 1fr) auto minmax(190px, .65fr);
+  align-items: center;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.app-shell .ex129-range-note,
+.app-shell .ex129-scope,
+.app-shell .ex129-month-nav {
+  min-height: 42px;
+  border: 1px solid #dbeafe;
+  border-radius: 14px;
+  background: rgba(248, 251, 255, .88);
+  color: #40516a;
+}
+
+.app-shell .ex129-range-note,
+.app-shell .ex129-scope {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  padding: 0 12px;
+  font-size: .78rem;
+  font-weight: 780;
+}
+
+.app-shell .ex129-range-note span,
+.app-shell .ex129-scope span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.app-shell .ex129-month-nav {
+  display: grid;
+  grid-template-columns: auto minmax(126px, auto) auto;
+  align-items: center;
+  gap: 7px;
+  padding: 4px;
+}
+
+.app-shell .ex129-month-nav strong {
+  color: #0f172a;
+  font-size: .82rem;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.app-shell .ex129-month-nav .btn {
+  min-height: 32px !important;
+  border-radius: 10px !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  color: #2563eb !important;
+}
+
+.app-shell .ex129-period-summary {
+  display: grid !important;
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  gap: 10px !important;
+  margin-top: 12px;
+}
+
+.app-shell .ex129-period-summary article {
+  min-height: 86px;
+  display: grid;
+  align-content: center;
+  gap: 5px;
+  padding: 13px 14px;
+  border: 1px solid #dbeafe;
+  border-radius: 16px;
+  background: #fff;
+}
+
+.app-shell .ex129-period-summary article svg {
+  display: none;
+}
+
+.app-shell .ex129-period-summary span {
+  color: #64748b;
+  font-size: .66rem;
+  font-weight: 900;
+  letter-spacing: .07em;
+  text-transform: uppercase;
+}
+
+.app-shell .ex129-period-summary strong {
+  color: #0f172a;
+  font-size: 1.18rem;
+  line-height: 1.05;
+}
+
+.app-shell .ex129-period-summary small {
+  color: #7a8aa0;
+  font-size: .7rem;
+}
+
+.app-shell .expenses-ia-page {
+  gap: 13px !important;
+}
+
+.app-shell .expenses-ia-page > .ui-pagination {
+  order: 8 !important;
+  margin-top: 0 !important;
+}
+
+.app-shell .expenses-ia-page .ex57-hero {
+  min-height: auto !important;
+  padding: 18px 20px !important;
+  border-radius: 20px !important;
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, .98), rgba(248, 251, 255, .96)),
+    radial-gradient(circle at 94% 12%, rgba(37, 99, 235, .11), transparent 28%) !important;
+}
+
+.app-shell .expenses-ia-page .ex57-hero h1 {
+  font-size: clamp(1.55rem, 2.1vw, 2.05rem) !important;
+  letter-spacing: 0 !important;
+}
+
+.app-shell .expenses-ia-page .ex57-actions {
+  align-self: center;
+}
+
+.app-shell .expenses-ia-page .ex57-actions .btn {
+  min-height: 40px !important;
+  min-width: 112px !important;
+  border-radius: 13px !important;
+}
+
+.app-shell .expenses-ia-page .ex122-branch-context,
+.app-shell .expenses-ia-page .ex57-context {
+  display: none !important;
+}
+
+.app-shell .expenses-ia-page .ex57-kpis {
+  grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+}
+
+.app-shell .expenses-ia-page .ex57-kpis article {
+  min-height: 92px !important;
+}
+
+.app-shell .expenses-ia-page .ex57-command {
+  order: 5 !important;
+}
+
+.app-shell .expenses-ia-page .ex57-tabs {
+  display: grid !important;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  overflow: visible !important;
+}
+
+.app-shell .expenses-ia-page .ex57-tabs button {
+  min-width: 0 !important;
+  justify-content: center;
+  text-align: center;
+}
+
+.app-shell .expenses-ia-page .ex57-filters {
+  grid-template-columns: minmax(240px, 1.2fr) minmax(170px, .7fr) repeat(3, minmax(140px, .6fr)) !important;
+}
+
+.app-shell .expenses-ia-page .ex57-section,
+.app-shell .expenses-ia-page .ex57-workspace {
+  order: 6 !important;
+}
+
+.app-shell .expenses-ia-page .ex57-trend-card {
+  order: 7 !important;
+}
+
+.app-shell .expenses-ia-page .ex57-list-panel > header,
+.app-shell .expenses-ia-page .ex57-section > header,
+.app-shell .expenses-ia-page .ex57-trend-card > header {
+  background: #fff !important;
+}
+
+@media (max-width: 1100px) {
+  .app-shell .ex129-report-strip {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .app-shell .ex129-scope {
+    grid-column: 1 / -1;
+  }
+
+  .app-shell .expenses-ia-page .ex57-tabs {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .app-shell .expenses-ia-page .ex57-filters {
+    grid-template-columns: minmax(240px, 1fr) repeat(2, minmax(150px, .7fr)) !important;
+  }
+}
+
+@media (max-width: 820px) {
+  .app-shell .ex129-history-premium {
+    padding: 18px !important;
+    border-radius: 20px !important;
+  }
+
+  .app-shell .ex129-history-premium .ex129-history-head {
+    flex-direction: column;
+  }
+
+  .app-shell .ex129-export-actions,
+  .app-shell .ex129-export-actions .btn {
+    width: 100%;
+  }
+
+  .app-shell .ex129-export-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .app-shell .ex129-controls,
+  .app-shell .ex129-report-strip,
+  .app-shell .ex129-period-summary,
+  .app-shell .expenses-ia-page .ex57-kpis,
+  .app-shell .expenses-ia-page .ex57-filters {
+    grid-template-columns: 1fr !important;
+  }
+
+  .app-shell .expenses-ia-page .ex57-tabs {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 540px) {
+  .app-shell .ex129-history-premium .ex129-title {
+    display: grid;
+    gap: 12px;
+  }
+
+  .app-shell .ex129-history-premium h2 {
+    font-size: 1.7rem;
+  }
+
+  .app-shell .ex129-export-actions,
+  .app-shell .expenses-ia-page .ex57-tabs {
+    grid-template-columns: 1fr;
+  }
+
+  .app-shell .ex129-month-nav {
+    grid-template-columns: 1fr;
+  }
+
+  .app-shell .ex129-range-note span,
+  .app-shell .ex129-scope span {
+    white-space: normal;
+  }
+}

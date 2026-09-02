@@ -1,8 +1,10 @@
 import { Bell, CheckCheck } from 'lucide-react'
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState, type CSSProperties } from 'react'
+import { createPortal } from 'react-dom'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../auth/AuthContext'
 import { supabase } from '../../lib/supabase'
+import { loadCurrentUserNotifications, markAllLiveNotificationsRead, markLiveNotificationRead } from './notificationLiveStore'
 import {
   getNotificationsByUser,
   markAllNotificationsAsRead,
@@ -43,15 +45,6 @@ function mapInternalNotification(notification: AppNotification): BellRow {
   }
 }
 
-type PatientNotificationRow = {
-  id: string
-  kind: string | null
-  title: string
-  message: string
-  is_read: boolean
-  created_at: string
-}
-
 export function TopbarNotificationBell({ className = '' }: { className?: string }) {
   const { user } = useAuth()
   const [open, setOpen] = useState(false)
@@ -59,16 +52,19 @@ export function TopbarNotificationBell({ className = '' }: { className?: string 
   const [busyId, setBusyId] = useState('')
   const [error, setError] = useState('')
   const rootRef = useRef<HTMLDivElement | null>(null)
+  const buttonRef = useRef<HTMLButtonElement | null>(null)
+  const popoverRef = useRef<HTMLElement | null>(null)
+  const [popoverStyle, setPopoverStyle] = useState<CSSProperties>({})
 
-  const isPatient = user?.role === 'patient'
   const unread = useMemo(() => rows.filter((row) => !row.isRead).length, [rows])
   const recentRows = rows.slice(0, 5)
-  const viewAllHref = isPatient ? undefined : '/app/notifications'
+  const viewAllHref = user?.role === 'patient' ? undefined : '/app/notifications'
 
   useEffect(() => {
     if (!open) return
     const handlePointer = (event: MouseEvent) => {
-      if (!rootRef.current?.contains(event.target as Node)) setOpen(false)
+      const target = event.target as Node
+      if (!rootRef.current?.contains(target) && !popoverRef.current?.contains(target)) setOpen(false)
     }
     const handleKey = (event: KeyboardEvent) => {
       if (event.key === 'Escape') setOpen(false)
@@ -82,80 +78,85 @@ export function TopbarNotificationBell({ className = '' }: { className?: string 
   }, [open])
 
   useEffect(() => {
+    if (!open) return
+    const positionPopover = () => {
+      const rect = buttonRef.current?.getBoundingClientRect()
+      if (!rect) return
+      const width = Math.min(380, window.innerWidth - 24)
+      const left = Math.max(12, Math.min(window.innerWidth - width - 12, rect.right - width))
+      setPopoverStyle({
+        position: 'fixed',
+        top: Math.min(window.innerHeight - 80, rect.bottom + 10),
+        left,
+        width,
+      })
+    }
+    positionPopover()
+    window.addEventListener('resize', positionPopover)
+    window.addEventListener('scroll', positionPopover, true)
+    return () => {
+      window.removeEventListener('resize', positionPopover)
+      window.removeEventListener('scroll', positionPopover, true)
+    }
+  }, [open])
+
+  useEffect(() => {
     if (!user) {
-      setRows([])
-      return
-    }
-
-    if (!isPatient) {
-      const loadInternal = () => setRows(getNotificationsByUser(user.id).map(mapInternalNotification))
-      loadInternal()
-      window.addEventListener('storage', loadInternal)
-      return () => window.removeEventListener('storage', loadInternal)
-    }
-
-    if (!supabase || !user.email) {
       setRows([])
       return
     }
 
     const db = supabase
     let active = true
-    const loadPatient = async () => {
-      const { data, error: queryError } = await db
-        .from('notifications')
-        .select('id,kind,title,message,is_read,created_at')
-        .eq('user_email', user.email)
-        .order('created_at', { ascending: false })
-        .limit(30)
-
-      if (!active) return
-      if (queryError) {
-        setError('Notifications could not be loaded.')
+    const loadNotifications = async () => {
+      if (!db) {
+        setRows(getNotificationsByUser(user.id).map(mapInternalNotification))
         return
       }
-
-      setError('')
-      setRows(((data ?? []) as PatientNotificationRow[]).map((row) => ({
-        id: row.id,
-        title: row.title,
-        message: row.message,
-        kind: row.kind || 'clinic update',
-        isRead: row.is_read,
-        createdAt: row.created_at,
-      })))
+      try {
+        const liveRows = await loadCurrentUserNotifications(30)
+        if (!active) return
+        setError('')
+        setRows((liveRows ?? []).map(mapInternalNotification))
+      } catch (cause) {
+        if (!active) return
+        setError(cause instanceof Error ? cause.message : 'Notifications could not be loaded.')
+        setRows(getNotificationsByUser(user.id).map(mapInternalNotification))
+      }
     }
 
-    void loadPatient()
-    const timer = window.setInterval(() => { void loadPatient() }, 60_000)
+    void loadNotifications()
+    const timer = window.setInterval(() => { void loadNotifications() }, 60_000)
+    window.addEventListener('storage', loadNotifications)
+    window.addEventListener('plamenco:notifications-refresh', loadNotifications)
     const channel = db
-      .channel(`topbar-patient-notifications-${user.id}`)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'notifications', filter: `user_email=eq.${user.email}` }, () => {
-        void loadPatient()
+      ?.channel(`topbar-notifications-${user.id}`)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'notifications' }, () => {
+        void loadNotifications()
       })
       .subscribe()
 
     return () => {
       active = false
       window.clearInterval(timer)
-      void db.removeChannel(channel)
+      window.removeEventListener('storage', loadNotifications)
+      window.removeEventListener('plamenco:notifications-refresh', loadNotifications)
+      if (channel) void db?.removeChannel(channel)
     }
-  }, [isPatient, user])
+  }, [user])
 
   async function markRead(id: string) {
     if (!user) return
     setBusyId(id)
-    if (isPatient) {
-      if (!supabase || !user.email) {
+    if (supabase) {
+      try {
+        await markLiveNotificationRead(id)
+      } catch {
+        setError('Could not mark this notification as read.')
         setBusyId('')
         return
       }
-      const { error: updateError } = await supabase.from('notifications').update({ is_read: true }).eq('id', id).eq('user_email', user.email)
       setBusyId('')
-      if (updateError) {
-        setError('Could not mark this notification as read.')
-        return
-      }
     } else {
       markNotificationAsRead(id)
       setBusyId('')
@@ -166,17 +167,15 @@ export function TopbarNotificationBell({ className = '' }: { className?: string 
   async function markAllRead() {
     if (!user || unread === 0) return
     setBusyId('all')
-    if (isPatient) {
-      if (!supabase || !user.email) {
+    if (supabase) {
+      try {
+        await markAllLiveNotificationsRead()
+      } catch {
+        setError('Could not mark notifications as read.')
         setBusyId('')
         return
       }
-      const { error: updateError } = await supabase.from('notifications').update({ is_read: true }).eq('user_email', user.email).eq('is_read', false)
       setBusyId('')
-      if (updateError) {
-        setError('Could not mark notifications as read.')
-        return
-      }
     } else {
       markAllNotificationsAsRead(user.id)
       setBusyId('')
@@ -187,6 +186,7 @@ export function TopbarNotificationBell({ className = '' }: { className?: string 
   return (
     <div className={`topbar-notification-bell ${className}`} ref={rootRef}>
       <button
+        ref={buttonRef}
         type="button"
         className={open ? 'is-open' : ''}
         aria-label={unread ? `Open notifications, ${unread} unread` : 'Open notifications'}
@@ -198,8 +198,8 @@ export function TopbarNotificationBell({ className = '' }: { className?: string 
         {unread > 0 && <span>{unread > 99 ? '99+' : unread}</span>}
       </button>
 
-      {open && (
-        <section className="topbar-notification-popover" aria-label="Recent notifications">
+      {open && createPortal(
+        <section className="topbar-notification-popover topbar-notification-popover-v153" aria-label="Recent notifications" ref={popoverRef} style={popoverStyle}>
           <header>
             <div><span>Updates</span><h3>Notifications</h3></div>
             <button type="button" onClick={() => void markAllRead()} disabled={!unread || busyId === 'all'}>
@@ -224,7 +224,8 @@ export function TopbarNotificationBell({ className = '' }: { className?: string 
             {!recentRows.length && !error && <div className="topbar-notification-empty"><Bell size={22} /><strong>No notifications yet</strong><p>You are all caught up.</p></div>}
           </div>
           {viewAllHref && <Link to={viewAllHref} onClick={() => setOpen(false)}>View all notifications</Link>}
-        </section>
+        </section>,
+        document.body,
       )}
     </div>
   )

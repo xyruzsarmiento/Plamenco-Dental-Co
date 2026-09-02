@@ -1,9 +1,22 @@
-import { CalendarClock, CheckCircle2, Clock3, Plus, Save, Stethoscope, Trash2, XCircle } from 'lucide-react'
+import {
+  AlertCircle,
+  Building2,
+  CalendarClock,
+  CalendarDays,
+  CheckCircle2,
+  Clock3,
+  Plus,
+  Save,
+  Stethoscope,
+  Trash2,
+  XCircle,
+} from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 import { Button } from '../../components/ui/Button'
 import { supabase } from '../../lib/supabase'
 import { getStoredBranches, loadBranchesFromSupabase } from '../branches/branchStore'
 import {
+  createAvailabilityOverride,
   getProviderAvailabilityOverrides,
   getProviderBranchAssignments,
   getProviderScheduleBlocks,
@@ -15,12 +28,42 @@ import type { AvailabilityOverrideType, ProviderScheduleBlock } from './dentistT
 import '../../styles/dentist-schedule-manager-v131.css'
 
 const DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
+const SHORT_DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+
 type EditableBlock = Omit<ProviderScheduleBlock, 'id' | 'providerId' | 'createdAt' | 'updatedAt'>
 
 function activeSchedule(providerId: string): EditableBlock[] {
   return getProviderScheduleBlocks()
     .filter((block) => block.providerId === providerId && block.status === 'active')
     .map(({ branchId, dayOfWeek, startTime, endTime }) => ({ branchId, dayOfWeek, startTime, endTime, status: 'active' }))
+}
+
+function formatTime(value?: string) {
+  if (!value) return 'Not set'
+  const date = new Date(`2026-01-01T${value}`)
+  if (Number.isNaN(date.getTime())) return value
+  return date.toLocaleTimeString('en-PH', { hour: 'numeric', minute: '2-digit' })
+}
+
+function minutesBetween(start: string, end: string) {
+  const [startHour, startMinute] = start.split(':').map(Number)
+  const [endHour, endMinute] = end.split(':').map(Number)
+  if ([startHour, startMinute, endHour, endMinute].some((value) => Number.isNaN(value))) return 0
+  return Math.max(0, endHour * 60 + endMinute - (startHour * 60 + startMinute))
+}
+
+function formatDuration(totalMinutes: number) {
+  const hours = Math.floor(totalMinutes / 60)
+  const minutes = totalMinutes % 60
+  if (!hours) return `${minutes}m`
+  return minutes ? `${hours}h ${minutes}m` : `${hours}h`
+}
+
+function dayBlocks(blocks: EditableBlock[], dayOfWeek: number) {
+  return blocks
+    .map((block, index) => ({ block, index }))
+    .filter(({ block }) => block.dayOfWeek === dayOfWeek)
+    .sort((left, right) => left.block.startTime.localeCompare(right.block.startTime))
 }
 
 export function DentistScheduleManagerV131() {
@@ -32,12 +75,16 @@ export function DentistScheduleManagerV131() {
   const [error, setError] = useState<string | null>(null)
   const [exception, setException] = useState({ date: '', branchId: '', type: 'unavailable' as AvailabilityOverrideType, startTime: '', endTime: '', reason: '' })
 
-  const providers = useMemo(() => { void revision; return getStoredProviders().filter((row) => row.status !== 'inactive') }, [revision])
+  const providers = useMemo(() => { void revision; return getStoredProviders().filter((row) => row.status === 'active') }, [revision])
   const branches = useMemo(() => { void revision; return getStoredBranches().filter((row) => row.status === 'active') }, [revision])
   const assignments = useMemo(() => { void revision; return getProviderBranchAssignments().filter((row) => row.status === 'active') }, [revision])
   const selected = providers.find((row) => row.id === providerId) ?? providers[0] ?? null
   const assignedBranches = selected ? branches.filter((branch) => assignments.some((assignment) => assignment.providerId === selected.id && assignment.branchId === branch.id)) : []
   const overrides = selected ? getProviderAvailabilityOverrides().filter((row) => row.providerId === selected.id).sort((a, b) => b.date.localeCompare(a.date)) : []
+  const workingDays = DAYS.map((_, day) => dayBlocks(blocks, day)).filter((entries) => entries.length > 0).length
+  const weeklyMinutes = blocks.reduce((sum, block) => sum + minutesBetween(block.startTime, block.endTime), 0)
+  const nextWorkingDay = DAYS.find((_, day) => dayBlocks(blocks, day).length > 0) ?? 'No working day'
+  const initials = selected?.displayName.split(/\s+/).filter(Boolean).slice(0, 2).map((part) => part[0]?.toUpperCase()).join('') || 'DR'
 
   async function reload(preferredProviderId?: string) {
     const [, foundation] = await Promise.all([
@@ -79,6 +126,11 @@ export function DentistScheduleManagerV131() {
     setFeedback(null)
   }
 
+  function removeBlock(index: number) {
+    setBlocks((current) => current.filter((_, rowIndex) => rowIndex !== index))
+    setFeedback(null)
+  }
+
   function validate() {
     const assignedIds = new Set(assignedBranches.map((branch) => branch.id))
     for (const block of blocks) {
@@ -102,7 +154,7 @@ export function DentistScheduleManagerV131() {
     try {
       await saveScheduleBlocks(selected.id, blocks.map((block) => ({ ...block, status: 'active' })))
       await reload(selected.id)
-      setFeedback('Bookable hours saved. Patient booking now uses these active periods.')
+      setFeedback('Bookable hours saved. Patient booking now uses this weekly pattern.')
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : 'Unable to save dentist availability.')
     } finally { setBusy(false) }
@@ -114,21 +166,22 @@ export function DentistScheduleManagerV131() {
     if ((exception.type === 'available' || exception.type === 'special_hours') && (!exception.startTime || !exception.endTime || exception.startTime >= exception.endTime)) return setError('Special hours require a valid start and end time.')
     if (!assignedBranches.some((branch) => branch.id === exception.branchId)) return setError('The exception branch must be assigned to this dentist.')
     setBusy(true); setError(null); setFeedback(null)
-    const { error: insertError } = await supabase.from('provider_availability_overrides').insert({
-      provider_id: selected.id,
-      branch_id: exception.branchId,
-      override_date: exception.date,
-      type: exception.type,
-      start_time: exception.startTime || null,
-      end_time: exception.endTime || null,
-      reason: exception.reason.trim(),
-      private_notes: '',
-    })
-    if (insertError) setError(insertError.message)
-    else {
+    try {
+      await createAvailabilityOverride({
+        providerId: selected.id,
+        branchId: exception.branchId,
+        date: exception.date,
+        type: exception.type,
+        startTime: exception.startTime || undefined,
+        endTime: exception.endTime || undefined,
+        reason: exception.reason.trim(),
+        privateNotes: '',
+      })
       await reload(selected.id)
       setException({ date: '', branchId: assignedBranches[0]?.id ?? '', type: 'unavailable', startTime: '', endTime: '', reason: '' })
       setFeedback('One-time schedule exception saved.')
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : 'Unable to save schedule exception.')
     }
     setBusy(false)
   }
@@ -143,13 +196,117 @@ export function DentistScheduleManagerV131() {
   }
 
   return <section className="dsm131">
-    <header className="dsm131-hero"><div><span>AUTHORITATIVE BOOKING SCHEDULE</span><h2>Dentist schedules</h2><p>Only active working periods shown here are used by patient booking. Inactive legacy periods are intentionally excluded.</p></div><CalendarClock size={22}/></header>
-    <div className="dsm131-toolbar"><label>Dentist<select value={selected?.id ?? ''} onChange={(event) => { setProviderId(event.target.value); setBlocks(activeSchedule(event.target.value)) }}>{providers.map((provider) => <option key={provider.id} value={provider.id}>{provider.displayName}</option>)}</select></label>{selected && <div className="dsm131-context"><Stethoscope size={16}/><span><strong>{selected.displayName}</strong><small>{assignedBranches.length} active branch assignment{assignedBranches.length === 1 ? '' : 's'}</small></span></div>}</div>
-    {error && <div className="dsm131-message is-error"><XCircle size={16}/>{error}</div>}{feedback && <div className="dsm131-message is-success"><CheckCircle2 size={16}/>{feedback}</div>}
-    {!selected ? <div className="dsm131-empty">No dentist profiles available.</div> : !assignedBranches.length ? <div className="dsm131-empty">Assign this dentist to a branch first. A dentist without an active branch cannot be booked.</div> : <>
-      <div className="dsm131-week">{DAYS.map((day, dayOfWeek) => { const entries = blocks.map((block, index) => ({ block, index })).filter(({ block }) => block.dayOfWeek === dayOfWeek); return <article key={day} className={entries.length ? 'is-working' : ''}><header><div><strong>{day}</strong><small>{entries.length ? `${entries.length} bookable period${entries.length === 1 ? '' : 's'}` : 'Not bookable'}</small></div><label><input type="checkbox" checked={entries.length > 0} onChange={() => toggleDay(dayOfWeek)}/><span>{entries.length ? 'Working' : 'Off'}</span></label></header>{entries.map(({ block, index }) => <div className="dsm131-period" key={`${day}-${index}`}><Clock3 size={15}/><select value={block.branchId} onChange={(event) => updateBlock(index, { branchId: event.target.value })}>{assignedBranches.map((branch) => <option key={branch.id} value={branch.id}>{branch.name}</option>)}</select><input type="time" value={block.startTime} onChange={(event) => updateBlock(index, { startTime: event.target.value })}/><span>to</span><input type="time" value={block.endTime} onChange={(event) => updateBlock(index, { endTime: event.target.value })}/><button type="button" aria-label={`Remove ${day} period`} onClick={() => setBlocks((current) => current.filter((_, rowIndex) => rowIndex !== index))}><Trash2 size={14}/></button></div>)}{entries.length > 0 && <button type="button" className="dsm131-add" onClick={() => addPeriod(dayOfWeek)}><Plus size={14}/>Add period</button>}</article> })}</div>
-      <div className="dsm131-save"><span>Saving replaces the active weekly pattern for this dentist. Existing appointments are not deleted.</span><Button icon={<Save size={15}/>} onClick={() => void save()} disabled={busy}>{busy ? 'Saving…' : 'Save bookable hours'}</Button></div>
-      <section className="dsm131-exceptions"><header><div><span>ONE-TIME CHANGES</span><h3>Leave, unavailable dates & special hours</h3></div></header><div className="dsm131-exception-form"><input type="date" value={exception.date} onChange={(event) => setException({ ...exception, date: event.target.value })}/><select value={exception.branchId} onChange={(event) => setException({ ...exception, branchId: event.target.value })}>{assignedBranches.map((branch) => <option key={branch.id} value={branch.id}>{branch.name}</option>)}</select><select value={exception.type} onChange={(event) => setException({ ...exception, type: event.target.value as AvailabilityOverrideType })}><option value="unavailable">Unavailable</option><option value="leave">Leave</option><option value="special_hours">Special hours</option><option value="available">Available hours</option></select><input type="time" value={exception.startTime} onChange={(event) => setException({ ...exception, startTime: event.target.value })}/><input type="time" value={exception.endTime} onChange={(event) => setException({ ...exception, endTime: event.target.value })}/><input value={exception.reason} onChange={(event) => setException({ ...exception, reason: event.target.value })} placeholder="Reason / note"/><Button variant="secondary" onClick={() => void addException()} disabled={busy}>Add exception</Button></div><div className="dsm131-exception-list">{overrides.map((row) => <article key={row.id}><div><strong>{row.date} · {row.type.replaceAll('_', ' ')}</strong><small>{branches.find((branch) => branch.id === row.branchId)?.name ?? 'All assigned branches'}{row.startTime && row.endTime ? ` · ${row.startTime}-${row.endTime}` : ''}{row.reason ? ` · ${row.reason}` : ''}</small></div><button type="button" onClick={() => void removeException(row.id)} disabled={busy}><Trash2 size={14}/></button></article>)}{!overrides.length && <p>No one-time exceptions recorded.</p>}</div></section>
+    <header className="dsm131-hero">
+      <div className="dsm131-hero-copy">
+        <span>AUTHORITATIVE BOOKING SCHEDULE</span>
+        <h2>Dentist availability command center</h2>
+        <p>Control the exact branch, day, and time windows used by patient booking. Active weekly periods and one-time exceptions stay separate so the schedule is easier to audit.</p>
+      </div>
+      <div className="dsm131-hero-metrics" aria-label="Schedule summary">
+        <article><strong>{workingDays}</strong><span>Working days</span></article>
+        <article><strong>{formatDuration(weeklyMinutes)}</strong><span>Weekly capacity</span></article>
+        <article><strong>{overrides.length}</strong><span>Exceptions</span></article>
+      </div>
+    </header>
+
+    <section className="dsm131-control-panel">
+      <label className="dsm131-provider-picker">
+        <span>Dentist profile</span>
+        <select value={selected?.id ?? ''} onChange={(event) => { setProviderId(event.target.value); setBlocks(activeSchedule(event.target.value)) }}>
+          {providers.map((provider) => <option key={provider.id} value={provider.id}>{provider.displayName}</option>)}
+        </select>
+      </label>
+      {selected && <aside className="dsm131-provider-card">
+        <span className="dsm131-avatar">{initials}</span>
+        <div>
+          <strong>{selected.displayName}</strong>
+          <small>{selected.specialization || 'General dentist'} - {assignedBranches.length} active branch assignment{assignedBranches.length === 1 ? '' : 's'}</small>
+        </div>
+      </aside>}
+    </section>
+
+    {error && <div className="dsm131-message is-error" role="alert"><XCircle size={16}/>{error}</div>}
+    {feedback && <div className="dsm131-message is-success" role="status"><CheckCircle2 size={16}/>{feedback}</div>}
+
+    {!selected ? <div className="dsm131-empty"><Stethoscope size={24}/><strong>No dentist profiles available.</strong><span>Create or activate a dentist profile before configuring bookable hours.</span></div> : !assignedBranches.length ? <div className="dsm131-empty"><AlertCircle size={24}/><strong>No active branch assignment.</strong><span>Assign this dentist to a branch first. A dentist without an active branch cannot be booked.</span></div> : <>
+      <section className="dsm131-overview">
+        <div className="dsm131-week-strip" aria-label="Weekly availability overview">
+          {DAYS.map((day, dayOfWeek) => {
+            const entries = dayBlocks(blocks, dayOfWeek)
+            return <button key={day} type="button" className={entries.length ? 'is-working' : ''} onClick={() => document.getElementById(`dsm131-day-${dayOfWeek}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' })}>
+              <strong>{SHORT_DAYS[dayOfWeek]}</strong>
+              <span>{entries.length ? `${entries.length} period${entries.length === 1 ? '' : 's'}` : 'Off'}</span>
+            </button>
+          })}
+        </div>
+        <div className="dsm131-next-card">
+          <CalendarDays size={18}/>
+          <div><span>Next configured day</span><strong>{nextWorkingDay}</strong></div>
+        </div>
+      </section>
+
+      <section className="dsm131-schedule-shell">
+        <header>
+          <div><span>WEEKLY TEMPLATE</span><h3>Bookable working periods</h3><p>Each active period must use one of the dentist's assigned branches.</p></div>
+          <Button icon={<Save size={15}/>} onClick={() => void save()} disabled={busy}>{busy ? 'Saving...' : 'Save schedule'}</Button>
+        </header>
+        <div className="dsm131-week">
+          {DAYS.map((day, dayOfWeek) => {
+            const entries = dayBlocks(blocks, dayOfWeek)
+            const total = entries.reduce((sum, { block }) => sum + minutesBetween(block.startTime, block.endTime), 0)
+            return <article key={day} id={`dsm131-day-${dayOfWeek}`} className={entries.length ? 'is-working' : ''}>
+              <header>
+                <div className="dsm131-day-title">
+                  <strong>{day}</strong>
+                  <small>{entries.length ? `${entries.length} period${entries.length === 1 ? '' : 's'} - ${formatDuration(total)}` : 'Off calendar for booking'}</small>
+                </div>
+                <label className="dsm131-switch">
+                  <input type="checkbox" checked={entries.length > 0} onChange={() => toggleDay(dayOfWeek)}/>
+                  <span>{entries.length ? 'Working' : 'Off'}</span>
+                </label>
+              </header>
+              {entries.length ? <div className="dsm131-period-list">
+                {entries.map(({ block, index }, entryIndex) => {
+                  const branch = assignedBranches.find((row) => row.id === block.branchId)
+                  return <div className="dsm131-period" key={`${day}-${index}`}>
+                    <span className="dsm131-period-number">{entryIndex + 1}</span>
+                    <label><small>Branch</small><select value={block.branchId} onChange={(event) => updateBlock(index, { branchId: event.target.value })}>{assignedBranches.map((assignedBranch) => <option key={assignedBranch.id} value={assignedBranch.id}>{assignedBranch.name}</option>)}</select></label>
+                    <label><small>Start</small><input type="time" value={block.startTime} onChange={(event) => updateBlock(index, { startTime: event.target.value })}/></label>
+                    <label><small>End</small><input type="time" value={block.endTime} onChange={(event) => updateBlock(index, { endTime: event.target.value })}/></label>
+                    <div className="dsm131-period-summary"><Clock3 size={14}/><span>{formatTime(block.startTime)} - {formatTime(block.endTime)}</span><small>{branch?.name ?? 'Assigned branch'}</small></div>
+                    <button type="button" aria-label={`Remove ${day} period ${entryIndex + 1}`} onClick={() => removeBlock(index)}><Trash2 size={14}/></button>
+                  </div>
+                })}
+                <button type="button" className="dsm131-add" onClick={() => addPeriod(dayOfWeek)}><Plus size={14}/>Add another period</button>
+              </div> : <button type="button" className="dsm131-off-state" onClick={() => addPeriod(dayOfWeek)}><Plus size={15}/><span>Add working hours for {day}</span></button>}
+            </article>
+          })}
+        </div>
+        <footer className="dsm131-save-note"><Building2 size={15}/><span>Saving replaces only this dentist's active weekly template. Existing appointments remain untouched.</span></footer>
+      </section>
+
+      <section className="dsm131-exceptions">
+        <header>
+          <div><span>ONE-TIME CHANGES</span><h3>Leave, unavailable dates, and special hours</h3><p>Use exceptions for holidays, emergency leave, temporary coverage, or a single-day schedule change.</p></div>
+          <CalendarClock size={19}/>
+        </header>
+        <div className="dsm131-exception-form">
+          <label><span>Date</span><input type="date" value={exception.date} onChange={(event) => setException({ ...exception, date: event.target.value })}/></label>
+          <label><span>Branch</span><select value={exception.branchId} onChange={(event) => setException({ ...exception, branchId: event.target.value })}>{assignedBranches.map((branch) => <option key={branch.id} value={branch.id}>{branch.name}</option>)}</select></label>
+          <label><span>Type</span><select value={exception.type} onChange={(event) => setException({ ...exception, type: event.target.value as AvailabilityOverrideType })}><option value="unavailable">Unavailable</option><option value="leave">Leave</option><option value="special_hours">Special hours</option><option value="available">Available hours</option></select></label>
+          <label><span>Start</span><input type="time" value={exception.startTime} onChange={(event) => setException({ ...exception, startTime: event.target.value })}/></label>
+          <label><span>End</span><input type="time" value={exception.endTime} onChange={(event) => setException({ ...exception, endTime: event.target.value })}/></label>
+          <label><span>Reason</span><input value={exception.reason} onChange={(event) => setException({ ...exception, reason: event.target.value })} placeholder="Reason or note"/></label>
+          <Button variant="secondary" onClick={() => void addException()} disabled={busy}>Add exception</Button>
+        </div>
+        <div className="dsm131-exception-list">
+          {overrides.slice(0, 8).map((row) => <article key={row.id}>
+            <div><strong>{row.date} - {row.type.replaceAll('_', ' ')}</strong><small>{branches.find((branch) => branch.id === row.branchId)?.name ?? 'All assigned branches'}{row.startTime && row.endTime ? ` - ${formatTime(row.startTime)} to ${formatTime(row.endTime)}` : ' - Full day'}{row.reason ? ` - ${row.reason}` : ''}</small></div>
+            <button type="button" aria-label={`Remove exception for ${row.date}`} onClick={() => void removeException(row.id)} disabled={busy}><Trash2 size={14}/></button>
+          </article>)}
+          {!overrides.length && <p>No one-time exceptions recorded.</p>}
+        </div>
+      </section>
     </>}
   </section>
 }

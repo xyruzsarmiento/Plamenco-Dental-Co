@@ -4,6 +4,7 @@ import { getStoredPatients } from '../patients/patientStore'
 import {
   archiveDocumentPersisted,
   createPatientDocumentSignedUrl,
+  getStoredDocuments,
   PATIENT_DOCUMENT_BUCKET,
   saveStoredDocuments,
   type CreateDocumentInput,
@@ -25,6 +26,20 @@ function sanitizeFileName(fileName: string) {
   return fileName.replace(/[^a-zA-Z0-9._-]+/g, '-').replace(/^-+|-+$/g, '') || 'document'
 }
 
+function inferMimeType(fileName: string, fileType: string) {
+  if (fileType && fileType !== 'application/octet-stream') return fileType
+  const lowerName = fileName.toLowerCase()
+  if (lowerName.endsWith('.pdf')) return 'application/pdf'
+  if (lowerName.endsWith('.png')) return 'image/png'
+  if (lowerName.endsWith('.jpg') || lowerName.endsWith('.jpeg')) return 'image/jpeg'
+  if (lowerName.endsWith('.gif')) return 'image/gif'
+  if (lowerName.endsWith('.webp')) return 'image/webp'
+  if (lowerName.endsWith('.doc')) return 'application/msword'
+  if (lowerName.endsWith('.docx')) return 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+  if (lowerName.endsWith('.txt')) return 'text/plain'
+  return 'application/octet-stream'
+}
+
 function ensureAllowedFile(fileName: string, fileType: string) {
   const lowerName = fileName.toLowerCase()
   const extensions = ['.pdf', '.png', '.jpg', '.jpeg', '.gif', '.webp', '.doc', '.docx', '.txt']
@@ -38,6 +53,7 @@ async function dataUrlToBlob(content: string, fileType: string) {
   const response = await fetch(content)
   if (!response.ok) throw new Error('The selected file could not be prepared for upload.')
   const blob = await response.blob()
+  if (blob.size <= 0) throw new Error('The selected file is empty. Choose a valid patient document.')
   if (blob.size > 10 * 1024 * 1024) throw new Error('Document must be 10 MB or smaller.')
   return blob.type ? blob : new Blob([blob], { type: fileType })
 }
@@ -92,15 +108,21 @@ export async function createBranchDocumentV127(input: BranchCreateDocumentInput)
 
   const patientDbId = resolvePatientDatabaseId(input.patientId)
   if (!patientDbId) throw new Error('The patient database record could not be resolved. Refresh and try again.')
-  const blob = await dataUrlToBlob(input.content, input.fileType)
-  const storagePath = `${patientDbId}/${createUuid()}-${sanitizeFileName(input.fileName)}`
+  const mimeType = inferMimeType(input.fileName, input.file?.type || input.fileType)
+  const blob = input.file ?? await dataUrlToBlob(input.content, mimeType)
+  if (blob.size <= 0) throw new Error('The selected file is empty. Choose a valid patient document.')
+  if (blob.size > 10 * 1024 * 1024) throw new Error('Document must be 10 MB or smaller.')
+  const storagePath = `patient-documents/${patientDbId}/${createUuid()}-${sanitizeFileName(input.fileName)}`
 
   const { error: uploadError } = await client.storage.from(PATIENT_DOCUMENT_BUCKET).upload(storagePath, blob, {
-    contentType: input.fileType || blob.type || 'application/octet-stream',
+    contentType: mimeType,
     cacheControl: '3600',
     upsert: false,
   })
-  if (uploadError) throw new Error('The document could not be uploaded. No document record was created.')
+  if (uploadError) {
+    if (import.meta.env.DEV) console.error('[branch document storage upload]', uploadError)
+    throw new Error(`The document could not be uploaded. No document record was created. ${uploadError.message}`)
+  }
 
   try {
     const { data, error } = await client.rpc('create_document_metadata_branch', {
@@ -109,7 +131,7 @@ export async function createBranchDocumentV127(input: BranchCreateDocumentInput)
       p_clinical_visit_id: input.clinicalVisitId ?? null,
       p_treatment_id: input.treatmentId ?? null,
       p_name: input.fileName.trim(),
-      p_file_type: input.fileType || blob.type || 'application/octet-stream',
+      p_file_type: mimeType,
       p_category: input.category,
       p_description: input.description?.trim() ?? '',
       p_storage_path: storagePath,
@@ -118,11 +140,24 @@ export async function createBranchDocumentV127(input: BranchCreateDocumentInput)
     })
     if (error || !data) throw error ?? new Error('Document metadata was not returned.')
     const content = await createPatientDocumentSignedUrl(storagePath, 300)
-    return mapRow(data as Record<string, any>, content)
+    const created = mapRow(data as Record<string, any>, content)
+    saveStoredDocuments([created, ...loadLocalDocumentsWithout(created.id)])
+    return created
   } catch (cause) {
-    await client.storage.from(PATIENT_DOCUMENT_BUCKET).remove([storagePath])
-    throw new Error(cause instanceof Error ? cause.message : 'Document metadata could not be saved. The uploaded file was removed.')
+    const { error: cleanupError } = await client.storage.from(PATIENT_DOCUMENT_BUCKET).remove([storagePath])
+    if (import.meta.env.DEV) {
+      console.error('[branch document metadata]', cause)
+      if (cleanupError) console.error('[branch document orphan cleanup]', cleanupError)
+    }
+    const detail = cause instanceof Error ? cause.message : 'Document metadata could not be saved.'
+    throw new Error(cleanupError
+      ? `${detail} The uploaded file may require administrator cleanup.`
+      : `${detail} The uploaded file was removed.`)
   }
+}
+
+function loadLocalDocumentsWithout(documentId: string) {
+  return getStoredDocuments().filter((document) => document.id !== documentId)
 }
 
 export async function setBranchDocumentVisibilityV127(documentId: string, patientVisible: boolean) {

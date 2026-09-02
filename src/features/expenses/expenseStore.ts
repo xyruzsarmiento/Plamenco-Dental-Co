@@ -286,6 +286,20 @@ export function getExpenseVendors() {
   return [...vendors, ...supplierVendors.filter((supplierVendor) => !vendors.some((vendor) => vendor.linkedSupplierId === supplierVendor.linkedSupplierId))]
 }
 
+export function replaceExpenseWorkspaceCache(input: {
+  expenses?: Expense[]
+  payments?: ExpensePayment[]
+  vendors?: ExpenseVendor[]
+  recurringTemplates?: RecurringExpenseTemplate[]
+  categories?: ExpenseCategory[]
+}) {
+  if (input.expenses) saveList(EXPENSE_KEY, input.expenses)
+  if (input.payments) saveList(PAYMENT_KEY, input.payments)
+  if (input.vendors) saveList(VENDOR_KEY, input.vendors)
+  if (input.recurringTemplates) saveList(RECURRING_KEY, input.recurringTemplates)
+  if (input.categories) saveList(CATEGORY_KEY, input.categories)
+}
+
 export function getExpenses() {
   return getList<Expense>(EXPENSE_KEY).map(normalizeExpense).sort((a, b) => new Date(b.expenseDate).getTime() - new Date(a.expenseDate).getTime())
 }

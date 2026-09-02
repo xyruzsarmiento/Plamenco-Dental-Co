@@ -1,0 +1,15 @@
+.topbar-notification-popover-v153 {
+  z-index: 11000;
+  right: auto;
+  max-width: calc(100vw - 24px);
+}
+
+@media (max-width: 520px) {
+  .topbar-notification-popover-v153 {
+    left: 10px !important;
+    right: 10px !important;
+    top: 68px !important;
+    width: auto !important;
+    max-height: calc(100dvh - 86px);
+  }
+}

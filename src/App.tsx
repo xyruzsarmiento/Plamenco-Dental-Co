@@ -37,6 +37,7 @@ import './styles/internal-expenses-branch-v122.css'
 import './styles/internal-reports-branch-v124.css'
 import './styles/branch-assignment-admin-v126.css'
 import './styles/part11-documents-import-forms-v127.css'
+import './styles/operational-workspace-parity-part1.css'
 
 const PATIENT_PORTAL_CACHE_KEYS = [
   'plamenco.appointments',
@@ -64,7 +65,6 @@ function patientPortalSnapshot() {
 
 function DataBootstrap({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, isLoading, user } = useAuth()
-  const [ready, setReady] = useState(false)
   const [dataRevision, setDataRevision] = useState(0)
 
   useEffect(() => {
@@ -74,14 +74,12 @@ function DataBootstrap({ children }: { children: React.ReactNode }) {
 
     if (isLoading) return () => { active = false }
     if (!isAuthenticated || !user?.id) {
-      setReady(true)
       return () => { active = false }
     }
 
     const scope = `user:${user.id}`
     const bootstrapKey = `workspace-bootstrap:${user.role}`
     const hasWarmBootstrap = readCachedQuery<boolean>(bootstrapKey, scope) === true
-    setReady(hasWarmBootstrap)
 
     const bootstrap = cachedQuery(
       bootstrapKey,
@@ -115,7 +113,6 @@ function DataBootstrap({ children }: { children: React.ReactNode }) {
 
     void bootstrap.finally(() => {
       if (!active) return
-      setReady(true)
 
       if (user.role === 'patient') {
         if (patientDataChanged) setDataRevision((value) => value + 1)
@@ -127,6 +124,7 @@ function DataBootstrap({ children }: { children: React.ReactNode }) {
           'internal-background-sync',
           async () => {
             await syncSupabaseToLocalStorage()
+            if (active) setDataRevision((value) => value + 1)
             return true
           },
           { ...queryCachePolicy.frequent, tags: ['internal-sync'], scope },
@@ -141,18 +139,6 @@ function DataBootstrap({ children }: { children: React.ReactNode }) {
       if (backgroundTimer !== undefined) window.clearTimeout(backgroundTimer)
     }
   }, [isAuthenticated, isLoading, user?.id, user?.role])
-
-  if (isLoading || !ready) {
-    return (
-      <main style={{ minHeight: '100vh', display: 'grid', placeItems: 'center', background: '#f8fafc', padding: 24 }}>
-        <section style={{ display: 'grid', justifyItems: 'center', gap: 10, padding: '24px 28px', border: '1px solid #e2e8f0', borderRadius: 18, background: '#fff', boxShadow: '0 18px 52px rgba(15, 23, 42, .07)', textAlign: 'center' }}>
-          <span style={{ width: 24, height: 24, border: '3px solid #dbeafe', borderTopColor: '#2563eb', borderRadius: '999px' }} />
-          <strong style={{ color: '#0f172a', fontSize: 14 }}>Preparing clinic workspace</strong>
-          <span style={{ color: '#64748b', fontSize: 12 }}>Loading essential clinic data.</span>
-        </section>
-      </main>
-    )
-  }
 
   return <Fragment key={`${user?.id ?? 'public'}:${dataRevision}`}>{children}</Fragment>
 }

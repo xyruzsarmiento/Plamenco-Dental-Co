@@ -12,7 +12,16 @@ import {
   type StockTransfer,
 } from './inventoryStore'
 
+type RefreshScope = {
+  branchIds?: string[]
+}
+
+const ITEM_KEY = 'plamenco.inventory.items'
+const CATEGORY_KEY = 'plamenco.inventory.categories'
+const UNIT_KEY = 'plamenco.inventory.units'
 const BRANCH_STOCK_KEY = 'plamenco.inventory.branchStock'
+const BATCH_KEY = 'plamenco.inventory.batches'
+const SUPPLIER_KEY = 'plamenco.inventory.suppliers'
 const MOVEMENT_KEY = 'plamenco.inventory.movements'
 const PO_KEY = 'plamenco.inventory.purchaseOrders'
 const RECEIPT_KEY = 'plamenco.inventory.purchaseReceipts'
@@ -22,6 +31,78 @@ const STOCK_COUNT_KEY = 'plamenco.inventory.stockCounts'
 function requireDatabase() {
   if (!supabase) throw new Error('Clinic database is not configured. Stock cannot be changed safely.')
   return supabase
+}
+
+function mapCategory(row: Record<string, any>) {
+  return {
+    id: String(row.id),
+    name: String(row.name ?? ''),
+    status: row.status ?? 'active',
+  }
+}
+
+function mapUnit(row: Record<string, any>) {
+  return {
+    id: String(row.id),
+    label: String(row.label ?? ''),
+    abbreviation: String(row.abbreviation ?? ''),
+    status: row.status ?? 'active',
+  }
+}
+
+function mapSupplier(row: Record<string, any>) {
+  return {
+    id: String(row.id),
+    supplierNumber: String(row.supplier_number ?? ''),
+    name: String(row.name ?? ''),
+    contactPerson: String(row.contact_person ?? ''),
+    phone: String(row.phone ?? ''),
+    email: String(row.email ?? ''),
+    address: String(row.address ?? ''),
+    notes: String(row.notes ?? ''),
+    status: row.status ?? 'active',
+    createdAt: row.created_at ?? new Date().toISOString(),
+    updatedAt: row.updated_at ?? row.created_at ?? new Date().toISOString(),
+  }
+}
+
+function mapItem(row: Record<string, any>) {
+  return {
+    id: String(row.id),
+    itemCode: String(row.item_code ?? ''),
+    sku: String(row.sku ?? ''),
+    name: String(row.name ?? ''),
+    description: String(row.description ?? ''),
+    categoryId: String(row.category_id ?? ''),
+    unitId: String(row.unit_id ?? ''),
+    brand: String(row.brand ?? ''),
+    defaultSupplierId: row.default_supplier_id ?? undefined,
+    defaultReorderLevel: Number(row.default_reorder_level ?? 0),
+    trackBatches: Boolean(row.track_batches),
+    trackExpiry: Boolean(row.track_expiry),
+    expiryWarningDays: Number(row.expiry_warning_days ?? 60),
+    status: row.status ?? 'active',
+    createdAt: row.created_at ?? new Date().toISOString(),
+    updatedAt: row.updated_at ?? row.created_at ?? new Date().toISOString(),
+  }
+}
+
+function mapBatch(row: Record<string, any>) {
+  return {
+    id: String(row.id),
+    branchId: String(row.branch_id),
+    itemId: String(row.inventory_item_id),
+    batchNumber: String(row.batch_number ?? ''),
+    quantityOnHand: Number(row.quantity_on_hand ?? 0),
+    receivedDate: row.received_date ?? '',
+    expiryDate: row.expiry_date ?? undefined,
+    supplierId: row.supplier_id ?? undefined,
+    unitCostCents: Number(row.unit_cost_cents ?? 0),
+    sourceType: row.source_type ?? '',
+    sourceId: row.source_id ?? undefined,
+    createdAt: row.created_at ?? new Date().toISOString(),
+    updatedAt: row.updated_at ?? row.created_at ?? new Date().toISOString(),
+  }
 }
 
 function mapMovement(row: Record<string, any>): StockMovement {
@@ -139,6 +220,21 @@ function setCache(key: string, value: unknown) {
   if (typeof window !== 'undefined') window.localStorage.setItem(key, JSON.stringify(value))
 }
 
+function readCache<T>(key: string): T[] {
+  if (typeof window === 'undefined') return []
+  try {
+    const parsed = JSON.parse(window.localStorage.getItem(key) ?? '[]') as T[]
+    return Array.isArray(parsed) ? parsed : []
+  } catch {
+    return []
+  }
+}
+
+function mergeById<T extends { id: string }>(key: string, incoming: T[], shouldReplace: (row: T) => boolean) {
+  const current = readCache<T>(key)
+  setCache(key, [...incoming, ...current.filter((row) => !shouldReplace(row) && !incoming.some((entry) => entry.id === row.id))])
+}
+
 function updateCaches(movement: StockMovement, stock: BranchInventory) {
   if (typeof window === 'undefined') return
   const movements = [movement, ...getStockMovements().filter((entry) => entry.id !== movement.id)]
@@ -147,25 +243,78 @@ function updateCaches(movement: StockMovement, stock: BranchInventory) {
   setCache(BRANCH_STOCK_KEY, stocks)
 }
 
-export async function refreshInventoryOperationalCaches() {
+export async function refreshInventoryOperationalCaches(scope: RefreshScope = {}) {
   const db = requireDatabase()
-  const [stocksResult, movementsResult, ordersResult, receiptsResult, transfersResult, countsResult] = await Promise.all([
-    db.from('branch_inventory').select('*'),
-    db.from('stock_movements').select('*').order('created_at', { ascending: false }),
-    db.from('purchase_orders').select('*').order('created_at', { ascending: false }),
-    db.from('purchase_receipts').select('*').order('created_at', { ascending: false }),
-    db.from('stock_transfers').select('*').order('created_at', { ascending: false }),
-    db.from('stock_counts').select('*').order('created_at', { ascending: false }),
+  const branchIds = [...new Set((scope.branchIds ?? []).filter(Boolean))]
+  const scoped = branchIds.length > 0
+  const transferFilter = `from_branch_id.in.(${branchIds.join(',')}),to_branch_id.in.(${branchIds.join(',')})`
+  const stocksQuery = scoped ? db.from('branch_inventory').select('*').in('branch_id', branchIds) : db.from('branch_inventory').select('*')
+  const batchesQuery = scoped ? db.from('inventory_batches').select('*').in('branch_id', branchIds) : db.from('inventory_batches').select('*')
+  const movementsQuery = scoped ? db.from('stock_movements').select('*').in('branch_id', branchIds).order('created_at', { ascending: false }) : db.from('stock_movements').select('*').order('created_at', { ascending: false })
+  const ordersQuery = scoped ? db.from('purchase_orders').select('*').in('branch_id', branchIds).order('created_at', { ascending: false }) : db.from('purchase_orders').select('*').order('created_at', { ascending: false })
+  const receiptsQuery = scoped ? db.from('purchase_receipts').select('*').in('branch_id', branchIds).order('created_at', { ascending: false }) : db.from('purchase_receipts').select('*').order('created_at', { ascending: false })
+  const transfersQuery = scoped ? db.from('stock_transfers').select('*').or(transferFilter).order('created_at', { ascending: false }) : db.from('stock_transfers').select('*').order('created_at', { ascending: false })
+  const countsQuery = scoped ? db.from('stock_counts').select('*').in('branch_id', branchIds).order('created_at', { ascending: false }) : db.from('stock_counts').select('*').order('created_at', { ascending: false })
+  const [
+    categoriesResult,
+    unitsResult,
+    suppliersResult,
+    itemsResult,
+    stocksResult,
+    batchesResult,
+    movementsResult,
+    ordersResult,
+    receiptsResult,
+    transfersResult,
+    countsResult,
+  ] = await Promise.all([
+    db.from('inventory_categories').select('*'),
+    db.from('inventory_units').select('*'),
+    db.from('suppliers').select('*').order('name', { ascending: true }),
+    db.from('inventory_items').select('*').order('name', { ascending: true }),
+    stocksQuery,
+    batchesQuery,
+    movementsQuery,
+    ordersQuery,
+    receiptsQuery,
+    transfersQuery,
+    countsQuery,
   ])
-  const firstError = [stocksResult.error, movementsResult.error, ordersResult.error, receiptsResult.error, transfersResult.error, countsResult.error].find(Boolean)
+  const firstError = [categoriesResult.error, unitsResult.error, suppliersResult.error, itemsResult.error, stocksResult.error, batchesResult.error, movementsResult.error, ordersResult.error, receiptsResult.error, transfersResult.error, countsResult.error].find(Boolean)
   if (firstError) throw new Error(`Inventory was saved, but the latest database state could not be refreshed: ${firstError?.message}`)
 
-  setCache(BRANCH_STOCK_KEY, (stocksResult.data ?? []).map((row) => mapStock(row as Record<string, any>)))
-  setCache(MOVEMENT_KEY, (movementsResult.data ?? []).map((row) => mapMovement(row as Record<string, any>)))
-  setCache(PO_KEY, (ordersResult.data ?? []).map((row) => mapPurchaseOrder(row as Record<string, any>)))
-  setCache(RECEIPT_KEY, (receiptsResult.data ?? []).map((row) => mapPurchaseReceipt(row as Record<string, any>)))
-  setCache(TRANSFER_KEY, (transfersResult.data ?? []).map((row) => mapTransfer(row as Record<string, any>)))
-  setCache(STOCK_COUNT_KEY, (countsResult.data ?? []).map((row) => mapStockCount(row as Record<string, any>)))
+  setCache(CATEGORY_KEY, (categoriesResult.data ?? []).map((row) => mapCategory(row as Record<string, any>)))
+  setCache(UNIT_KEY, (unitsResult.data ?? []).map((row) => mapUnit(row as Record<string, any>)))
+  setCache(SUPPLIER_KEY, (suppliersResult.data ?? []).map((row) => mapSupplier(row as Record<string, any>)))
+  setCache(ITEM_KEY, (itemsResult.data ?? []).map((row) => mapItem(row as Record<string, any>)))
+
+  const stocks = (stocksResult.data ?? []).map((row) => mapStock(row as Record<string, any>))
+  const batches = (batchesResult.data ?? []).map((row) => mapBatch(row as Record<string, any>))
+  const movements = (movementsResult.data ?? []).map((row) => mapMovement(row as Record<string, any>))
+  const orders = (ordersResult.data ?? []).map((row) => mapPurchaseOrder(row as Record<string, any>))
+  const receipts = (receiptsResult.data ?? []).map((row) => mapPurchaseReceipt(row as Record<string, any>))
+  const transfers = (transfersResult.data ?? []).map((row) => mapTransfer(row as Record<string, any>))
+  const counts = (countsResult.data ?? []).map((row) => mapStockCount(row as Record<string, any>))
+
+  if (!scoped) {
+    setCache(BRANCH_STOCK_KEY, stocks)
+    setCache(BATCH_KEY, batches)
+    setCache(MOVEMENT_KEY, movements)
+    setCache(PO_KEY, orders)
+    setCache(RECEIPT_KEY, receipts)
+    setCache(TRANSFER_KEY, transfers)
+    setCache(STOCK_COUNT_KEY, counts)
+    return
+  }
+
+  const inScope = (branchId: string) => branchIds.includes(branchId)
+  mergeById(BRANCH_STOCK_KEY, stocks, (row: BranchInventory) => inScope(row.branchId))
+  mergeById(BATCH_KEY, batches, (row: ReturnType<typeof mapBatch>) => inScope(row.branchId))
+  mergeById(MOVEMENT_KEY, movements, (row: StockMovement) => inScope(row.branchId))
+  mergeById(PO_KEY, orders, (row: PurchaseOrder) => inScope(row.branchId))
+  mergeById(RECEIPT_KEY, receipts, (row: PurchaseReceipt) => inScope(row.branchId))
+  mergeById(TRANSFER_KEY, transfers, (row: StockTransfer) => inScope(row.fromBranchId) || inScope(row.toBranchId))
+  mergeById(STOCK_COUNT_KEY, counts, (row: StockCount) => inScope(row.branchId))
 }
 
 export async function postStockMovementPersisted(input: {

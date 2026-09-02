@@ -95,7 +95,7 @@ export function ClinicalVisitWorkspace({ record, patient, appointment, branch, p
     if (isSavingClinical) return
     setIsSavingClinical(true); setMutationError(null); setMessage(null)
     try {
-      await createPrescriptionPersisted({ patientId: patient.patientId, dentalRecordId: record.id, appointmentId: appointment?.id, branchId: branch?.id, providerId: provider?.id, providerNameSnapshot: provider?.displayName, items: prescriptionItems, notes: prescriptionNotes, prescribedBy: provider?.displayName ?? actor, prescriptionDate: record.recordDate })
+      await createPrescriptionPersisted({ patientId: patient.patientId, dentalRecordId: record.id, appointmentId: appointment?.id, branchId: branch?.id ?? appointment?.branchId ?? record.branchId, providerId: provider?.id, providerNameSnapshot: provider?.displayName, items: prescriptionItems, notes: prescriptionNotes, prescribedBy: provider?.displayName ?? actor, prescriptionDate: record.recordDate })
       setPrescriptionItems([emptyPrescriptionItem]); setPrescriptionNotes(''); refreshRelated(); setMessage('Prescription saved.')
     } catch (cause) { setMutationError(cause instanceof Error ? cause.message : 'Prescription could not be saved.') }
     finally { setIsSavingClinical(false) }

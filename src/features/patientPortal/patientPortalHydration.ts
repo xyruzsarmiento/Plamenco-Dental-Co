@@ -37,10 +37,11 @@ export async function hydratePatientPortalFromDatabase() {
 
   const patientDbId = String(patientRow.id)
   const patientPublicId = String(patientRow.patient_id)
+  const patientReferences = Array.from(new Set([patientDbId, patientPublicId].filter(Boolean)))
 
   const [appointments, treatments, treatmentPlans, prescriptions, invoices, payments, receipts, documents, recalls] = await Promise.all([
     db.from('appointments')
-      .select('id,appointment_number,patient_id,branch_id,provider_id,service_id,operatory_id,appointment_date,start_time,end_time,duration_minutes,estimated_amount_cents,payment_status,deposit_status,deposit_required_cents,deposit_paid_cents,reason_for_visit,patient_notes,booking_source,status,created_at,updated_at')
+      .select('*')
       .eq('patient_id', patientDbId)
       .order('appointment_date', { ascending: true }),
     db.from('treatments')
@@ -53,7 +54,8 @@ export async function hydratePatientPortalFromDatabase() {
       .order('created_at', { ascending: false }),
     db.from('prescriptions')
       .select('id,patient_id,dental_record_id,appointment_id,branch_id,provider_id,provider_name_snapshot,items,prescribed_by,prescription_date,status,created_at,updated_at')
-      .eq('patient_id', patientDbId)
+      .in('patient_id', patientReferences)
+      .neq('status', 'voided')
       .order('prescription_date', { ascending: false }),
     db.from('invoices')
       .select('id,invoice_number,patient_id,branch_id,invoice_date,due_date,items,subtotal_cents,discount_cents,total_cents,amount_paid_cents,balance_cents,status,created_at,updated_at')
@@ -87,7 +89,10 @@ export async function hydratePatientPortalFromDatabase() {
 
   save(keys.appointments, (appointments.data ?? []).map((row: any) => ({
     id: String(row.id), appointmentNumber: row.appointment_number ?? undefined, patientId: patientPublicId,
-    branchId: row.branch_id ?? undefined, providerId: row.provider_id ?? undefined, serviceId: String(row.service_id ?? ''), operatoryId: row.operatory_id ?? undefined,
+    branchId: row.branch_id ?? undefined, providerId: row.provider_id ?? undefined, proposedProviderId: row.proposed_provider_id ?? undefined,
+    providerAcceptedAt: row.provider_accepted_at ?? undefined, providerAcceptedBy: row.provider_accepted_by ?? undefined,
+    providerDeclinedAt: row.provider_declined_at ?? undefined, providerDeclinedBy: row.provider_declined_by ?? undefined,
+    serviceId: String(row.service_id ?? ''), operatoryId: row.operatory_id ?? undefined,
     date: row.appointment_date ?? '', startTime: String(row.start_time ?? '').slice(0, 5), endTime: String(row.end_time ?? '').slice(0, 5),
     durationMinutes: row.duration_minutes == null ? undefined : Number(row.duration_minutes), estimatedAmountCents: row.estimated_amount_cents == null ? undefined : Number(row.estimated_amount_cents),
     paymentStatus: row.payment_status ?? 'not_billed', depositStatus: row.deposit_status ?? 'not_required', depositRequiredCents: Number(row.deposit_required_cents ?? 0), depositPaidCents: Number(row.deposit_paid_cents ?? 0),

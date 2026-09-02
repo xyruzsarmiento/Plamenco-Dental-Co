@@ -8,6 +8,7 @@ import { findStaffByEmail } from './staffStore'
 
 const STORAGE_KEY = 'plamenco.auth.user'
 const SOCIAL_INTENT_KEY = 'plamenco.auth.social-intent'
+const AUTH_OPERATION_TIMEOUT_MS = 12000
 const allowLegacyLocalAuth = import.meta.env.DEV && import.meta.env.VITE_ENABLE_LEGACY_LOCAL_AUTH === 'true'
 
 type SessionUser = {
@@ -41,6 +42,36 @@ function clearCachedUser() {
 
 function cacheUser(user: AuthUser) {
   window.localStorage.setItem(STORAGE_KEY, JSON.stringify(user))
+}
+
+function withAuthTimeout<T>(operation: Promise<T>, message: string): Promise<T> {
+  let timeoutId: number | undefined
+  const timeout = new Promise<never>((_, reject) => {
+    timeoutId = window.setTimeout(() => reject(new Error(message)), AUTH_OPERATION_TIMEOUT_MS)
+  })
+
+  return Promise.race([operation, timeout]).finally(() => {
+    if (timeoutId !== undefined) window.clearTimeout(timeoutId)
+  })
+}
+
+function readSupabaseHashCallback() {
+  if (typeof window === 'undefined' || !window.location.hash) return null
+  const params = new URLSearchParams(window.location.hash.replace(/^#/, ''))
+  const error = params.get('error_description') || params.get('error')
+  if (error) return { error, accessToken: '', refreshToken: '' }
+  const accessToken = params.get('access_token') ?? ''
+  const refreshToken = params.get('refresh_token') ?? ''
+  if (!accessToken || !refreshToken) return null
+  return { error: '', accessToken, refreshToken }
+}
+
+function clearSupabaseHashCallback() {
+  if (typeof window === 'undefined' || !window.location.hash) return
+  const params = new URLSearchParams(window.location.hash.replace(/^#/, ''))
+  const hasSupabaseCallback = ['access_token', 'refresh_token', 'error', 'error_description'].some((key) => params.has(key))
+  if (!hasSupabaseCallback) return
+  window.history.replaceState({}, document.title, `${window.location.pathname}${window.location.search}`)
 }
 
 function isUserRole(value: unknown): value is UserRole {
@@ -213,6 +244,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
 
     let isMounted = true
+    const authStateTimers = new Set<number>()
     const applySession = async (sessionUser: SessionUser | null | undefined) => {
       if (!isMounted) return
       if (!sessionUser) {
@@ -222,14 +254,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return
       }
 
-      const nextUser = await buildUserFromSupabaseSession(sessionUser)
-      if (!isMounted) return
-      if (nextUser) {
-        cacheUser(nextUser)
-        setUser(nextUser)
-        setAuthError(null)
-        if (typeof window !== 'undefined') window.sessionStorage.removeItem(SOCIAL_INTENT_KEY)
-      } else {
+      try {
+        const nextUser = await withAuthTimeout(
+          buildUserFromSupabaseSession(sessionUser),
+          'Clinic account lookup took too long. Please refresh or sign in again.',
+        )
+        if (!isMounted) return
+        if (nextUser) {
+          cacheUser(nextUser)
+          setUser(nextUser)
+          setAuthError(null)
+          if (typeof window !== 'undefined') window.sessionStorage.removeItem(SOCIAL_INTENT_KEY)
+          setIsLoading(false)
+          return
+        }
         const social = isSocialSession(sessionUser)
         clearCachedUser()
         clearAllQueryCache()
@@ -238,25 +276,79 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           ? 'Social sign-in is available for patient accounts only. If this email belongs to a clinic team account, sign in with your clinic-managed password.'
           : 'Unable to load an authorized clinic account for this session.')
         if (social) void client.auth.signOut()
+      } catch (cause) {
+        if (!isMounted) return
+        console.error('[auth session restore failed]', cause)
+        clearCachedUser()
+        clearAllQueryCache()
+        setUser(null)
+        setAuthError(cause instanceof Error ? cause.message : 'Unable to restore your secure clinic session. Please sign in again.')
+      } finally {
+        if (isMounted) setIsLoading(false)
       }
-      setIsLoading(false)
     }
 
     const applySupabaseSession = async () => {
-      const { data: { session }, error } = await client.auth.getSession()
-      if (!isMounted) return
-      if (error) {
+      try {
+        const callback = readSupabaseHashCallback()
+        if (callback?.error) {
+          clearSupabaseHashCallback()
+          clearCachedUser(); clearAllQueryCache(); setUser(null)
+          setAuthError(callback.error)
+          setIsLoading(false)
+          return
+        }
+        if (callback?.accessToken && callback.refreshToken) {
+          const { data, error } = await withAuthTimeout(
+            client.auth.setSession({ access_token: callback.accessToken, refresh_token: callback.refreshToken }),
+            'Secure sign-in callback took too long. Please refresh or sign in again.',
+          )
+          clearSupabaseHashCallback()
+          if (!isMounted) return
+          if (error) {
+            clearCachedUser(); clearAllQueryCache(); setUser(null)
+            setAuthError('Unable to complete secure sign-in. Please sign in again.')
+            setIsLoading(false)
+            return
+          }
+          await applySession(data.session?.user)
+          return
+        }
+        const { data: { session }, error } = await withAuthTimeout(
+          client.auth.getSession(),
+          'Secure session restore took too long. Please refresh or sign in again.',
+        )
+        if (!isMounted) return
+        if (error) {
+          clearCachedUser(); clearAllQueryCache(); setUser(null)
+          setAuthError('Unable to restore your secure session. Please sign in again.')
+          setIsLoading(false)
+          return
+        }
+        await applySession(session?.user)
+      } catch (cause) {
+        if (!isMounted) return
+        console.error('[auth session load failed]', cause)
         clearCachedUser(); clearAllQueryCache(); setUser(null)
-        setAuthError('Unable to restore your secure session. Please sign in again.')
+        setAuthError(cause instanceof Error ? cause.message : 'Unable to restore your secure session. Please sign in again.')
         setIsLoading(false)
-        return
       }
-      await applySession(session?.user)
     }
 
     void applySupabaseSession()
-    const { data: { subscription } } = client.auth.onAuthStateChange((_event, session) => { void applySession(session?.user) })
-    return () => { isMounted = false; subscription.unsubscribe() }
+    const { data: { subscription } } = client.auth.onAuthStateChange((_event, session) => {
+      const timer = window.setTimeout(() => {
+        authStateTimers.delete(timer)
+        void applySession(session?.user)
+      }, 0)
+      authStateTimers.add(timer)
+    })
+    return () => {
+      isMounted = false
+      authStateTimers.forEach((timer) => window.clearTimeout(timer))
+      authStateTimers.clear()
+      subscription.unsubscribe()
+    }
   }, [])
 
   const value = useMemo<AuthContextValue>(() => ({

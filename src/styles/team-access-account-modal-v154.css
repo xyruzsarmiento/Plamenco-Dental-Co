@@ -1,0 +1,253 @@
+.app-shell.role-super_admin .team-v26-drawer.team-v26-account-modal-v153 {
+  width: min(880px, calc(100vw - 48px)) !important;
+  max-width: min(880px, calc(100vw - 48px)) !important;
+  border-radius: 26px !important;
+  background:
+    radial-gradient(circle at 96% 0%, rgba(37, 99, 235, 0.08), transparent 30%),
+    linear-gradient(180deg, #ffffff 0%, #f8fbff 100%) !important;
+}
+
+.app-shell.role-super_admin .team-v26-account-modal-v153 > header {
+  padding: 20px 22px !important;
+}
+
+.app-shell.role-super_admin .team-v26-account-modal-v153 .team-v26-profile-head {
+  display: grid !important;
+  grid-template-columns: 54px minmax(0, 1fr) auto !important;
+  align-items: center !important;
+  gap: 14px !important;
+  width: 100%;
+}
+
+.app-shell.role-super_admin .team-v26-account-modal-v153 .team-v26-profile-head h3 {
+  font-size: clamp(1.55rem, 2.4vw, 2rem) !important;
+}
+
+.app-shell.role-super_admin .team-v26-account-modal-v153 .team-v26-drawer-body {
+  display: grid !important;
+  grid-template-columns: 1fr !important;
+  gap: 14px !important;
+  padding: 16px 20px 18px !important;
+}
+
+.app-shell.role-super_admin .team-v26-account-overview-v154 {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.app-shell.role-super_admin .team-v26-account-overview-v154 > div,
+.app-shell.role-super_admin .team-v26-account-profile-v154,
+.app-shell.role-super_admin .team-v26-branch-workspace-v154,
+.app-shell.role-super_admin .team-v26-account-state-v154 {
+  min-width: 0;
+  border: 1px solid #dce8f6;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.045);
+}
+
+.app-shell.role-super_admin .team-v26-account-overview-v154 > div {
+  display: grid;
+  gap: 4px;
+  padding: 14px;
+}
+
+.app-shell.role-super_admin .team-v26-account-overview-v154 span,
+.app-shell.role-super_admin .team-v26-account-profile-v154 .team-v26-detail-grid span,
+.app-shell.role-super_admin .team-v26-account-state-v154 .team-v26-context-grid span,
+.app-shell.role-super_admin .team-v26-branch-head-v154 small {
+  color: #2563eb;
+  font-size: 0.67rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.app-shell.role-super_admin .team-v26-account-overview-v154 strong {
+  color: #0f172a;
+  font-size: 1.02rem;
+  line-height: 1.25;
+}
+
+.app-shell.role-super_admin .team-v26-account-overview-v154 small {
+  color: #64748b;
+  font-size: 0.75rem;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+
+.app-shell.role-super_admin .team-v26-account-profile-v154,
+.app-shell.role-super_admin .team-v26-branch-workspace-v154,
+.app-shell.role-super_admin .team-v26-account-state-v154 {
+  display: grid;
+  gap: 14px;
+  padding: 16px;
+}
+
+.app-shell.role-super_admin .team-v26-account-profile-v154 > p {
+  margin: 0;
+  color: #64748b;
+  font-size: 0.84rem;
+  line-height: 1.55;
+}
+
+.app-shell.role-super_admin .team-v26-account-profile-v154 .team-v26-detail-grid,
+.app-shell.role-super_admin .team-v26-account-state-v154 .team-v26-context-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+}
+
+.app-shell.role-super_admin .team-v26-account-profile-v154 .team-v26-detail-grid > div,
+.app-shell.role-super_admin .team-v26-account-state-v154 .team-v26-context-grid > article {
+  padding: 12px 13px;
+  border: 1px solid #e8eef7;
+  border-radius: 14px;
+  background: #f8fbff;
+}
+
+.app-shell.role-super_admin .team-v26-branch-head-v154 {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.app-shell.role-super_admin .team-v26-branch-head-v154 small {
+  display: inline-flex;
+  align-items: center;
+  min-height: 30px;
+  padding: 0 11px;
+  border: 1px solid #bfdbfe;
+  border-radius: 999px;
+  background: #eff6ff;
+  white-space: nowrap;
+}
+
+.app-shell.role-super_admin .team-v26-branch-editor.team-v26-branch-editor-v154 {
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  gap: 10px !important;
+}
+
+.app-shell.role-super_admin .team-v26-branch-editor-v154 label {
+  position: relative;
+  min-height: 86px !important;
+  padding: 14px !important;
+  border-radius: 18px !important;
+  background: linear-gradient(180deg, #ffffff 0%, #fbfdff 100%) !important;
+  transition: border-color 0.16s ease, background 0.16s ease, box-shadow 0.16s ease, transform 0.16s ease;
+}
+
+.app-shell.role-super_admin .team-v26-branch-editor-v154 label:hover {
+  border-color: #bfdbfe !important;
+  box-shadow: 0 12px 26px rgba(37, 99, 235, 0.08) !important;
+  transform: translateY(-1px);
+}
+
+.app-shell.role-super_admin .team-v26-branch-editor-v154 label.is-selected {
+  border-color: #3b82f6 !important;
+  background: linear-gradient(180deg, #eff6ff 0%, #ffffff 100%) !important;
+  box-shadow: inset 0 0 0 1px rgba(59, 130, 246, 0.18), 0 12px 26px rgba(37, 99, 235, 0.1) !important;
+}
+
+.app-shell.role-super_admin .team-v26-branch-editor-v154 input[type='checkbox'] {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.app-shell.role-super_admin .team-v26-branch-editor-v154 input[type='radio'] {
+  width: 18px;
+  height: 18px;
+  accent-color: #2563eb;
+}
+
+.app-shell.role-super_admin .team-v26-branch-editor-v154 strong {
+  white-space: normal !important;
+}
+
+.app-shell.role-super_admin .team-v26-save-state-v154 {
+  justify-self: center;
+  color: #15803d;
+  font-size: 0.8rem;
+  font-weight: 800;
+}
+
+.app-shell.role-super_admin .team-v26-save-state-v154.is-error {
+  color: #b91c1c;
+}
+
+.app-shell.role-super_admin .team-v26-account-footer-v153 {
+  display: grid !important;
+  grid-template-columns: minmax(140px, auto) minmax(0, 1fr) auto !important;
+  align-items: center !important;
+}
+
+.app-shell.role-super_admin .team-v26-account-footer-v153 > div {
+  justify-self: end;
+}
+
+.app-shell.role-super_admin .modal-backdrop:has(.staff-modal) {
+  z-index: 17000 !important;
+}
+
+.app-shell.role-super_admin .modal.staff-modal {
+  z-index: 17001 !important;
+}
+
+@media (max-width: 860px) {
+  .app-shell.role-super_admin .team-v26-account-overview-v154,
+  .app-shell.role-super_admin .team-v26-branch-editor.team-v26-branch-editor-v154,
+  .app-shell.role-super_admin .team-v26-account-profile-v154 .team-v26-detail-grid,
+  .app-shell.role-super_admin .team-v26-account-state-v154 .team-v26-context-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .app-shell.role-super_admin .team-v26-account-footer-v153 {
+    grid-template-columns: 1fr !important;
+  }
+
+  .app-shell.role-super_admin .team-v26-save-state-v154 {
+    justify-self: start;
+  }
+}
+
+@media (max-width: 560px) {
+  .app-shell.role-super_admin .team-v26-drawer.team-v26-account-modal-v153,
+  .app-shell.role-super_admin .modal.staff-modal {
+    width: 100vw !important;
+    max-width: 100vw !important;
+    height: 100dvh !important;
+    max-height: 100dvh !important;
+    border-radius: 0 !important;
+  }
+
+  .app-shell.role-super_admin .team-v26-account-modal-v153 .team-v26-profile-head {
+    grid-template-columns: 48px minmax(0, 1fr) auto !important;
+    gap: 11px !important;
+  }
+
+  .app-shell.role-super_admin .team-v26-account-modal-v153 .team-v26-profile-head .badge {
+    grid-column: 2 / 3;
+    justify-self: start;
+  }
+
+  .app-shell.role-super_admin .team-v26-account-modal-v153 .team-v26-drawer-body {
+    padding: 12px !important;
+  }
+
+  .app-shell.role-super_admin .team-v26-account-profile-v154,
+  .app-shell.role-super_admin .team-v26-branch-workspace-v154,
+  .app-shell.role-super_admin .team-v26-account-state-v154 {
+    padding: 13px;
+    border-radius: 16px;
+  }
+
+  .app-shell.role-super_admin .team-v26-branch-head-v154 {
+    display: grid;
+  }
+
+  .app-shell.role-super_admin .team-v26-account-footer-v153 > div {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+  }
+}

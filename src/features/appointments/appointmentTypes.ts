@@ -42,6 +42,11 @@ export type Appointment = {
   patientId: string
   branchId?: string
   providerId?: string
+  proposedProviderId?: string
+  providerAcceptedAt?: string
+  providerAcceptedBy?: string
+  providerDeclinedAt?: string
+  providerDeclinedBy?: string
   serviceId: string
   operatoryId?: string
   date: string

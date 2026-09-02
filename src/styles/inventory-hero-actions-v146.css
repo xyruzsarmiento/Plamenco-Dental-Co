@@ -1,0 +1,291 @@
+/* Shared Inventory action toolbar for Super Admin and Staff. */
+
+.app-shell.role-super_admin .content-area :where(.inv121-hero, .inventory-v22-hero),
+.app-shell.role-staff .content-area :where(.inv121-hero, .inventory-v22-hero) {
+  overflow: visible !important;
+  isolation: auto !important;
+  z-index: 18 !important;
+}
+
+.app-shell.role-super_admin .content-area :where(.inv121-metrics, .inventory-v22-metrics, .inv121-command, .inventory-v22-command),
+.app-shell.role-staff .content-area :where(.inv121-metrics, .inventory-v22-metrics, .inv121-command, .inventory-v22-command) {
+  position: relative !important;
+  z-index: 1 !important;
+}
+
+.app-shell.role-super_admin .inventory-action-toolbar,
+.app-shell.role-staff .inventory-action-toolbar {
+  position: relative !important;
+  z-index: 25 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-end !important;
+  flex-wrap: nowrap !important;
+  gap: 9px !important;
+  width: auto !important;
+  max-width: min(100%, 720px) !important;
+  margin-left: auto !important;
+}
+
+.app-shell.role-super_admin .inventory-action-toolbar > .btn,
+.app-shell.role-staff .inventory-action-toolbar > .btn {
+  flex: 0 0 auto !important;
+  width: auto !important;
+  min-width: 0 !important;
+  min-height: 42px !important;
+  padding: 0 16px !important;
+  border-radius: 12px !important;
+  font-size: .8rem !important;
+  font-weight: 850 !important;
+  letter-spacing: 0 !important;
+  line-height: 1 !important;
+  white-space: nowrap !important;
+}
+
+.app-shell.role-super_admin .inventory-action-toolbar > .btn svg,
+.app-shell.role-staff .inventory-action-toolbar > .btn svg {
+  flex: 0 0 auto !important;
+}
+
+.app-shell.role-super_admin .inventory-action-toolbar > .btn span,
+.app-shell.role-staff .inventory-action-toolbar > .btn span {
+  color: inherit !important;
+  font: inherit !important;
+  letter-spacing: inherit !important;
+  text-transform: none !important;
+}
+
+.app-shell.role-super_admin .inventory-action-toolbar > .btn-primary,
+.app-shell.role-staff .inventory-action-toolbar > .btn-primary {
+  min-width: 122px !important;
+  border-color: #2563eb !important;
+  background: linear-gradient(180deg, #3b73f0 0%, #2563eb 100%) !important;
+  color: #fff !important;
+  box-shadow: 0 12px 24px rgba(37, 99, 235, .2) !important;
+}
+
+.app-shell.role-super_admin .inventory-action-toolbar > .btn-secondary,
+.app-shell.role-staff .inventory-action-toolbar > .btn-secondary {
+  min-width: 132px !important;
+  border-color: #cfe0f7 !important;
+  background: rgba(255, 255, 255, .96) !important;
+  color: #223046 !important;
+  box-shadow: 0 8px 18px rgba(15, 23, 42, .045) !important;
+}
+
+.app-shell.role-super_admin .inventory-action-toolbar > .btn-secondary:hover,
+.app-shell.role-staff .inventory-action-toolbar > .btn-secondary:hover {
+  border-color: #a9c8f5 !important;
+  background: #f8fbff !important;
+  color: #1d4ed8 !important;
+}
+
+.app-shell.role-super_admin .inventory-action-toolbar > .btn:disabled,
+.app-shell.role-staff .inventory-action-toolbar > .btn:disabled,
+.app-shell.role-super_admin .inv121-more-menu button:disabled,
+.app-shell.role-staff .inv121-more-menu button:disabled {
+  cursor: not-allowed !important;
+  opacity: .55 !important;
+  box-shadow: none !important;
+}
+
+.app-shell.role-super_admin .inv121-more-actions,
+.app-shell.role-staff .inv121-more-actions {
+  position: relative !important;
+  flex: 0 0 auto !important;
+}
+
+.app-shell.role-super_admin .inv121-more-actions:not(.has-desktop-items),
+.app-shell.role-staff .inv121-more-actions:not(.has-desktop-items) {
+  display: none !important;
+}
+
+.app-shell.role-super_admin .inv121-more-trigger,
+.app-shell.role-staff .inv121-more-trigger {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 8px !important;
+  width: auto !important;
+  min-width: 142px !important;
+  min-height: 42px !important;
+  padding: 0 15px !important;
+  border: 1px solid #cfe0f7 !important;
+  border-radius: 12px !important;
+  background: rgba(255, 255, 255, .96) !important;
+  color: #223046 !important;
+  font-size: .8rem !important;
+  font-weight: 850 !important;
+  letter-spacing: 0 !important;
+  line-height: 1 !important;
+  box-shadow: 0 8px 18px rgba(15, 23, 42, .045) !important;
+  cursor: pointer !important;
+}
+
+.app-shell.role-super_admin .inv121-more-trigger span,
+.app-shell.role-staff .inv121-more-trigger span {
+  color: inherit !important;
+  font: inherit !important;
+  letter-spacing: inherit !important;
+  text-transform: none !important;
+}
+
+.app-shell.role-super_admin .inv121-more-trigger:hover,
+.app-shell.role-staff .inv121-more-trigger:hover,
+.app-shell.role-super_admin .inv121-more-trigger:focus-visible,
+.app-shell.role-staff .inv121-more-trigger:focus-visible,
+.app-shell.role-super_admin .inv121-more-trigger[aria-expanded="true"],
+.app-shell.role-staff .inv121-more-trigger[aria-expanded="true"] {
+  border-color: #93c5fd !important;
+  background: #f8fbff !important;
+  color: #1d4ed8 !important;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, .1), 0 10px 24px rgba(37, 99, 235, .08) !important;
+  outline: none !important;
+}
+
+.app-shell.role-super_admin .inv121-more-menu,
+.app-shell.role-staff .inv121-more-menu {
+  position: absolute !important;
+  top: calc(100% + 10px) !important;
+  right: 0 !important;
+  left: auto !important;
+  z-index: 60 !important;
+  display: grid !important;
+  gap: 4px !important;
+  width: max(224px, 100%) !important;
+  min-width: 224px !important;
+  padding: 7px !important;
+  border: 1px solid #dbe5f1 !important;
+  border-radius: 14px !important;
+  background: rgba(255, 255, 255, .98) !important;
+  box-shadow: 0 22px 48px rgba(15, 23, 42, .16) !important;
+  backdrop-filter: blur(12px) !important;
+}
+
+.app-shell.role-super_admin .inv121-more-menu button,
+.app-shell.role-staff .inv121-more-menu button {
+  display: grid !important;
+  grid-template-columns: 18px minmax(0, 1fr) !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+  gap: 10px !important;
+  width: 100% !important;
+  min-height: 40px !important;
+  padding: 10px 11px !important;
+  border: 0 !important;
+  border-radius: 10px !important;
+  background: transparent !important;
+  color: #26364c !important;
+  box-shadow: none !important;
+  font: inherit !important;
+  font-size: .8rem !important;
+  font-weight: 800 !important;
+  line-height: 1 !important;
+  text-align: left !important;
+  white-space: nowrap !important;
+  cursor: pointer !important;
+}
+
+.app-shell.role-super_admin .inv121-more-menu button span,
+.app-shell.role-staff .inv121-more-menu button span {
+  min-width: 0 !important;
+  overflow: hidden !important;
+  color: inherit !important;
+  font: inherit !important;
+  text-overflow: ellipsis !important;
+  text-transform: none !important;
+}
+
+.app-shell.role-super_admin .inv121-more-menu button svg,
+.app-shell.role-staff .inv121-more-menu button svg {
+  width: 17px !important;
+  height: 17px !important;
+  color: #2563eb !important;
+}
+
+.app-shell.role-super_admin .inv121-more-menu button:hover,
+.app-shell.role-staff .inv121-more-menu button:hover,
+.app-shell.role-super_admin .inv121-more-menu button:focus-visible,
+.app-shell.role-staff .inv121-more-menu button:focus-visible {
+  background: #f1f6ff !important;
+  color: #1d4ed8 !important;
+  outline: none !important;
+}
+
+.app-shell.role-super_admin .inv121-menu-mobile-only,
+.app-shell.role-staff .inv121-menu-mobile-only {
+  display: none !important;
+}
+
+@media (max-width: 1180px) {
+  .app-shell.role-super_admin .inventory-action-toolbar,
+  .app-shell.role-staff .inventory-action-toolbar {
+    flex-wrap: wrap !important;
+    max-width: 520px !important;
+  }
+}
+
+@media (max-width: 760px) {
+  .app-shell.role-super_admin .inventory-action-toolbar,
+  .app-shell.role-staff .inventory-action-toolbar {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) !important;
+    width: 100% !important;
+    max-width: none !important;
+    margin-left: 0 !important;
+  }
+
+  .app-shell.role-super_admin .inventory-action-toolbar > .btn,
+  .app-shell.role-staff .inventory-action-toolbar > .btn,
+  .app-shell.role-super_admin .inv121-more-trigger,
+  .app-shell.role-staff .inv121-more-trigger {
+    width: 100% !important;
+    min-width: 0 !important;
+  }
+
+  .app-shell.role-super_admin .inventory-action-toolbar > .btn-primary,
+  .app-shell.role-staff .inventory-action-toolbar > .btn-primary {
+    grid-column: 1 / -1 !important;
+  }
+
+  .app-shell.role-super_admin .inv121-more-menu,
+  .app-shell.role-staff .inv121-more-menu {
+    right: auto !important;
+    left: 0 !important;
+    width: min(280px, calc(100vw - 40px)) !important;
+  }
+}
+
+@media (max-width: 640px) {
+  .app-shell.role-super_admin .inventory-action-toolbar > .inv121-toolbar-secondary,
+  .app-shell.role-staff .inventory-action-toolbar > .inv121-toolbar-secondary {
+    display: none !important;
+  }
+
+  .app-shell.role-super_admin .inv121-more-actions:not(.has-desktop-items),
+  .app-shell.role-staff .inv121-more-actions:not(.has-desktop-items) {
+    display: block !important;
+  }
+
+  .app-shell.role-super_admin .inventory-action-toolbar,
+  .app-shell.role-staff .inventory-action-toolbar {
+    grid-template-columns: minmax(0, 1fr) auto !important;
+  }
+
+  .app-shell.role-super_admin .inventory-action-toolbar > .btn-primary,
+  .app-shell.role-staff .inventory-action-toolbar > .btn-primary {
+    grid-column: auto !important;
+  }
+
+  .app-shell.role-super_admin .inv121-menu-mobile-only,
+  .app-shell.role-staff .inv121-menu-mobile-only {
+    display: grid !important;
+  }
+}
+
+@media (max-width: 430px) {
+  .app-shell.role-super_admin .inventory-action-toolbar,
+  .app-shell.role-staff .inventory-action-toolbar {
+    grid-template-columns: 1fr !important;
+  }
+}

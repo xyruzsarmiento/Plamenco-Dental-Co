@@ -40,7 +40,7 @@ export async function loadInternalAccountsFromProfiles(options: { strict?: boole
   if (!supabase) return getStoredStaff()
   const { data, error } = await supabase
     .from('profiles')
-    .select('id, full_name, email, phone, role, status, created_at, updated_at')
+    .select('id, full_name, email, phone, role, status, job_title, created_at, updated_at')
     .in('role', ['super_admin', 'staff', 'dentist', 'associate_dentist'])
     .order('full_name', { ascending: true })
   if (error) {
@@ -58,7 +58,7 @@ export async function loadInternalAccountsFromProfiles(options: { strict?: boole
       name: String(row.full_name || prior?.name || row.email || 'Internal account'),
       email: String(row.email || prior?.email || ''),
       phone: String(row.phone || prior?.phone || ''),
-      position: prior?.position || rolePosition(role),
+      position: String(row.job_title || prior?.position || rolePosition(role)),
       role,
       status: row.status === 'active' ? 'active' : 'inactive',
       password: '',
@@ -68,6 +68,29 @@ export async function loadInternalAccountsFromProfiles(options: { strict?: boole
   })
   saveStoredStaff(rows)
   return rows
+}
+
+export async function updateInternalAccountProfilePersisted(staffId: string, values: { name: string; email: string; phone: string; position: string }) {
+  if (!supabase) throw new Error('Clinic database is not configured.')
+  const { error } = await supabase
+    .from('profiles')
+    .update({
+      full_name: values.name.trim(),
+      email: values.email.trim().toLowerCase(),
+      phone: values.phone.trim(),
+      job_title: values.position.trim(),
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', staffId)
+  if (error) throw new Error(`Unable to update internal account profile: ${error.message}`)
+  return loadInternalAccountsFromProfiles({ strict: true })
+}
+
+export async function updateInternalAccountStatusPersisted(staffId: string, status: StaffMember['status']) {
+  if (!supabase) throw new Error('Clinic database is not configured.')
+  const { error } = await supabase.rpc('set_internal_account_status', { p_profile_id: staffId, p_status: status })
+  if (error) throw new Error(`Unable to update internal account status: ${error.message}`)
+  return loadInternalAccountsFromProfiles({ strict: true })
 }
 
 export function deleteStaffMember(staffId: string) {

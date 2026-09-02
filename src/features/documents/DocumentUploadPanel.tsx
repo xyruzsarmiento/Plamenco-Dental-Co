@@ -1,16 +1,18 @@
 import { useRef, useState } from 'react'
 import type { ChangeEvent, DragEvent } from 'react'
-import { Download, Eye, FileText, LockKeyhole, Share2, Trash2, Upload, UploadCloud } from 'lucide-react'
+import { LockKeyhole, Share2, Upload, UploadCloud } from 'lucide-react'
 import { Button } from '../../components/ui/Button'
 import { Input } from '../../components/ui/Input'
 import { Select } from '../../components/ui/Select'
 import { Textarea } from '../../components/ui/Textarea'
-import type { DocumentCategory, PatientDocument } from './documentStore'
+import { DocumentCard } from './DocumentCard'
+import { downloadPatientDocumentFile, type DocumentCategory, type PatientDocument } from './documentStore'
 
 type DocumentUploadPanelProps = {
   patientId: string
   onUpload: (payload: {
     patientId: string
+    file: File
     fileName: string
     fileType: string
     category: DocumentCategory
@@ -32,6 +34,7 @@ export function DocumentUploadPanel({ defaultPatientVisible = false, onCancel, p
   const [description, setDescription] = useState('')
   const [patientVisible, setPatientVisible] = useState(defaultPatientVisible)
   const [content, setContent] = useState('')
+  const [file, setFile] = useState<File | null>(null)
   const [readingFile, setReadingFile] = useState(false)
   const [progress, setProgress] = useState(0)
   const [saving, setSaving] = useState(false)
@@ -39,25 +42,30 @@ export function DocumentUploadPanel({ defaultPatientVisible = false, onCancel, p
 
   function processFile(file: File | undefined) {
     if (!file) return
+    const lowerName = file.name.toLowerCase()
+    const allowedExtensions = ['.pdf', '.png', '.jpg', '.jpeg', '.gif', '.webp', '.doc', '.docx', '.txt']
+    const allowedMimeTypes = ['application/pdf', 'image/png', 'image/jpeg', 'image/gif', 'image/webp', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'text/plain']
+    if (file.size <= 0) {
+      setError('The selected file is empty. Choose a valid patient document.')
+      return
+    }
+    if (file.size > 10 * 1024 * 1024) {
+      setError('Document must be 10 MB or smaller.')
+      return
+    }
+    if (!allowedExtensions.some((extension) => lowerName.endsWith(extension)) && !allowedMimeTypes.includes(file.type)) {
+      setError('Unsupported file type. Please upload a supported medical document or image.')
+      return
+    }
 
     setFileName(file.name)
     setFileType(file.type || 'application/octet-stream')
     setReadingFile(true)
-    setProgress(20)
+    setProgress(100)
     setError(null)
-
-    const reader = new FileReader()
-    reader.onload = () => {
-      setContent(String(reader.result ?? ''))
-      setProgress(100)
-      setReadingFile(false)
-    }
-    reader.onerror = () => {
-      setReadingFile(false)
-      setProgress(0)
-      setError('The selected file could not be read.')
-    }
-    reader.readAsDataURL(file)
+    setFile(file)
+    setContent(file.name)
+    setReadingFile(false)
   }
 
   function handleFilesSelected(event: ChangeEvent<HTMLInputElement>) {
@@ -71,12 +79,13 @@ export function DocumentUploadPanel({ defaultPatientVisible = false, onCancel, p
   }
 
   async function handleSubmit() {
-    if (saving || readingFile || !content || !fileName.trim()) return
+    if (saving || readingFile || !file || !fileName.trim()) return
     setSaving(true)
     setError(null)
     try {
       await onUpload({
         patientId,
+        file,
         fileName,
         fileType,
         category,
@@ -92,6 +101,7 @@ export function DocumentUploadPanel({ defaultPatientVisible = false, onCancel, p
       setDescription('')
       setPatientVisible(defaultPatientVisible)
       setContent('')
+      setFile(null)
       setProgress(0)
       if (fileInputRef.current) fileInputRef.current.value = ''
     } catch (cause) {
@@ -166,8 +176,8 @@ export function DocumentUploadPanel({ defaultPatientVisible = false, onCancel, p
             Cancel
           </Button>
         )}
-        <Button onClick={() => void handleSubmit()} icon={<Upload size={16} />} disabled={!content || !fileName.trim() || readingFile || saving}>
-          {saving ? 'Saving to database...' : 'Upload document'}
+        <Button onClick={() => void handleSubmit()} icon={<Upload size={16} />} disabled={!file || !fileName.trim() || readingFile || saving}>
+          {saving ? 'Saving document...' : 'Upload document'}
         </Button>
       </div>
     </div>
@@ -182,30 +192,30 @@ type DocumentListProps = {
 }
 
 export function DocumentList({ busyId, documents, onDelete, onToggleVisibility }: DocumentListProps) {
+  const [actionError, setActionError] = useState<string | null>(null)
   if (documents.length === 0) return null
+
+  async function downloadDocument(document: PatientDocument) {
+    setActionError(null)
+    try {
+      await downloadPatientDocumentFile(document)
+    } catch (cause) {
+      setActionError(cause instanceof Error ? cause.message : 'Document download is unavailable.')
+    }
+  }
 
   return (
     <div className="document-list">
+      {actionError && <div className="error-alert" role="alert">{actionError}</div>}
       {documents.map((document) => (
-        <article key={document.id} className="document-card">
-          <div className="document-icon"><FileText size={18} /></div>
-          <div className="document-details">
-            <strong>{document.fileName}</strong>
-            <span>{document.category.replaceAll('_', ' ')}</span>
-            <small>{new Date(document.uploadDate).toLocaleDateString()} - {document.uploadedBy}</small>
-            <small>{document.patientVisible ? 'Shared with patient' : 'Private clinic file'}</small>
-          </div>
-          <div className="document-actions">
-            {document.content && <a href={document.content} target="_blank" rel="noreferrer" aria-label={`Preview ${document.fileName}`}><Eye size={16} /></a>}
-            {document.content && <a href={document.content} download={document.fileName} aria-label={`Download ${document.fileName}`}><Download size={16} /></a>}
-            {onToggleVisibility && (
-              <button type="button" disabled={busyId === document.id} aria-label={`${document.patientVisible ? 'Make private' : 'Share'} ${document.fileName}`} onClick={() => onToggleVisibility(document.id, !document.patientVisible)}>
-                {document.patientVisible ? 'Private' : 'Share'}
-              </button>
-            )}
-            {onDelete && <button type="button" disabled={busyId === document.id} aria-label={`Archive ${document.fileName}`} onClick={() => onDelete(document.id)}><Trash2 size={16} /></button>}
-          </div>
-        </article>
+        <DocumentCard
+          key={document.id}
+          document={document}
+          busy={busyId === document.id}
+          onDownload={(item) => void downloadDocument(item)}
+          onToggleVisibility={onToggleVisibility ? (item) => onToggleVisibility(item.id, !item.patientVisible) : undefined}
+          onArchive={onDelete ? (item) => onDelete(item.id) : undefined}
+        />
       ))}
     </div>
   )

@@ -138,7 +138,7 @@ export function AppointmentDetails({
   const canBookNextFollowUp = Boolean(nextFollowUp && nextFollowUp.status !== 'booked' && !nextFollowUp.linkedAppointmentId)
 
   const visibleActions: Array<{ status: AppointmentStatus; label: string; reason?: boolean }> = !canManage ? []
-    : appointment.status === 'pending' ? [{ status: 'confirmed', label: 'Confirm' }, { status: 'rejected', label: 'Reject', reason: true }]
+    : appointment.status === 'pending' ? [...(appointment.providerId ? [{ status: 'confirmed' as const, label: 'Confirm' }] : []), { status: 'rejected', label: 'Reject', reason: true }]
     : appointment.status === 'confirmed' ? [
       { status: 'checked_in', label: 'Check In' }, { status: 'rescheduled', label: 'Mark Rescheduled', reason: true },
       { status: 'cancelled', label: 'Cancel', reason: true }, { status: 'no_show', label: 'Mark No Show', reason: true },
