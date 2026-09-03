@@ -52,6 +52,9 @@ const PATIENT_PORTAL_CACHE_KEYS = [
   'plamenco.documents',
 ]
 
+const BOOTSTRAP_TIMEOUT_MS = 8_000
+const BACKGROUND_SYNC_TIMEOUT_MS = 20_000
+
 function clearPatientPortalCaches() {
   if (typeof window === 'undefined') return
   PATIENT_PORTAL_CACHE_KEYS.forEach((key) => window.localStorage.removeItem(key))
@@ -62,6 +65,34 @@ function patientPortalSnapshot() {
   return PATIENT_PORTAL_CACHE_KEYS
     .map((key) => `${key}:${window.localStorage.getItem(key) ?? ''}`)
     .join('|')
+}
+
+function settleWithin<T>(promise: Promise<T>, timeoutMs: number, label: string): Promise<T | undefined> {
+  return new Promise((resolve) => {
+    let settled = false
+    const timer = window.setTimeout(() => {
+      if (settled) return
+      settled = true
+      console.warn(`[${label}] timed out after ${timeoutMs}ms; continuing with available data.`)
+      resolve(undefined)
+    }, timeoutMs)
+
+    promise.then(
+      (value) => {
+        if (settled) return
+        settled = true
+        window.clearTimeout(timer)
+        resolve(value)
+      },
+      (error) => {
+        if (settled) return
+        settled = true
+        window.clearTimeout(timer)
+        console.error(`[${label}] failed; continuing with available data.`, error)
+        resolve(undefined)
+      },
+    )
+  })
 }
 
 function DataBootstrap({ children }: { children: React.ReactNode }) {
@@ -103,14 +134,16 @@ function DataBootstrap({ children }: { children: React.ReactNode }) {
               patientDataChanged = before !== patientPortalSnapshot()
             }),
           )
-        } else if (!hadWarmBootstrap) {
-          // Cold internal portal loads remain behind the skeleton until the
-          // operational datasets used by appointments, billing, documents,
-          // inventory, expenses, reports, and clinical workspaces are synced.
-          essentialLoads.push(syncSupabaseToLocalStorage())
         }
 
-        await Promise.allSettled(essentialLoads)
+        // Never allow a slow or hanging Supabase request to trap the whole app
+        // behind the portal skeleton. Individual pages retain their own loaders
+        // while any late data finishes hydrating.
+        await settleWithin(
+          Promise.allSettled(essentialLoads).then(() => undefined),
+          BOOTSTRAP_TIMEOUT_MS,
+          'workspace bootstrap',
+        )
         return true
       },
       {
@@ -129,18 +162,22 @@ function DataBootstrap({ children }: { children: React.ReactNode }) {
         return
       }
 
-      // Warm sessions refresh operational data in the background without
-      // replaying a blocking skeleton on every in-app navigation.
-      if (!hadWarmBootstrap) return
+      // Full operational synchronization is intentionally non-blocking. The
+      // sync touches many tables sequentially, so it must never control whether
+      // the application shell is allowed to render.
       backgroundTimer = window.setTimeout(() => {
         void cachedQuery(
           'internal-background-sync',
           async () => {
-            await syncSupabaseToLocalStorage()
+            await settleWithin(
+              syncSupabaseToLocalStorage(),
+              BACKGROUND_SYNC_TIMEOUT_MS,
+              'internal background sync',
+            )
             if (active) setDataRevision((value) => value + 1)
             return true
           },
-          { ...queryCachePolicy.frequent, tags: ['internal-sync'], scope: currentScope },
+          { ...queryCachePolicy.frequent, tags: ['internal-sync'], scope: currentScope, force: !hadWarmBootstrap },
         ).catch((error) => {
           console.error('[background clinic sync failed]', error)
         })
