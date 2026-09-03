@@ -1,0 +1,187 @@
+/* Unified loading state for Super Admin, Staff, Dentist and Patient portals. */
+.ui-skeleton-portal {
+  width: 100%;
+  min-width: 0;
+  min-height: 100dvh;
+  overflow: hidden;
+  background: #f6f8fc;
+}
+
+.ui-skeleton-portal .ui-skeleton {
+  position: relative;
+  overflow: hidden;
+  background: #edf1f6;
+  animation: none;
+}
+
+.ui-skeleton-portal .ui-skeleton::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  transform: translateX(-105%);
+  background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,.72) 46%, transparent 100%);
+  animation: portalSkeletonSweep 1.35s ease-in-out infinite;
+}
+
+@keyframes portalSkeletonSweep {
+  100% { transform: translateX(105%); }
+}
+
+.ui-skeleton-portal .ui-skeleton-rail {
+  width: var(--ui-skeleton-rail-width, 244px);
+  min-height: 100dvh;
+  padding: 24px 18px 18px;
+  gap: 24px;
+  border-right-color: #e7ebf2;
+  box-shadow: 8px 0 28px rgba(15,23,42,.025);
+}
+
+.ui-skeleton-portal.is-patient .ui-skeleton-rail {
+  width: var(--ui-skeleton-rail-width, 260px);
+}
+
+.ui-skeleton-portal .ui-skeleton-brand {
+  min-height: 58px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #eef1f5;
+}
+
+.ui-skeleton-portal .ui-skeleton-rail > .ui-skeleton-list {
+  align-content: start;
+  gap: 7px;
+}
+
+.ui-skeleton-portal .ui-skeleton-rail .ui-skeleton-list-row {
+  min-height: 42px;
+  padding: 8px 10px;
+  border: 0;
+  background: transparent;
+}
+
+.ui-skeleton-portal .ui-skeleton-rail-account {
+  padding: 13px;
+  border: 1px solid #e8edf4;
+  border-radius: 14px;
+  background: #fbfcfe;
+}
+
+.ui-skeleton-portal .ui-skeleton-workspace {
+  width: 100%;
+  max-width: 1760px;
+  margin-inline: auto;
+  padding: 20px clamp(18px, 2.2vw, 38px) 34px;
+  gap: 16px;
+}
+
+.ui-skeleton-portal .ui-skeleton-topbar {
+  min-height: 72px;
+  margin: -20px calc(clamp(18px, 2.2vw, 38px) * -1) 2px;
+  padding: 14px clamp(18px, 2.2vw, 38px);
+  border-bottom: 1px solid #e9edf3;
+  background: rgba(255,255,255,.96);
+}
+
+.ui-skeleton-portal .ui-skeleton-card {
+  border-color: #e4e9f0;
+  border-radius: 18px;
+  box-shadow: 0 8px 24px rgba(15,23,42,.035);
+}
+
+.ui-skeleton-portal .ui-skeleton-hero-card {
+  min-height: 132px;
+  border-color: #d8e6f8;
+  background: linear-gradient(135deg,#fff 0%,#f8fbff 70%,#f1f6fd 100%);
+}
+
+.ui-skeleton-portal .ui-skeleton-stat-grid {
+  gap: 12px;
+}
+
+.ui-skeleton-portal .ui-skeleton-stat-grid .ui-skeleton-card {
+  min-height: 98px;
+}
+
+.ui-skeleton-portal .ui-skeleton-main-grid {
+  gap: 14px;
+}
+
+.ui-skeleton-portal.is-patient .ui-skeleton-hero-card {
+  min-height: 150px;
+}
+
+.ui-skeleton-portal.is-booking {
+  background: #f8fafc;
+}
+
+.ui-skeleton-portal.is-booking .ui-skeleton-workspace {
+  max-width: 1180px;
+  padding-top: 28px;
+}
+
+@media (max-width: 1100px) {
+  .ui-skeleton-portal .ui-skeleton-workspace {
+    padding-inline: 22px;
+  }
+
+  .ui-skeleton-portal .ui-skeleton-topbar {
+    margin-inline: -22px;
+    padding-inline: 22px;
+  }
+}
+
+@media (max-width: 760px) {
+  .ui-skeleton-portal {
+    grid-template-columns: 1fr !important;
+  }
+
+  .ui-skeleton-portal .ui-skeleton-rail {
+    display: none;
+  }
+
+  .ui-skeleton-portal .ui-skeleton-workspace {
+    padding: 0 14px 24px;
+    gap: 12px;
+  }
+
+  .ui-skeleton-portal .ui-skeleton-topbar {
+    min-height: 66px;
+    margin: 0 -14px 2px;
+    padding: 11px 14px;
+  }
+
+  .ui-skeleton-portal .ui-skeleton-hero-card {
+    min-height: 118px;
+    padding: 16px;
+    border-radius: 16px;
+  }
+
+  .ui-skeleton-portal .ui-skeleton-stat-grid {
+    grid-template-columns: repeat(2,minmax(0,1fr));
+    gap: 9px;
+  }
+
+  .ui-skeleton-portal .ui-skeleton-stat-grid .ui-skeleton-card {
+    min-height: 84px;
+    padding: 13px;
+  }
+}
+
+@media (max-width: 480px) {
+  .ui-skeleton-portal .ui-skeleton-stat-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .ui-skeleton-portal .ui-skeleton-main-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .ui-skeleton-portal .ui-skeleton-main-grid > .ui-skeleton-card:last-child {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ui-skeleton-portal .ui-skeleton::after {
+    animation: none;
+  }
+}
