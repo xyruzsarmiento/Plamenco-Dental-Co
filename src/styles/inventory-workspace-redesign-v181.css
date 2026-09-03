@@ -1,0 +1,205 @@
+/* Inventory workspace redesign v181
+   Shared by Super Admin all-branches inventory and Staff/Super Admin branch inventory.
+   Goal: reduce visual noise, prioritize actionable stock health, and preserve all inventory operations. */
+
+/* ---------- Shared page rhythm ---------- */
+.app-shell .inventory56-page,
+.app-shell .inv121-page {
+  display: grid !important;
+  gap: 14px !important;
+  min-width: 0;
+}
+
+/* ---------- Branch workspace (Staff + Super Admin) ---------- */
+.app-shell .inv121-hero {
+  display: grid !important;
+  grid-template-columns: minmax(0,1fr) auto !important;
+  align-items: center !important;
+  gap: 20px !important;
+  padding: 20px 22px !important;
+  border: 1px solid #dce7f4 !important;
+  border-radius: 22px !important;
+  background: linear-gradient(135deg,#fff 0%,#f8fbff 72%,#eef5ff 100%) !important;
+  box-shadow: 0 10px 30px rgba(31,54,91,.045) !important;
+}
+.app-shell .inv121-hero>div:first-child{max-width:680px}
+.app-shell .inv121-hero>div:first-child>span{display:block;margin-bottom:6px;color:#2563eb;font-size:.66rem;font-weight:850;letter-spacing:.09em;text-transform:uppercase}
+.app-shell .inv121-hero h2{margin:0!important;font-size:clamp(1.65rem,2.5vw,2.15rem)!important;letter-spacing:-.035em!important}
+.app-shell .inv121-hero p{margin:6px 0 0!important;max-width:620px;color:#65748a!important;line-height:1.5!important}
+
+.app-shell .inv121-metrics {
+  display: grid !important;
+  grid-template-columns: repeat(4,minmax(0,1fr)) !important;
+  gap: 9px !important;
+}
+.app-shell .inv121-metrics>article {
+  position: relative;
+  display: grid !important;
+  grid-template-columns: 34px minmax(0,1fr) !important;
+  grid-template-areas: "icon label" "icon value" "icon note" !important;
+  align-items: center !important;
+  column-gap: 10px !important;
+  row-gap: 1px !important;
+  min-height: 92px !important;
+  padding: 13px 14px !important;
+  border: 1px solid #e0e8f2 !important;
+  border-radius: 16px !important;
+  background:#fff !important;
+  box-shadow:none!important;
+}
+.app-shell .inv121-metrics>article>svg{grid-area:icon;width:34px!important;height:34px!important;padding:8px;border-radius:10px;background:#edf4ff;color:#2563eb}
+.app-shell .inv121-metrics>article>span{grid-area:label;color:#718097!important;font-size:.68rem!important}
+.app-shell .inv121-metrics>article>strong{grid-area:value;margin:1px 0!important;font-size:1.2rem!important;letter-spacing:-.025em}
+.app-shell .inv121-metrics>article>small{grid-area:note;color:#8995a7!important;font-size:.66rem!important}
+.app-shell .inv121-metrics>article.tone-warning>svg{background:#fff7e8;color:#b7791f}
+.app-shell .inv121-metrics>article.tone-danger>svg{background:#fff0f0;color:#d14343}
+.app-shell .inv121-metrics>article.tone-caution>svg{background:#f6f1ff;color:#7c3aed}
+
+/* Tabs read as primary inventory tasks rather than a generic toolbar. */
+.app-shell .inv121-command{padding:12px 14px 14px!important;border-radius:18px!important}
+.app-shell .inv121-tabs{display:flex!important;gap:6px!important;overflow-x:auto!important;scrollbar-width:none}
+.app-shell .inv121-tabs::-webkit-scrollbar{display:none}
+.app-shell .inv121-tabs button{flex:0 0 auto!important;min-height:38px!important;padding:0 14px!important;border-radius:10px!important;font-weight:750!important}
+.app-shell .inv121-tabs button.is-active,.app-shell .inv121-tabs button.active{background:#eaf2ff!important;color:#1459d9!important}
+
+/* Inventory rows: content first, controls second. */
+.app-shell .inv121-stock-card{box-shadow:none!important;border-color:#e4ebf4!important;background:#fff!important}
+.app-shell .inv121-stock-card:hover{border-color:#bfd3f2!important;background:#fbfdff!important;box-shadow:0 8px 22px rgba(31,54,91,.05)!important}
+.app-shell .inv121-stock-main h3{font-size:.94rem!important}
+.app-shell .inv121-stock-main p{color:#7a8799!important;font-size:.68rem!important}
+.app-shell .inv121-stock-quantity strong{font-size:.93rem!important}
+.app-shell .inv121-row-actions .btn{box-shadow:none!important}
+
+/* ---------- All Branches: turn comparison into an executive inventory cockpit ---------- */
+.app-shell .inventory56-scope-banner {
+  display: grid !important;
+  grid-template-columns: 34px minmax(0,1fr) !important;
+  align-items: center !important;
+  gap: 10px !important;
+  padding: 11px 13px !important;
+  border: 1px solid #dbe7f6 !important;
+  border-radius: 14px !important;
+  background:#f7faff!important;
+  color:#4d617d!important;
+  box-shadow:none!important;
+}
+.app-shell .inventory56-scope-banner>svg{width:34px!important;height:34px!important;padding:8px;border-radius:10px;background:#e8f1ff;color:#2563eb}
+.app-shell .inventory56-scope-banner strong{display:block;color:#23426c;font-size:.76rem!important}
+.app-shell .inventory56-scope-banner span{display:block;margin-top:2px;font-size:.68rem!important;line-height:1.45!important}
+
+.app-shell .inventory56-all-hero {
+  display:grid!important;
+  grid-template-columns:minmax(0,1fr) minmax(190px,230px)!important;
+  align-items:center!important;
+  gap:20px!important;
+  padding:20px 22px!important;
+  border:1px solid #dce7f4!important;
+  border-radius:22px!important;
+  background:linear-gradient(135deg,#fff 0%,#f8fbff 72%,#eef5ff 100%)!important;
+  box-shadow:0 10px 30px rgba(31,54,91,.045)!important;
+}
+.app-shell .inventory56-all-hero>div:first-child>span{display:block;margin-bottom:5px;color:#2563eb;font-size:.65rem;font-weight:850;letter-spacing:.09em;text-transform:uppercase}
+.app-shell .inventory56-all-hero h1{margin:0!important;font-size:clamp(1.7rem,2.6vw,2.2rem)!important;letter-spacing:-.04em!important}
+.app-shell .inventory56-all-hero p{margin:6px 0 0!important;max-width:680px;color:#65748a!important;font-size:.78rem!important;line-height:1.5!important}
+.app-shell .inventory56-all-hero-meta{padding:13px 15px!important;border:1px solid #d6e4f7!important;border-radius:16px!important;background:rgba(255,255,255,.78)!important;box-shadow:none!important}
+.app-shell .inventory56-all-hero-meta span{font-size:.64rem!important}
+.app-shell .inventory56-all-hero-meta strong{margin-top:6px!important;font-size:1.28rem!important}
+.app-shell .inventory56-all-hero-meta small{font-size:.66rem!important}
+
+/* Keep only the four actionable clinic-wide KPIs. Active branches and stock positions are already obvious elsewhere. */
+.app-shell .inventory56-executive-strip{display:grid!important;grid-template-columns:repeat(4,minmax(0,1fr))!important;gap:9px!important}
+.app-shell .inventory56-executive-strip>article{min-height:88px!important;padding:13px 14px!important;border-radius:15px!important;box-shadow:none!important}
+.app-shell .inventory56-executive-strip>article:nth-child(1),
+.app-shell .inventory56-executive-strip>article:nth-child(2){display:none!important}
+.app-shell .inventory56-executive-strip span{font-size:.67rem!important}
+.app-shell .inventory56-executive-strip strong{margin-top:4px!important;font-size:1.25rem!important}
+.app-shell .inventory56-executive-strip small{font-size:.64rem!important}
+
+/* Branches are the primary navigation in All Branches mode. */
+.app-shell .inventory56-branch-grid{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:11px!important}
+.app-shell .inventory56-branch-card{padding:16px!important;border:1px solid #dde7f2!important;border-radius:18px!important;background:#fff!important;box-shadow:none!important}
+.app-shell .inventory56-branch-card:hover{border-color:#bfd3f2!important;box-shadow:0 8px 24px rgba(31,54,91,.05)!important}
+.app-shell .inventory56-branch-card>header{gap:10px!important;margin-bottom:12px!important}
+.app-shell .inventory56-branch-card>header>span{width:36px!important;height:36px!important;border-radius:11px!important}
+.app-shell .inventory56-branch-card h2{font-size:.94rem!important}
+.app-shell .inventory56-branch-card p{font-size:.68rem!important}
+.app-shell .inventory56-branch-stats{display:grid!important;grid-template-columns:repeat(4,minmax(0,1fr))!important;gap:6px!important}
+.app-shell .inventory56-branch-stats>div{padding:9px 10px!important;border-radius:11px!important;background:#f7f9fc!important}
+.app-shell .inventory56-branch-stats span{font-size:.59rem!important}
+.app-shell .inventory56-branch-stats strong{font-size:.86rem!important}
+.app-shell .inventory56-branch-card>footer{margin-top:11px!important;padding-top:10px!important;gap:10px!important}
+.app-shell .inventory56-branch-card>footer>span{font-size:.66rem!important;color:#78869a!important}
+
+/* "Needs attention" area: three focused queues. Operations snapshot is duplicate information. */
+.app-shell .inventory56-overview-grid{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:11px!important}
+.app-shell .inventory56-overview-grid>.inventory56-overview-card:nth-child(4){display:none!important}
+.app-shell .inventory56-overview-card{min-width:0;padding:15px!important;border:1px solid #e0e8f2!important;border-radius:18px!important;background:#fff!important;box-shadow:none!important}
+.app-shell .inventory56-overview-card>header{margin-bottom:10px!important}
+.app-shell .inventory56-overview-card>header h2{font-size:.88rem!important}
+.app-shell .inventory56-overview-card>header span{font-size:.61rem!important}
+.app-shell .inventory56-overview-list{max-height:250px;overflow:auto;padding-right:2px;scrollbar-width:thin}
+.app-shell .inventory56-alert-row{padding:9px 8px!important;border-radius:11px!important}
+.app-shell .inventory56-alert-row strong{font-size:.74rem!important}
+.app-shell .inventory56-alert-row small{font-size:.61rem!important}
+.app-shell .inventory56-alert-row b{font-size:.69rem!important}
+
+/* Catalog management remains available but becomes clearly secondary. */
+.app-shell .inventory56-maintenance,
+.app-shell .inventory56-intelligence{padding:16px!important;border:1px solid #e2e9f2!important;border-radius:19px!important;background:#fff!important;box-shadow:none!important}
+.app-shell .inventory56-section-head{margin-bottom:12px!important}
+.app-shell .inventory56-section-head h2{font-size:.95rem!important}
+.app-shell .inventory56-section-head p{max-width:720px!important;font-size:.68rem!important}
+.app-shell .inventory56-maintenance-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:9px!important}
+.app-shell .inventory56-maintenance-card{padding:12px!important;border-radius:14px!important;box-shadow:none!important}
+
+/* Remove the duplicate risk summary inside intelligence; actionable stock risk is already shown above. */
+.app-shell .inventory56-intelligence .inventory56-risk-card{display:none!important}
+.app-shell .inventory56-chart-grid{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:11px!important}
+.app-shell .inventory56-chart-card{padding:14px!important;border-radius:15px!important;box-shadow:none!important}
+.app-shell .inventory56-chart-card.is-wide{grid-column:1/-1!important}
+
+/* Skeleton should resemble the simplified inventory hierarchy. */
+.app-shell .inventory56-skeleton-kpis{grid-template-columns:repeat(4,minmax(0,1fr))!important}
+
+@media(max-width:1180px){
+  .app-shell .inv121-hero{grid-template-columns:1fr!important}
+  .app-shell .inv121-metrics{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+  .app-shell .inventory56-overview-grid{grid-template-columns:1fr!important}
+  .app-shell .inventory56-overview-list{max-height:220px}
+  .app-shell .inventory56-maintenance-grid{grid-template-columns:1fr!important}
+}
+
+@media(max-width:900px){
+  .app-shell .inventory56-all-hero{grid-template-columns:1fr!important}
+  .app-shell .inventory56-all-hero-meta{display:grid!important;grid-template-columns:1fr auto!important;align-items:center!important;gap:4px 12px!important}
+  .app-shell .inventory56-all-hero-meta span{grid-column:1/-1!important}
+  .app-shell .inventory56-all-hero-meta small{text-align:right!important}
+  .app-shell .inventory56-executive-strip{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+  .app-shell .inventory56-branch-grid{grid-template-columns:1fr!important}
+  .app-shell .inventory56-chart-grid{grid-template-columns:1fr!important}
+  .app-shell .inventory56-chart-card.is-wide{grid-column:auto!important}
+}
+
+@media(max-width:640px){
+  .app-shell .inventory56-page,.app-shell .inv121-page{gap:10px!important}
+  .app-shell .inv121-hero,.app-shell .inventory56-all-hero{padding:15px!important;border-radius:18px!important}
+  .app-shell .inv121-metrics,.app-shell .inventory56-executive-strip{grid-template-columns:1fr 1fr!important;gap:7px!important}
+  .app-shell .inv121-metrics>article{min-height:82px!important;padding:11px!important}
+  .app-shell .inventory56-scope-banner{grid-template-columns:30px minmax(0,1fr)!important;padding:9px 10px!important}
+  .app-shell .inventory56-scope-banner>svg{width:30px!important;height:30px!important;padding:7px!important}
+  .app-shell .inventory56-branch-card{padding:13px!important;border-radius:16px!important}
+  .app-shell .inventory56-branch-stats{grid-template-columns:1fr 1fr!important}
+  .app-shell .inventory56-branch-card>footer{display:grid!important;grid-template-columns:1fr!important}
+  .app-shell .inventory56-branch-card>footer .btn{width:100%!important;justify-content:center!important}
+  .app-shell .inventory56-maintenance,.app-shell .inventory56-intelligence,.app-shell .inventory56-overview-card{padding:13px!important;border-radius:16px!important}
+}
+
+@media(max-width:420px){
+  .app-shell .inv121-metrics,.app-shell .inventory56-executive-strip{grid-template-columns:1fr!important}
+  .app-shell .inventory56-all-hero-meta{grid-template-columns:1fr!important}
+  .app-shell .inventory56-all-hero-meta small{text-align:left!important}
+}
+
+@media(prefers-reduced-motion:reduce){
+  .app-shell .inventory56-branch-card,.app-shell .inv121-stock-card{transition:none!important}
+}
