@@ -53,7 +53,10 @@ const PATIENT_PORTAL_CACHE_KEYS = [
 ]
 
 const BOOTSTRAP_TIMEOUT_MS = 8_000
+const BOOTSTRAP_WATCHDOG_MS = 10_000
 const BACKGROUND_SYNC_TIMEOUT_MS = 20_000
+
+type BootstrapPhase = 'idle' | 'loading' | 'ready'
 
 function clearPatientPortalCaches() {
   if (typeof window === 'undefined') return
@@ -95,50 +98,79 @@ function settleWithin<T>(promise: Promise<T>, timeoutMs: number, label: string):
   })
 }
 
+function safeLoad(loader: () => Promise<unknown>) {
+  return Promise.resolve().then(loader)
+}
+
 function DataBootstrap({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, isLoading, user } = useAuth()
   const [dataRevision, setDataRevision] = useState(0)
-  const [bootstrapRevision, setBootstrapRevision] = useState(0)
+  const [bootstrapPhase, setBootstrapPhase] = useState<BootstrapPhase>('idle')
+  const [bootstrapIdentity, setBootstrapIdentity] = useState('')
 
+  const identity = user?.id ? `${user.id}:${user.role}` : ''
   const scope = user?.id ? `user:${user.id}` : 'public'
   const bootstrapKey = `workspace-bootstrap:${user?.role ?? 'guest'}`
   const hasWarmBootstrap = Boolean(user?.id && readCachedQuery<boolean>(bootstrapKey, scope) === true)
-  const shouldShowPortalSkeleton = !isLoading && isAuthenticated && Boolean(user?.id) && !hasWarmBootstrap
+  const identityIsCurrent = bootstrapIdentity === identity
+  const shouldShowPortalSkeleton =
+    !isLoading &&
+    isAuthenticated &&
+    Boolean(user?.id) &&
+    !hasWarmBootstrap &&
+    (!identityIsCurrent || bootstrapPhase !== 'ready')
 
   useEffect(() => {
     let active = true
     let backgroundTimer: number | undefined
+    let watchdogTimer: number | undefined
     let patientDataChanged = false
 
-    if (isLoading || !isAuthenticated || !user?.id) return () => { active = false }
+    if (isLoading || !isAuthenticated || !user?.id) {
+      setBootstrapIdentity('')
+      setBootstrapPhase('idle')
+      return () => { active = false }
+    }
 
+    const currentIdentity = `${user.id}:${user.role}`
     const currentScope = `user:${user.id}`
     const currentBootstrapKey = `workspace-bootstrap:${user.role}`
     const hadWarmBootstrap = readCachedQuery<boolean>(currentBootstrapKey, currentScope) === true
+
+    setBootstrapIdentity(currentIdentity)
+    setBootstrapPhase(hadWarmBootstrap ? 'ready' : 'loading')
+
+    // Independent UI watchdog: even if the query cache, a loader, or a network
+    // request behaves unexpectedly, the skeleton itself can never become an
+    // infinite blocking state.
+    if (!hadWarmBootstrap) {
+      watchdogTimer = window.setTimeout(() => {
+        if (!active) return
+        console.warn('[workspace bootstrap] UI watchdog released the portal skeleton.')
+        setBootstrapPhase('ready')
+      }, BOOTSTRAP_WATCHDOG_MS)
+    }
 
     const bootstrap = cachedQuery(
       currentBootstrapKey,
       async () => {
         const essentialLoads: Promise<unknown>[] = [
-          loadBranchesFromSupabase({ strict: false }),
-          loadProviderFoundationFromSupabase({ strict: false }),
-          loadPatientsFromSupabase({ strict: false }),
-          loadServicesFromSupabase({ strict: false }),
+          safeLoad(() => loadBranchesFromSupabase({ strict: false })),
+          safeLoad(() => loadProviderFoundationFromSupabase({ strict: false })),
+          safeLoad(() => loadPatientsFromSupabase({ strict: false })),
+          safeLoad(() => loadServicesFromSupabase({ strict: false })),
         ]
 
         if (user.role === 'patient') {
           if (!hadWarmBootstrap) clearPatientPortalCaches()
           const before = patientPortalSnapshot()
           essentialLoads.push(
-            hydratePatientPortalFromDatabase().finally(() => {
+            safeLoad(() => hydratePatientPortalFromDatabase()).finally(() => {
               patientDataChanged = before !== patientPortalSnapshot()
             }),
           )
         }
 
-        // Never allow a slow or hanging Supabase request to trap the whole app
-        // behind the portal skeleton. Individual pages retain their own loaders
-        // while any late data finishes hydrating.
         await settleWithin(
           Promise.allSettled(essentialLoads).then(() => undefined),
           BOOTSTRAP_TIMEOUT_MS,
@@ -153,44 +185,48 @@ function DataBootstrap({ children }: { children: React.ReactNode }) {
       },
     )
 
-    void bootstrap.finally(() => {
-      if (!active) return
-      setBootstrapRevision((value) => value + 1)
+    void bootstrap
+      .catch((error) => {
+        console.error('[workspace bootstrap failed]', error)
+      })
+      .finally(() => {
+        if (!active) return
+        if (watchdogTimer !== undefined) {
+          window.clearTimeout(watchdogTimer)
+          watchdogTimer = undefined
+        }
+        setBootstrapPhase('ready')
 
-      if (user.role === 'patient') {
-        if (patientDataChanged) setDataRevision((value) => value + 1)
-        return
-      }
+        if (user.role === 'patient') {
+          if (patientDataChanged) setDataRevision((value) => value + 1)
+          return
+        }
 
-      // Full operational synchronization is intentionally non-blocking. The
-      // sync touches many tables sequentially, so it must never control whether
-      // the application shell is allowed to render.
-      backgroundTimer = window.setTimeout(() => {
-        void cachedQuery(
-          'internal-background-sync',
-          async () => {
-            await settleWithin(
-              syncSupabaseToLocalStorage(),
-              BACKGROUND_SYNC_TIMEOUT_MS,
-              'internal background sync',
-            )
-            if (active) setDataRevision((value) => value + 1)
-            return true
-          },
-          { ...queryCachePolicy.frequent, tags: ['internal-sync'], scope: currentScope, force: !hadWarmBootstrap },
-        ).catch((error) => {
-          console.error('[background clinic sync failed]', error)
-        })
-      }, 0)
-    })
+        backgroundTimer = window.setTimeout(() => {
+          void cachedQuery(
+            'internal-background-sync',
+            async () => {
+              await settleWithin(
+                syncSupabaseToLocalStorage(),
+                BACKGROUND_SYNC_TIMEOUT_MS,
+                'internal background sync',
+              )
+              if (active) setDataRevision((value) => value + 1)
+              return true
+            },
+            { ...queryCachePolicy.frequent, tags: ['internal-sync'], scope: currentScope, force: !hadWarmBootstrap },
+          ).catch((error) => {
+            console.error('[background clinic sync failed]', error)
+          })
+        }, 0)
+      })
 
     return () => {
       active = false
+      if (watchdogTimer !== undefined) window.clearTimeout(watchdogTimer)
       if (backgroundTimer !== undefined) window.clearTimeout(backgroundTimer)
     }
   }, [isAuthenticated, isLoading, user?.id, user?.role])
-
-  void bootstrapRevision
 
   if (shouldShowPortalSkeleton) {
     return (
