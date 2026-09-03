@@ -15,6 +15,7 @@ function php(cents = 0) {
 
 export function InventoryEnhancerV183({ onInventoryChanged }: { onInventoryChanged: () => void }) {
   const permissions = usePermissions()
+  const canManageItems = permissions.can('inventory.edit_item')
   const { activeBranchId, authorizedBranchIds, isAllBranchesMode } = useBranchContext()
   const [selectedItemId, setSelectedItemId] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
@@ -43,18 +44,23 @@ export function InventoryEnhancerV183({ onInventoryChanged }: { onInventoryChang
 
   useEffect(() => {
     let raf = 0
+    let revisionScheduled = false
     const enhance = () => {
       cancelAnimationFrame(raf)
       raf = requestAnimationFrame(() => {
         const page = document.querySelector('.page-inventory .inv182-page')
         if (!page) { setMount(null); return }
+        let changed = false
 
         let valuationMount = page.querySelector<HTMLElement>('[data-inv183-valuation-mount]')
         if (!valuationMount) {
           valuationMount = document.createElement('div')
           valuationMount.dataset.inv183ValuationMount = 'true'
           const target = page.querySelector('.inv182-health-grid') ?? page.querySelector('.inv182-priority-grid') ?? page.querySelector('.inv182-branch-summary')
-          target?.insertAdjacentElement('afterend', valuationMount)
+          if (target) {
+            target.insertAdjacentElement('afterend', valuationMount)
+            changed = true
+          }
         }
         setMount(valuationMount)
 
@@ -71,11 +77,13 @@ export function InventoryEnhancerV183({ onInventoryChanged }: { onInventoryChang
             chip.className = 'inv183-value-chip'
             const actions = row.querySelector('.inv182-row-actions')
             actions?.insertAdjacentElement('beforebegin', chip)
+            changed = true
           }
           const lineValue = Math.round(Number(branchStock.quantityOnHand || 0) * Number(branchStock.averageUnitCostCents || 0))
-          chip.innerHTML = `<span>Stock value</span><strong>${php(lineValue)}</strong><small>${php(Number(branchStock.averageUnitCostCents || 0))} / unit</small>`
+          const nextMarkup = `<span>Stock value</span><strong>${php(lineValue)}</strong><small>${php(Number(branchStock.averageUnitCostCents || 0))} / unit</small>`
+          if (chip && chip.innerHTML !== nextMarkup) chip.innerHTML = nextMarkup
 
-          if (permissions.can('inventory.edit_item')) {
+          if (canManageItems) {
             const actions = row.querySelector<HTMLElement>('.inv182-row-actions')
             if (actions && !actions.querySelector('[data-inv183-manage]')) {
               const button = document.createElement('button')
@@ -84,15 +92,25 @@ export function InventoryEnhancerV183({ onInventoryChanged }: { onInventoryChang
               button.dataset.inv183Manage = item.id
               button.textContent = 'Manage'
               actions.appendChild(button)
+              changed = true
             }
           }
         })
-        setDomRevision((value) => value + 1)
+        if (changed && !revisionScheduled) {
+          revisionScheduled = true
+          window.setTimeout(() => {
+            revisionScheduled = false
+            setDomRevision((value) => value + 1)
+          }, 0)
+        }
       })
     }
 
     enhance()
-    const observer = new MutationObserver(enhance)
+    const observer = new MutationObserver((records) => {
+      const externalChange = records.some((record) => Array.from(record.addedNodes).some((node) => !(node instanceof HTMLElement) || !node.closest?.('[data-inv183-valuation-mount], .inv183-value-chip, [data-inv183-manage]')))
+      if (externalChange) enhance()
+    })
     observer.observe(document.body, { childList: true, subtree: true })
     const onClick = (event: Event) => {
       const target = event.target as HTMLElement | null
@@ -109,7 +127,7 @@ export function InventoryEnhancerV183({ onInventoryChanged }: { onInventoryChang
       observer.disconnect()
       document.removeEventListener('click', onClick, true)
     }
-  }, [activeBranchId, permissions])
+  }, [activeBranchId, canManageItems])
 
   async function refreshAfterChange() {
     try {
@@ -157,8 +175,8 @@ export function InventoryEnhancerV183({ onInventoryChanged }: { onInventoryChang
     <section className="inv183-manage-modal" role="dialog" aria-modal="true" aria-labelledby="inv183-manage-title">
       <header><div className="inv183-manage-icon"><Package size={19}/></div><div><span>Inventory management</span><h2 id="inv183-manage-title">Manage {selectedItem.name}</h2><p>Remove the item from active use without corrupting stock, purchasing, or expense history.</p></div><button type="button" aria-label="Close" onClick={() => setSelectedItemId(null)} disabled={busy}><X size={18}/></button></header>
       <div className="inv183-manage-body">
-        <div className="inv183-manage-card"><i><Archive size={19}/></i><div><strong>Archive item</strong><span>Recommended when the item has ever had stock, movements, purchase orders, transfers, or counts. It disappears from active inventory but historical records stay valid.</span><small>This is reversible later by changing the item's status in the database/admin workflow.</small></div></div>
-        <div className="inv183-manage-card is-danger"><i><Trash2 size={19}/></i><div><strong>Delete permanently</strong><span>Only available for a newly created catalog item with no inventory history at all. The persistence layer rejects permanent deletion once the item participates in the ledger.</span><small>This prevents broken audit trails and unexplained financial totals.</small></div></div>
+        <div className="inv183-manage-card"><i><Archive size={19}/></i><div><strong>Archive item</strong><span>Recommended when the item has ever had stock, movements, purchase orders, transfers, or counts. It disappears from active inventory but historical records stay valid.</span><small>This preserves reporting and valuation history.</small></div></div>
+        <div className="inv183-manage-card is-danger"><i><Trash2 size={19}/></i><div><strong>Delete permanently</strong><span>Only available for a newly created catalog item with no inventory history at all. The database-backed persistence layer rejects permanent deletion once the item participates in the ledger.</span><small>This prevents broken audit trails and unexplained financial totals.</small></div></div>
         {message && <div className="inv182-error" role="alert"><AlertTriangle size={16}/><span>{message}</span></div>}
       </div>
       <footer><Button variant="secondary" onClick={() => setSelectedItemId(null)} disabled={busy}>Close</Button><Button variant="secondary" onClick={() => void archiveSelected()} disabled={busy}><Archive size={14}/> Archive</Button><Button className="inv183-danger-button" variant="secondary" onClick={() => void deleteSelected()} disabled={busy}><Trash2 size={14}/> Delete permanently</Button></footer>
