@@ -1,0 +1,515 @@
+/* Internal Account / Staff Profile modal — premium responsive redesign */
+.app-shell.role-super_admin .team-v26-drawer-backdrop {
+  padding: clamp(18px, 4vw, 48px) !important;
+  background: rgba(15, 23, 42, .52) !important;
+  backdrop-filter: blur(12px) saturate(115%);
+  -webkit-backdrop-filter: blur(12px) saturate(115%);
+}
+
+.app-shell.role-super_admin .team-v26-drawer.team-v26-account-modal-v153 {
+  width: min(920px, calc(100vw - 40px)) !important;
+  max-width: 920px !important;
+  height: min(820px, calc(100dvh - 40px)) !important;
+  max-height: calc(100dvh - 40px) !important;
+  display: grid !important;
+  grid-template-rows: auto minmax(0, 1fr) auto !important;
+  overflow: hidden !important;
+  border: 1px solid rgba(203, 213, 225, .82) !important;
+  border-radius: 28px !important;
+  background: #f8fafc !important;
+  box-shadow: 0 34px 90px rgba(15, 23, 42, .24), 0 2px 8px rgba(15, 23, 42, .08) !important;
+}
+
+.app-shell.role-super_admin .team-v26-account-modal-v153 > header {
+  position: relative;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 18px !important;
+  padding: 24px 26px 22px !important;
+  border-bottom: 1px solid #e2e8f0 !important;
+  background:
+    radial-gradient(circle at 92% 0%, rgba(37, 99, 235, .14), transparent 34%),
+    linear-gradient(135deg, #fff 0%, #f8fbff 62%, #eff6ff 100%) !important;
+}
+
+.app-shell.role-super_admin .team-v26-account-modal-v153 .team-v26-profile-head {
+  display: grid !important;
+  grid-template-columns: 62px minmax(0, 1fr) auto !important;
+  align-items: center !important;
+  gap: 16px !important;
+  min-width: 0;
+}
+
+.app-shell.role-super_admin .team-v26-account-modal-v153 .team-v26-avatar.is-large {
+  width: 62px !important;
+  height: 62px !important;
+  border-radius: 19px !important;
+  background: linear-gradient(145deg, #1d4ed8, #2563eb) !important;
+  color: #fff !important;
+  font-size: 1rem !important;
+  font-weight: 850 !important;
+  box-shadow: 0 12px 28px rgba(37, 99, 235, .22) !important;
+}
+
+.app-shell.role-super_admin .team-v26-account-modal-v153 .team-v26-profile-head > div {
+  min-width: 0;
+}
+
+.app-shell.role-super_admin .team-v26-account-modal-v153 .team-v26-profile-head > div > span {
+  display: block;
+  margin-bottom: 4px;
+  color: #2563eb;
+  font-size: .67rem;
+  font-weight: 900;
+  letter-spacing: .13em;
+  text-transform: uppercase;
+}
+
+.app-shell.role-super_admin .team-v26-account-modal-v153 .team-v26-profile-head h3 {
+  margin: 0 !important;
+  color: #0f172a !important;
+  font-size: clamp(1.6rem, 3vw, 2.05rem) !important;
+  line-height: 1.08 !important;
+  letter-spacing: -.025em !important;
+  overflow-wrap: anywhere;
+}
+
+.app-shell.role-super_admin .team-v26-account-modal-v153 .team-v26-profile-head p {
+  margin: 5px 0 0 !important;
+  color: #64748b !important;
+  font-size: .82rem !important;
+  overflow-wrap: anywhere;
+}
+
+.app-shell.role-super_admin .team-v26-account-modal-v153 > header > .team-v26-icon-button {
+  width: 40px !important;
+  height: 40px !important;
+  flex: 0 0 40px;
+  display: grid !important;
+  place-items: center !important;
+  border: 1px solid #d8e2ef !important;
+  border-radius: 13px !important;
+  background: rgba(255,255,255,.88) !important;
+  color: #475569 !important;
+  box-shadow: 0 6px 18px rgba(15,23,42,.05);
+  transition: transform .16s ease, border-color .16s ease, background .16s ease;
+}
+
+.app-shell.role-super_admin .team-v26-account-modal-v153 > header > .team-v26-icon-button:hover {
+  transform: translateY(-1px);
+  border-color: #bfdbfe !important;
+  background: #fff !important;
+  color: #1d4ed8 !important;
+}
+
+.app-shell.role-super_admin .team-v26-account-modal-v153 .team-v26-drawer-body {
+  min-height: 0 !important;
+  overflow-y: auto !important;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) !important;
+  align-content: start !important;
+  gap: 14px !important;
+  padding: 18px 22px 22px !important;
+  background: linear-gradient(180deg, #f8fafc 0%, #f6f9fd 100%) !important;
+  scrollbar-width: thin;
+  scrollbar-color: #c5d2e3 transparent;
+}
+
+.app-shell.role-super_admin .team-v26-account-modal-v153 .team-v26-drawer-body::-webkit-scrollbar { width: 7px; }
+.app-shell.role-super_admin .team-v26-account-modal-v153 .team-v26-drawer-body::-webkit-scrollbar-track { background: transparent; }
+.app-shell.role-super_admin .team-v26-account-modal-v153 .team-v26-drawer-body::-webkit-scrollbar-thumb {
+  background: #c5d2e3;
+  border: 2px solid transparent;
+  border-radius: 999px;
+  background-clip: padding-box;
+}
+
+.app-shell.role-super_admin .team-v26-account-overview-v154 {
+  display: grid !important;
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  gap: 10px !important;
+}
+
+.app-shell.role-super_admin .team-v26-account-overview-v154 > div {
+  position: relative;
+  min-width: 0;
+  min-height: 102px;
+  display: flex !important;
+  flex-direction: column;
+  justify-content: center;
+  gap: 4px !important;
+  padding: 16px 17px !important;
+  overflow: hidden;
+  border: 1px solid #dfe7f1 !important;
+  border-radius: 18px !important;
+  background: #fff !important;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, .035) !important;
+}
+
+.app-shell.role-super_admin .team-v26-account-overview-v154 > div::before {
+  content: '';
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 3px;
+  background: linear-gradient(180deg, #2563eb, #60a5fa);
+  opacity: .9;
+}
+
+.app-shell.role-super_admin .team-v26-account-overview-v154 span,
+.app-shell.role-super_admin .team-v26-account-profile-v154 .team-v26-detail-grid span,
+.app-shell.role-super_admin .team-v26-account-state-v154 .team-v26-context-grid span,
+.app-shell.role-super_admin .team-v26-branch-head-v154 small {
+  color: #64748b !important;
+  font-size: .65rem !important;
+  font-weight: 850 !important;
+  letter-spacing: .08em !important;
+  text-transform: uppercase !important;
+}
+
+.app-shell.role-super_admin .team-v26-account-overview-v154 strong {
+  color: #0f172a !important;
+  font-size: 1.06rem !important;
+  line-height: 1.25 !important;
+  overflow-wrap: anywhere;
+}
+
+.app-shell.role-super_admin .team-v26-account-overview-v154 small {
+  color: #748195 !important;
+  font-size: .75rem !important;
+  line-height: 1.42 !important;
+  overflow-wrap: anywhere;
+}
+
+.app-shell.role-super_admin .team-v26-account-profile-v154,
+.app-shell.role-super_admin .team-v26-branch-workspace-v154,
+.app-shell.role-super_admin .team-v26-account-state-v154 {
+  min-width: 0;
+  display: grid !important;
+  gap: 15px !important;
+  padding: 18px !important;
+  border: 1px solid #dfe7f1 !important;
+  border-radius: 20px !important;
+  background: #fff !important;
+  box-shadow: 0 8px 26px rgba(15, 23, 42, .035) !important;
+}
+
+.app-shell.role-super_admin .team-v26-card-title {
+  display: flex !important;
+  align-items: center !important;
+  gap: 11px !important;
+}
+
+.app-shell.role-super_admin .team-v26-card-title > svg {
+  width: 36px;
+  height: 36px;
+  padding: 9px;
+  flex: 0 0 36px;
+  border-radius: 11px;
+  background: #eff6ff;
+  color: #2563eb;
+}
+
+.app-shell.role-super_admin .team-v26-card-title span {
+  display: block;
+  color: #7b8798 !important;
+  font-size: .64rem !important;
+  font-weight: 850 !important;
+  letter-spacing: .1em !important;
+  text-transform: uppercase !important;
+}
+
+.app-shell.role-super_admin .team-v26-card-title h4 {
+  margin: 2px 0 0 !important;
+  color: #172033 !important;
+  font-size: 1rem !important;
+  line-height: 1.2 !important;
+}
+
+.app-shell.role-super_admin .team-v26-account-profile-v154 .team-v26-detail-grid {
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  gap: 9px !important;
+}
+
+.app-shell.role-super_admin .team-v26-account-profile-v154 .team-v26-detail-grid > div {
+  min-width: 0;
+  padding: 13px 14px !important;
+  border: 1px solid #e6ecf3 !important;
+  border-radius: 14px !important;
+  background: #f9fbfd !important;
+}
+
+.app-shell.role-super_admin .team-v26-account-profile-v154 .team-v26-detail-grid strong {
+  display: block;
+  margin-top: 4px;
+  color: #263247 !important;
+  font-size: .84rem !important;
+  line-height: 1.35 !important;
+  overflow-wrap: anywhere;
+}
+
+.app-shell.role-super_admin .team-v26-account-profile-v154 > p {
+  margin: -1px 0 0 !important;
+  padding: 11px 13px;
+  border-radius: 12px;
+  background: #f8fafc;
+  color: #67758a !important;
+  font-size: .77rem !important;
+  line-height: 1.55 !important;
+}
+
+.app-shell.role-super_admin .team-v26-branch-head-v154 {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 12px !important;
+}
+
+.app-shell.role-super_admin .team-v26-branch-head-v154 > small {
+  display: inline-flex !important;
+  align-items: center;
+  min-height: 29px;
+  padding: 0 10px !important;
+  border: 1px solid #dbe7f5 !important;
+  border-radius: 999px !important;
+  background: #f4f8fc !important;
+  color: #52647b !important;
+  white-space: nowrap;
+}
+
+.app-shell.role-super_admin .team-v26-branch-editor.team-v26-branch-editor-v154 {
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  gap: 10px !important;
+}
+
+.app-shell.role-super_admin .team-v26-branch-editor-v154 label {
+  position: relative;
+  min-width: 0;
+  min-height: 82px !important;
+  display: grid !important;
+  grid-template-columns: auto minmax(0, 1fr) auto !important;
+  align-items: center !important;
+  gap: 11px !important;
+  padding: 14px !important;
+  border: 1px solid #e1e8f0 !important;
+  border-radius: 16px !important;
+  background: linear-gradient(180deg, #fff, #fbfdff) !important;
+  cursor: pointer;
+  transition: transform .16s ease, border-color .16s ease, box-shadow .16s ease, background .16s ease;
+}
+
+.app-shell.role-super_admin .team-v26-branch-editor-v154 label:hover {
+  transform: translateY(-1px);
+  border-color: #bfdbfe !important;
+  box-shadow: 0 10px 24px rgba(37, 99, 235, .075) !important;
+}
+
+.app-shell.role-super_admin .team-v26-branch-editor-v154 label.is-selected {
+  border-color: #60a5fa !important;
+  background: linear-gradient(135deg, #eff6ff, #fff) !important;
+  box-shadow: inset 0 0 0 1px rgba(59, 130, 246, .08), 0 10px 24px rgba(37, 99, 235, .07) !important;
+}
+
+.app-shell.role-super_admin .team-v26-branch-editor-v154 .team-v26-branch-check {
+  width: 34px !important;
+  height: 34px !important;
+  display: grid !important;
+  place-items: center !important;
+  border-radius: 10px !important;
+  background: #f1f5f9 !important;
+  color: #64748b !important;
+}
+
+.app-shell.role-super_admin .team-v26-branch-editor-v154 label.is-selected .team-v26-branch-check {
+  background: #dbeafe !important;
+  color: #1d4ed8 !important;
+}
+
+.app-shell.role-super_admin .team-v26-branch-editor-v154 label > span:nth-of-type(2) {
+  min-width: 0;
+}
+
+.app-shell.role-super_admin .team-v26-branch-editor-v154 label strong,
+.app-shell.role-super_admin .team-v26-branch-editor-v154 label small {
+  display: block;
+  overflow-wrap: anywhere;
+}
+
+.app-shell.role-super_admin .team-v26-branch-editor-v154 label strong {
+  color: #263247 !important;
+  font-size: .82rem !important;
+}
+
+.app-shell.role-super_admin .team-v26-branch-editor-v154 label small {
+  margin-top: 3px;
+  color: #7b8798 !important;
+  font-size: .7rem !important;
+}
+
+.app-shell.role-super_admin .team-v26-dentist-access-note {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 14px !important;
+  padding: 14px 15px !important;
+  border: 1px solid #e1e8f0 !important;
+  border-radius: 15px !important;
+  background: #f9fbfd !important;
+}
+
+.app-shell.role-super_admin .team-v26-dentist-access-note p {
+  margin: 0 !important;
+  color: #66758a !important;
+  font-size: .76rem !important;
+  line-height: 1.5 !important;
+}
+
+.app-shell.role-super_admin .team-v26-account-state-v154 .team-v26-context-grid {
+  display: grid !important;
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  gap: 9px !important;
+}
+
+.app-shell.role-super_admin .team-v26-account-state-v154 .team-v26-context-grid > article {
+  min-width: 0;
+  padding: 13px 14px !important;
+  border: 1px solid #e6ecf3 !important;
+  border-radius: 14px !important;
+  background: #f9fbfd !important;
+}
+
+.app-shell.role-super_admin .team-v26-account-state-v154 .team-v26-context-grid strong,
+.app-shell.role-super_admin .team-v26-account-state-v154 .team-v26-context-grid small {
+  display: block;
+  overflow-wrap: anywhere;
+}
+
+.app-shell.role-super_admin .team-v26-account-state-v154 .team-v26-context-grid strong {
+  margin-top: 4px;
+  color: #263247 !important;
+  font-size: .85rem !important;
+  text-transform: capitalize;
+}
+
+.app-shell.role-super_admin .team-v26-account-state-v154 .team-v26-context-grid small {
+  margin-top: 3px;
+  color: #7a8798 !important;
+  font-size: .7rem !important;
+  line-height: 1.4 !important;
+}
+
+.app-shell.role-super_admin .team-v26-account-footer-v153 {
+  min-height: 70px;
+  display: grid !important;
+  grid-template-columns: minmax(110px, auto) minmax(0, 1fr) auto !important;
+  align-items: center !important;
+  gap: 12px !important;
+  padding: 13px 18px !important;
+  border-top: 1px solid #e2e8f0 !important;
+  background: rgba(255,255,255,.97) !important;
+  box-shadow: 0 -8px 22px rgba(15,23,42,.035);
+}
+
+.app-shell.role-super_admin .team-v26-account-footer-v153 > div {
+  display: flex !important;
+  justify-content: flex-end !important;
+  gap: 8px !important;
+  flex-wrap: wrap;
+}
+
+.app-shell.role-super_admin .team-v26-save-state-v154 {
+  justify-self: center !important;
+  font-size: .73rem !important;
+  font-weight: 750 !important;
+}
+
+@media (max-width: 820px) {
+  .app-shell.role-super_admin .team-v26-drawer-backdrop { padding: 14px !important; }
+  .app-shell.role-super_admin .team-v26-drawer.team-v26-account-modal-v153 {
+    width: min(720px, calc(100vw - 28px)) !important;
+    height: min(840px, calc(100dvh - 28px)) !important;
+    max-height: calc(100dvh - 28px) !important;
+    border-radius: 22px !important;
+  }
+  .app-shell.role-super_admin .team-v26-account-overview-v154 { grid-template-columns: 1fr 1fr !important; }
+  .app-shell.role-super_admin .team-v26-account-overview-v154 > div:last-child { grid-column: 1 / -1; }
+  .app-shell.role-super_admin .team-v26-account-state-v154 .team-v26-context-grid { grid-template-columns: 1fr 1fr !important; }
+  .app-shell.role-super_admin .team-v26-account-state-v154 .team-v26-context-grid > article:last-child { grid-column: 1 / -1; }
+}
+
+@media (max-width: 620px) {
+  .app-shell.role-super_admin .team-v26-drawer-backdrop { padding: 0 !important; }
+  .app-shell.role-super_admin .team-v26-drawer.team-v26-account-modal-v153 {
+    width: 100vw !important;
+    max-width: 100vw !important;
+    height: 100dvh !important;
+    max-height: 100dvh !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+  }
+  .app-shell.role-super_admin .team-v26-account-modal-v153 > header {
+    padding: 18px 16px !important;
+  }
+  .app-shell.role-super_admin .team-v26-account-modal-v153 .team-v26-profile-head {
+    grid-template-columns: 50px minmax(0, 1fr) !important;
+    gap: 11px !important;
+  }
+  .app-shell.role-super_admin .team-v26-account-modal-v153 .team-v26-avatar.is-large {
+    width: 50px !important;
+    height: 50px !important;
+    border-radius: 15px !important;
+  }
+  .app-shell.role-super_admin .team-v26-account-modal-v153 .team-v26-profile-head .badge {
+    grid-column: 2 / 3 !important;
+    justify-self: start !important;
+  }
+  .app-shell.role-super_admin .team-v26-account-modal-v153 .team-v26-profile-head h3 { font-size: 1.4rem !important; }
+  .app-shell.role-super_admin .team-v26-account-modal-v153 .team-v26-drawer-body {
+    padding: 12px !important;
+  }
+  .app-shell.role-super_admin .team-v26-account-overview-v154,
+  .app-shell.role-super_admin .team-v26-account-profile-v154 .team-v26-detail-grid,
+  .app-shell.role-super_admin .team-v26-branch-editor.team-v26-branch-editor-v154,
+  .app-shell.role-super_admin .team-v26-account-state-v154 .team-v26-context-grid {
+    grid-template-columns: 1fr !important;
+  }
+  .app-shell.role-super_admin .team-v26-account-overview-v154 > div:last-child,
+  .app-shell.role-super_admin .team-v26-account-state-v154 .team-v26-context-grid > article:last-child { grid-column: auto; }
+  .app-shell.role-super_admin .team-v26-account-profile-v154,
+  .app-shell.role-super_admin .team-v26-branch-workspace-v154,
+  .app-shell.role-super_admin .team-v26-account-state-v154 {
+    padding: 14px !important;
+    border-radius: 17px !important;
+  }
+  .app-shell.role-super_admin .team-v26-branch-head-v154,
+  .app-shell.role-super_admin .team-v26-dentist-access-note {
+    display: grid !important;
+    align-items: stretch !important;
+  }
+  .app-shell.role-super_admin .team-v26-account-footer-v153 {
+    grid-template-columns: 1fr !important;
+    gap: 8px !important;
+    padding: 10px 12px max(10px, env(safe-area-inset-bottom)) !important;
+  }
+  .app-shell.role-super_admin .team-v26-account-footer-v153 > button { display: none !important; }
+  .app-shell.role-super_admin .team-v26-account-footer-v153 > div {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    width: 100%;
+  }
+  .app-shell.role-super_admin .team-v26-account-footer-v153 > div > :last-child:nth-child(3) {
+    grid-column: 1 / -1;
+  }
+  .app-shell.role-super_admin .team-v26-save-state-v154 {
+    justify-self: start !important;
+  }
+}
+
+@media (max-width: 400px) {
+  .app-shell.role-super_admin .team-v26-account-footer-v153 > div { grid-template-columns: 1fr !important; }
+  .app-shell.role-super_admin .team-v26-account-footer-v153 > div > :last-child:nth-child(3) { grid-column: auto; }
+}
