@@ -67,29 +67,26 @@ function patientPortalSnapshot() {
 function DataBootstrap({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, isLoading, user } = useAuth()
   const [dataRevision, setDataRevision] = useState(0)
-  const [coldBootstrapLoading, setColdBootstrapLoading] = useState(false)
+  const [bootstrapRevision, setBootstrapRevision] = useState(0)
+
+  const scope = user?.id ? `user:${user.id}` : 'public'
+  const bootstrapKey = `workspace-bootstrap:${user?.role ?? 'guest'}`
+  const hasWarmBootstrap = Boolean(user?.id && readCachedQuery<boolean>(bootstrapKey, scope) === true)
+  const shouldShowPortalSkeleton = !isLoading && isAuthenticated && Boolean(user?.id) && !hasWarmBootstrap
 
   useEffect(() => {
     let active = true
     let backgroundTimer: number | undefined
     let patientDataChanged = false
 
-    if (isLoading) {
-      setColdBootstrapLoading(false)
-      return () => { active = false }
-    }
-    if (!isAuthenticated || !user?.id) {
-      setColdBootstrapLoading(false)
-      return () => { active = false }
-    }
+    if (isLoading || !isAuthenticated || !user?.id) return () => { active = false }
 
-    const scope = `user:${user.id}`
-    const bootstrapKey = `workspace-bootstrap:${user.role}`
-    const hasWarmBootstrap = readCachedQuery<boolean>(bootstrapKey, scope) === true
-    setColdBootstrapLoading(!hasWarmBootstrap)
+    const currentScope = `user:${user.id}`
+    const currentBootstrapKey = `workspace-bootstrap:${user.role}`
+    const hadWarmBootstrap = readCachedQuery<boolean>(currentBootstrapKey, currentScope) === true
 
     const bootstrap = cachedQuery(
-      bootstrapKey,
+      currentBootstrapKey,
       async () => {
         const essentialLoads: Promise<unknown>[] = [
           loadBranchesFromSupabase({ strict: false }),
@@ -99,13 +96,18 @@ function DataBootstrap({ children }: { children: React.ReactNode }) {
         ]
 
         if (user.role === 'patient') {
-          if (!hasWarmBootstrap) clearPatientPortalCaches()
+          if (!hadWarmBootstrap) clearPatientPortalCaches()
           const before = patientPortalSnapshot()
           essentialLoads.push(
             hydratePatientPortalFromDatabase().finally(() => {
               patientDataChanged = before !== patientPortalSnapshot()
             }),
           )
+        } else if (!hadWarmBootstrap) {
+          // Cold internal portal loads remain behind the skeleton until the
+          // operational datasets used by appointments, billing, documents,
+          // inventory, expenses, reports, and clinical workspaces are synced.
+          essentialLoads.push(syncSupabaseToLocalStorage())
         }
 
         await Promise.allSettled(essentialLoads)
@@ -114,19 +116,22 @@ function DataBootstrap({ children }: { children: React.ReactNode }) {
       {
         ...(user.role === 'patient' ? queryCachePolicy.frequent : queryCachePolicy.moderate),
         tags: ['workspace-bootstrap', 'branches', 'providers', 'patients', 'services', user.role === 'patient' ? 'patient-portal' : 'internal-portal'],
-        scope,
+        scope: currentScope,
       },
     )
 
     void bootstrap.finally(() => {
       if (!active) return
-      setColdBootstrapLoading(false)
+      setBootstrapRevision((value) => value + 1)
 
       if (user.role === 'patient') {
         if (patientDataChanged) setDataRevision((value) => value + 1)
         return
       }
 
+      // Warm sessions refresh operational data in the background without
+      // replaying a blocking skeleton on every in-app navigation.
+      if (!hadWarmBootstrap) return
       backgroundTimer = window.setTimeout(() => {
         void cachedQuery(
           'internal-background-sync',
@@ -135,7 +140,7 @@ function DataBootstrap({ children }: { children: React.ReactNode }) {
             if (active) setDataRevision((value) => value + 1)
             return true
           },
-          { ...queryCachePolicy.frequent, tags: ['internal-sync'], scope },
+          { ...queryCachePolicy.frequent, tags: ['internal-sync'], scope: currentScope },
         ).catch((error) => {
           console.error('[background clinic sync failed]', error)
         })
@@ -148,11 +153,13 @@ function DataBootstrap({ children }: { children: React.ReactNode }) {
     }
   }, [isAuthenticated, isLoading, user?.id, user?.role])
 
-  if (!isLoading && isAuthenticated && user?.id && coldBootstrapLoading) {
+  void bootstrapRevision
+
+  if (shouldShowPortalSkeleton) {
     return (
       <PortalSkeleton
-        variant={user.role === 'patient' ? 'patient' : 'internal'}
-        message={user.role === 'patient' ? 'Loading your patient portal' : 'Loading clinic workspace'}
+        variant={user?.role === 'patient' ? 'patient' : 'internal'}
+        message={user?.role === 'patient' ? 'Loading your patient portal' : 'Loading clinic workspace'}
       />
     )
   }
