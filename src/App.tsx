@@ -7,6 +7,7 @@ import { ExpenseTrendEnhancer } from './components/system/ExpenseTrendEnhancer'
 import { InternalUiActionsEnhancerV116 } from './components/system/InternalUiActionsEnhancerV116'
 import { InventoryBranchScopeEnhancerV118 } from './components/system/InventoryBranchScopeEnhancerV118'
 import { PersistenceStatusNotice } from './components/system/PersistenceStatusNotice'
+import { PortalSkeleton } from './components/ui/DesignSystem'
 import { ModalAccessibilityManager } from './components/ui/ModalAccessibilityManager'
 import { useAuth } from './features/auth/AuthContext'
 import { AuthProvider } from './features/auth/AuthProvider'
@@ -66,20 +67,26 @@ function patientPortalSnapshot() {
 function DataBootstrap({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, isLoading, user } = useAuth()
   const [dataRevision, setDataRevision] = useState(0)
+  const [coldBootstrapLoading, setColdBootstrapLoading] = useState(false)
 
   useEffect(() => {
     let active = true
     let backgroundTimer: number | undefined
     let patientDataChanged = false
 
-    if (isLoading) return () => { active = false }
+    if (isLoading) {
+      setColdBootstrapLoading(false)
+      return () => { active = false }
+    }
     if (!isAuthenticated || !user?.id) {
+      setColdBootstrapLoading(false)
       return () => { active = false }
     }
 
     const scope = `user:${user.id}`
     const bootstrapKey = `workspace-bootstrap:${user.role}`
     const hasWarmBootstrap = readCachedQuery<boolean>(bootstrapKey, scope) === true
+    setColdBootstrapLoading(!hasWarmBootstrap)
 
     const bootstrap = cachedQuery(
       bootstrapKey,
@@ -113,6 +120,7 @@ function DataBootstrap({ children }: { children: React.ReactNode }) {
 
     void bootstrap.finally(() => {
       if (!active) return
+      setColdBootstrapLoading(false)
 
       if (user.role === 'patient') {
         if (patientDataChanged) setDataRevision((value) => value + 1)
@@ -139,6 +147,15 @@ function DataBootstrap({ children }: { children: React.ReactNode }) {
       if (backgroundTimer !== undefined) window.clearTimeout(backgroundTimer)
     }
   }, [isAuthenticated, isLoading, user?.id, user?.role])
+
+  if (!isLoading && isAuthenticated && user?.id && coldBootstrapLoading) {
+    return (
+      <PortalSkeleton
+        variant={user.role === 'patient' ? 'patient' : 'internal'}
+        message={user.role === 'patient' ? 'Loading your patient portal' : 'Loading clinic workspace'}
+      />
+    )
+  }
 
   return <Fragment key={`${user?.id ?? 'public'}:${dataRevision}`}>{children}</Fragment>
 }
