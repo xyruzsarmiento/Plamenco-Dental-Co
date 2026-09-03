@@ -1,3 +1,5 @@
+@import './internal-account-modal-premium-v174.css';
+
 .app-shell.role-super_admin .team-v26-drawer.team-v26-account-modal-v153 {
   width: min(880px, calc(100vw - 48px)) !important;
   max-width: min(880px, calc(100vw - 48px)) !important;
