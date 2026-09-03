@@ -1,0 +1,117 @@
+/* Internal Account modal footer action spacing refinement */
+.app-shell.role-super_admin .team-v26-account-footer-v153 {
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  padding: 10px 14px !important;
+  overflow: visible !important;
+}
+
+.app-shell.role-super_admin .team-v26-account-footer-v153 > .btn:first-child {
+  flex: 1 1 260px !important;
+  min-width: 160px !important;
+  width: auto !important;
+}
+
+.app-shell.role-super_admin .team-v26-account-footer-v153 > .team-v26-save-state-v154 {
+  flex: 0 1 auto !important;
+  min-width: 0 !important;
+  margin-inline: 2px !important;
+  font-size: .72rem !important;
+  white-space: normal !important;
+}
+
+.app-shell.role-super_admin .team-v26-account-footer-v153 > div {
+  flex: 0 0 auto !important;
+  display: grid !important;
+  grid-template-columns: auto auto minmax(138px, auto) !important;
+  align-items: center !important;
+  gap: 8px !important;
+  width: auto !important;
+  min-width: 0 !important;
+  justify-self: auto !important;
+}
+
+.app-shell.role-super_admin .team-v26-account-footer-v153 > div .btn {
+  min-width: 0 !important;
+  min-height: 38px !important;
+  width: auto !important;
+  padding-inline: 13px !important;
+  white-space: nowrap !important;
+}
+
+.app-shell.role-super_admin .team-v26-account-footer-v153 > div .btn:last-child {
+  min-width: 142px !important;
+  padding-inline: 16px !important;
+}
+
+@media (max-width: 820px) {
+  .app-shell.role-super_admin .team-v26-account-footer-v153 {
+    display: grid !important;
+    grid-template-columns: minmax(150px, 1fr) auto !important;
+  }
+
+  .app-shell.role-super_admin .team-v26-account-footer-v153 > .team-v26-save-state-v154 {
+    grid-column: 1 / -1 !important;
+    grid-row: 1 !important;
+    justify-self: start !important;
+  }
+
+  .app-shell.role-super_admin .team-v26-account-footer-v153 > .btn:first-child {
+    grid-column: 1 !important;
+    width: 100% !important;
+  }
+
+  .app-shell.role-super_admin .team-v26-account-footer-v153 > div {
+    grid-column: 2 !important;
+  }
+}
+
+@media (max-width: 720px) {
+  .app-shell.role-super_admin .team-v26-account-footer-v153 {
+    grid-template-columns: 1fr !important;
+    gap: 8px !important;
+    padding: 9px 12px !important;
+  }
+
+  .app-shell.role-super_admin .team-v26-account-footer-v153 > .btn:first-child,
+  .app-shell.role-super_admin .team-v26-account-footer-v153 > div,
+  .app-shell.role-super_admin .team-v26-account-footer-v153 > .team-v26-save-state-v154 {
+    grid-column: 1 !important;
+  }
+
+  .app-shell.role-super_admin .team-v26-account-footer-v153 > div {
+    display: grid !important;
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    width: 100% !important;
+  }
+
+  .app-shell.role-super_admin .team-v26-account-footer-v153 > div .btn,
+  .app-shell.role-super_admin .team-v26-account-footer-v153 > div .btn:last-child {
+    width: 100% !important;
+    min-width: 0 !important;
+    padding-inline: 10px !important;
+  }
+}
+
+@media (max-width: 540px) {
+  .app-shell.role-super_admin .team-v26-account-footer-v153 > div {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+
+  .app-shell.role-super_admin .team-v26-account-footer-v153 > div .btn:last-child {
+    grid-column: 1 / -1 !important;
+  }
+}
+
+@media (max-width: 390px) {
+  .app-shell.role-super_admin .team-v26-account-footer-v153 > div {
+    grid-template-columns: 1fr !important;
+  }
+
+  .app-shell.role-super_admin .team-v26-account-footer-v153 > div .btn:last-child {
+    grid-column: auto !important;
+  }
+}
