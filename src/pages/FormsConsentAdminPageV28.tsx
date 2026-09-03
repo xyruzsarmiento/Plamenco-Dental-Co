@@ -16,7 +16,6 @@ import {
   ShieldCheck,
   Sparkles,
   Trash2,
-  UsersRound,
   X,
 } from 'lucide-react'
 import { Badge, StatusBadge } from '../components/ui/Badge'
@@ -405,43 +404,46 @@ export function FormsConsentAdminPageV28() {
   return (
     <PageScaffold title="Forms & Consent" description="Manage clinic-provided form templates, immutable versions, patient assignments and consent status.">
       <div className="forms-v28">
-        <section className="forms-v28-hero">
-          <div>
-            <span className="forms-v28-kicker">Clinical documentation governance</span>
-            <h2>Forms & Consent Control Center</h2>
-            <p>Build clinic-authored forms, control version publishing, and assign only immutable published versions to patients.</p>
-          </div>
-          <div className="forms-v28-hero-actions">
-            <Button variant="secondary" onClick={openAssign} disabled={!selectedTemplate || publishedVersionOptions.length === 0}><Send size={16} /> Assign form</Button>
-            <Button onClick={() => setShowCreate(true)}><FilePlus2 size={16} /> New form</Button>
-          </div>
-        </section>
+        <section className="forms-v28-overview">
+          <header className="forms-v28-hero">
+            <span className="forms-v28-hero-mark" aria-hidden="true"><ClipboardSignature size={22} /></span>
+            <div className="forms-v28-hero-copy">
+              <span className="forms-v28-kicker">Clinical documentation</span>
+              <h2>Forms & Consent</h2>
+              <p>Create, publish, and assign clinic-approved forms while preserving every signed version.</p>
+            </div>
+            <div className="forms-v28-hero-actions">
+              <Button variant="secondary" onClick={openAssign} disabled={!selectedTemplate || publishedVersionOptions.length === 0}><Send size={16} /> Assign form</Button>
+              <Button onClick={() => setShowCreate(true)}><FilePlus2 size={16} /> New form</Button>
+            </div>
+          </header>
 
-        <section className="forms-v28-truth">
-          <ShieldCheck size={19} />
-          <div><strong>Versioned consent records</strong><span>Published and signed history remains immutable. The system stores clinic-provided wording; it does not generate legal wording or medical clearance.</span></div>
-        </section>
-
-        <section className="forms-v28-metrics">
-          <article><span><FileText size={17} /> Templates</span><strong>{metrics.templates}</strong><small>All form templates</small></article>
-          <article><span><CheckCircle2 size={17} /> Published</span><strong>{metrics.published}</strong><small>Assignable templates</small></article>
-          <article><span><ClipboardSignature size={17} /> Signature required</span><strong>{metrics.signatureRequired}</strong><small>Current published settings</small></article>
-          <article><span><UsersRound size={17} /> Assignments</span><strong>{metrics.assignments}</strong><small>Recent records loaded</small></article>
+          <div className="forms-v28-overview-footer">
+            <section className="forms-v28-metrics" aria-label="Forms summary">
+              <article><span>Templates</span><strong>{metrics.templates}</strong></article>
+              <article><span>Published</span><strong>{metrics.published}</strong></article>
+              <article><span>Need signature</span><strong>{metrics.signatureRequired}</strong></article>
+              <article><span>Assignments</span><strong>{metrics.assignments}</strong></article>
+            </section>
+            <div className="forms-v28-truth">
+              <ShieldCheck size={18} />
+              <div><strong>Published records stay protected</strong><span>Signed wording and version history cannot be overwritten.</span></div>
+            </div>
+          </div>
         </section>
 
         {message && <div className="forms-v28-alert success"><CheckCircle2 size={16} /> {message}</div>}
         {error && <div className="forms-v28-alert error">{error}</div>}
 
-        <section className="forms-v28-command">
-          <label className="forms-v28-search"><Search size={16} /><input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search title, description or category" /></label>
-          <select value={statusFilter} onChange={(event) => setStatusFilter(event.target.value)} aria-label="Filter forms by status">
-            <option value="all">All statuses</option><option value="draft">Draft</option><option value="published">Published</option><option value="archived">Archived</option>
-          </select>
-        </section>
-
         <div className="forms-v28-workspace">
           <section className="forms-v28-library">
-            <header><div><span>Template library</span><h3>{filteredTemplates.length} forms</h3></div><Badge tone="info">Governed</Badge></header>
+            <header><div><span>Template library</span><h3>{filteredTemplates.length} form{filteredTemplates.length === 1 ? '' : 's'}</h3></div><Badge tone="info">Clinic-wide</Badge></header>
+            <section className="forms-v28-command" aria-label="Filter form templates">
+              <label className="forms-v28-search"><Search size={16} /><input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search forms" /></label>
+              <select value={statusFilter} onChange={(event) => setStatusFilter(event.target.value)} aria-label="Filter forms by status">
+                <option value="all">All statuses</option><option value="draft">Draft</option><option value="published">Published</option><option value="archived">Archived</option>
+              </select>
+            </section>
             {loading ? <SkeletonList items={5} withAvatar /> : filteredTemplates.length === 0 ? (
               <div className="forms-v28-empty"><ClipboardSignature size={30} /><h3>No forms found</h3><p>Create a new clinic-authored draft or adjust the current filters.</p></div>
             ) : (

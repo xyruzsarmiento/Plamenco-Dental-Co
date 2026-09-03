@@ -253,24 +253,22 @@ export function BranchesPageV27() {
   return (
     <section className="branches-v27">
       <header className="branches-v27-hero">
-        <div>
-          <span className="branches-v27-kicker">Clinic network</span>
-          <h2>Branch Operations</h2>
-          <p>Manage clinic locations, contact readiness, provider coverage, and operational branch context from one workspace.</p>
+        <div className="branches-v27-hero-title">
+          <span className="branches-v27-hero-icon"><Building2 size={22} /></span>
+          <div>
+            <span className="branches-v27-kicker">Clinic network</span>
+            <h2>Branch Operations</h2>
+            <p>Review each location's contact details, clinical coverage, and daily schedule.</p>
+          </div>
         </div>
-        <div className="branches-v27-hero-badge"><ShieldCheck size={18} /><div><strong>{activeBranches} active locations</strong><span>Existing branch identities preserved</span></div></div>
+        <div className="branches-v27-hero-badge"><ShieldCheck size={18} /><div><strong>{activeBranches} of {branches.length} active</strong><span>Clinic locations</span></div></div>
       </header>
 
-      <section className="branches-v27-metrics" aria-label="Branch summary">
-        <article><span className="branches-v27-metric-icon"><Building2 size={18} /></span><div><small>Total branches</small><strong>{branches.length}</strong><p>{activeBranches} active</p></div></article>
-        <article><span className="branches-v27-metric-icon"><Stethoscope size={18} /></span><div><small>Assigned providers</small><strong>{assignedProviders}</strong><p>{activeAssignments.length} active assignments</p></div></article>
-        <article><span className="branches-v27-metric-icon"><CalendarDays size={18} /></span><div><small>Appointments today</small><strong>{todayAppointments}</strong><p>Across active branch records</p></div></article>
-        <article><span className="branches-v27-metric-icon"><Phone size={18} /></span><div><small>Contact ready</small><strong>{contactReady}/{branches.length}</strong><p>Phone or email recorded</p></div></article>
-      </section>
-
-      <section className="branches-v27-command">
-        <label className="branches-v27-search"><Search size={17} /><input type="search" placeholder="Search branch, city, code, contact" value={query} onChange={(event) => setQuery(event.target.value)} /></label>
-        <select value={statusFilter} onChange={(event) => setStatusFilter(event.target.value as typeof statusFilter)} aria-label="Filter branches by status"><option value="all">All statuses</option><option value="active">Active</option><option value="inactive">Inactive</option></select>
+      <section className="branches-v27-overview" aria-label="Clinic network summary">
+        <article><Building2 size={17} /><div><strong>{branches.length}</strong><span>Locations</span></div></article>
+        <article><Stethoscope size={17} /><div><strong>{assignedProviders}</strong><span>Active providers</span></div></article>
+        <article><CalendarDays size={17} /><div><strong>{todayAppointments}</strong><span>Appointments today</span></div></article>
+        <article><Phone size={17} /><div><strong>{contactReady}/{branches.length}</strong><span>Contact ready</span></div></article>
       </section>
 
       {loadError && <div className="branches-v27-error" role="alert">{loadError}</div>}
@@ -293,14 +291,20 @@ export function BranchesPageV27() {
       ) : (
         <div className="branches-v27-workspace">
           <aside className="branches-v27-directory">
-            <header><div><span>Directory</span><h3>{filteredBranches.length} locations</h3></div></header>
+            <header>
+              <div><span>Locations</span><h3>Branch directory</h3><p>{filteredBranches.length} of {branches.length} shown</p></div>
+              <div className="branches-v27-directory-tools">
+                <label className="branches-v27-search"><Search size={16} /><input type="search" placeholder="Search locations" value={query} onChange={(event) => setQuery(event.target.value)} /></label>
+                <select value={statusFilter} onChange={(event) => setStatusFilter(event.target.value as typeof statusFilter)} aria-label="Filter branches by status"><option value="all">All</option><option value="active">Active</option><option value="inactive">Inactive</option></select>
+              </div>
+            </header>
             {filteredBranches.length === 0 ? <div className="branches-v27-mini-empty"><Search size={22} /><strong>No matching branches</strong><span>Try a different search or status.</span></div> : filteredBranches.map((branch) => {
               const branchAssignments = activeAssignments.filter((assignment) => assignment.branchId === branch.id)
               const branchToday = appointments.filter((appointment) => appointment.branchId === branch.id && appointment.date === today && !['cancelled', 'rejected', 'rescheduled'].includes(appointment.status)).length
               return (
                 <button key={branch.id} type="button" className={`branches-v27-entry ${selectedBranch?.id === branch.id ? 'is-selected' : ''}`} onClick={() => setSelectedBranchId(branch.id)}>
                   <span className="branches-v27-entry-avatar">{initials(branch.name)}</span>
-                  <span className="branches-v27-entry-copy"><span><strong>{branch.name}</strong><em className={branch.status === 'active' ? 'is-active' : 'is-inactive'}>{branch.status}</em></span><small><MapPin size={13} />{branch.city}, {branch.province}</small><small>{branchAssignments.length} providers · {branchToday} appointments today</small></span>
+                  <span className="branches-v27-entry-copy"><span><strong>{branch.name}</strong><em className={branch.status === 'active' ? 'is-active' : 'is-inactive'}>{branch.status}</em></span><small><MapPin size={13} />{branch.city}, {branch.province}</small><small>{branchAssignments.length} provider{branchAssignments.length === 1 ? '' : 's'} · {branchToday} today</small></span>
                 </button>
               )
             })}

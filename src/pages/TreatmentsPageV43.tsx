@@ -5,10 +5,12 @@ import { Pagination } from '../components/ui/DesignSystem'
 import { MostPerformedTreatmentsV45, PlannedVsPerformedV45 } from '../components/ui/TreatmentAnalyticsV45'
 import { TreatmentFormDrawerV12 } from '../features/treatments/TreatmentFormDrawerV12'
 import { getStoredPatients } from '../features/patients/patientStore'
+import { loadPatientsFromSupabase } from '../features/patients/patientPersistence'
 import { getStoredServices } from '../features/services/serviceStore'
 import { getStoredBranches } from '../features/branches/branchStore'
+import { useBranchContext } from '../features/branches/BranchContext'
 import { getStoredProviders } from '../features/dentists/dentistStore'
-import { createTreatment, deleteTreatment, getStoredTreatments, updateTreatment } from '../features/treatments/treatmentStore'
+import { createTreatment, deleteTreatment, loadTreatmentsFromSupabase, updateTreatment } from '../features/treatments/treatmentStore'
 import type { Treatment, TreatmentFormValues, TreatmentStatus } from '../features/treatments/treatmentTypes'
 import { buildEnterpriseReportSnapshot, formatReportCurrency } from '../features/reports/reportStore'
 
@@ -56,11 +58,13 @@ function statusLabel(status: TreatmentStatus) {
 }
 
 export function TreatmentsPageV43() {
-  const patients = useMemo(() => getStoredPatients(), [])
+  const { activeBranchId } = useBranchContext()
+  const [patients, setPatients] = useState(() => getStoredPatients())
   const services = useMemo(() => getStoredServices(), [])
   const branches = useMemo(() => getStoredBranches(), [])
   const providers = useMemo(() => getStoredProviders(), [])
-  const [treatments, setTreatments] = useState<Treatment[]>(() => getStoredTreatments())
+  const [treatments, setTreatments] = useState<Treatment[]>([])
+  const [isLoadingTreatments, setIsLoadingTreatments] = useState(true)
   const [patientSearch, setPatientSearch] = useState('')
   const [workspaceSearch, setWorkspaceSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState('all')
@@ -76,6 +80,24 @@ export function TreatmentsPageV43() {
   const [isMutating, setIsMutating] = useState(false)
   const [treatmentPage, setTreatmentPage] = useState(1)
   const [treatmentPageSize, setTreatmentPageSize] = useState(10)
+
+  useEffect(() => {
+    let active = true
+    setIsLoadingTreatments(true)
+    setMutationError(null)
+    void loadPatientsFromSupabase({ strict: true }).then(async (nextPatients) => {
+      const rows = await loadTreatmentsFromSupabase({ strict: true })
+      if (!active) return
+      setPatients(nextPatients)
+      setSelectedPatientId((current) => current || nextPatients[0]?.patientId || '')
+      setTreatments(rows)
+    }).catch((cause) => {
+      if (active) setMutationError(cause instanceof Error ? cause.message : 'Treatments could not be loaded from the clinic database.')
+    }).finally(() => {
+      if (active) setIsLoadingTreatments(false)
+    })
+    return () => { active = false }
+  }, [])
 
   const patientMap = useMemo(() => new Map(patients.map((patient) => [patient.patientId, patient])), [patients])
   const serviceMap = useMemo(() => new Map(services.map((service) => [service.id, service])), [services])
@@ -137,7 +159,7 @@ export function TreatmentsPageV43() {
     setMutationError(null)
     setMode('add')
     setEditingId(null)
-    setFormValues(emptyTreatmentForm(selectedPatient.patientId, services[0]?.id ?? ''))
+    setFormValues({ ...emptyTreatmentForm(selectedPatient.id, services[0]?.id ?? ''), branchId: activeBranchId ?? '' })
     setDrawerOpen(true)
   }
 
@@ -152,12 +174,16 @@ export function TreatmentsPageV43() {
 
   async function submitTreatment(values: TreatmentFormValues) {
     if (!selectedPatient || isMutating) return
+    if (!values.branchId?.trim()) {
+      setMutationError('Select the clinic branch for this treatment.')
+      return
+    }
     setIsMutating(true)
     setMutationError(null)
     try {
-      if (mode === 'add') await createTreatment({ ...values, patientId: selectedPatient.patientId })
-      else if (editingId) await updateTreatment(editingId, { ...values, patientId: selectedPatient.patientId })
-      setTreatments(getStoredTreatments())
+      if (mode === 'add') await createTreatment({ ...values, patientId: selectedPatient.id })
+      else if (editingId) await updateTreatment(editingId, { ...values, patientId: selectedPatient.id })
+      setTreatments(await loadTreatmentsFromSupabase({ strict: true }))
       setDrawerOpen(false)
       setEditingId(null)
     } catch (cause) {
@@ -178,7 +204,7 @@ export function TreatmentsPageV43() {
     setMutationError(null)
     try {
       await deleteTreatment(id)
-      setTreatments(getStoredTreatments())
+      setTreatments(await loadTreatmentsFromSupabase({ strict: true }))
     } catch (cause) {
       setMutationError(cause instanceof Error ? cause.message : 'Treatment could not be voided.')
     } finally {
@@ -192,7 +218,7 @@ export function TreatmentsPageV43() {
     setMutationError(null)
     try {
       await updateTreatment(treatment.id, { ...treatment, status })
-      setTreatments(getStoredTreatments())
+      setTreatments(await loadTreatmentsFromSupabase({ strict: true }))
     } catch (cause) {
       setMutationError(cause instanceof Error ? cause.message : 'Treatment status could not be changed.')
     } finally {
@@ -212,6 +238,7 @@ export function TreatmentsPageV43() {
       </header>
 
       {mutationError && <div className="tx12-form-error" role="alert">{mutationError}</div>}
+      {isLoadingTreatments && <div className="tx43-loading" role="status">Loading treatments from the clinic database...</div>}
 
       <section className="tx43-analytics">
         <article className="tx43-insight tx43-insight-primary">

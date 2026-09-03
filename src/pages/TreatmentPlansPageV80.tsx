@@ -1,12 +1,14 @@
 import { useEffect, useMemo, useState } from 'react'
-import { CalendarDays, CheckCircle2, ChevronRight, FileText, Plus, Search, Send, ShieldCheck, Sparkles, Stethoscope, Trash2, UserRound, X } from 'lucide-react'
+import { CalendarDays, CheckCircle2, ChevronRight, ClipboardList, FileText, Plus, Search, Send, ShieldCheck, Sparkles, Stethoscope, Trash2, UserRound, X } from 'lucide-react'
 import { Button } from '../components/ui/Button'
 import { Pagination, SkeletonList } from '../components/ui/DesignSystem'
 import { PageScaffold } from '../components/ui/PageScaffold'
 import { usePermissions } from '../features/auth/permissions'
 import { getStoredBranches } from '../features/branches/branchStore'
+import { useBranchContext } from '../features/branches/BranchContext'
 import { getStoredProviders } from '../features/dentists/dentistStore'
 import { getStoredPatients } from '../features/patients/patientStore'
+import { loadPatientsFromSupabase } from '../features/patients/patientPersistence'
 import { getStoredServices, servicePriceToCents } from '../features/services/serviceStore'
 import {
   createTreatmentPlan,
@@ -53,9 +55,12 @@ function newDraftItem(serviceId: string, price: number): DraftItem {
 
 export function TreatmentPlansPageV80() {
   const { can } = usePermissions()
-  const patients = useMemo(() => getStoredPatients(), [])
+  const { activeBranchId, availableBranches, isAllBranchesMode } = useBranchContext()
+  const [patients, setPatients] = useState(() => getStoredPatients())
   const services = useMemo(() => getStoredServices().filter((service) => service.status === 'active'), [])
-  const branches = useMemo(() => getStoredBranches().filter((branch) => branch.status === 'active'), [])
+  const branches = useMemo(() => availableBranches.length
+    ? availableBranches.filter((branch) => branch.status === 'active')
+    : getStoredBranches().filter((branch) => branch.status === 'active'), [availableBranches])
   const providers = useMemo(() => getStoredProviders().filter((provider) => provider.status === 'active'), [])
 
   const [patientSearch, setPatientSearch] = useState('')
@@ -75,6 +80,19 @@ export function TreatmentPlansPageV80() {
   const [items, setItems] = useState<DraftItem[]>([])
   const [planPage, setPlanPage] = useState(1)
   const [planPageSize, setPlanPageSize] = useState(10)
+  const [planStatusFilter, setPlanStatusFilter] = useState<'all' | 'active' | 'accepted' | 'closed'>('all')
+
+  useEffect(() => {
+    let active = true
+    void loadPatientsFromSupabase({ strict: true }).then((nextPatients) => {
+      if (!active) return
+      setPatients(nextPatients)
+      setSelectedPatientId((current) => current || nextPatients[0]?.patientId || '')
+    }).catch((cause) => {
+      if (active) setError(cause instanceof Error ? cause.message : 'Could not load patients from the clinic database.')
+    })
+    return () => { active = false }
+  }, [])
 
   const selectedPatient = patients.find((patient) => patient.patientId === selectedPatientId)
   const filteredPatients = useMemo(() => {
@@ -96,16 +114,23 @@ export function TreatmentPlansPageV80() {
     procedures: plans.reduce((sum, plan) => sum + plan.items.length, 0),
   }), [plans])
 
-  const planPageCount = Math.max(1, Math.ceil(plans.length / planPageSize))
+  const filteredPlans = useMemo(() => plans.filter((plan) => {
+    if (planStatusFilter === 'active') return ['draft', 'presented'].includes(plan.status)
+    if (planStatusFilter === 'accepted') return ['accepted', 'partially_accepted'].includes(plan.status)
+    if (planStatusFilter === 'closed') return ['declined', 'superseded', 'cancelled'].includes(plan.status)
+    return true
+  }), [planStatusFilter, plans])
+
+  const planPageCount = Math.max(1, Math.ceil(filteredPlans.length / planPageSize))
   const effectivePlanPage = Math.min(planPage, planPageCount)
   const visiblePlans = useMemo(() => {
     const start = (effectivePlanPage - 1) * planPageSize
-    return plans.slice(start, start + planPageSize)
-  }, [effectivePlanPage, planPageSize, plans])
+    return filteredPlans.slice(start, start + planPageSize)
+  }, [effectivePlanPage, filteredPlans, planPageSize])
 
   useEffect(() => {
     setPlanPage(1)
-  }, [planPageSize, selectedPatientId])
+  }, [planPageSize, planStatusFilter, selectedPatientId])
 
   useEffect(() => {
     setPlanPage((current) => Math.min(current, planPageCount))
@@ -131,11 +156,25 @@ export function TreatmentPlansPageV80() {
     void refresh(selectedPatientId)
   }, [selectedPatientId])
 
+  useEffect(() => {
+    if (!showCreate && !selectedPlan) return undefined
+    function closeDialog(event: KeyboardEvent) {
+      if (event.key !== 'Escape') return
+      if (showCreate && !saving) setShowCreate(false)
+      if (selectedPlan) setSelectedPlan(null)
+    }
+    document.addEventListener('keydown', closeDialog)
+    return () => document.removeEventListener('keydown', closeDialog)
+  }, [saving, selectedPlan, showCreate])
+
   function openCreate() {
     const first = services[0]
     setName('Treatment Plan')
     setDescription('')
-    setBranchId(selectedPatient?.preferredBranchId ?? '')
+    const preferredBranchId = selectedPatient?.preferredBranchId && branches.some((branch) => branch.id === selectedPatient.preferredBranchId)
+      ? selectedPatient.preferredBranchId
+      : ''
+    setBranchId(activeBranchId || preferredBranchId || (branches.length === 1 ? branches[0].id : ''))
     setProviderId('')
     setPatientNotes('')
     setInternalNotes('')
@@ -161,6 +200,7 @@ export function TreatmentPlansPageV80() {
   async function createPlan() {
     if (!selectedPatient) return
     if (!name.trim()) return setError('Plan name is required.')
+    if (!branchId) return setError('Select the clinic branch for this treatment plan.')
     if (!items.length) return setError('Add at least one recommended procedure.')
     if (items.some((item) => !item.serviceId || !Number.isFinite(Number(item.quotedPricePhp)) || Number(item.quotedPricePhp) < 0)) {
       return setError('Every procedure needs a valid quoted price.')
@@ -170,7 +210,7 @@ export function TreatmentPlansPageV80() {
     setError(null)
     try {
       await createTreatmentPlan({
-        patientId: selectedPatient.patientId,
+        patientId: selectedPatient.id,
         name: name.trim(),
         description: description.trim(),
         branchId: branchId || undefined,
@@ -217,8 +257,8 @@ export function TreatmentPlansPageV80() {
     <PageScaffold title="Treatment Plans" description="Recommended care and planned procedures. Estimates and patient decisions stay separate from performed treatments.">
       <section className="tp80-page">
         <header className="tp80-hero">
-          <div><span className="tp80-eyebrow"><Sparkles size={14} /> Care roadmap</span><h2>Treatment plans</h2><p>Propose future care, organize recommended procedures, and present estimates without marking actual treatment complete.</p></div>
-          {can('treatments.create') && <Button icon={<Plus size={16} />} onClick={openCreate} disabled={!selectedPatient}>Create treatment plan</Button>}
+          <div className="tp80-hero-title"><span className="tp80-hero-icon"><ClipboardList size={22} /></span><div><span className="tp80-eyebrow"><Sparkles size={14} /> Care roadmap</span><h2>Treatment plans</h2><p>Build clear care recommendations, share estimates, and track patient decisions.</p></div></div>
+          {can('treatments.create') && <Button icon={<Plus size={16} />} onClick={openCreate} disabled={!selectedPatient}>New plan</Button>}
         </header>
 
         <div className="tp80-layout">
@@ -232,14 +272,17 @@ export function TreatmentPlansPageV80() {
 
           <main className="tp80-main">
             {selectedPatient ? <>
-              <section className="tp80-patient-card"><div className="tp80-identity"><span className="tp80-avatar is-large">{initials(selectedPatient.firstName, selectedPatient.lastName)}</span><div><span className="tp80-eyebrow">Selected patient</span><h3>{selectedPatient.firstName} {selectedPatient.lastName}</h3><p>{selectedPatient.patientId} · {selectedPatient.phone || 'No phone'} · {selectedPatient.email || 'No email'}</p></div></div><span className="tp80-patient-status">{selectedPatient.status}</span></section>
+              <section className="tp80-patient-card"><div className="tp80-identity"><span className="tp80-avatar is-large">{initials(selectedPatient.firstName, selectedPatient.lastName)}</span><div><span className="tp80-eyebrow">Planning care for</span><h3>{selectedPatient.firstName} {selectedPatient.lastName}</h3><p>{selectedPatient.patientId} · {selectedPatient.phone || 'No phone'} · {selectedPatient.email || 'No email'}</p></div></div><span className="tp80-patient-status">{selectedPatient.status}</span></section>
 
               <section className="tp80-metrics"><article><span>Active plans</span><strong>{metrics.active}</strong><small>Open care recommendations</small></article><article><span>Accepted</span><strong>{metrics.accepted}</strong><small>Patient-approved plans</small></article><article><span>Quoted value</span><strong>{formatTreatmentPlanCurrency(metrics.value)}</strong><small>Estimate, not billed amount</small></article><article><span>Procedures</span><strong>{metrics.procedures}</strong><small>Across all plans</small></article></section>
 
               {error && <div className="tp80-error" role="alert">{error}</div>}
               <section className="tp80-registry">
-                <div className="tp80-section-head"><div><span className="tp80-eyebrow">Care recommendations</span><h3>Treatment plan registry</h3><p>Plans represent proposed care. Accepted items may later link to treatments, but acceptance is not procedure completion.</p></div><span>{plans.length} plan{plans.length === 1 ? '' : 's'}</span></div>
-                {loading ? <SkeletonList items={5} withAvatar /> : plans.length ? (
+                <div className="tp80-section-head"><div><span className="tp80-eyebrow">Care recommendations</span><h3>Care plans</h3><p>Review proposed procedures, estimates, and patient decisions.</p></div><span>{filteredPlans.length} shown</span></div>
+                {plans.length > 0 && <div className="tp80-plan-filters" aria-label="Filter treatment plans by status">
+                  {([['all', 'All plans'], ['active', 'In progress'], ['accepted', 'Accepted'], ['closed', 'Closed']] as const).map(([value, label]) => <button key={value} type="button" className={planStatusFilter === value ? 'is-active' : ''} aria-pressed={planStatusFilter === value} onClick={() => setPlanStatusFilter(value)}>{label}</button>)}
+                </div>}
+                {loading ? <SkeletonList items={5} withAvatar /> : filteredPlans.length ? (
                   <>
                     <div className="tp80-plan-grid">
                       {visiblePlans.map((plan) => (
@@ -255,9 +298,9 @@ export function TreatmentPlansPageV80() {
                         </article>
                       ))}
                     </div>
-                    <Pagination page={effectivePlanPage} pageCount={planPageCount} totalItems={plans.length} pageSize={planPageSize} pageSizeOptions={PLAN_PAGE_SIZE_OPTIONS} onPageChange={setPlanPage} onPageSizeChange={setPlanPageSize} label="Treatment plan registry pages" />
+                    <Pagination page={effectivePlanPage} pageCount={planPageCount} totalItems={filteredPlans.length} pageSize={planPageSize} pageSizeOptions={PLAN_PAGE_SIZE_OPTIONS} onPageChange={setPlanPage} onPageSizeChange={setPlanPageSize} label="Treatment plan registry pages" />
                   </>
-                ) : <div className="tp80-empty"><FileText size={24} /><h3>No treatment plans yet</h3><p>Create the first care recommendation for this patient.</p></div>}
+                ) : <div className="tp80-empty"><FileText size={24} /><h3>{plans.length ? 'No plans in this view' : 'No treatment plans yet'}</h3><p>{plans.length ? 'Choose another status to see this patient’s plans.' : 'Create the first care recommendation for this patient.'}</p>{!plans.length && can('treatments.create') && <Button size="sm" icon={<Plus size={14} />} onClick={openCreate}>Create first plan</Button>}</div>}
               </section>
             </> : <div className="tp80-empty"><UserRound size={26} /><h3>No patient selected</h3></div>}
           </main>
@@ -268,7 +311,7 @@ export function TreatmentPlansPageV80() {
             <section className="tp80-create-modal" role="dialog" aria-modal="true" aria-labelledby="tp80-create-title">
               <header><div><span className="tp80-modal-icon"><Stethoscope size={20} /></span><div><span className="tp80-eyebrow">New care estimate</span><h2 id="tp80-create-title">Create treatment plan</h2><p>Build a patient-specific recommendation with editable quoted pricing.</p></div></div><button type="button" onClick={() => setShowCreate(false)} disabled={saving} aria-label="Close"><X size={18} /></button></header>
               <div className="tp80-create-body">
-                <section className="tp80-form-section"><div className="tp80-form-title"><span>01</span><div><h3>Plan context</h3><p>Name the plan and assign the clinical context.</p></div></div><div className="tp80-form-grid"><label><span>Plan name</span><input value={name} onChange={(event) => setName(event.target.value)} /></label><label><span>Branch</span><select value={branchId} onChange={(event) => setBranchId(event.target.value)}><option value="">Not assigned</option>{branches.map((branch) => <option key={branch.id} value={branch.id}>{branch.name}</option>)}</select></label><label><span>Dentist</span><select value={providerId} onChange={(event) => setProviderId(event.target.value)}><option value="">Not assigned</option>{providers.map((provider) => <option key={provider.id} value={provider.id}>{provider.displayName}</option>)}</select></label><label className="is-wide"><span>Description</span><textarea rows={3} value={description} onChange={(event) => setDescription(event.target.value)} placeholder="Clinical goal and plan summary" /></label></div></section>
+                <section className="tp80-form-section"><div className="tp80-form-title"><span>01</span><div><h3>Plan context</h3><p>Name the plan and assign the clinical context.</p></div></div><div className="tp80-form-grid"><label><span>Plan name</span><input value={name} onChange={(event) => setName(event.target.value)} /></label><label><span>Branch</span><select value={branchId} onChange={(event) => setBranchId(event.target.value)} disabled={!isAllBranchesMode && Boolean(activeBranchId)} required><option value="">Select branch</option>{branches.map((branch) => <option key={branch.id} value={branch.id}>{branch.name}</option>)}</select></label><label><span>Dentist</span><select value={providerId} onChange={(event) => setProviderId(event.target.value)}><option value="">Not assigned</option>{providers.map((provider) => <option key={provider.id} value={provider.id}>{provider.displayName}</option>)}</select></label><label className="is-wide"><span>Description</span><textarea rows={3} value={description} onChange={(event) => setDescription(event.target.value)} placeholder="Clinical goal and plan summary" /></label></div></section>
 
                 <section className="tp80-form-section"><div className="tp80-form-title is-action"><div><span>02</span><div><h3>Recommended procedures</h3><p>The catalogue price is a starting point; the quoted PHP amount is editable.</p></div></div><Button variant="secondary" size="sm" icon={<Plus size={14} />} onClick={addItem}>Add procedure</Button></div><div className="tp80-items">{items.map((item, index) => { const service = services.find((entry) => entry.id === item.serviceId); const unitCents = Math.round((Number(item.quotedPricePhp) || 0) * 100); return <article key={item.key} className="tp80-item"><span className="tp80-item-index">{String(index + 1).padStart(2, '0')}</span><div className="tp80-item-fields"><label><span>Service</span><select value={item.serviceId} onChange={(event) => changeService(item.key, event.target.value)}>{services.map((entry) => <option key={entry.id} value={entry.id}>{entry.name}</option>)}</select></label><label><span>Quantity</span><input type="number" min="1" value={item.quantity} onChange={(event) => setItems((current) => current.map((entry) => entry.key === item.key ? { ...entry, quantity: Math.max(1, Number(event.target.value) || 1) } : entry))} /></label><label><span>Phase</span><input value={item.phase} onChange={(event) => setItems((current) => current.map((entry) => entry.key === item.key ? { ...entry, phase: event.target.value } : entry))} placeholder="Optional" /></label><label className="is-quote"><span>Quoted price (PHP)</span><input type="number" min="0" step="0.01" value={item.quotedPricePhp} onChange={(event) => setItems((current) => current.map((entry) => entry.key === item.key ? { ...entry, quotedPricePhp: event.target.value } : entry))} /><small>Catalogue: {service ? new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP' }).format(service.price) : '—'}</small></label></div><div className="tp80-item-total"><span>Line estimate</span><strong>{formatTreatmentPlanCurrency(unitCents * item.quantity)}</strong></div><button type="button" className="tp80-remove" onClick={() => setItems((current) => current.filter((entry) => entry.key !== item.key))} aria-label="Remove procedure"><Trash2 size={16} /></button></article> })}</div></section>
 

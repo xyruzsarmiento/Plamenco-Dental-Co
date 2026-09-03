@@ -14,7 +14,7 @@ import {
   UserRound,
   X,
 } from 'lucide-react'
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Button } from '../components/ui/Button'
 import { PageScaffold } from '../components/ui/PageScaffold'
 import { StatusBadge } from '../components/ui/Badge'
@@ -22,19 +22,23 @@ import { DentalRecordFormModal } from '../features/dentalRecords/DentalRecordFor
 import {
   createDentalRecord,
   deleteDentalRecord,
-  getDentalRecordsByPatientId,
   getPatientName,
+  loadDentalRecordsFromSupabase,
   updateDentalRecord,
 } from '../features/dentalRecords/dentalRecordStore'
 import type { DentalRecord, DentalRecordFormValues } from '../features/dentalRecords/dentalRecordTypes'
 import { getAppointmentsByPatient } from '../features/appointments/appointmentStore'
 import { getStoredBranches } from '../features/branches/branchStore'
+import { useBranchContext } from '../features/branches/BranchContext'
 import { getStoredProviders } from '../features/dentists/dentistStore'
 import { getStoredPatients } from '../features/patients/patientStore'
-import { getTreatmentsByPatient } from '../features/treatments/treatmentStore'
+import { loadPatientsFromSupabase } from '../features/patients/patientPersistence'
+import { loadTreatmentsFromSupabase } from '../features/treatments/treatmentStore'
+import type { Treatment } from '../features/treatments/treatmentTypes'
 
-const createEmptyRecordValues = (patientId: string): DentalRecordFormValues => ({
+const createEmptyRecordValues = (patientId: string, branchId = ''): DentalRecordFormValues => ({
   patientId,
+  branchId,
   recordDate: new Date().toISOString().slice(0, 10),
   visitType: 'consultation',
   chiefComplaint: '',
@@ -81,18 +85,46 @@ function initials(firstName: string, lastName: string) {
 }
 
 export function DentalRecordsPageV11() {
-  const patients = useMemo(() => [...getStoredPatients()].sort((a, b) => a.lastName.localeCompare(b.lastName)), [])
+  const { activeBranchId, availableBranches, isAllBranchesMode } = useBranchContext()
+  const [patients, setPatients] = useState(() => [...getStoredPatients()].sort((a, b) => a.lastName.localeCompare(b.lastName)))
   const branchMap = useMemo(() => new Map(getStoredBranches().map((branch) => [branch.id, branch.name])), [])
   const providerMap = useMemo(() => new Map(getStoredProviders().map((provider) => [provider.id, provider.displayName])), [])
   const [patientSearch, setPatientSearch] = useState('')
   const [selectedPatientId, setSelectedPatientId] = useState<string>(patients[0]?.patientId ?? '')
-  const [recordDraft, setRecordDraft] = useState<DentalRecordFormValues>(() => createEmptyRecordValues(patients[0]?.patientId ?? ''))
+  const [recordDraft, setRecordDraft] = useState<DentalRecordFormValues>(() => createEmptyRecordValues(patients[0]?.patientId ?? '', activeBranchId ?? ''))
   const [showRecordForm, setShowRecordForm] = useState(false)
   const [recordFormMode, setRecordFormMode] = useState<'add' | 'edit'>('add')
   const [recordError, setRecordError] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [selectedRecord, setSelectedRecord] = useState<DentalRecord | null>(null)
   const [successMessage, setSuccessMessage] = useState<string | null>(null)
+  const [recordFilter, setRecordFilter] = useState<'all' | 'finalized' | 'draft'>('all')
+  const [records, setRecords] = useState<DentalRecord[]>([])
+  const [treatments, setTreatments] = useState<Treatment[]>([])
+  const [isLoadingRecords, setIsLoadingRecords] = useState(true)
+
+  useEffect(() => {
+    let active = true
+    setIsLoadingRecords(true)
+    setRecordError(null)
+    void loadPatientsFromSupabase({ strict: true }).then(async (nextPatients) => {
+      const [nextRecords, nextTreatments] = await Promise.all([
+        loadDentalRecordsFromSupabase({ strict: true }),
+        loadTreatmentsFromSupabase({ strict: true }),
+      ])
+      if (!active) return
+      setPatients([...nextPatients].sort((a, b) => a.lastName.localeCompare(b.lastName)))
+      setSelectedPatientId((current) => current || nextPatients[0]?.patientId || '')
+      setRecords(nextRecords)
+      setTreatments(nextTreatments)
+    }).catch((cause) => {
+      if (!active) return
+      setRecordError(cause instanceof Error ? cause.message : 'Clinical data could not be loaded from the clinic database.')
+    }).finally(() => {
+      if (active) setIsLoadingRecords(false)
+    })
+    return () => { active = false }
+  }, [])
 
   const filteredPatients = useMemo(() => {
     const query = patientSearch.trim().toLowerCase()
@@ -105,12 +137,19 @@ export function DentalRecordsPageV11() {
     [filteredPatients, patients, selectedPatientId],
   )
 
-  const patientRecords = useMemo(() => selectedPatient ? getDentalRecordsByPatientId(selectedPatient.patientId) : [], [selectedPatient, successMessage])
+  const patientRecords = useMemo(() => {
+    if (!selectedPatient) return []
+    return records
+      .filter((record) => record.patientId === selectedPatient.patientId || record.patientId === selectedPatient.id)
+      .sort((a, b) => new Date(b.recordDate).getTime() - new Date(a.recordDate).getTime())
+  }, [records, selectedPatient])
   const patientAppointments = useMemo(
     () => selectedPatient ? getAppointmentsByPatient(selectedPatient.patientId).sort((a, b) => `${a.date}T${a.startTime}`.localeCompare(`${b.date}T${b.startTime}`)) : [],
     [selectedPatient],
   )
-  const patientTreatments = useMemo(() => selectedPatient ? getTreatmentsByPatient(selectedPatient.patientId) : [], [selectedPatient])
+  const patientTreatments = useMemo(() => selectedPatient
+    ? treatments.filter((treatment) => treatment.patientId === selectedPatient.patientId || treatment.patientId === selectedPatient.id)
+    : [], [selectedPatient, treatments])
 
   const timeline = useMemo(() => {
     const records = patientRecords.map((record) => ({
@@ -161,6 +200,7 @@ export function DentalRecordsPageV11() {
   const followUps = patientRecords.filter((record) => record.followUpRequired || record.followUpDate)
   const finalizedRecords = patientRecords.filter((record) => record.status === 'finalized').length
   const draftRecords = patientRecords.filter((record) => record.status === 'draft').length
+  const visibleTimeline = useMemo(() => timeline.filter((entry) => recordFilter === 'all' || entry.status === recordFilter), [recordFilter, timeline])
 
   function selectPatient(patientId: string) {
     setSelectedPatientId(patientId)
@@ -170,8 +210,12 @@ export function DentalRecordsPageV11() {
 
   function openCreateRecord() {
     if (!selectedPatient) return
+    const preferredBranchId = selectedPatient.preferredBranchId && availableBranches.some((branch) => branch.id === selectedPatient.preferredBranchId)
+      ? selectedPatient.preferredBranchId
+      : ''
+    const branchId = activeBranchId || preferredBranchId || (availableBranches.length === 1 ? availableBranches[0].id : '')
     setRecordFormMode('add')
-    setRecordDraft(createEmptyRecordValues(selectedPatient.patientId))
+    setRecordDraft(createEmptyRecordValues(selectedPatient.id, branchId))
     setRecordError(null)
     setSuccessMessage(null)
     setSelectedRecord(null)
@@ -215,6 +259,7 @@ export function DentalRecordsPageV11() {
 
   async function handleSubmitRecord() {
     if (!selectedPatient || isSubmitting) return
+    if (!recordDraft.branchId?.trim()) return setRecordError('Select the clinic branch for this clinical record.')
     if (!recordDraft.chiefComplaint.trim()) return setRecordError('Chief complaint is required.')
     if (!recordDraft.diagnosis.trim()) return setRecordError('Diagnosis is required.')
     setRecordError(null)
@@ -223,14 +268,15 @@ export function DentalRecordsPageV11() {
     try {
       if (recordFormMode === 'edit') {
         if (!selectedRecord) throw new Error('Clinical record was not found. Refresh and try again.')
-        await updateDentalRecord(selectedRecord.id, { ...recordDraft, patientId: selectedPatient.patientId })
+        await updateDentalRecord(selectedRecord.id, { ...recordDraft, patientId: selectedPatient.id })
       } else {
-        await createDentalRecord({ ...recordDraft, patientId: selectedPatient.patientId })
+        await createDentalRecord({ ...recordDraft, patientId: selectedPatient.id })
       }
+      setRecords(await loadDentalRecordsFromSupabase({ strict: true }))
       setSuccessMessage(recordFormMode === 'edit' ? 'Record updated successfully.' : 'Record created successfully.')
       setShowRecordForm(false)
       setSelectedRecord(null)
-      setRecordDraft(createEmptyRecordValues(selectedPatient.patientId))
+      setRecordDraft(createEmptyRecordValues(selectedPatient.id, activeBranchId ?? ''))
     } catch (cause) {
       setRecordError(cause instanceof Error ? cause.message : 'Clinical record could not be saved.')
     } finally {
@@ -246,6 +292,7 @@ export function DentalRecordsPageV11() {
     try {
       const deleted = await deleteDentalRecord(record.id)
       if (!deleted) throw new Error('Only draft clinical records can be deleted.')
+      setRecords(await loadDentalRecordsFromSupabase({ strict: true }))
       setSelectedRecord(null)
       setSuccessMessage('Draft dental record deleted.')
     } catch (cause) {
@@ -271,12 +318,11 @@ export function DentalRecordsPageV11() {
     <PageScaffold title="Dental Records" description="Clinical visit documentation: findings, diagnosis, notes, and finalized care summaries.">
       <section className="dr11-page">
         <header className="dr11-command-header">
-          <div>
-            <span className="dr11-kicker">Clinical records workspace</span>
-            <h2>Visit documentation</h2>
-            <p>Document what happened clinically during a visit. Treatment plans and procedure execution stay in their own workspaces.</p>
+          <div className="dr11-command-title">
+            <span className="dr11-command-icon"><FileText size={22} /></span>
+            <div><span className="dr11-kicker">Patient chart</span><h2>Dental records</h2><p>Review visit notes, clinical findings, diagnoses, and follow-up care.</p></div>
           </div>
-          <Button onClick={openCreateRecord} icon={<ClipboardPlus size={17} />}>New clinical record</Button>
+          <Button onClick={openCreateRecord} icon={<ClipboardPlus size={17} />}>New record</Button>
         </header>
 
         <div className="dr11-layout">
@@ -296,7 +342,7 @@ export function DentalRecordsPageV11() {
 
             <div className="dr11-patient-list">
               {filteredPatients.map((patient) => {
-                const records = getDentalRecordsByPatientId(patient.patientId)
+                const patientRecordCount = records.filter((record) => record.patientId === patient.patientId || record.patientId === patient.id).length
                 return (
                   <button key={patient.id} type="button" className={selectedPatient.patientId === patient.patientId ? 'is-active' : ''} onClick={() => selectPatient(patient.patientId)}>
                     <span className="dr11-avatar">{initials(patient.firstName, patient.lastName)}</span>
@@ -304,7 +350,7 @@ export function DentalRecordsPageV11() {
                       <strong>{patient.firstName} {patient.lastName}</strong>
                       <small>{patient.patientId}</small>
                     </span>
-                    <span className="dr11-record-count">{records.length}</span>
+                    <span className="dr11-record-count">{patientRecordCount}</span>
                     <ChevronRight size={15} />
                   </button>
                 )
@@ -318,7 +364,7 @@ export function DentalRecordsPageV11() {
               <div className="dr11-patient-identity">
                 <span className="dr11-avatar dr11-avatar-lg">{initials(selectedPatient.firstName, selectedPatient.lastName)}</span>
                 <div>
-                  <span className="dr11-kicker">Selected patient</span>
+                  <span className="dr11-kicker">Patient chart</span>
                   <h2>{selectedPatient.firstName} {selectedPatient.middleName ? `${selectedPatient.middleName} ` : ''}{selectedPatient.lastName}</h2>
                   <div className="dr11-contact-row">
                     <span><UserRound size={14} /> {selectedPatient.patientId}</span>
@@ -358,39 +404,41 @@ export function DentalRecordsPageV11() {
 
               <section className="dr11-activity-card">
                 <div className="dr11-section-head">
-                  <div><span className="dr11-kicker">Care activity</span><h3>Record mix</h3></div>
+                  <div><span className="dr11-kicker">Connected care</span><h3>Related activity</h3></div>
                   <Activity size={18} />
                 </div>
-                <div className="dr11-ring" style={{ '--records': `${Math.min(100, patientRecords.length * 14)}%` } as React.CSSProperties}>
-                  <div><strong>{timeline.length}</strong><span>events</span></div>
-                </div>
                 <div className="dr11-mix-list">
-                  <div><span>Clinical records</span><strong>{patientRecords.length}</strong></div>
-                  <div><span>Appointments</span><strong>{patientAppointments.length}</strong></div>
-                  <div><span>Treatments</span><strong>{patientTreatments.length}</strong></div>
+                  <div><span><FileText size={15} /> Clinical records</span><strong>{patientRecords.length}</strong></div>
+                  <div><span><CalendarDays size={15} /> Appointments</span><strong>{patientAppointments.length}</strong></div>
+                  <div><span><HeartPulse size={15} /> Treatments</span><strong>{patientTreatments.length}</strong></div>
                 </div>
               </section>
             </div>
 
             {successMessage && <div className="dr11-success" role="status">{successMessage}</div>}
             {recordError && !showRecordForm && <div className="tp13-error" role="alert">{recordError}</div>}
+            {isLoadingRecords && <div className="dr11-loading" role="status">Loading clinical records from the clinic database...</div>}
 
             <section className="dr11-timeline-card">
               <div className="dr11-section-head dr11-timeline-head">
-              <div><span className="dr11-kicker">Longitudinal history</span><h3>Clinical record timeline</h3><p>Visit documentation only: complaint, findings, diagnosis, notes, and finalized/amended status.</p></div>
-                <span className="dr11-count-pill">{timeline.length} entries</span>
+                <div><span className="dr11-kicker">Visit history</span><h3>Clinical records</h3><p>Open a record to review its findings, diagnosis, care notes, and follow-up.</p></div>
+                <span className="dr11-count-pill">{visibleTimeline.length} shown</span>
               </div>
 
-              {timeline.length === 0 ? (
+              {timeline.length > 0 && <div className="dr11-record-filters" aria-label="Filter clinical records by status">
+                {([['all', 'All records'], ['finalized', 'Finalized'], ['draft', 'Drafts']] as const).map(([value, label]) => <button key={value} type="button" className={recordFilter === value ? 'is-active' : ''} aria-pressed={recordFilter === value} onClick={() => setRecordFilter(value)}>{label}</button>)}
+              </div>}
+
+              {visibleTimeline.length === 0 ? (
                 <div className="dr11-empty-timeline">
                   <FileText size={28} />
-                  <h3>No clinical history yet</h3>
-                  <p>Create the first clinical record after the patient's consultation or treatment.</p>
-                  <Button onClick={openCreateRecord} icon={<Plus size={16} />}>Create first record</Button>
+                  <h3>{timeline.length ? 'No records in this view' : 'No clinical history yet'}</h3>
+                  <p>{timeline.length ? 'Choose another status to see this patient’s records.' : 'Create the first clinical record after the patient’s consultation or treatment.'}</p>
+                  {!timeline.length && <Button onClick={openCreateRecord} icon={<Plus size={16} />}>Create first record</Button>}
                 </div>
               ) : (
                 <div className="dr11-timeline">
-                  {timeline.map((entry) => {
+                  {visibleTimeline.map((entry) => {
                     const record = entry.kind === 'record' ? patientRecords.find((item) => item.id === entry.id.replace('record-', '')) : undefined
                     return (
                       <article key={entry.id} className={`dr11-event dr11-event-${entry.kind}`} onClick={() => record && setSelectedRecord(record)}>
@@ -416,6 +464,8 @@ export function DentalRecordsPageV11() {
 
         {showRecordForm && (
           <DentalRecordFormModal
+            branches={availableBranches}
+            branchLocked={!isAllBranchesMode && Boolean(activeBranchId)}
             patientName={`${selectedPatient.firstName} ${selectedPatient.lastName}`}
             values={recordDraft}
             onChange={setRecordDraft}

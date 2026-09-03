@@ -7,6 +7,8 @@ import { Textarea } from '../../components/ui/Textarea'
 import type { DentalRecordFormValues } from './dentalRecordTypes'
 
 type DentalRecordFormModalProps = {
+  branches?: Array<{ id: string; name: string }>
+  branchLocked?: boolean
   error: string | null
   patientName: string
   values: DentalRecordFormValues
@@ -18,6 +20,8 @@ type DentalRecordFormModalProps = {
 }
 
 export function DentalRecordFormModal({
+  branches = [],
+  branchLocked = false,
   error,
   isSubmitting = false,
   successMessage,
@@ -57,6 +61,19 @@ export function DentalRecordFormModal({
                 onChange={(event) => onChange({ ...values, recordDate: event.target.value })}
                 required
               />
+              {branches.length > 0 ? (
+                <Select
+                  label="Branch"
+                  value={values.branchId ?? ''}
+                  disabled={branchLocked}
+                  onChange={(event) => onChange({ ...values, branchId: event.target.value })}
+                  options={[
+                    { label: 'Select branch', value: '' },
+                    ...branches.map((branch) => ({ label: branch.name, value: branch.id })),
+                  ]}
+                  required
+                />
+              ) : null}
               <Select
                 label="Visit type"
                 value={values.visitType}

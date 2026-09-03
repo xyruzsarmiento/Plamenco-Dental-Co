@@ -206,6 +206,7 @@ export function AppointmentsPageV38() {
   useEffect(() => {
     if (!ready || !user?.id) return
     const userId = user.id
+    let cacheBaselineEstablished = false
 
     function refreshRequestsWorkspace(scroll = false) {
       setRenderVersion((version) => version + 1)
@@ -233,8 +234,20 @@ export function AppointmentsPageV38() {
 
     const timer = window.setInterval(() => {
       if (hydratingRef.current) return
-      const currentRows = getStoredAppointments()
+      const storedRows = getStoredAppointments()
+      const currentRows = !isAllBranchesMode && activeBranchId
+        ? storedRows.filter((appointment) => appointment.branchId === activeBranchId)
+        : storedRows
       const current = new Map(currentRows.map((appointment) => [appointment.id, appointment]))
+
+      // The child workspace also refreshes its cache on mount. Treat that first
+      // reconciliation as a baseline, not as a newly created appointment event.
+      if (!cacheBaselineEstablished) {
+        previousRef.current = current
+        cacheBaselineEstablished = true
+        return
+      }
+
       const previous = previousRef.current
       const keepRequestsOpen = requestsWorkspaceIsActive()
       let createdAppointment: Appointment | null = null

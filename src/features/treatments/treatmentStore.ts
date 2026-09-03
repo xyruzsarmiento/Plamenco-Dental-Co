@@ -166,6 +166,28 @@ export function saveStoredTreatmentPlans(plans: TreatmentPlan[]) {
   window.localStorage.setItem(TREATMENT_PLAN_STORAGE_KEY, JSON.stringify(plans))
 }
 
+export async function loadTreatmentsFromSupabase(options: { strict?: boolean } = {}): Promise<Treatment[]> {
+  if (!supabase) {
+    if (options.strict) throw new Error('Clinic database is not configured. Treatments cannot be loaded safely.')
+    return getStoredTreatments()
+  }
+
+  const { data, error } = await supabase
+    .from('treatments')
+    .select('*')
+    .order('treatment_date', { ascending: false })
+    .order('created_at', { ascending: false })
+
+  if (error) {
+    if (options.strict) throw persistenceError('Treatments could not be loaded from the clinic database.', error)
+    return getStoredTreatments()
+  }
+
+  const treatments = (data ?? []).map((row) => mapTreatmentRow(row as Record<string, any>))
+  saveStoredTreatments(treatments)
+  return treatments
+}
+
 export function getTreatmentsByPatient(patientId: string): Treatment[] {
   const refs = patientRefs(patientId)
   return getStoredTreatments()

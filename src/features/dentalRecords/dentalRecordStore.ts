@@ -165,6 +165,28 @@ export function saveStoredDentalRecords(records: DentalRecord[]) {
   window.localStorage.setItem(DENTAL_RECORD_STORAGE_KEY, JSON.stringify(records))
 }
 
+export async function loadDentalRecordsFromSupabase(options: { strict?: boolean } = {}): Promise<DentalRecord[]> {
+  if (!supabase) {
+    if (options.strict) throw new Error('Clinic database is not configured. Clinical records cannot be loaded safely.')
+    return getStoredDentalRecords()
+  }
+
+  const { data, error } = await supabase
+    .from('dental_records')
+    .select('*')
+    .order('record_date', { ascending: false })
+    .order('created_at', { ascending: false })
+
+  if (error) {
+    if (options.strict) throw persistenceError('Clinical records could not be loaded from the clinic database.', error)
+    return getStoredDentalRecords()
+  }
+
+  const records = (data ?? []).map((row) => mapSupabaseDentalRecordRow(row as Record<string, any>))
+  saveStoredDentalRecords(records)
+  return records
+}
+
 export function getDentalRecordsByPatientId(patientId: string): DentalRecord[] {
   const refs = patientRefs(patientId)
   return getStoredDentalRecords()
