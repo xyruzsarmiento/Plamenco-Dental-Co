@@ -1,0 +1,355 @@
+/* Hardening pass: service icon containment, document picker placement, Patient 360 responsiveness. */
+
+/* SERVICE CATALOGUE ICONS --------------------------------------------------- */
+.app-shell .svc-premium-head-icon,
+.app-shell .svc-premium-detail-icon,
+.app-shell .svc-premium-section-icon,
+.app-shell .svc-premium-preview-icon {
+  display: grid !important;
+  place-items: center !important;
+  align-items: center !important;
+  justify-items: center !important;
+  position: relative !important;
+  flex: 0 0 auto !important;
+  overflow: hidden !important;
+  box-sizing: border-box !important;
+  line-height: 0 !important;
+}
+
+.app-shell .svc-premium-head-icon,
+.app-shell .svc-premium-detail-icon {
+  width: 48px !important;
+  height: 48px !important;
+  min-width: 48px !important;
+  min-height: 48px !important;
+}
+
+.app-shell .svc-premium-section-icon {
+  width: 34px !important;
+  height: 34px !important;
+  min-width: 34px !important;
+  min-height: 34px !important;
+}
+
+.app-shell .svc-premium-preview-icon {
+  width: 40px !important;
+  height: 40px !important;
+  min-width: 40px !important;
+  min-height: 40px !important;
+}
+
+.app-shell .svc-premium-head-icon svg,
+.app-shell .svc-premium-detail-icon svg,
+.app-shell .svc-premium-section-icon svg,
+.app-shell .svc-premium-preview-icon svg {
+  position: relative !important;
+  inset: auto !important;
+  top: auto !important;
+  left: auto !important;
+  right: auto !important;
+  bottom: auto !important;
+  display: block !important;
+  width: 18px !important;
+  height: 18px !important;
+  min-width: 18px !important;
+  min-height: 18px !important;
+  max-width: 18px !important;
+  max-height: 18px !important;
+  margin: 0 auto !important;
+  padding: 0 !important;
+  transform: none !important;
+  translate: none !important;
+  vertical-align: middle !important;
+}
+
+.app-shell .svc-premium-head-icon svg,
+.app-shell .svc-premium-detail-icon svg {
+  width: 20px !important;
+  height: 20px !important;
+  min-width: 20px !important;
+  min-height: 20px !important;
+  max-width: 20px !important;
+  max-height: 20px !important;
+}
+
+/* DOCUMENT PICKER ---------------------------------------------------------- */
+.app-shell .document-dropzone-v10 {
+  display: grid !important;
+  grid-template-columns: 48px minmax(0, 1fr) auto !important;
+  grid-template-areas: "icon copy action" !important;
+  align-items: center !important;
+  gap: 14px !important;
+  min-height: 126px !important;
+  padding: 18px 20px !important;
+  box-sizing: border-box !important;
+  overflow: hidden !important;
+}
+
+.app-shell .document-dropzone-v10 > .document-dropzone-icon-v10 {
+  grid-area: icon !important;
+  align-self: center !important;
+  justify-self: center !important;
+}
+
+.app-shell .document-dropzone-v10 > div {
+  grid-area: copy !important;
+  min-width: 0 !important;
+  align-self: center !important;
+}
+
+.app-shell .document-dropzone-v10 > div > strong,
+.app-shell .document-dropzone-v10 > div > small {
+  display: block !important;
+}
+
+.app-shell .document-dropzone-v10 > button.btn {
+  grid-area: action !important;
+  position: static !important;
+  inset: auto !important;
+  align-self: center !important;
+  justify-self: end !important;
+  width: auto !important;
+  min-width: 124px !important;
+  max-width: 100% !important;
+  margin: 0 !important;
+  transform: none !important;
+}
+
+@media (max-width: 720px) {
+  .app-shell .document-dropzone-v10 {
+    grid-template-columns: 44px minmax(0, 1fr) !important;
+    grid-template-areas:
+      "icon copy"
+      ". action" !important;
+    grid-auto-rows: auto !important;
+    min-height: 0 !important;
+    padding: 16px !important;
+    row-gap: 12px !important;
+  }
+
+  .app-shell .document-dropzone-v10 > button.btn {
+    justify-self: start !important;
+    width: auto !important;
+    min-width: 132px !important;
+    min-height: 40px !important;
+  }
+}
+
+@media (max-width: 430px) {
+  .app-shell .document-dropzone-v10 {
+    grid-template-columns: 40px minmax(0, 1fr) !important;
+    grid-template-areas:
+      "icon copy"
+      "action action" !important;
+    padding: 14px !important;
+    gap: 10px !important;
+  }
+
+  .app-shell .document-dropzone-v10 > button.btn {
+    width: 100% !important;
+    min-width: 0 !important;
+    justify-self: stretch !important;
+  }
+}
+
+/* PATIENT 360 -------------------------------------------------------------- */
+.app-shell .patient-detail-backdrop {
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: 17000 !important;
+  display: grid !important;
+  place-items: center !important;
+  padding: 24px !important;
+  overflow: auto !important;
+  box-sizing: border-box !important;
+}
+
+.app-shell .patient-detail-drawer.patient-workspace-drawer {
+  width: min(1180px, calc(100vw - 48px)) !important;
+  max-width: 1180px !important;
+  max-height: calc(100dvh - 48px) !important;
+  min-width: 0 !important;
+  min-height: 0 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  overflow: hidden !important;
+  box-sizing: border-box !important;
+}
+
+.app-shell .patient-detail-header,
+.app-shell .patient-detail-heading,
+.app-shell .patient-detail-meta,
+.app-shell .patient-workspace-tabs,
+.app-shell .patient-detail-body,
+.app-shell .patient-workspace-body,
+.app-shell .patient-detail-actions,
+.app-shell .detail-section,
+.app-shell .detail-section-header {
+  min-width: 0 !important;
+  max-width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+.app-shell .patient-detail-heading {
+  display: flex !important;
+  align-items: flex-start !important;
+  gap: 14px !important;
+}
+
+.app-shell .patient-detail-heading > div:last-child {
+  min-width: 0 !important;
+  flex: 1 1 auto !important;
+}
+
+.app-shell .patient-detail-heading h3,
+.app-shell .patient-detail-meta span,
+.app-shell .patient-workspace-body,
+.app-shell .detail-section {
+  overflow-wrap: anywhere !important;
+  word-break: break-word !important;
+}
+
+.app-shell .patient-detail-meta {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  gap: 6px 8px !important;
+}
+
+.app-shell .patient-workspace-tabs {
+  display: flex !important;
+  flex: 0 0 auto !important;
+  width: 100% !important;
+  overflow-x: auto !important;
+  overflow-y: hidden !important;
+  -webkit-overflow-scrolling: touch !important;
+  scrollbar-width: thin !important;
+}
+
+.app-shell .patient-workspace-tabs > button {
+  flex: 0 0 auto !important;
+  white-space: nowrap !important;
+}
+
+.app-shell .patient-detail-body.patient-workspace-body {
+  flex: 1 1 auto !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  overscroll-behavior: contain !important;
+  -webkit-overflow-scrolling: touch !important;
+}
+
+.app-shell .patient-detail-actions {
+  flex: 0 0 auto !important;
+  display: flex !important;
+  flex-wrap: wrap !important;
+  gap: 8px !important;
+}
+
+.app-shell .patient-detail-body table,
+.app-shell .patient-workspace-body table {
+  max-width: none !important;
+}
+
+.app-shell .patient-detail-body .table-container,
+.app-shell .patient-detail-body .table-wrap,
+.app-shell .patient-detail-body .data-table-wrap,
+.app-shell .patient-workspace-body .table-container,
+.app-shell .patient-workspace-body .table-wrap,
+.app-shell .patient-workspace-body .data-table-wrap {
+  width: 100% !important;
+  max-width: 100% !important;
+  overflow-x: auto !important;
+  -webkit-overflow-scrolling: touch !important;
+}
+
+@media (max-width: 900px) {
+  .app-shell .patient-detail-backdrop {
+    padding: 16px !important;
+  }
+
+  .app-shell .patient-detail-drawer.patient-workspace-drawer {
+    width: min(100%, 820px) !important;
+    max-height: calc(100dvh - 32px) !important;
+  }
+}
+
+@media (max-width: 640px) {
+  .app-shell .patient-detail-backdrop {
+    place-items: end center !important;
+    padding: 10px 10px max(10px, env(safe-area-inset-bottom)) !important;
+  }
+
+  .app-shell .patient-detail-drawer.patient-workspace-drawer {
+    width: 100% !important;
+    max-width: none !important;
+    max-height: min(88dvh, 860px) !important;
+    border-radius: 22px 22px 14px 14px !important;
+  }
+
+  .app-shell .patient-detail-header {
+    padding: 16px !important;
+  }
+
+  .app-shell .patient-detail-heading {
+    gap: 11px !important;
+  }
+
+  .app-shell .patient-avatar.patient-avatar-large {
+    width: 46px !important;
+    height: 46px !important;
+    min-width: 46px !important;
+    min-height: 46px !important;
+  }
+
+  .app-shell .patient-detail-heading h3 {
+    font-size: clamp(1.18rem, 6vw, 1.55rem) !important;
+    line-height: 1.1 !important;
+  }
+
+  .app-shell .patient-workspace-tabs {
+    padding-inline: 10px !important;
+  }
+
+  .app-shell .patient-detail-body.patient-workspace-body {
+    padding: 14px !important;
+  }
+
+  .app-shell .patient-detail-actions {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    padding: 12px 14px max(12px, env(safe-area-inset-bottom)) !important;
+  }
+
+  .app-shell .patient-detail-actions .btn {
+    width: 100% !important;
+    justify-content: center !important;
+  }
+}
+
+@media (max-width: 430px) {
+  .app-shell .patient-detail-backdrop {
+    padding-inline: 6px !important;
+  }
+
+  .app-shell .patient-detail-drawer.patient-workspace-drawer {
+    max-height: 90dvh !important;
+    border-radius: 20px 20px 10px 10px !important;
+  }
+
+  .app-shell .patient-detail-header {
+    padding: 14px !important;
+  }
+
+  .app-shell .patient-detail-meta {
+    gap: 5px !important;
+  }
+
+  .app-shell .patient-detail-body.patient-workspace-body {
+    padding: 12px !important;
+  }
+
+  .app-shell .detail-section {
+    min-width: 0 !important;
+    overflow-x: hidden !important;
+  }
+}
