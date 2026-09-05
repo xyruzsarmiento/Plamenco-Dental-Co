@@ -206,6 +206,7 @@ import './styles/inventory-action-button-content-v197.css'
 import App from './App.tsx'
 /* Must load after App's page/component stylesheet dependency tree. */
 import './styles/internal-mobile-bottom-sheet-v199.css'
+import './styles/modal-and-services-premium-v200.css'
 import { registerPatientPortalPwa } from './features/patientPortal/pwaRegistration'
 import { registerAppointmentTrendChartInteractivity } from './lib/appointmentTrendInteractivity'
 import { registerAnalyticsChartInteractivity } from './lib/analyticsChartInteractivity'
