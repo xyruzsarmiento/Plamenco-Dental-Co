@@ -1,0 +1,437 @@
+/* Root-cause fixes for service modal icons, document upload picker and the active Patient 360 route.
+   Loaded last so these rules resolve legacy cascade conflicts without changing feature behavior. */
+
+/* --------------------------------------------------------------------------
+   SERVICE MODAL ICONS
+
+   Root cause:
+   modal-and-services-premium-v200.css contains the broad selector
+   `.svc-premium-section-title span`, which also matches the icon shell span.
+   That later rule changes the icon shell from display:grid to display:block and
+   adds margin-top, so the Lucide glyph is no longer centered in its tile.
+   Target the icon shell as a direct child and restore its intended geometry.
+   -------------------------------------------------------------------------- */
+.app-shell .svc-premium-section-title > .svc-premium-section-icon,
+.app-shell .svc-premium-titleline > .svc-premium-head-icon,
+.app-shell .svc-premium-detail-titleline > .svc-premium-detail-icon,
+.app-shell .svc-premium-preview-top > .svc-premium-preview-icon {
+  position: relative !important;
+  display: grid !important;
+  place-items: center !important;
+  align-items: center !important;
+  justify-items: center !important;
+  flex: 0 0 auto !important;
+  align-self: center !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  line-height: 0 !important;
+  overflow: hidden !important;
+  box-sizing: border-box !important;
+  transform: none !important;
+}
+
+.app-shell .svc-premium-section-title > .svc-premium-section-icon {
+  width: 34px !important;
+  min-width: 34px !important;
+  max-width: 34px !important;
+  height: 34px !important;
+  min-height: 34px !important;
+  max-height: 34px !important;
+}
+
+.app-shell .svc-premium-titleline > .svc-premium-head-icon,
+.app-shell .svc-premium-detail-titleline > .svc-premium-detail-icon {
+  width: 48px !important;
+  min-width: 48px !important;
+  max-width: 48px !important;
+  height: 48px !important;
+  min-height: 48px !important;
+  max-height: 48px !important;
+}
+
+.app-shell .svc-premium-preview-top > .svc-premium-preview-icon {
+  width: 40px !important;
+  min-width: 40px !important;
+  max-width: 40px !important;
+  height: 40px !important;
+  min-height: 40px !important;
+  max-height: 40px !important;
+}
+
+.app-shell .svc-premium-section-title > .svc-premium-section-icon > svg,
+.app-shell .svc-premium-titleline > .svc-premium-head-icon > svg,
+.app-shell .svc-premium-detail-titleline > .svc-premium-detail-icon > svg,
+.app-shell .svc-premium-preview-top > .svc-premium-preview-icon > svg {
+  position: static !important;
+  inset: auto !important;
+  display: block !important;
+  flex: none !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  transform: none !important;
+  translate: none !important;
+  vertical-align: middle !important;
+}
+
+.app-shell .svc-premium-section-title > .svc-premium-section-icon > svg {
+  width: 17px !important;
+  height: 17px !important;
+  min-width: 17px !important;
+  min-height: 17px !important;
+  max-width: 17px !important;
+  max-height: 17px !important;
+}
+
+.app-shell .svc-premium-titleline > .svc-premium-head-icon > svg,
+.app-shell .svc-premium-detail-titleline > .svc-premium-detail-icon > svg,
+.app-shell .svc-premium-preview-top > .svc-premium-preview-icon > svg {
+  width: 20px !important;
+  height: 20px !important;
+  min-width: 20px !important;
+  min-height: 20px !important;
+  max-width: 20px !important;
+  max-height: 20px !important;
+}
+
+/* Only the supporting text inside the title copy should receive text styling. */
+.app-shell .svc-premium-section-title > div > span {
+  display: block !important;
+  margin-top: 2px !important;
+}
+
+/* --------------------------------------------------------------------------
+   DOCUMENT UPLOAD / SELECT FILE
+
+   Root cause:
+   v191, v192, v194, v200 and v202 all redefine the same dropzone grid at the
+   same mobile breakpoints. The final cascade can leave the button assigned to
+   a row without a stable grid area while min-height/align-content rules come
+   from another version. Give the three direct children explicit areas and let
+   the card size from content so the button can never hang below the dashed box.
+   -------------------------------------------------------------------------- */
+.app-shell .document-dropzone-v10 {
+  position: relative !important;
+  display: grid !important;
+  grid-template-columns: 48px minmax(0, 1fr) auto !important;
+  grid-template-areas: "upload-icon upload-copy upload-button" !important;
+  grid-template-rows: auto !important;
+  grid-auto-rows: auto !important;
+  align-items: center !important;
+  align-content: center !important;
+  gap: 14px !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  height: auto !important;
+  min-height: 116px !important;
+  max-height: none !important;
+  padding: 18px !important;
+  overflow: hidden !important;
+  box-sizing: border-box !important;
+}
+
+.app-shell .document-dropzone-v10 > .document-dropzone-icon-v10 {
+  grid-area: upload-icon !important;
+  align-self: center !important;
+  justify-self: center !important;
+  margin: 0 !important;
+}
+
+.app-shell .document-dropzone-v10 > div {
+  grid-area: upload-copy !important;
+  align-self: center !important;
+  min-width: 0 !important;
+  max-width: 100% !important;
+  margin: 0 !important;
+}
+
+.app-shell .document-dropzone-v10 > div > strong,
+.app-shell .document-dropzone-v10 > div > small {
+  max-width: 100% !important;
+  overflow-wrap: anywhere !important;
+}
+
+.app-shell .document-dropzone-v10 > .btn,
+.app-shell .document-dropzone-v10 > .button {
+  grid-area: upload-button !important;
+  position: static !important;
+  inset: auto !important;
+  align-self: center !important;
+  justify-self: end !important;
+  width: auto !important;
+  min-width: 126px !important;
+  max-width: 100% !important;
+  min-height: 42px !important;
+  margin: 0 !important;
+  transform: none !important;
+  box-sizing: border-box !important;
+}
+
+@media (max-width: 720px) {
+  .app-shell .document-dropzone-v10 {
+    grid-template-columns: 42px minmax(0, 1fr) !important;
+    grid-template-areas:
+      "upload-icon upload-copy"
+      "upload-button upload-button" !important;
+    grid-template-rows: auto auto !important;
+    align-content: start !important;
+    row-gap: 12px !important;
+    column-gap: 12px !important;
+    height: auto !important;
+    min-height: 0 !important;
+    padding: 16px 16px 18px !important;
+  }
+
+  .app-shell .document-dropzone-v10 > .document-dropzone-icon-v10 {
+    width: 42px !important;
+    height: 42px !important;
+  }
+
+  .app-shell .document-dropzone-v10 > .btn,
+  .app-shell .document-dropzone-v10 > .button {
+    align-self: stretch !important;
+    justify-self: stretch !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    margin: 0 !important;
+  }
+}
+
+@media (max-width: 430px) {
+  .app-shell .document-dropzone-v10 {
+    grid-template-columns: 40px minmax(0, 1fr) !important;
+    padding: 14px 14px 17px !important;
+    row-gap: 11px !important;
+    column-gap: 10px !important;
+  }
+
+  .app-shell .document-dropzone-v10 > .document-dropzone-icon-v10 {
+    width: 40px !important;
+    height: 40px !important;
+  }
+
+  .app-shell .document-dropzone-v10 > .btn,
+  .app-shell .document-dropzone-v10 > .button {
+    min-height: 42px !important;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   ACTIVE PATIENT 360 ROUTE (/app/patients/:patientId)
+
+   Root cause:
+   PatientBranchAwareDetailV125 imports patient-branch-history-v125.css before
+   patient-360-premium-v173.css. The legacy stylesheet defines the hero as a
+   three-column grid, then switches to `auto 1fr` on <=760px. The newer premium
+   stylesheet changes display/layout but does not reset grid-template-columns.
+   The current markup has two direct children (identity + workspace context), so
+   the workspace card is forced into the narrow second column on phones.
+
+   This is the route shared by Super Admin, Dentist and Staff, so one correction
+   fixes all three internal portals.
+   -------------------------------------------------------------------------- */
+.app-shell .patient125-page,
+.app-shell .patient125-page > *,
+.app-shell .patient125-hero,
+.app-shell .patient125-identity,
+.app-shell .patient125-identity-copy,
+.app-shell .patient125-hero-context,
+.app-shell .patient125-glance,
+.app-shell .patient125-tabs,
+.app-shell .patient125-overview,
+.app-shell .patient125-side-stack,
+.app-shell .patient125-grid,
+.app-shell .patient125-care-layout,
+.app-shell .patient125-records-layout,
+.app-shell .patient125-billing-layout,
+.app-shell .patient125-card {
+  min-width: 0 !important;
+  max-width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+.app-shell .patient125-page {
+  width: 100% !important;
+  overflow-x: hidden !important;
+}
+
+.app-shell .patient125-identity-copy h1,
+.app-shell .patient125-meta,
+.app-shell .patient125-hero-context strong,
+.app-shell .patient125-hero-context small,
+.app-shell .patient125-card strong,
+.app-shell .patient125-card p {
+  overflow-wrap: anywhere !important;
+  word-break: normal !important;
+}
+
+.app-shell .patient125-tabs {
+  width: 100% !important;
+  overflow-x: auto !important;
+  overflow-y: hidden !important;
+  overscroll-behavior-inline: contain !important;
+  -webkit-overflow-scrolling: touch !important;
+}
+
+.app-shell .patient125-tabs > button {
+  flex: 0 0 auto !important;
+}
+
+@media (max-width: 920px) {
+  .app-shell .patient125-overview,
+  .app-shell .patient125-care-layout,
+  .app-shell .patient125-records-layout {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+
+  .app-shell .patient125-side-stack {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+}
+
+@media (max-width: 760px) {
+  .app-shell .patient125-page {
+    gap: 14px !important;
+    width: 100% !important;
+    padding-inline: 0 !important;
+  }
+
+  .app-shell .patient125-topbar {
+    width: 100% !important;
+    min-width: 0 !important;
+  }
+
+  .app-shell .patient125-hero {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) !important;
+    grid-template-rows: auto auto !important;
+    grid-auto-flow: row !important;
+    align-items: stretch !important;
+    gap: 14px !important;
+    width: 100% !important;
+    padding: 18px !important;
+  }
+
+  .app-shell .patient125-hero > .patient125-identity,
+  .app-shell .patient125-hero > .patient125-hero-context {
+    grid-column: 1 / -1 !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: none !important;
+  }
+
+  .app-shell .patient125-identity {
+    display: flex !important;
+    align-items: center !important;
+    gap: 12px !important;
+  }
+
+  .app-shell .patient125-identity-copy {
+    flex: 1 1 auto !important;
+    width: auto !important;
+  }
+
+  .app-shell .patient125-hero-context {
+    padding: 12px 14px !important;
+  }
+
+  .app-shell .patient125-glance {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    width: 100% !important;
+  }
+
+  .app-shell .patient125-glance article,
+  .app-shell .patient125-glance article > div {
+    min-width: 0 !important;
+  }
+
+  .app-shell .patient125-glance strong,
+  .app-shell .patient125-glance p {
+    max-width: 100% !important;
+  }
+
+  .app-shell .patient125-overview,
+  .app-shell .patient125-grid,
+  .app-shell .patient125-care-layout,
+  .app-shell .patient125-records-layout,
+  .app-shell .patient125-billing-summary,
+  .app-shell .patient125-profile-grid,
+  .app-shell .patient125-safety-grid,
+  .app-shell .patient125-side-stack {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+
+  .app-shell .patient125-card {
+    width: 100% !important;
+  }
+}
+
+@media (max-width: 520px) {
+  .app-shell .patient125-hero {
+    padding: 16px !important;
+    border-radius: 18px !important;
+  }
+
+  .app-shell .patient125-avatar {
+    width: 50px !important;
+    min-width: 50px !important;
+    height: 50px !important;
+    border-radius: 15px !important;
+  }
+
+  .app-shell .patient125-identity h1 {
+    margin-right: 0 !important;
+    font-size: clamp(1.28rem, 6vw, 1.55rem) !important;
+    overflow-wrap: anywhere !important;
+  }
+
+  .app-shell .patient125-meta {
+    gap: 6px !important;
+  }
+
+  .app-shell .patient125-glance {
+    grid-template-columns: minmax(0, 1fr) !important;
+    gap: 9px !important;
+  }
+
+  .app-shell .patient125-glance article {
+    align-items: center !important;
+    width: 100% !important;
+  }
+
+  .app-shell .patient125-glance p {
+    white-space: normal !important;
+    overflow: visible !important;
+    text-overflow: clip !important;
+  }
+
+  .app-shell .patient125-card {
+    padding: 15px !important;
+    border-radius: 16px !important;
+  }
+
+  .app-shell .patient125-card > header {
+    gap: 10px !important;
+  }
+
+  .app-shell .patient125-list > article {
+    width: 100% !important;
+    min-width: 0 !important;
+  }
+}
+
+@media (max-width: 390px) {
+  .app-shell .patient125-identity {
+    align-items: flex-start !important;
+  }
+
+  .app-shell .patient125-avatar {
+    width: 46px !important;
+    min-width: 46px !important;
+    height: 46px !important;
+  }
+
+  .app-shell .patient125-hero,
+  .app-shell .patient125-card {
+    padding-inline: 14px !important;
+  }
+}
