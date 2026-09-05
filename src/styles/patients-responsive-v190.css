@@ -1,0 +1,158 @@
+/* Patient directory layout: keep the clinic scope message readable at every width. */
+.app-shell .patients125-directory-shell,
+.app-shell .patients125-directory-context,
+.app-shell .patients36-page,
+.app-shell .patients36-hero,
+.app-shell .patients36-directory {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+.app-shell .patients125-directory-context {
+  display: grid;
+  grid-template-columns: 36px minmax(0, 1fr) auto;
+  align-items: start;
+  gap: 12px;
+}
+
+.app-shell .patients125-directory-context > * {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.app-shell .patients125-directory-context > div:nth-child(2) {
+  min-width: 0;
+}
+
+.app-shell .patients125-directory-context strong,
+.app-shell .patients125-directory-context p {
+  overflow-wrap: anywhere;
+}
+
+.app-shell .patients125-directory-context > :last-child {
+  justify-self: end;
+  max-width: 100%;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+.app-shell .patients36-hero-copy,
+.app-shell .patients36-hero-actions,
+.app-shell .patients36-growth-card,
+.app-shell .patients36-kpis,
+.app-shell .patients36-commandbar,
+.app-shell .patients36-list,
+.app-shell .patients36-row > * {
+  min-width: 0;
+}
+
+@media (max-width: 900px) {
+  .app-shell .patients36-insight-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .app-shell .patients36-commandbar {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .app-shell .patients36-search {
+    grid-column: 1 / -1;
+  }
+
+  .app-shell .patients36-list-head {
+    display: none;
+  }
+
+  .app-shell .patients36-row {
+    grid-template-columns: minmax(0, 1fr) 38px;
+    gap: 10px;
+  }
+
+  .app-shell .patients36-contact,
+  .app-shell .patients36-context,
+  .app-shell .patients36-next {
+    grid-column: 1;
+    grid-row: auto;
+  }
+
+  .app-shell .patients36-open {
+    grid-column: 2;
+    grid-row: 1;
+  }
+}
+
+@media (max-width: 640px) {
+  .app-shell .patients125-directory-context {
+    grid-template-columns: 36px minmax(0, 1fr);
+    gap: 10px;
+    padding: 14px;
+  }
+
+  .app-shell .patients125-directory-context > :last-child {
+    grid-column: 1 / -1;
+    grid-row: 3;
+    justify-self: start;
+  }
+
+  .app-shell .patients125-directory-context strong {
+    font-size: 13px;
+    line-height: 1.35;
+  }
+
+  .app-shell .patients125-directory-context p {
+    font-size: 11px;
+    line-height: 1.45;
+  }
+
+  .app-shell .patients36-hero {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 14px;
+  }
+
+  .app-shell .patients36-hero-actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .app-shell .patients36-hero-actions .btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .app-shell .patients36-commandbar {
+    grid-template-columns: 1fr;
+  }
+
+  .app-shell .patients36-search,
+  .app-shell .patients36-commandbar label:last-child {
+    grid-column: auto;
+  }
+}
+
+@media (max-width: 430px) {
+  .app-shell .patients125-directory-context {
+    grid-template-columns: 32px minmax(0, 1fr);
+  }
+
+  .app-shell .patients125-directory-icon {
+    width: 32px;
+    height: 32px;
+  }
+
+  .app-shell .patients36-hero-actions {
+    grid-template-columns: 1fr;
+  }
+
+  .app-shell .patients36-kpis {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 390px) {
+  .app-shell .patients36-kpis {
+    grid-template-columns: 1fr;
+  }
+}

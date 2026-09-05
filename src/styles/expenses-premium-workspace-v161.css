@@ -8,10 +8,12 @@ html body .app-shell.page-expenses {
   overflow: visible !important;
 }
 
-html body .app-shell.page-expenses > .sidebar {
-  position: sticky !important;
-  top: 0 !important;
-  height: 100dvh !important;
+@media (min-width: 901px) {
+  html body .app-shell.page-expenses > .sidebar {
+    position: sticky !important;
+    top: 0 !important;
+    height: 100dvh !important;
+  }
 }
 
 html body .app-shell.page-expenses > .main-shell {

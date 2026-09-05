@@ -17,7 +17,10 @@ function BillingWorkspaceSkeleton() {
 export function BillingLiveWorkspaceV131() {
   const { user } = useAuth()
   const { activeBranchId, isAllBranchesMode } = useBranchContext()
-  const [state, setState] = useState<'loading' | 'ready' | 'error'>(isAllBranchesMode ? 'ready' : 'loading')
+  const [state, setState] = useState<'loading' | 'ready' | 'error'>('loading')
+  const [retry, setRetry] = useState(0)
+  const scope = `${user?.id}:${isAllBranchesMode ? 'all' : activeBranchId}`
+  const [loadedScope, setLoadedScope] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [revision, setRevision] = useState(0)
 
@@ -25,18 +28,20 @@ export function BillingLiveWorkspaceV131() {
     let alive = true
 
     async function hydrate() {
-      if (isAllBranchesMode || !activeBranchId) {
-        if (alive) setState('ready')
+      if (!isAllBranchesMode && !activeBranchId) {
+        setError('Select a branch to view billing records.')
+        setState('error')
         return
       }
 
       setState('loading')
       setError(null)
       try {
-        await hydrateBranchBillingFromDatabase(activeBranchId)
+        await hydrateBranchBillingFromDatabase(isAllBranchesMode ? undefined : activeBranchId ?? undefined)
         if (!alive) return
         setRevision((value) => value + 1)
         setState('ready')
+        setLoadedScope(scope)
       } catch (cause) {
         if (!alive) return
         setError(cause instanceof Error ? cause.message : 'Unable to load live billing data.')
@@ -48,7 +53,7 @@ export function BillingLiveWorkspaceV131() {
 
     const onMutation = (event: Event) => {
       const detail = (event as CustomEvent<{ branchId?: string }>).detail
-      if (!activeBranchId || (detail?.branchId && detail.branchId !== activeBranchId)) return
+      if (!isAllBranchesMode && detail?.branchId && detail.branchId !== activeBranchId) return
       void hydrate()
     }
     window.addEventListener('plamenco:billing-mutated', onMutation)
@@ -57,14 +62,14 @@ export function BillingLiveWorkspaceV131() {
       alive = false
       window.removeEventListener('plamenco:billing-mutated', onMutation)
     }
-  }, [activeBranchId, isAllBranchesMode, user?.id])
+  }, [activeBranchId, isAllBranchesMode, user?.id, retry, scope])
 
-  if (state === 'loading') {
+  if (state !== 'error' && (state === 'loading' || loadedScope !== scope)) {
     return <BillingWorkspaceSkeleton />
   }
 
   if (state === 'error') {
-    return <section className="bill123-page"><div className="inline-alert" role="alert">{error}</div></section>
+    return <section className="bill123-page"><div className="inline-alert" role="alert">{error}</div><button type="button" className="btn" onClick={() => setRetry((value) => value + 1)}>Retry loading</button></section>
   }
 
   return <BillingBranchWorkspaceV123 key={`billing-live:${user?.id ?? 'guest'}:${activeBranchId ?? 'all'}:${revision}`} />

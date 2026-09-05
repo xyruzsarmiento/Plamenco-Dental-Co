@@ -1,0 +1,107 @@
+/* Replace the browser-native file control with the designed upload surface. */
+.app-shell .document-dropzone-v10 .document-file-input-v10 {
+  display: none !important;
+}
+
+.app-shell .document-dropzone-v10 {
+  grid-template-columns: 48px minmax(0, 1fr) auto !important;
+  min-height: 124px !important;
+  border-style: dashed !important;
+  border-width: 1.5px !important;
+  border-color: #9fc1f2 !important;
+  background:
+    linear-gradient(135deg, rgba(239, 246, 255, .96), rgba(255, 255, 255, .98)),
+    repeating-linear-gradient(-45deg, transparent 0 8px, rgba(37, 99, 235, .025) 8px 10px) !important;
+  transition: border-color .18s ease, box-shadow .18s ease, transform .18s ease, background .18s ease !important;
+}
+
+.app-shell .document-dropzone-v10::after {
+  position: absolute;
+  inset: 6px;
+  z-index: -1;
+  border-radius: 13px;
+  background: rgba(255, 255, 255, .5);
+  content: '';
+  pointer-events: none;
+}
+
+.app-shell .document-dropzone-v10:hover,
+.app-shell .document-dropzone-v10:focus-within {
+  border-color: #4f8fe8 !important;
+  background: linear-gradient(135deg, #edf5ff 0%, #ffffff 100%) !important;
+  box-shadow: 0 14px 32px rgba(37, 99, 235, .11), 0 0 0 4px rgba(37, 99, 235, .08) !important;
+  transform: translateY(-1px);
+}
+
+.app-shell .document-dropzone-icon-v10 {
+  width: 48px !important;
+  height: 48px !important;
+  border: 1px solid #cfe0fb !important;
+  border-radius: 15px !important;
+  background: #e8f1ff !important;
+  box-shadow: 0 8px 18px rgba(37, 99, 235, .1) !important;
+}
+
+.app-shell .document-dropzone-v10 strong {
+  color: #172033 !important;
+  font-size: .94rem !important;
+  font-weight: 850 !important;
+}
+
+.app-shell .document-dropzone-v10 small {
+  max-width: 360px !important;
+  color: #667085 !important;
+  font-size: .74rem !important;
+  line-height: 1.5 !important;
+}
+
+.app-shell .document-dropzone-v10 .btn,
+.app-shell .document-dropzone-v10 .button {
+  min-height: 42px !important;
+  padding: 0 15px !important;
+  border: 1px solid #b8d2f7 !important;
+  border-radius: 11px !important;
+  background: #ffffff !important;
+  color: #1d4ed8 !important;
+  box-shadow: 0 7px 16px rgba(37, 99, 235, .08) !important;
+  font-size: .76rem !important;
+  font-weight: 850 !important;
+  transition: border-color .15s ease, background .15s ease, box-shadow .15s ease, transform .15s ease !important;
+}
+
+.app-shell .document-dropzone-v10 .btn:hover,
+.app-shell .document-dropzone-v10 .btn:focus-visible,
+.app-shell .document-dropzone-v10 .button:hover,
+.app-shell .document-dropzone-v10 .button:focus-visible {
+  border-color: #2563eb !important;
+  background: #eff6ff !important;
+  box-shadow: 0 10px 22px rgba(37, 99, 235, .14) !important;
+  outline: 0 !important;
+  transform: translateY(-1px);
+}
+
+.app-shell .document-dropzone-v10.has-file .document-dropzone-icon-v10 {
+  border-color: #bbf7d0 !important;
+  background: #ecfdf3 !important;
+  color: #15803d !important;
+}
+
+@media (max-width: 720px) {
+  .app-shell .document-dropzone-v10 {
+    grid-template-columns: 44px minmax(0, 1fr) !important;
+    min-height: 146px !important;
+  }
+
+  .app-shell .document-dropzone-icon-v10 {
+    width: 44px !important;
+    height: 44px !important;
+  }
+
+  .app-shell .document-dropzone-v10 .btn,
+  .app-shell .document-dropzone-v10 .button {
+    grid-column: 1 / -1 !important;
+    min-height: 44px !important;
+    width: 100% !important;
+    justify-content: center !important;
+  }
+}

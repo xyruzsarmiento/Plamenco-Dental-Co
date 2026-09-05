@@ -1,10 +1,12 @@
 import { Boxes, ClipboardCheck, ClipboardList, PackagePlus, PencilLine, Trash2, Truck, X } from 'lucide-react'
-import { useMemo, useState, type ReactNode } from 'react'
+import { useEffect, useMemo, useState, type ReactNode } from 'react'
+import { createPortal } from 'react-dom'
 import { Button } from '../../components/ui/Button'
 import { Input } from '../../components/ui/Input'
 import { Select } from '../../components/ui/Select'
 import { Textarea } from '../../components/ui/Textarea'
 import { isSupabaseConfigured, supabase } from '../../lib/supabase'
+import { acquireModalScrollLock } from '../../lib/modalScrollLock'
 import type { Branch } from '../branches/branchTypes'
 import { archiveInventoryItemRecord, updateInventoryItemRecord } from './inventoryItemActions'
 import {
@@ -160,6 +162,23 @@ export function InventoryActionModal({ dialog, branches, preferredBranchId, onCl
   const [toBranchId, setToBranchId] = useState(branches.find((branch) => branch.id !== defaultBranch)?.id ?? '')
   const [physicalQuantity, setPhysicalQuantity] = useState(dialog.type === 'count_item' ? String(dialog.currentQuantity) : '0')
 
+  useEffect(() => acquireModalScrollLock(), [])
+
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape' && !busy) onClose()
+    }
+    document.addEventListener('keydown', handleKeyDown)
+    return () => document.removeEventListener('keydown', handleKeyDown)
+  }, [busy, onClose])
+
+  useEffect(() => {
+    const frame = requestAnimationFrame(() => {
+      document.querySelector<HTMLElement>('.inventory-action-modal .inventory-action-body')?.scrollTo({ top: 0 })
+    })
+    return () => cancelAnimationFrame(frame)
+  }, [])
+
   const currentItem = 'item' in dialog ? dialog.item : undefined
   const receiveOrder = dialog.type === 'receive_po' ? getPurchaseOrders().find((order) => order.id === dialog.poId) : undefined
   const receiveItem = receiveOrder?.items.find((item) => item.quantityReceived < item.quantityOrdered)
@@ -312,7 +331,7 @@ export function InventoryActionModal({ dialog, branches, preferredBranchId, onCl
 
   const meta = modalMeta()
 
-  return (
+  return createPortal(
     <div className="modal-backdrop inventory-action-backdrop inv56-backdrop" onClick={busy ? undefined : onClose}>
       <section className={`modal inventory-action-modal inv56-modal inv56-${dialog.type}`} role="dialog" aria-modal="true" aria-labelledby="inventory-action-title" onClick={(event) => event.stopPropagation()}>
         <div className="modal-header inv56-modal-header"><ModalLead icon={meta.icon} eyebrow={meta.eyebrow} title={title()} copy={meta.copy} /><button type="button" className="icon-button inv56-close" aria-label="Close dialog" onClick={onClose} disabled={busy}><X size={18} /></button></div>
@@ -351,6 +370,7 @@ export function InventoryActionModal({ dialog, branches, preferredBranchId, onCl
         </div>
         <div className="modal-actions inv56-modal-actions">{success ? <Button onClick={onClose}>Done</Button> : <><Button variant="secondary" onClick={onClose} disabled={busy}>Cancel</Button><Button onClick={() => void submit()} disabled={busy} variant={dialog.type === 'remove_item' ? 'danger' : undefined}>{busy ? 'Saving...' : dialog.type === 'remove_item' ? 'Archive item' : dialog.type === 'edit_item' ? 'Save changes' : 'Save'}</Button></>}</div>
       </section>
-    </div>
+    </div>,
+    document.body,
   )
 }

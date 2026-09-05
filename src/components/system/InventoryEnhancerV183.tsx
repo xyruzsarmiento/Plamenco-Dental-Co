@@ -7,6 +7,7 @@ import { useBranchContext } from '../../features/branches/BranchContext'
 import { archiveInventoryItemRecord, removeInventoryItemRecord } from '../../features/inventory/inventoryItemActions'
 import { refreshInventoryOperationalCaches } from '../../features/inventory/inventoryPersistence'
 import { getBranchInventory, getInventoryItems, getStockStatus, type InventoryItem } from '../../features/inventory/inventoryStore'
+import { acquireModalScrollLock } from '../../lib/modalScrollLock'
 import '../../styles/inventory-modals-premium-v183.css'
 
 function php(cents = 0) {
@@ -41,6 +42,20 @@ export function InventoryEnhancerV183({ onInventoryChanged }: { onInventoryChang
     .sort((a, b) => b.valueCents - a.valueCents), [itemMap, visibleStocks])
   const valuationTotal = valuationRows.reduce((sum, row) => sum + row.valueCents, 0)
   const selectedItem = selectedItemId ? itemMap.get(selectedItemId) ?? getInventoryItems().find((item) => item.id === selectedItemId) ?? null : null
+
+  useEffect(() => {
+    if (!selectedItemId) return undefined
+    return acquireModalScrollLock()
+  }, [selectedItemId])
+
+  useEffect(() => {
+    if (!selectedItemId) return undefined
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape' && !busy) setSelectedItemId(null)
+    }
+    document.addEventListener('keydown', handleKeyDown)
+    return () => document.removeEventListener('keydown', handleKeyDown)
+  }, [busy, selectedItemId])
 
   useEffect(() => {
     let raf = 0
@@ -171,7 +186,7 @@ export function InventoryEnhancerV183({ onInventoryChanged }: { onInventoryChang
       </div>
     </section>, mount) : null
 
-  return <>{valuation}{selectedItem && <div className="inv182-modal-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget && !busy) setSelectedItemId(null) }}>
+  return <>{valuation}{selectedItem && createPortal(<div className="inv182-modal-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget && !busy) setSelectedItemId(null) }}>
     <section className="inv183-manage-modal" role="dialog" aria-modal="true" aria-labelledby="inv183-manage-title">
       <header><div className="inv183-manage-icon"><Package size={19}/></div><div><span>Inventory management</span><h2 id="inv183-manage-title">Manage {selectedItem.name}</h2><p>Remove the item from active use without corrupting stock, purchasing, or expense history.</p></div><button type="button" aria-label="Close" onClick={() => setSelectedItemId(null)} disabled={busy}><X size={18}/></button></header>
       <div className="inv183-manage-body">
@@ -181,5 +196,5 @@ export function InventoryEnhancerV183({ onInventoryChanged }: { onInventoryChang
       </div>
       <footer><Button variant="secondary" onClick={() => setSelectedItemId(null)} disabled={busy}>Close</Button><Button variant="secondary" onClick={() => void archiveSelected()} disabled={busy}><Archive size={14}/> Archive</Button><Button className="inv183-danger-button" variant="secondary" onClick={() => void deleteSelected()} disabled={busy}><Trash2 size={14}/> Delete permanently</Button></footer>
     </section>
-  </div>}</>
+  </div>, document.body)}</>
 }

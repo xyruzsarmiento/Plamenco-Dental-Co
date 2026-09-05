@@ -21,7 +21,8 @@ function requireDatabase() {
   return supabase
 }
 
-function mergeById<T extends { id: string }>(existing: T[], incoming: T[], branchId: string, getBranchId: (row: T) => string | undefined) {
+function mergeById<T extends { id: string }>(existing: T[], incoming: T[], branchId: string | undefined, getBranchId: (row: T) => string | undefined) {
+  if (!branchId) return incoming
   const untouched = existing.filter((row) => getBranchId(row) !== branchId)
   const byId = new Map(untouched.map((row) => [row.id, row]))
   incoming.forEach((row) => byId.set(row.id, row))
@@ -38,21 +39,31 @@ function parseStored<T>(key: string): T[] {
   }
 }
 
-export async function hydrateBranchBillingFromDatabase(branchId: string) {
-  if (!branchId) throw new Error('Choose an authorized branch before loading billing data.')
+export async function hydrateBranchBillingFromDatabase(branchId?: string) {
   const db = requireDatabase()
+  const { data: auth, error: authError } = await db.auth.getUser()
+  if (authError || !auth.user) throw new Error('Your session could not be verified. Sign in again to load billing records.')
+  const scoped = (table: string, order: string) => {
+    const query = db.from(table).select('*').order(order, { ascending: false })
+    return branchId ? query.eq('branch_id', branchId) : query
+  }
 
-  const [patientResult, invoiceResult, paymentResult, receiptResult, refundResult, chargeResult] = await Promise.all([
+  const [patientResult, invoiceResult, paymentResult, receiptResult, refundResult, chargeResult, methodResult] = await Promise.all([
     db.from('patients').select('*').eq('status', 'active'),
-    db.from('invoices').select('*').eq('branch_id', branchId).order('invoice_date', { ascending: false }),
-    db.from('payments').select('*').eq('branch_id', branchId).order('payment_date', { ascending: false }),
-    db.from('receipts').select('*').eq('branch_id', branchId).order('issued_at', { ascending: false }),
-    db.from('refunds').select('*').eq('branch_id', branchId).order('processed_at', { ascending: false }),
-    db.from('charges').select('*').eq('branch_id', branchId).order('created_at', { ascending: false }),
+    scoped('invoices', 'invoice_date'),
+    scoped('payments', 'payment_date'),
+    scoped('receipts', 'issued_at'),
+    scoped('refunds', 'processed_at'),
+    scoped('charges', 'created_at'),
+    db.from('payment_methods').select('*'),
   ])
 
-  const failure = [patientResult, invoiceResult, paymentResult, receiptResult, refundResult, chargeResult].find((result) => result.error)
+  const failure = [patientResult, invoiceResult, paymentResult, receiptResult, refundResult, chargeResult, methodResult].find((result) => result.error)
   if (failure?.error) throw new Error(`Unable to refresh branch billing: ${failure.error.message}`)
+  window.localStorage.setItem('plamenco.billing.paymentMethods', JSON.stringify((methodResult.data ?? []).map((row) => ({
+    id: row.id, label: row.label, active: row.active, isOnline: row.is_online,
+    requiresReference: row.requires_reference, requiresVerification: row.requires_verification,
+  }))))
 
   const patients = (patientResult.data ?? []).map((row) => mapSupabasePatientRow(row as Record<string, unknown>))
   const patientIdByDbId = new Map(patients.map((patient) => [patient.id, patient.patientId]))

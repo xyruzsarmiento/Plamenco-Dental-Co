@@ -153,7 +153,7 @@ export function DocumentsPage() {
     setError(null)
     setMessage(null)
     const confirmed = await createDocumentPersisted({ ...payload, uploadedBy: actor, patientVisible: payload.patientVisible ?? false })
-    setDocuments([confirmed, ...getStoredDocuments().filter((entry) => entry.id !== confirmed.id)])
+    setDocuments((current) => [confirmed, ...current.filter((entry) => entry.id !== confirmed.id)])
     setSelectedPatientId(confirmed.patientId)
     setUploadOpen(false)
     setMessage('Document uploaded to the private patient-documents bucket.')

@@ -14,6 +14,13 @@ function branchShortLabel(name: string, code: string) {
   return location ? `${location} Branch` : 'Branch workspace'
 }
 
+function branchOptionLabel(name: string, code: string) {
+  const location = name.split(' - ').pop()?.trim()
+  if (location && location.length < name.length) return location
+  const normalizedCode = code.trim().replace(/[-_]+/g, ' ')
+  return normalizedCode ? normalizedCode.replace(/\b\w/g, (letter) => letter.toUpperCase()) : name
+}
+
 export function BranchContextIndicator() {
   const {
     activeBranch,
@@ -76,9 +83,9 @@ export function BranchContextIndicator() {
           else setActiveBranch(event.target.value)
         }}
       >
-        {canViewAllBranches && <option value="__all__">All Branches — Executive overview</option>}
+        {canViewAllBranches && <option value="__all__">All Branches</option>}
         {availableBranches.map((branch) => (
-          <option key={branch.id} value={branch.id}>{branch.name}</option>
+          <option key={branch.id} value={branch.id}>{branchOptionLabel(branch.name, branch.code)}</option>
         ))}
       </select>
     </label>

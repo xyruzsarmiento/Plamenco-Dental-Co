@@ -1,4 +1,5 @@
 import { useEffect } from 'react'
+import { acquireModalScrollLock } from '../../lib/modalScrollLock'
 
 const FOCUSABLE_SELECTOR = [
   'a[href]',
@@ -52,7 +53,7 @@ export function ModalAccessibilityManager() {
   useEffect(() => {
     let activeDialog: HTMLElement | null = null
     let previouslyFocused: HTMLElement | null = null
-    let previousBodyOverflow = ''
+    let releaseScrollLock: (() => void) | null = null
 
     const deactivateDialog = () => {
       if (!activeDialog) return
@@ -67,7 +68,8 @@ export function ModalAccessibilityManager() {
       if (!nextDialog) {
         if (activeDialog) {
           deactivateDialog()
-          document.body.style.overflow = previousBodyOverflow
+          releaseScrollLock?.()
+          releaseScrollLock = null
           if (previouslyFocused && document.contains(previouslyFocused)) previouslyFocused.focus()
         }
         previouslyFocused = null
@@ -78,8 +80,7 @@ export function ModalAccessibilityManager() {
 
       if (!activeDialog) {
         previouslyFocused = document.activeElement instanceof HTMLElement ? document.activeElement : null
-        previousBodyOverflow = document.body.style.overflow
-        document.body.style.overflow = 'hidden'
+        releaseScrollLock = acquireModalScrollLock()
       } else {
         deactivateDialog()
       }
@@ -156,7 +157,8 @@ export function ModalAccessibilityManager() {
       document.removeEventListener('focusin', onFocusIn)
       if (activeDialog) {
         deactivateDialog()
-        document.body.style.overflow = previousBodyOverflow
+        releaseScrollLock?.()
+        releaseScrollLock = null
       }
     }
   }, [])

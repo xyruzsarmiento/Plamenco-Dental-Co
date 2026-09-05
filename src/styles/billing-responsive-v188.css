@@ -1,0 +1,82 @@
+/* Billing dialogs are portals: constrain them independently of the app shell. */
+.bp153-dialog-layer,
+.bp153-drawer-layer {
+  box-sizing: border-box;
+  padding: 16px !important;
+  grid-template-columns: minmax(0, 1fr);
+  place-items: center !important;
+}
+
+.bp153-dialog,
+.bp153-drawer {
+  box-sizing: border-box;
+  width: min(920px, 100%) !important;
+  max-width: 100% !important;
+  min-width: 0;
+  height: auto !important;
+  max-height: min(860px, calc(100dvh - 32px)) !important;
+  grid-template-columns: minmax(0, 1fr);
+  border-radius: 8px !important;
+}
+
+.bp153-dialog *,
+.bp153-page * {
+  box-sizing: border-box;
+  min-width: 0;
+}
+
+.bp153-dialog-body {
+  overflow-x: hidden;
+  overscroll-behavior: contain;
+}
+
+.bp153-dialog-head > button {
+  flex: 0 0 38px;
+}
+
+.bp153-dialog-head h2,
+.bp153-dialog-head p,
+.bp153-page td {
+  overflow-wrap: anywhere;
+}
+
+.bp153-dialog .bp153-service-line-row,
+.bp153-dialog .bp153-line-labels {
+  grid-template-columns: 26px minmax(0, 1.2fr) minmax(0, 1.3fr) 56px minmax(0, .7fr) minmax(0, .7fr) 34px;
+}
+
+@media (max-width: 720px) {
+  .bp153-dialog-layer,
+  .bp153-drawer-layer { padding: 12px !important; }
+  .bp153-dialog,
+  .bp153-drawer { max-height: min(780px, calc(100dvh - 48px)) !important; }
+  .bp153-dialog-head,
+  .bp153-drawer-head { padding: 14px !important; gap: 10px; }
+  .bp153-dialog-head h2 { font-size: 20px; line-height: 1.25; }
+  .bp153-dialog-head p { margin-bottom: 0; font-size: 13px; }
+  .bp153-dialog-titleline { gap: 10px; }
+  .bp153-dialog-icon { width: 36px; height: 36px; }
+  .bp153-dialog-body { padding: 12px; }
+  .bp153-invoice-body { padding: 0; }
+  .bp153-dialog input,
+  .bp153-dialog select,
+  .bp153-dialog textarea { font-size: 16px; max-width: 100%; }
+  .bp153-form-grid label,
+  .bp153-invoice-grid label { padding: 8px; }
+  .bp153-dialog .bp153-line-labels { display: none; }
+  .bp153-dialog .bp153-service-line-row { grid-template-columns: 26px minmax(0, 1fr) 40px; }
+  .bp153-dialog-footer { padding: 12px; gap: 8px; }
+  .bp153-dialog-footer > div:first-child { flex-direction: row; justify-content: space-between; }
+  .bp153-dialog-footer > div:last-child { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr); width: 100%; gap: 8px; }
+  .bp153-dialog-footer .btn { min-width: 0; min-height: 44px; white-space: normal; }
+  .bp153-summary-facts { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .bp153-more { width: 100%; }
+  .bp153-more-menu { left: 0; right: auto; width: 100%; max-width: 100%; }
+  .bp153-header { padding: 16px; }
+  .bp153-title h1 { font-size: 24px; }
+  .bp153-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .bp153-kpis article { padding: 12px; }
+  .bp153-kpis strong { font-size: 18px; overflow-wrap: anywhere; }
+  .bp153-toolbar nav { flex-wrap: wrap; }
+  .bp153-search { min-width: 0; }
+}

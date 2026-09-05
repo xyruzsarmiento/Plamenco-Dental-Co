@@ -1,0 +1,164 @@
+/* Shared dashboard layout for staff, dentist, associate dentist and super admin. */
+.app-shell.page-dashboard .premium-dashboard,
+.app-shell.page-dashboard .executive-dashboard,
+.app-shell.page-dashboard .role-home-with-greeting {
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  overflow: visible;
+}
+
+.app-shell.page-dashboard .dashboard-intro,
+.app-shell.page-dashboard .dashboard-greeting-v2,
+.app-shell.page-dashboard .dashboard-main-grid,
+.app-shell.page-dashboard .dashboard-lower-grid,
+.app-shell.page-dashboard .dashboard-stats-grid,
+.app-shell.page-dashboard .workflow-strip,
+.app-shell.page-dashboard .operations-board {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.app-shell.page-dashboard .dashboard-intro-copy,
+.app-shell.page-dashboard .dashboard-intro-copy h2,
+.app-shell.page-dashboard .dashboard-intro-copy p {
+  min-width: 0;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+}
+
+.app-shell.page-dashboard .dashboard-pill-row {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 8px;
+  min-width: 0;
+}
+
+.app-shell.page-dashboard .dashboard-pill {
+  min-width: 0;
+  max-width: 100%;
+  white-space: normal;
+}
+
+.app-shell.page-dashboard .dashboard-main-grid,
+.app-shell.page-dashboard .dashboard-lower-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.app-shell.page-dashboard .dashboard-panel,
+.app-shell.page-dashboard .dashboard-list-panel,
+.app-shell.page-dashboard .operations-board {
+  overflow: hidden;
+}
+
+.app-shell.page-dashboard .panel-header,
+.app-shell.page-dashboard .operations-board-header,
+.app-shell.page-dashboard .queue-item,
+.app-shell.page-dashboard .mini-row {
+  min-width: 0;
+}
+
+.app-shell.page-dashboard .panel-header > *,
+.app-shell.page-dashboard .operations-board-header > *,
+.app-shell.page-dashboard .queue-item > *,
+.app-shell.page-dashboard .mini-row > * {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.app-shell.page-dashboard .operations-flow {
+  display: flex;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 6px;
+  min-width: 0;
+}
+
+.app-shell.page-dashboard .daily-flow-table-wrap {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.app-shell.page-dashboard .daily-flow-table {
+  min-width: 760px;
+}
+
+@media (max-width: 1100px) {
+  .app-shell.page-dashboard .dashboard-main-grid,
+  .app-shell.page-dashboard .dashboard-lower-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .app-shell.page-dashboard .dashboard-intro {
+    align-items: flex-start;
+  }
+}
+
+@media (max-width: 760px) {
+  .app-shell.page-dashboard .dashboard-intro,
+  .app-shell.page-dashboard .dashboard-greeting-v2 {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 14px;
+    padding: 18px !important;
+  }
+
+  .app-shell.page-dashboard .dashboard-pill-row,
+  .app-shell.page-dashboard .dashboard-greeting-v2-context {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    justify-items: stretch;
+    width: 100%;
+  }
+
+  .app-shell.page-dashboard .dashboard-pill,
+  .app-shell.page-dashboard .dashboard-greeting-v2-context > * {
+    width: 100%;
+  }
+
+  .app-shell.page-dashboard .dashboard-main-grid,
+  .app-shell.page-dashboard .dashboard-lower-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .app-shell.page-dashboard .operations-board-header {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .app-shell.page-dashboard .operations-flow {
+    justify-content: flex-start;
+  }
+}
+
+@media (max-width: 480px) {
+  .app-shell.page-dashboard .dashboard-pill-row,
+  .app-shell.page-dashboard .dashboard-greeting-v2-context {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .app-shell.page-dashboard .dashboard-intro-copy h2 {
+    font-size: 1.45rem !important;
+    line-height: 1.12 !important;
+  }
+
+  .app-shell.page-dashboard .dashboard-greeting-v2 h1 {
+    font-size: 1.42rem !important;
+  }
+
+  .app-shell.page-dashboard .workflow-strip {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  .app-shell.page-dashboard .workflow-step {
+    min-width: 0;
+  }
+}

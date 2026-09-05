@@ -1,0 +1,83 @@
+/* The search label owns the frame; the input only fills the space inside it. */
+.app-shell .inv182-workspace {
+  width: 100% !important;
+  min-width: 0 !important;
+  box-sizing: border-box !important;
+  overflow: hidden !important;
+}
+
+.app-shell .inv182-tabs {
+  min-width: 0 !important;
+  max-width: 100% !important;
+  overflow-x: auto !important;
+  scrollbar-width: thin !important;
+}
+
+.app-shell .inv182-search {
+  display: flex !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  box-sizing: border-box !important;
+  margin: 0 !important;
+  padding: 0 12px !important;
+  border: 1px solid #d5e1ef !important;
+  border-radius: 12px !important;
+  background: #fbfdff !important;
+  box-shadow: none !important;
+  overflow: hidden !important;
+}
+
+.app-shell .inv182-search:focus-within {
+  border-color: #78aaf0 !important;
+  background: #ffffff !important;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, .11) !important;
+}
+
+.app-shell .inv182-search > svg {
+  flex: 0 0 auto !important;
+  color: #71839a !important;
+}
+
+.app-shell .inv182-search input {
+  display: block !important;
+  flex: 1 1 auto !important;
+  width: auto !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  height: 40px !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  outline: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.app-shell .inv182-search input:focus,
+.app-shell .inv182-search input:focus-visible {
+  border: 0 !important;
+  outline: 0 !important;
+  box-shadow: none !important;
+}
+
+@media (max-width: 640px) {
+  .app-shell .inv182-workspace {
+    align-items: stretch !important;
+    gap: 10px !important;
+    padding: 10px !important;
+  }
+
+  .app-shell .inv182-tabs {
+    padding-bottom: 2px !important;
+  }
+
+  .app-shell .inv182-tabs button {
+    min-height: 38px !important;
+    padding-inline: 12px !important;
+  }
+
+  .app-shell .inv182-search {
+    min-height: 42px !important;
+  }
+}

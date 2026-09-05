@@ -169,7 +169,7 @@ function InvoiceEditor({ mode, invoice, scopeBranchId, allowedBranchIds, onClose
     if (mode === 'edit') return false
     if (charge.status !== 'unbilled') return false
     if (branchId && charge.branchId && charge.branchId !== branchId) return false
-    if (!selectedPatient) return true
+    if (!selectedPatient) return false
     return charge.patientId === selectedPatient.id || charge.patientId === selectedPatient.patientId
   }), [branchId, mode, selectedPatient])
 
@@ -325,7 +325,10 @@ function PaymentDialog({ allowedInvoiceIds, onClose, onSuccess }: { allowedInvoi
   const amountCents = cents(amount)
 
   async function submit() {
+    if (busy) return
     if (!selected) return setError('Select an open invoice.')
+    if (!date) return setError('Select a payment date.')
+    if (!selectedMethod) return setError('Select an available payment method.')
     if (amountCents <= 0 || amountCents > selected.balanceCents) return setError(`Payment must be between PHP 0.01 and ${formatCurrency(selected.balanceCents)}.`)
     if (selectedMethod?.requiresReference && !reference.trim()) return setError(`${selectedMethod.label} requires a reference number.`)
     try {

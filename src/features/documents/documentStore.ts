@@ -228,7 +228,7 @@ export function getDocumentsByPatient(patientId: string): PatientDocument[] {
 }
 
 export async function loadDocumentsFromSupabase(): Promise<PatientDocument[]> {
-  if (!supabase) return getStoredDocuments()
+  if (!supabase) throw new Error('Clinic database is not configured. Documents cannot be loaded safely.')
   const { data, error } = await supabase.from('documents').select('*').is('archived_at', null).order('created_at', { ascending: false })
   if (error) throw new Error('Unable to load patient documents from the clinic database.')
   const mapped = await Promise.all((data ?? []).map(async (row) => {

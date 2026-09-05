@@ -480,7 +480,7 @@ export function getStoredRefunds(): Refund[] {
 
 export function getPaymentMethods(): PaymentMethodConfig[] {
   const stored = getList<PaymentMethodConfig>(PAYMENT_METHOD_STORAGE_KEY)
-  return stored.length ? stored : defaultPaymentMethods
+  return getStorage().getItem(PAYMENT_METHOD_STORAGE_KEY) !== null ? stored : defaultPaymentMethods
 }
 
 export function updatePaymentMethodConfig(methodId: PaymentMethod, updates: Partial<Omit<PaymentMethodConfig, 'id'>>) {

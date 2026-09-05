@@ -1,0 +1,70 @@
+/* Final alignment pass for the upload dropzone and privacy copy. */
+.app-shell .document-dropzone-v10 {
+  box-sizing: border-box !important;
+  align-content: center !important;
+  overflow: hidden !important;
+}
+
+.app-shell .document-dropzone-v10 > div {
+  min-width: 0 !important;
+}
+
+.app-shell .document-dropzone-v10 strong,
+.app-shell .document-dropzone-v10 small,
+.app-shell .document-share-toggle-v10 strong,
+.app-shell .document-share-toggle-v10 small {
+  display: block !important;
+}
+
+.app-shell .document-dropzone-v10 small {
+  margin-top: 7px !important;
+}
+
+.app-shell .document-dropzone-v10 .btn,
+.app-shell .document-dropzone-v10 .button {
+  position: relative !important;
+  z-index: 1 !important;
+  align-self: center !important;
+  box-sizing: border-box !important;
+  margin: 0 !important;
+}
+
+.app-shell .document-share-toggle-v10 > span:last-child {
+  display: grid !important;
+  gap: 5px !important;
+  min-width: 0 !important;
+}
+
+.app-shell .document-share-toggle-v10 small {
+  margin-top: 0 !important;
+  line-height: 1.45 !important;
+}
+
+@media (max-width: 720px) {
+  .app-shell .document-dropzone-v10 {
+    grid-template-columns: 44px minmax(0, 1fr) !important;
+    grid-template-rows: auto auto !important;
+    align-content: center !important;
+    row-gap: 14px !important;
+  }
+
+  .app-shell .document-dropzone-v10 > .document-dropzone-icon-v10 {
+    grid-column: 1 !important;
+    grid-row: 1 !important;
+    align-self: center !important;
+  }
+
+  .app-shell .document-dropzone-v10 > div {
+    grid-column: 2 !important;
+    grid-row: 1 !important;
+    align-self: center !important;
+  }
+
+  .app-shell .document-dropzone-v10 .btn,
+  .app-shell .document-dropzone-v10 .button {
+    grid-column: 1 / -1 !important;
+    grid-row: 2 !important;
+    align-self: stretch !important;
+    width: 100% !important;
+  }
+}

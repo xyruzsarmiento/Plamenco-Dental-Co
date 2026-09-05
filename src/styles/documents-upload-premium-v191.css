@@ -1,0 +1,275 @@
+/* Shared upload dialog: a compact, calm workflow on desktop and mobile. */
+.app-shell .documents-v10-upload-shell,
+.app-shell .doc149-modal-backdrop {
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: 16000 !important;
+  display: grid !important;
+  place-items: center !important;
+  padding: 24px !important;
+  overflow: auto !important;
+  background: rgba(15, 23, 42, .56) !important;
+  backdrop-filter: blur(10px) !important;
+  -webkit-backdrop-filter: blur(10px) !important;
+}
+
+.app-shell .documents-v10-upload-backdrop {
+  position: fixed !important;
+  inset: 0 !important;
+  background: transparent !important;
+  backdrop-filter: none !important;
+}
+
+.app-shell .documents-v10-upload-panel,
+.app-shell .doc149-upload-modal {
+  position: relative !important;
+  z-index: 1 !important;
+  display: grid !important;
+  grid-template-rows: auto minmax(0, 1fr) !important;
+  width: min(760px, calc(100vw - 48px)) !important;
+  max-width: 760px !important;
+  height: min(820px, calc(100dvh - 48px)) !important;
+  max-height: calc(100dvh - 48px) !important;
+  min-height: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  overflow: hidden !important;
+  border: 1px solid #d6e3f4 !important;
+  border-radius: 24px !important;
+  background: #f8fbff !important;
+  box-shadow: 0 34px 100px rgba(15, 23, 42, .34) !important;
+}
+
+.app-shell .documents-v10-upload-panel > header,
+.app-shell .doc149-upload-modal > header {
+  display: flex !important;
+  align-items: flex-start !important;
+  justify-content: space-between !important;
+  gap: 18px !important;
+  min-width: 0 !important;
+  padding: 24px 26px 20px !important;
+  border-bottom: 1px solid #e3ebf5 !important;
+  background:
+    radial-gradient(circle at 90% 0%, rgba(37, 99, 235, .11), transparent 34%),
+    linear-gradient(135deg, #ffffff 0%, #f5f9ff 100%) !important;
+}
+
+.app-shell .documents-v10-upload-panel > header > div,
+.app-shell .doc149-upload-modal > header > div {
+  min-width: 0 !important;
+}
+
+.app-shell .documents-v10-upload-panel h3,
+.app-shell .doc149-upload-modal h2 {
+  margin: 5px 0 6px !important;
+  color: #172033 !important;
+  font-size: clamp(1.35rem, 2.4vw, 1.8rem) !important;
+  line-height: 1.08 !important;
+  letter-spacing: -.035em !important;
+}
+
+.app-shell .documents-v10-upload-panel > header p,
+.app-shell .doc149-upload-modal > header p {
+  max-width: 520px !important;
+  margin: 0 !important;
+  color: #667085 !important;
+  font-size: .8rem !important;
+  line-height: 1.5 !important;
+}
+
+.app-shell .documents-v10-upload-body,
+.app-shell .doc149-upload-modal > .document-upload-panel-v10,
+.app-shell .doc149-upload-modal > .doc149-upload-patient,
+.app-shell .doc149-upload-modal > .doc149-empty {
+  min-width: 0 !important;
+}
+
+.app-shell .documents-v10-upload-body {
+  min-height: 0 !important;
+  overflow: auto !important;
+  padding: 22px 26px 26px !important;
+  background: #f8fbff !important;
+}
+
+.app-shell .doc149-upload-modal {
+  grid-template-rows: auto auto minmax(0, 1fr) !important;
+  gap: 0 !important;
+}
+
+.app-shell .doc149-upload-modal > .doc149-upload-patient {
+  display: grid !important;
+  gap: 7px !important;
+  margin: 0 !important;
+  padding: 18px 26px 0 !important;
+  background: #f8fbff !important;
+}
+
+.app-shell .doc149-upload-modal > .document-upload-panel-v10 {
+  overflow: auto !important;
+  padding: 18px 26px 26px !important;
+  background: #f8fbff !important;
+}
+
+.app-shell .document-upload-panel-v10 {
+  display: grid !important;
+  gap: 16px !important;
+}
+
+.app-shell .document-dropzone-v10 {
+  grid-template-columns: 44px minmax(0, 1fr) auto !important;
+  min-height: 112px !important;
+  padding: 18px !important;
+  border: 1px dashed #9bbcf0 !important;
+  border-radius: 18px !important;
+  background: linear-gradient(135deg, #f1f7ff 0%, #ffffff 100%) !important;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .75) !important;
+}
+
+.app-shell .document-dropzone-v10.has-file {
+  border-style: solid !important;
+  border-color: #75a8ef !important;
+  background: #ffffff !important;
+  box-shadow: 0 12px 30px rgba(37, 99, 235, .08) !important;
+}
+
+.app-shell .document-dropzone-icon-v10 {
+  display: grid !important;
+  place-items: center !important;
+  width: 44px !important;
+  height: 44px !important;
+  border-radius: 14px !important;
+  background: #e7f0ff !important;
+  color: #2563eb !important;
+}
+
+.app-shell .document-dropzone-v10 strong {
+  font-size: .92rem !important;
+  line-height: 1.35 !important;
+}
+
+.app-shell .document-dropzone-v10 small {
+  margin-top: 5px !important;
+  font-size: .73rem !important;
+}
+
+.app-shell .document-upload-panel-v10 .form-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  gap: 14px !important;
+  padding: 18px !important;
+  border: 1px solid #e1eaf5 !important;
+  border-radius: 18px !important;
+  background: #ffffff !important;
+}
+
+.app-shell .document-upload-panel-v10 > textarea,
+.app-shell .document-upload-panel-v10 > .document-share-toggle-v10,
+.app-shell .document-upload-panel-v10 > .error-alert {
+  width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+.app-shell .document-upload-panel-v10 input,
+.app-shell .document-upload-panel-v10 select,
+.app-shell .document-upload-panel-v10 textarea,
+.app-shell .doc149-upload-patient select {
+  min-height: 44px !important;
+  border-color: #d4e1f0 !important;
+  border-radius: 12px !important;
+  background: #ffffff !important;
+}
+
+.app-shell .document-upload-panel-v10 textarea {
+  min-height: 88px !important;
+  resize: vertical !important;
+}
+
+.app-shell .document-upload-panel-v10 .modal-actions {
+  position: sticky !important;
+  bottom: -26px !important;
+  display: grid !important;
+  grid-template-columns: minmax(120px, .7fr) minmax(180px, 1fr) !important;
+  gap: 10px !important;
+  margin: 0 -26px -26px !important;
+  padding: 14px 26px max(14px, env(safe-area-inset-bottom)) !important;
+  border-top: 1px solid #e1eaf5 !important;
+  background: rgba(248, 251, 255, .96) !important;
+  backdrop-filter: blur(12px) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
+}
+
+.app-shell .document-upload-panel-v10 .modal-actions .btn,
+.app-shell .document-upload-panel-v10 .modal-actions .button {
+  width: 100% !important;
+  justify-content: center !important;
+}
+
+@media (max-width: 720px) {
+  .app-shell .documents-v10-upload-shell,
+  .app-shell .doc149-modal-backdrop {
+    place-items: end center !important;
+    padding: 12px !important;
+  }
+
+  .app-shell .documents-v10-upload-panel,
+  .app-shell .doc149-upload-modal {
+    width: min(100%, 560px) !important;
+    height: min(900px, calc(100dvh - 24px)) !important;
+    max-height: calc(100dvh - 24px) !important;
+    border-radius: 22px !important;
+  }
+
+  .app-shell .documents-v10-upload-panel > header,
+  .app-shell .doc149-upload-modal > header {
+    padding: 20px 18px 17px !important;
+  }
+
+  .app-shell .documents-v10-upload-body,
+  .app-shell .doc149-upload-modal > .document-upload-panel-v10 {
+    padding: 16px 18px 20px !important;
+  }
+
+  .app-shell .doc149-upload-modal > .doc149-upload-patient {
+    padding: 16px 18px 0 !important;
+  }
+
+  .app-shell .document-upload-panel-v10 .form-grid {
+    grid-template-columns: 1fr !important;
+    padding: 14px !important;
+  }
+
+  .app-shell .document-dropzone-v10 {
+    grid-template-columns: 42px minmax(0, 1fr) !important;
+  }
+
+  .app-shell .document-dropzone-v10 .btn {
+    grid-column: 1 / -1 !important;
+    width: 100% !important;
+    justify-content: center !important;
+  }
+
+  .app-shell .document-upload-panel-v10 .modal-actions {
+    grid-template-columns: 1fr !important;
+    margin: 0 -18px -20px !important;
+    padding: 12px 18px max(12px, env(safe-area-inset-bottom)) !important;
+  }
+}
+
+@media (max-width: 430px) {
+  .app-shell .documents-v10-upload-shell,
+  .app-shell .doc149-modal-backdrop {
+    padding: 8px !important;
+  }
+
+  .app-shell .documents-v10-upload-panel,
+  .app-shell .doc149-upload-modal {
+    width: 100% !important;
+    height: calc(100dvh - 16px) !important;
+    max-height: calc(100dvh - 16px) !important;
+    border-radius: 18px !important;
+  }
+
+  .app-shell .documents-v10-upload-panel h3,
+  .app-shell .doc149-upload-modal h2 {
+    font-size: 1.3rem !important;
+  }
+}
