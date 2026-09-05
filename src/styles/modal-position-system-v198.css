@@ -203,7 +203,7 @@
     [class*='dialog-backdrop'],
     [class*='sheet-backdrop']
   ) {
-    place-items: center !important;
+    place-items: end center !important;
     padding: var(--internal-modal-mobile-gutter) !important;
   }
 
@@ -223,14 +223,15 @@
     width: min(calc(100vw - (var(--internal-modal-mobile-gutter) * 2)), 100%) !important;
     max-width: calc(100vw - (var(--internal-modal-mobile-gutter) * 2)) !important;
     height: auto !important;
-    max-height: calc(100dvh - (var(--internal-modal-mobile-gutter) * 2)) !important;
+    max-height: min(82dvh, 760px) !important;
     border-radius: var(--internal-modal-radius) !important;
     border-inline: 1px solid #dbe3ef !important;
   }
 
   .app-shell .team-v26-drawer.team-v26-account-modal-v153 {
     grid-template-rows: auto minmax(0, 1fr) auto !important;
-    height: min(820px, calc(100dvh - (var(--internal-modal-mobile-gutter) * 2))) !important;
+    height: auto !important;
+    max-height: min(82dvh, 760px) !important;
   }
 
   .app-shell :where([role='dialog'] > header) { padding-inline: 16px; }
@@ -257,7 +258,7 @@
     body > .dv16-modal-backdrop,
     body > .dentists133-drawer-backdrop
   ) {
-    place-items: center !important;
+    place-items: end center !important;
     padding: var(--internal-modal-mobile-gutter) !important;
   }
 
@@ -292,7 +293,7 @@
     width: min(calc(100vw - (var(--internal-modal-mobile-gutter) * 2)), 100%) !important;
     max-width: calc(100vw - (var(--internal-modal-mobile-gutter) * 2)) !important;
     height: auto !important;
-    max-height: calc(100dvh - (var(--internal-modal-mobile-gutter) * 2)) !important;
+    max-height: min(82dvh, 760px) !important;
   }
 }
 
