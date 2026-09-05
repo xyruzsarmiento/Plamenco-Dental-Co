@@ -1,0 +1,319 @@
+/*
+ * Internal modal system.
+ * Route-specific styles may choose content width, but all internal overlays
+ * share viewport safety, backdrop treatment, and scroll ownership here.
+ */
+:root {
+  --internal-modal-gutter: 24px;
+  --internal-modal-mobile-gutter: 12px;
+  --internal-modal-max-height: min(900px, calc(100dvh - (var(--internal-modal-gutter) * 2)));
+  --internal-modal-radius: 18px;
+  --internal-modal-backdrop: rgba(15, 23, 42, .52);
+}
+
+/* Public size tokens for new internal dialogs. */
+.internal-modal--sm { width: min(460px, calc(100vw - 48px)); }
+.internal-modal--md { width: min(680px, calc(100vw - 48px)); }
+.internal-modal--lg { width: min(860px, calc(100vw - 48px)); }
+.internal-modal--xl { width: min(1080px, calc(100vw - 48px)); }
+
+.app-shell :where(
+  .modal-backdrop,
+  [class*='modal-backdrop'],
+  [class*='drawer-backdrop'],
+  [class*='dialog-backdrop'],
+  [class*='sheet-backdrop']
+) {
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: 16000 !important;
+  display: grid !important;
+  place-items: center !important;
+  padding: var(--internal-modal-gutter) !important;
+  overflow: hidden !important;
+  background: var(--internal-modal-backdrop) !important;
+  backdrop-filter: blur(10px) saturate(115%);
+  -webkit-backdrop-filter: blur(10px) saturate(115%);
+}
+
+.app-shell :where(
+  .modal-backdrop > [role='dialog'],
+  [class*='modal-backdrop'] > [role='dialog'],
+  [class*='drawer-backdrop'] > [role='dialog'],
+  [class*='dialog-backdrop'] > [role='dialog'],
+  [class*='sheet-backdrop'] > [role='dialog'],
+  .team-v26-modal,
+  .team-v26-drawer,
+  .bp153-dialog,
+  .bp153-drawer,
+  .doc149-upload-modal,
+  .doc149-drawer
+) {
+  position: relative !important;
+  inset: auto !important;
+  max-height: var(--internal-modal-max-height) !important;
+  margin: 0 !important;
+  overflow: hidden !important;
+  border-radius: var(--internal-modal-radius) !important;
+}
+
+/* Preserve content-specific desktop widths while keeping a shared ceiling. */
+.app-shell :where([role='dialog']) {
+  min-width: 0;
+  max-height: var(--internal-modal-max-height);
+  outline: none;
+}
+
+.app-shell :where(
+  [role='dialog'] > form,
+  [role='dialog'] > [class*='body'],
+  [role='dialog'] > [class*='content'],
+  [role='dialog'] > [class*='panel'],
+  [role='dialog'] > [class*='form']
+) {
+  min-width: 0 !important;
+  min-height: 0 !important;
+  overflow-x: hidden !important;
+  overflow-y: auto !important;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+}
+
+.app-shell :where([role='dialog'] > header, [role='dialog'] > footer) {
+  min-width: 0;
+  flex-shrink: 0;
+}
+
+.app-shell :where([role='dialog'] > footer) {
+  position: sticky;
+  bottom: 0;
+  z-index: 3;
+  background: rgba(255, 255, 255, .96);
+  border-top: 1px solid #dbeafe;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+/* Portaled internal dialogs render under body rather than inside .app-shell. */
+:where(
+  body > .modal-backdrop,
+  body > .inv182-modal-backdrop,
+  body > .inv56-backdrop,
+  body > .doc149-modal-backdrop,
+  body > .doc149-drawer-backdrop,
+  body > .ex57-modal-backdrop,
+  body > .expense-modal-backdrop,
+  body > .svc15-modal-backdrop,
+  body > .rep162-modal-backdrop,
+  body > .data-import-v21-modal-backdrop,
+  body > .forms-v28-modal-backdrop,
+  body > .branches-v27-modal-backdrop,
+  body > .team-v26-modal-backdrop,
+  body > .team-v26-drawer-backdrop,
+  body > .dv16-modal-backdrop,
+  body > .dentists133-drawer-backdrop
+) {
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: 16000 !important;
+  display: grid !important;
+  place-items: center !important;
+  padding: var(--internal-modal-gutter) !important;
+  overflow: hidden !important;
+  background: var(--internal-modal-backdrop) !important;
+  backdrop-filter: blur(10px) saturate(115%);
+  -webkit-backdrop-filter: blur(10px) saturate(115%);
+}
+
+:where(
+  body > .modal-backdrop > [role='dialog'],
+  body > .inv182-modal-backdrop > [role='dialog'],
+  body > .inv56-backdrop > [role='dialog'],
+  body > .doc149-modal-backdrop > [role='dialog'],
+  body > .doc149-drawer-backdrop > [role='dialog'],
+  body > .ex57-modal-backdrop > [role='dialog'],
+  body > .expense-modal-backdrop > [role='dialog'],
+  body > .svc15-modal-backdrop > [role='dialog'],
+  body > .rep162-modal-backdrop > [role='dialog'],
+  body > .data-import-v21-modal-backdrop > [role='dialog'],
+  body > .forms-v28-modal-backdrop > [role='dialog'],
+  body > .branches-v27-modal-backdrop > [role='dialog'],
+  body > .team-v26-modal-backdrop > [role='dialog'],
+  body > .team-v26-drawer-backdrop > [role='dialog'],
+  body > .dv16-modal-backdrop > [role='dialog'],
+  body > .dentists133-drawer-backdrop > [role='dialog'],
+  body > .modal-backdrop > .modal
+) {
+  position: relative !important;
+  inset: auto !important;
+  max-height: var(--internal-modal-max-height) !important;
+  margin: 0 !important;
+  overflow: hidden !important;
+  border-radius: var(--internal-modal-radius) !important;
+}
+
+:where(
+  body > .inv182-modal-backdrop > form,
+  body > .inv56-backdrop [role='dialog'],
+  body > .doc149-modal-backdrop [role='dialog'],
+  body > .doc149-drawer-backdrop [role='dialog'],
+  body > .ex57-modal-backdrop [role='dialog'],
+  body > .expense-modal-backdrop [role='dialog'],
+  body > .svc15-modal-backdrop [role='dialog'],
+  body > .rep162-modal-backdrop [role='dialog'],
+  body > .data-import-v21-modal-backdrop [role='dialog'],
+  body > .forms-v28-modal-backdrop [role='dialog'],
+  body > .branches-v27-modal-backdrop [role='dialog'],
+  body > .team-v26-drawer-backdrop [role='dialog'],
+  body > .dv16-modal-backdrop [role='dialog'],
+  body > .dentists133-drawer-backdrop [role='dialog']
+) {
+  min-width: 0 !important;
+}
+
+/* The account drawer uses an explicit grid so its footer never scrolls away. */
+.app-shell .team-v26-drawer.team-v26-account-modal-v153 {
+  display: grid !important;
+  grid-template-rows: auto minmax(0, 1fr) auto !important;
+  width: min(860px, calc(100vw - 48px)) !important;
+  max-width: min(860px, calc(100vw - 48px)) !important;
+  height: min(820px, calc(100dvh - 48px)) !important;
+}
+
+.app-shell .team-v26-drawer-body {
+  min-width: 0 !important;
+  min-height: 0 !important;
+  overflow-x: hidden !important;
+  overflow-y: auto !important;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+}
+
+@media (max-width: 900px) {
+  :root { --internal-modal-gutter: 16px; }
+}
+
+@media (max-width: 640px) {
+  :root { --internal-modal-mobile-gutter: 8px; }
+
+  .app-shell :where(
+    .modal-backdrop,
+    [class*='modal-backdrop'],
+    [class*='drawer-backdrop'],
+    [class*='dialog-backdrop'],
+    [class*='sheet-backdrop']
+  ) {
+    place-items: center !important;
+    padding: var(--internal-modal-mobile-gutter) !important;
+  }
+
+  .app-shell :where(
+    .modal-backdrop > [role='dialog'],
+    [class*='modal-backdrop'] > [role='dialog'],
+    [class*='drawer-backdrop'] > [role='dialog'],
+    [class*='dialog-backdrop'] > [role='dialog'],
+    [class*='sheet-backdrop'] > [role='dialog'],
+    .team-v26-modal,
+    .team-v26-drawer,
+    .bp153-dialog,
+    .bp153-drawer,
+    .doc149-upload-modal,
+    .doc149-drawer
+  ) {
+    width: min(calc(100vw - (var(--internal-modal-mobile-gutter) * 2)), 100%) !important;
+    max-width: calc(100vw - (var(--internal-modal-mobile-gutter) * 2)) !important;
+    height: auto !important;
+    max-height: calc(100dvh - (var(--internal-modal-mobile-gutter) * 2)) !important;
+    border-radius: var(--internal-modal-radius) !important;
+    border-inline: 1px solid #dbe3ef !important;
+  }
+
+  .app-shell .team-v26-drawer.team-v26-account-modal-v153 {
+    grid-template-rows: auto minmax(0, 1fr) auto !important;
+    height: min(820px, calc(100dvh - (var(--internal-modal-mobile-gutter) * 2))) !important;
+  }
+
+  .app-shell :where([role='dialog'] > header) { padding-inline: 16px; }
+  .app-shell :where([role='dialog'] > footer) {
+    padding-inline: 12px;
+    padding-bottom: max(12px, env(safe-area-inset-bottom));
+  }
+
+  :where(
+    body > .modal-backdrop,
+    body > .inv182-modal-backdrop,
+    body > .inv56-backdrop,
+    body > .doc149-modal-backdrop,
+    body > .doc149-drawer-backdrop,
+    body > .ex57-modal-backdrop,
+    body > .expense-modal-backdrop,
+    body > .svc15-modal-backdrop,
+    body > .rep162-modal-backdrop,
+    body > .data-import-v21-modal-backdrop,
+    body > .forms-v28-modal-backdrop,
+    body > .branches-v27-modal-backdrop,
+    body > .team-v26-modal-backdrop,
+    body > .team-v26-drawer-backdrop,
+    body > .dv16-modal-backdrop,
+    body > .dentists133-drawer-backdrop
+  ) {
+    place-items: center !important;
+    padding: var(--internal-modal-mobile-gutter) !important;
+  }
+
+  :where(
+    body > .modal-backdrop > [role='dialog'],
+    body > .modal-backdrop > .modal,
+    body > .inv182-modal-backdrop > [role='dialog'],
+    body > .inv56-backdrop > [role='dialog'],
+    body > .doc149-modal-backdrop > [role='dialog'],
+    body > .doc149-drawer-backdrop > [role='dialog'],
+    body > .ex57-modal-backdrop > [role='dialog'],
+    body > .expense-modal-backdrop > [role='dialog'],
+    body > .svc15-modal-backdrop > [role='dialog'],
+    body > .rep162-modal-backdrop > [role='dialog'],
+    body > .data-import-v21-modal-backdrop > [role='dialog'],
+    body > .forms-v28-modal-backdrop > [role='dialog'],
+    body > .branches-v27-modal-backdrop > [role='dialog'],
+    body > .team-v26-modal-backdrop > [role='dialog'],
+    body > .team-v26-drawer-backdrop > [role='dialog'],
+    body > .dv16-modal-backdrop > [role='dialog'],
+    body > .dentists133-drawer-backdrop > [role='dialog']
+  ) {
+    width: min(calc(100vw - (var(--internal-modal-mobile-gutter) * 2)), 100%) !important;
+    max-width: calc(100vw - (var(--internal-modal-mobile-gutter) * 2)) !important;
+    height: auto !important;
+    max-height: calc(100dvh - (var(--internal-modal-mobile-gutter) * 2)) !important;
+    border-radius: var(--internal-modal-radius) !important;
+    border-inline: 1px solid #dbe3ef !important;
+  }
+
+  body > .inv182-modal-backdrop > .inv182-add-modal {
+    width: min(calc(100vw - (var(--internal-modal-mobile-gutter) * 2)), 100%) !important;
+    max-width: calc(100vw - (var(--internal-modal-mobile-gutter) * 2)) !important;
+    height: auto !important;
+    max-height: calc(100dvh - (var(--internal-modal-mobile-gutter) * 2)) !important;
+  }
+}
+
+@media (max-width: 430px) {
+  .app-shell :where([role='dialog'] > header h1, [role='dialog'] > header h2, [role='dialog'] > header h3) {
+    font-size: clamp(1.2rem, 6vw, 1.55rem);
+    line-height: 1.15;
+    overflow-wrap: anywhere;
+  }
+  .app-shell :where([role='dialog'] > footer) { gap: 8px; }
+}
+
+@media (max-width: 360px) {
+  :root { --internal-modal-mobile-gutter: 6px; }
+  .app-shell :where([role='dialog'] > footer) { padding-inline: 8px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .app-shell :where([role='dialog'], [class*='modal-backdrop'], [class*='drawer-backdrop']) {
+    scroll-behavior: auto !important;
+    transition: none !important;
+    animation: none !important;
+  }
+}
