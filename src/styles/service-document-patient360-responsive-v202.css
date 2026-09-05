@@ -1,0 +1,395 @@
+/* Final responsive corrective layer for service icons, document picker and shared Patient 360. */
+
+/* --------------------------------------------------------------------------
+   Service catalogue icon containment
+   Root cause: several older/global SVG rules can leak positioning/transform
+   into Lucide icons. Make every icon shell its own containing block and reset
+   the SVG itself so it can never render outside the visual tile.
+   -------------------------------------------------------------------------- */
+.app-shell .svc-premium-head-icon,
+.app-shell .svc-premium-detail-icon,
+.app-shell .svc-premium-section-icon,
+.app-shell .svc-premium-preview-icon {
+  position: relative !important;
+  isolation: isolate !important;
+  overflow: hidden !important;
+  box-sizing: border-box !important;
+}
+
+.app-shell .svc-premium-head-icon > svg,
+.app-shell .svc-premium-detail-icon > svg,
+.app-shell .svc-premium-section-icon > svg,
+.app-shell .svc-premium-preview-icon > svg {
+  position: static !important;
+  inset: auto !important;
+  top: auto !important;
+  right: auto !important;
+  bottom: auto !important;
+  left: auto !important;
+  display: block !important;
+  flex: 0 0 auto !important;
+  width: 18px !important;
+  height: 18px !important;
+  max-width: 18px !important;
+  max-height: 18px !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  transform: none !important;
+  translate: none !important;
+  vertical-align: middle !important;
+}
+
+.app-shell .svc-premium-head-icon > svg,
+.app-shell .svc-premium-detail-icon > svg {
+  width: 20px !important;
+  height: 20px !important;
+  max-width: 20px !important;
+  max-height: 20px !important;
+}
+
+/* Keep text from being squeezed by the icon shell on narrow screens. */
+.app-shell .svc-premium-section-title > div,
+.app-shell .svc-premium-titleline > div,
+.app-shell .svc-premium-detail-titleline > div {
+  min-width: 0 !important;
+}
+
+/* --------------------------------------------------------------------------
+   Document file picker
+   Keep Select file visually inside the dashed card with deliberate padding.
+   -------------------------------------------------------------------------- */
+.app-shell .document-dropzone-v10 {
+  position: relative !important;
+  box-sizing: border-box !important;
+  overflow: hidden !important;
+  align-items: center !important;
+  column-gap: 14px !important;
+  row-gap: 10px !important;
+  padding: 18px !important;
+}
+
+.app-shell .document-dropzone-v10 > div {
+  min-width: 0 !important;
+  align-self: center !important;
+}
+
+.app-shell .document-dropzone-v10 .btn,
+.app-shell .document-dropzone-v10 .button {
+  position: static !important;
+  inset: auto !important;
+  align-self: center !important;
+  justify-self: end !important;
+  width: auto !important;
+  max-width: 100% !important;
+  margin: 0 !important;
+  transform: none !important;
+}
+
+.app-shell .document-dropzone-icon-v10 {
+  position: relative !important;
+  isolation: isolate !important;
+  overflow: hidden !important;
+}
+
+.app-shell .document-dropzone-icon-v10 > svg {
+  position: static !important;
+  inset: auto !important;
+  display: block !important;
+  width: 22px !important;
+  height: 22px !important;
+  margin: 0 !important;
+  transform: none !important;
+}
+
+@media (max-width: 720px) {
+  .app-shell .document-dropzone-v10 {
+    grid-template-columns: 44px minmax(0, 1fr) !important;
+    grid-template-rows: auto auto !important;
+    min-height: 0 !important;
+    padding: 16px !important;
+  }
+
+  .app-shell .document-dropzone-v10 .btn,
+  .app-shell .document-dropzone-v10 .button {
+    grid-column: 2 !important;
+    grid-row: 2 !important;
+    justify-self: start !important;
+    width: auto !important;
+    min-width: 126px !important;
+    min-height: 40px !important;
+    margin-top: 2px !important;
+  }
+}
+
+@media (max-width: 430px) {
+  .app-shell .document-dropzone-v10 {
+    grid-template-columns: 40px minmax(0, 1fr) !important;
+    padding: 14px !important;
+    border-radius: 15px !important;
+  }
+
+  .app-shell .document-dropzone-icon-v10 {
+    width: 40px !important;
+    height: 40px !important;
+  }
+
+  .app-shell .document-dropzone-v10 .btn,
+  .app-shell .document-dropzone-v10 .button {
+    grid-column: 1 / -1 !important;
+    width: 100% !important;
+    justify-self: stretch !important;
+    margin-top: 4px !important;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   Patient 360 / Patient Profile
+   This component is shared by Super Admin, Dentist and Staff portals, so the
+   rules intentionally target the shared PatientProfile class names rather
+   than one portal shell.
+   -------------------------------------------------------------------------- */
+.app-shell .patient-profile.premium-profile-shell {
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  box-sizing: border-box !important;
+  overflow-x: hidden !important;
+}
+
+.app-shell .patient-profile .premium-profile-header,
+.app-shell .patient-profile .profile-content,
+.app-shell .patient-profile .tab-content,
+.app-shell .patient-profile .profile-section {
+  min-width: 0 !important;
+  max-width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+.app-shell .patient-profile .profile-header-content {
+  display: flex !important;
+  align-items: flex-start !important;
+  justify-content: space-between !important;
+  gap: 18px !important;
+  min-width: 0 !important;
+}
+
+.app-shell .patient-profile .profile-title-wrap {
+  min-width: 0 !important;
+  flex: 1 1 420px !important;
+}
+
+.app-shell .patient-profile .profile-title-wrap h1,
+.app-shell .patient-profile .profile-meta,
+.app-shell .patient-profile .info-item .value {
+  overflow-wrap: anywhere !important;
+  word-break: break-word !important;
+}
+
+.app-shell .patient-profile .profile-actions {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-end !important;
+  gap: 8px !important;
+  flex: 0 0 auto !important;
+  flex-wrap: wrap !important;
+}
+
+.app-shell .patient-profile .patient-metrics {
+  display: grid !important;
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  gap: 10px !important;
+  width: 100% !important;
+  min-width: 0 !important;
+}
+
+.app-shell .patient-profile .metric-slab {
+  min-width: 0 !important;
+}
+
+.app-shell .patient-profile .profile-quick-actions {
+  display: grid !important;
+  grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+  gap: 9px !important;
+  width: 100% !important;
+  min-width: 0 !important;
+}
+
+.app-shell .patient-profile .profile-quick-actions .btn,
+.app-shell .patient-profile .profile-quick-actions .button {
+  width: 100% !important;
+  min-width: 0 !important;
+  justify-content: center !important;
+  white-space: normal !important;
+  text-align: center !important;
+}
+
+.app-shell .patient-profile > .tabs,
+.app-shell .patient-profile .tabs {
+  display: flex !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  max-width: 100% !important;
+  overflow-x: auto !important;
+  overflow-y: hidden !important;
+  overscroll-behavior-inline: contain !important;
+  -webkit-overflow-scrolling: touch !important;
+  scrollbar-width: thin !important;
+}
+
+.app-shell .patient-profile .tabs .tab {
+  flex: 0 0 auto !important;
+  white-space: nowrap !important;
+}
+
+.app-shell .patient-profile .profile-content {
+  width: 100% !important;
+  overflow-x: hidden !important;
+}
+
+.app-shell .patient-profile .info-grid {
+  display: grid !important;
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  gap: 10px !important;
+  min-width: 0 !important;
+}
+
+.app-shell .patient-profile .info-grid.info-grid-full {
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+}
+
+.app-shell .patient-profile .info-item,
+.app-shell .patient-profile .document-list,
+.app-shell .patient-profile .treatment-list,
+.app-shell .patient-profile .dental-record-list {
+  min-width: 0 !important;
+  max-width: 100% !important;
+}
+
+/* Any legacy tables inside Patient 360 must scroll rather than stretch page. */
+.app-shell .patient-profile table {
+  max-width: none !important;
+}
+
+.app-shell .patient-profile .table-container,
+.app-shell .patient-profile .table-wrap,
+.app-shell .patient-profile .data-table-wrap {
+  width: 100% !important;
+  max-width: 100% !important;
+  overflow-x: auto !important;
+  -webkit-overflow-scrolling: touch !important;
+}
+
+@media (max-width: 1024px) {
+  .app-shell .patient-profile .profile-quick-actions {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+
+  .app-shell .patient-profile .info-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+}
+
+@media (max-width: 720px) {
+  .app-shell .patient-profile.premium-profile-shell {
+    padding-inline: 0 !important;
+  }
+
+  .app-shell .patient-profile .premium-profile-header {
+    padding: 18px !important;
+    border-radius: 18px !important;
+  }
+
+  .app-shell .patient-profile .profile-header-content {
+    flex-direction: column !important;
+    gap: 14px !important;
+  }
+
+  .app-shell .patient-profile .profile-title-wrap {
+    flex-basis: auto !important;
+    width: 100% !important;
+  }
+
+  .app-shell .patient-profile .profile-title-wrap h1 {
+    font-size: clamp(1.45rem, 7vw, 2rem) !important;
+    line-height: 1.08 !important;
+  }
+
+  .app-shell .patient-profile .profile-meta {
+    display: flex !important;
+    align-items: center !important;
+    gap: 7px !important;
+    flex-wrap: wrap !important;
+  }
+
+  .app-shell .patient-profile .profile-actions {
+    width: 100% !important;
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+
+  .app-shell .patient-profile .profile-actions .btn,
+  .app-shell .patient-profile .profile-actions .button {
+    width: 100% !important;
+    justify-content: center !important;
+  }
+
+  .app-shell .patient-profile .patient-metrics {
+    grid-template-columns: 1fr !important;
+  }
+
+  .app-shell .patient-profile .profile-quick-actions {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+
+  .app-shell .patient-profile > .tabs,
+  .app-shell .patient-profile .tabs {
+    margin-inline: 0 !important;
+    padding: 4px !important;
+    gap: 4px !important;
+  }
+
+  .app-shell .patient-profile .tabs .tab {
+    min-height: 40px !important;
+    padding-inline: 11px !important;
+  }
+
+  .app-shell .patient-profile .profile-content,
+  .app-shell .patient-profile .tab-content {
+    padding-inline: 0 !important;
+  }
+
+  .app-shell .patient-profile .profile-section {
+    padding: 14px !important;
+    border-radius: 16px !important;
+  }
+
+  .app-shell .patient-profile .info-grid,
+  .app-shell .patient-profile .info-grid.info-grid-full {
+    grid-template-columns: 1fr !important;
+  }
+
+  .app-shell .patient-profile .document-upload-panel-v10 .form-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+@media (max-width: 460px) {
+  .app-shell .patient-profile .premium-profile-header {
+    padding: 15px !important;
+  }
+
+  .app-shell .patient-profile .profile-actions,
+  .app-shell .patient-profile .profile-quick-actions {
+    grid-template-columns: 1fr !important;
+  }
+
+  .app-shell .patient-profile .metric-slab,
+  .app-shell .patient-profile .profile-section,
+  .app-shell .patient-profile .info-item {
+    min-width: 0 !important;
+  }
+
+  .app-shell .patient-profile .tabs .tab {
+    font-size: .76rem !important;
+  }
+}
