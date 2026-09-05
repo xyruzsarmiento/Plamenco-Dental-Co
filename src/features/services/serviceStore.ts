@@ -4,7 +4,6 @@ import { supabase } from '../../lib/supabase'
 import { createUuid } from '../../lib/id'
 
 const SERVICE_STORAGE_KEY = 'plamenco.services'
-
 const seedServices: Service[] = []
 
 function safeParseServices(value: string | null): Service[] | null {
@@ -17,6 +16,11 @@ function safeParseServices(value: string | null): Service[] | null {
   }
 }
 
+function requireServiceDatabase() {
+  if (!supabase) throw new Error('Supabase is not configured. Service catalogue changes were not saved.')
+  return supabase
+}
+
 export function getStoredServices(): Service[] {
   const stored = safeParseServices(window.localStorage.getItem(SERVICE_STORAGE_KEY))
   if (stored?.length) return stored
@@ -24,6 +28,7 @@ export function getStoredServices(): Service[] {
   return seedServices
 }
 
+/** Local storage is only a UI cache. Supabase remains the source of truth. */
 export function saveStoredServices(services: Service[]) {
   window.localStorage.setItem(SERVICE_STORAGE_KEY, JSON.stringify(services))
   window.dispatchEvent(new CustomEvent('plamenco:services-updated'))
@@ -85,6 +90,7 @@ function mapServiceRow(row: Record<string, any>, fallback?: Service): Service {
   }
 }
 
+/** Legacy optimistic helper kept for older call sites. Prefer createServicePersisted. */
 export function createService(values: ServiceFormValues): Service {
   const services = getStoredServices()
   const now = new Date().toISOString()
@@ -95,20 +101,18 @@ export function createService(values: ServiceFormValues): Service {
 }
 
 export async function createServicePersisted(values: ServiceFormValues): Promise<Service> {
+  const database = requireServiceDatabase()
   const services = getStoredServices()
   const now = new Date().toISOString()
   const service: Service = { id: createUuid(), ...values, createdAt: now, updatedAt: now }
-  if (supabase) {
-    const { data, error } = await supabase.from('services').insert(remoteRow(service)).select('*').single()
-    if (error) throw new Error(`Unable to save service to the clinic database: ${error.message}`)
-    const confirmed = mapServiceRow(data as Record<string, any>, service)
-    saveStoredServices([...services.filter((entry) => entry.id !== confirmed.id), confirmed])
-    return confirmed
-  }
-  saveStoredServices([...services, service])
-  return service
+  const { data, error } = await database.from('services').insert(remoteRow(service)).select('*').single()
+  if (error) throw new Error(`Unable to save service to the clinic database: ${error.message}`)
+  const confirmed = mapServiceRow(data as Record<string, any>, service)
+  saveStoredServices([...services.filter((entry) => entry.id !== confirmed.id), confirmed])
+  return confirmed
 }
 
+/** Legacy optimistic helper kept for older call sites. Prefer updateServicePersisted. */
 export function updateService(id: string, values: ServiceFormValues): Service | null {
   const services = getStoredServices()
   const index = services.findIndex((service) => service.id === id)
@@ -122,20 +126,23 @@ export function updateService(id: string, values: ServiceFormValues): Service | 
 }
 
 export async function updateServicePersisted(id: string, values: ServiceFormValues): Promise<Service | null> {
+  const database = requireServiceDatabase()
   const services = getStoredServices()
   const current = services.find((service) => service.id === id)
   if (!current) return null
-  const now = new Date().toISOString()
-  const updated: Service = { ...current, ...values, updatedAt: now }
-  if (supabase) {
-    const { data, error } = await supabase.from('services').update(remoteRow(updated)).eq('id', id).select('*').single()
-    if (error) throw new Error(`Unable to update service in the clinic database: ${error.message}`)
-    const confirmed = mapServiceRow(data as Record<string, any>, updated)
-    saveStoredServices(services.map((entry) => entry.id === id ? confirmed : entry))
-    return confirmed
-  }
-  saveStoredServices(services.map((entry) => entry.id === id ? updated : entry))
-  return updated
+  const updated: Service = { ...current, ...values, updatedAt: new Date().toISOString() }
+  const { data, error } = await database.from('services').update(remoteRow(updated)).eq('id', id).select('*').single()
+  if (error) throw new Error(`Unable to update service in the clinic database: ${error.message}`)
+  const confirmed = mapServiceRow(data as Record<string, any>, updated)
+  saveStoredServices(services.map((entry) => entry.id === id ? confirmed : entry))
+  return confirmed
+}
+
+export async function toggleServiceStatusPersisted(id: string): Promise<Service | null> {
+  const service = getStoredServices().find((entry) => entry.id === id)
+  if (!service) return null
+  const status: ServiceStatus = service.status === 'active' ? 'inactive' : 'active'
+  return updateServicePersisted(id, { ...service, status })
 }
 
 export function deleteService(id: string): boolean {
@@ -188,7 +195,10 @@ export function paginateServices(services: Service[], page: number, pageSize = 1
 }
 
 export async function loadServicesFromSupabase(options: { strict?: boolean } = {}): Promise<Service[]> {
-  if (!supabase) return getStoredServices()
+  if (!supabase) {
+    if (options.strict) throw new Error('Supabase is not configured. The service catalogue cannot be loaded from the clinic database.')
+    return getStoredServices()
+  }
   try {
     const { data, error } = await supabase.from('services').select('*').order('name', { ascending: true })
     if (error) {
@@ -196,7 +206,7 @@ export async function loadServicesFromSupabase(options: { strict?: boolean } = {
       if (options.strict) throw new Error(`Unable to load clinic services: ${error.message}`)
       return getStoredServices()
     }
-    if (!data) return getStoredServices()
+    if (!data) return []
     const supabaseServices = data.map((row: any) => mapServiceRow(row))
     saveStoredServices(supabaseServices)
     return supabaseServices
