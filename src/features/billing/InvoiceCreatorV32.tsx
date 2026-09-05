@@ -9,6 +9,7 @@ import {
 import { createInvoicePersisted } from './billingPersistence'
 import { getStoredBranches } from '../branches/branchStore'
 import { getStoredPatients } from '../patients/patientStore'
+import { PatientSearchCombobox } from '../patients/PatientSearchCombobox'
 
 function manilaDate() {
   return new Intl.DateTimeFormat('en-CA', {
@@ -182,7 +183,7 @@ export function InvoiceCreatorButtonV32({ onSuccess }: { onSuccess?: (invoiceId:
                 <section className="inv32-section">
                   <div className="inv32-section-head"><span>1</span><div><h3>Patient & billing context</h3><p>Select who the invoice belongs to and where it was issued.</p></div></div>
                   <div className="inv32-grid inv32-grid-2">
-                    <label><span>Patient</span><select value={patientId} onChange={(event) => { setPatientId(event.target.value); setSelectedCharges([]) }} disabled={submitting}><option value="">Select patient</option>{patients.map((patient) => <option key={patient.id} value={patient.id}>{patient.firstName} {patient.lastName} · {patient.patientId}</option>)}</select></label>
+                    <PatientSearchCombobox patients={patients} value={patientId} required disabled={submitting} placeholder="Search by name, patient ID, phone or email" onSelect={(patient) => { setPatientId(patient?.id ?? ''); setSelectedCharges([]) }} />
                     <label><span>Branch</span><select value={branchId} onChange={(event) => setBranchId(event.target.value)} disabled={submitting}><option value="">Unassigned branch</option>{branches.map((branch) => <option key={branch.id} value={branch.id}>{branch.name}</option>)}</select></label>
                     <label><span>Invoice date</span><input type="date" value={invoiceDate} onChange={(event) => setInvoiceDate(event.target.value)} disabled={submitting} /></label>
                     <label><span>Due date</span><input type="date" min={invoiceDate} value={dueDate} onChange={(event) => setDueDate(event.target.value)} disabled={submitting} /></label>

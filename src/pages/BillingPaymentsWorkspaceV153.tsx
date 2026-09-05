@@ -8,6 +8,7 @@ import { useAuth } from '../features/auth/AuthContext'
 import { useBranchContext } from '../features/branches/BranchContext'
 import { getStoredBranches } from '../features/branches/branchStore'
 import { getStoredPatients } from '../features/patients/patientStore'
+import { PatientSearchCombobox } from '../features/patients/PatientSearchCombobox'
 import { getStoredServices, loadServicesFromSupabase, servicePriceToCents } from '../features/services/serviceStore'
 import { acquireModalScrollLock } from '../lib/modalScrollLock'
 import {
@@ -278,7 +279,14 @@ function InvoiceEditor({ mode, invoice, scopeBranchId, allowedBranchIds, onClose
           <section className="bp153-invoice-panel">
             <div className="bp153-panel-title"><span>Invoice setup</span><strong>Patient and branch</strong></div>
             <div className="bp153-invoice-grid">
-              <label><span>Patient</span><select value={patientId} onChange={(event) => { setPatientId(event.target.value); setSelectedCharges([]) }} disabled={mode === 'edit' || busy}><option value="">Select patient</option>{patients.map((patient) => <option key={patient.id} value={patient.id}>{patient.firstName} {patient.lastName} - {patient.patientId}</option>)}</select></label>
+              <PatientSearchCombobox
+                patients={patients}
+                value={patientId}
+                disabled={mode === 'edit' || busy}
+                required={mode === 'create'}
+                placeholder="Search by name, patient ID, phone or email"
+                onSelect={(patient) => { setPatientId(patient?.id ?? ''); setSelectedCharges([]) }}
+              />
               <label><span>Branch</span><select value={branchId} onChange={(event) => setBranchId(event.target.value)} disabled={Boolean(scopeBranchId) || mode === 'edit' || busy}>{branches.map((branch) => <option key={branch.id} value={branch.id}>{branch.name}</option>)}</select></label>
               <label><span>Issue date</span><input type="date" value={invoiceDate} onChange={(event) => setInvoiceDate(event.target.value)} disabled={busy}/></label>
               <label><span>Due date</span><input type="date" min={invoiceDate} value={dueDate} onChange={(event) => setDueDate(event.target.value)} disabled={busy}/></label>

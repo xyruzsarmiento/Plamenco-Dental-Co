@@ -31,6 +31,7 @@ import {
 import { downloadPatientDocumentFile, type DocumentCategory } from '../features/documents/documentStore'
 import { usePermissions } from '../features/auth/permissions'
 import { useBranchContext } from '../features/branches/BranchContext'
+import { PatientSearchCombobox } from '../features/patients/PatientSearchCombobox'
 import { getStoredPatients } from '../features/patients/patientStore'
 import { acquireModalScrollLock } from '../lib/modalScrollLock'
 import { getCurrentSessionUserName } from '../features/security/security'
@@ -277,7 +278,13 @@ export function DocumentsBranchWorkspaceV127() {
       {uploadOpen && activeBranchId && <div className="doc149-modal-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setUploadOpen(false) }}>
         <section className="doc149-upload-modal" role="dialog" aria-modal="true" aria-labelledby="doc149-upload-title">
           <header><div><span>Upload document</span><h2 id="doc149-upload-title">Attach a patient file</h2><p>Files are stored privately first. Share only when ready for patient portal access.</p></div><button type="button" className="doc149-icon-button" onClick={() => setUploadOpen(false)} aria-label="Close upload dialog"><X size={18} /></button></header>
-          <label className="doc149-upload-patient"><span>Patient</span><select value={uploadPatientId} onChange={(event) => setUploadPatientId(event.target.value)}><option value="">Choose patient</option>{patients.map((patient) => <option key={patient.id} value={patient.patientId}>{patientName(patient)} - {patient.patientId}</option>)}</select></label>
+          <PatientSearchCombobox
+            patients={patients}
+            value={uploadPatientId}
+            label="Patient"
+            placeholder="Search by name, patient ID, phone or email"
+            onSelect={(patient) => setUploadPatientId(patient?.patientId ?? '')}
+          />
           {uploadPatientId ? <DocumentUploadPanel
             patientId={uploadPatientId}
             uploadedBy={getCurrentSessionUserName()}

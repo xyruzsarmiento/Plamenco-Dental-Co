@@ -8,6 +8,7 @@ import { usePermissions } from '../features/auth/permissions'
 import { useOptionalBranchContext } from '../features/branches/BranchContext'
 import { getStoredBranches } from '../features/branches/branchStore'
 import { getStoredPatients } from '../features/patients/patientStore'
+import { PatientSearchCombobox } from '../features/patients/PatientSearchCombobox'
 import { createPrescriptionPersisted, getStoredPrescriptions, type Prescription } from '../features/prescriptions/prescriptionStore'
 import '../styles/prescriptions-workspace-v96.css'
 
@@ -197,7 +198,7 @@ export function PrescriptionsPage() {
               <button type="button" aria-label="Close prescription dialog" onClick={() => setCreating(false)} disabled={busy}><X size={18} /></button>
             </header>
             <div className="rx116-form">
-              <label className="rx116-span-2"><span>Patient</span><select value={patientId} onChange={(event) => setPatientId(event.target.value)} disabled={busy}><option value="">Select patient</option>{patientList.map((patient) => <option key={patient.id} value={patient.patientId}>{patient.firstName} {patient.lastName} · {patient.patientId}</option>)}</select></label>
+              <div className="rx116-span-2"><PatientSearchCombobox patients={patientList} value={patientId} required disabled={busy} placeholder="Search by name, patient ID, phone or email" onSelect={(patient) => setPatientId(patient?.patientId ?? '')} /></div>
               <label className="rx116-span-2"><span>Clinic branch</span><select value={branchContext?.isAllBranchesMode ? branchId : branchContext?.activeBranchId ?? branchId} onChange={(event) => setBranchId(event.target.value)} disabled={busy || (!branchContext?.isAllBranchesMode && Boolean(branchContext?.activeBranchId))}><option value="">Select branch</option>{branchOptions.map((branch) => <option key={branch.id} value={branch.id}>{branch.name}</option>)}</select></label>
               <div className="rx116-span-2 rx116-context-note"><Building2 size={15} /><span>{branchContext?.isAllBranchesMode ? 'Select the branch that owns this prescription record.' : `Prescription will be linked to ${branchContext?.activeBranch?.name ?? 'the active clinic branch'}.`}</span></div>
               <label><span>Medication</span><input value={medication} onChange={(event) => setMedication(event.target.value)} placeholder="e.g. Amoxicillin" disabled={busy} /></label>

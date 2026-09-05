@@ -55,7 +55,7 @@ import type { Provider } from '../features/dentists/dentistTypes'
 import { getStoredPatients } from '../features/patients/patientStore'
 import { loadPatientsFromSupabase } from '../features/patients/patientPersistence'
 import type { Patient } from '../features/patients/patientTypes'
-import { getStoredServices } from '../features/services/serviceStore'
+import { getStoredServices, loadServicesFromSupabase } from '../features/services/serviceStore'
 import type { Service } from '../features/services/serviceTypes'
 import type { CommunicationTemplateKey } from '../features/communications/communicationTypes'
 import { completeRecall, linkRecallToAppointment, listPatientRecalls, type RecallQueueItem } from '../features/recalls/recallStore'
@@ -219,7 +219,7 @@ export function AppointmentsPage() {
   const canAssignDentist = permissions.can('appointments.assign_dentist')
   const [appointments, setAppointments] = useState<Appointment[]>(getStoredAppointments())
   const [patients, setPatients] = useState<Patient[]>(getStoredPatients())
-  const [services] = useState<Service[]>(getStoredServices())
+  const [services, setServices] = useState<Service[]>(getStoredServices())
   const [branches] = useState<Branch[]>(getStoredBranches().filter((branch) => branch.status === 'active'))
   const [providers] = useState<Provider[]>(getStoredProviders())
   const [viewTab, setViewTab] = useState<ViewTab>('queue')
@@ -271,6 +271,18 @@ export function AppointmentsPage() {
       })
       .catch((error) => {
         if (import.meta.env.DEV) console.warn('[appointments] patient refresh failed', error)
+      })
+    return () => { active = false }
+  }, [])
+
+  useEffect(() => {
+    let active = true
+    void loadServicesFromSupabase({ strict: true })
+      .then((rows) => {
+        if (active) setServices(rows)
+      })
+      .catch((error) => {
+        if (active) setOperationError(error instanceof Error ? error.message : 'Unable to load services from Supabase.')
       })
     return () => { active = false }
   }, [])

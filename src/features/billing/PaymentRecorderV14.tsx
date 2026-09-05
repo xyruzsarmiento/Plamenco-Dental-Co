@@ -10,6 +10,7 @@ import {
 } from './billingStore'
 import { recordManualPaymentPersisted } from './billingPersistence'
 import { getStoredPatients } from '../patients/patientStore'
+import { PatientSearchCombobox } from '../patients/PatientSearchCombobox'
 
 type PaymentRecorderProps = {
   onClose: () => void
@@ -131,7 +132,7 @@ export function PaymentRecorderV14({ onClose, onSuccess }: PaymentRecorderProps)
             <section className="pay14-section">
               <div className="pay14-section-head"><span>01</span><div><h3>Patient & invoice</h3><p>Choose the account and outstanding invoice.</p></div></div>
               <div className="pay14-grid pay14-grid-2">
-                <label><span>Patient</span><select value={selectedPatientId} onChange={(event) => handlePatientChange(event.target.value)} disabled={loading}><option value="">Select patient</option>{patients.map((patient) => <option key={patient.id} value={patient.id}>{patient.firstName} {patient.lastName} · {patient.patientId}</option>)}</select></label>
+                <PatientSearchCombobox patients={patients} value={selectedPatientId} required disabled={loading} placeholder="Search by name, patient ID, phone or email" onSelect={(patient) => handlePatientChange(patient?.id ?? '')} />
                 <label><span>Invoice</span><select value={selectedInvoiceId} onChange={(event) => handleInvoiceChange(event.target.value)} disabled={loading || !selectedPatientId || availableInvoices.length === 0}><option value="">{selectedPatientId ? 'Select outstanding invoice' : 'Select patient first'}</option>{availableInvoices.map((invoice) => <option key={invoice.id} value={invoice.id}>{invoice.invoiceNumber} · {formatCurrency(invoice.balanceCents)} due</option>)}</select></label>
               </div>
               {selectedPatientId && availableInvoices.length === 0 && <div className="pay14-note">This patient has no outstanding invoices.</div>}

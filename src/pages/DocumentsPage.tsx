@@ -27,6 +27,7 @@ import { Select } from '../components/ui/Select'
 import { useAuth } from '../features/auth/AuthContext'
 import { usePermissions } from '../features/auth/permissions'
 import { DocumentUploadPanel } from '../features/documents/DocumentUploadPanel'
+import { PatientSearchCombobox } from '../features/patients/PatientSearchCombobox'
 import {
   archiveDocumentPersisted,
   createDocumentPersisted,
@@ -96,6 +97,7 @@ export function DocumentsPage() {
   const [busyId, setBusyId] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [uploadOpen, setUploadOpen] = useState(false)
+  const [uploadPatientId, setUploadPatientId] = useState('')
   const [message, setMessage] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
 
@@ -156,6 +158,7 @@ export function DocumentsPage() {
     setDocuments((current) => [confirmed, ...current.filter((entry) => entry.id !== confirmed.id)])
     setSelectedPatientId(confirmed.patientId)
     setUploadOpen(false)
+    setUploadPatientId('')
     setMessage('Document uploaded to the private patient-documents bucket.')
     return confirmed
   }
@@ -205,7 +208,7 @@ export function DocumentsPage() {
   }
 
   function openUpload() {
-    if (!selectedPatientId && patients[0]?.patientId) setSelectedPatientId(patients[0].patientId)
+    setUploadPatientId(selectedPatientId)
     setUploadOpen(true)
   }
 
@@ -359,27 +362,26 @@ export function DocumentsPage() {
 
         {canUpload && uploadOpen && createPortal(
           <div className="documents-v10-upload-shell">
-            <div className="documents-v10-upload-backdrop" onClick={() => setUploadOpen(false)} />
+            <div className="documents-v10-upload-backdrop" onClick={() => { setUploadOpen(false); setUploadPatientId('') }} />
             <section className="documents-upload-zone documents-v10-upload-panel" role="dialog" aria-modal="true" aria-labelledby="documents-v10-upload-title">
               <header>
                 <div>
                   <span className="documents-v10-kicker">Upload workflow</span>
-                  <h3 id="documents-v10-upload-title">{selectedPatientId ? `Upload for ${patientName(selectedPatientId)}` : 'Choose a patient'}</h3>
+                  <h3 id="documents-v10-upload-title">{uploadPatientId ? `Upload for ${patientName(uploadPatientId)}` : 'Attach a patient file'}</h3>
                   <p>Files are stored privately first. Share with the patient portal only when the document is ready for patient access.</p>
                 </div>
-                <button type="button" className="modal-close-button documents-v10-close" data-modal-close aria-label="Close upload panel" onClick={() => setUploadOpen(false)}><X size={18} /></button>
+                <button type="button" className="modal-close-button documents-v10-close" data-modal-close aria-label="Close upload panel" onClick={() => { setUploadOpen(false); setUploadPatientId('') }}><X size={18} /></button>
               </header>
               <div className="documents-v10-upload-body">
-                {!selectedPatientId && (
-                  <Select
-                    label="Patient"
-                    value={selectedPatientId}
-                    onChange={(event) => setSelectedPatientId(event.target.value)}
-                    options={[{ label: 'Choose patient', value: '' }, ...patients.map((patient) => ({ label: `${patient.lastName}, ${patient.firstName} - ${patient.patientId}`, value: patient.patientId }))]}
-                  />
-                )}
-                {selectedPatientId
-                  ? <DocumentUploadPanel patientId={selectedPatientId} uploadedBy={actor} defaultPatientVisible={false} onUpload={handleUpload} onCancel={() => setUploadOpen(false)} />
+                <PatientSearchCombobox
+                  patients={patients}
+                  value={uploadPatientId}
+                  label="Patient"
+                  placeholder="Search by name, patient ID, phone or email"
+                  onSelect={(patient) => setUploadPatientId(patient?.patientId ?? '')}
+                />
+                {uploadPatientId
+                  ? <DocumentUploadPanel patientId={uploadPatientId} uploadedBy={actor} defaultPatientVisible={false} onUpload={handleUpload} onCancel={() => { setUploadOpen(false); setUploadPatientId('') }} />
                   : <EmptyState title="Patient required" message="Select a patient before attaching a clinic document." />}
               </div>
             </section>

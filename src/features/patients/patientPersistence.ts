@@ -106,6 +106,33 @@ export async function loadPatientsFromSupabase(options: { strict?: boolean } = {
   return patients
 }
 
+export async function searchPatientsFromSupabase(query: string, limit = 12): Promise<Patient[]> {
+  if (!supabase) throw new Error('Clinic database is not configured. Patient search is unavailable.')
+
+  const normalizedQuery = query.trim().replace(/[%*,]/g, ' ').replace(/\s+/g, ' ')
+  if (normalizedQuery.length < 2) return []
+  const pattern = `%${normalizedQuery}%`
+  const { data, error } = await supabase
+    .from('patients')
+    .select('*')
+    .eq('status', 'active')
+    .or([
+      `first_name.ilike.${pattern}`,
+      `middle_name.ilike.${pattern}`,
+      `last_name.ilike.${pattern}`,
+      `full_name.ilike.${pattern}`,
+      `patient_id.ilike.${pattern}`,
+      `phone.ilike.${pattern}`,
+      `email.ilike.${pattern}`,
+    ].join(','))
+    .order('last_name', { ascending: true })
+    .order('first_name', { ascending: true })
+    .limit(Math.max(1, Math.min(limit, 25)))
+
+  if (error) throw new Error('Patients could not be loaded from the clinic database.')
+  return (data ?? []).map((row) => mapSupabasePatientRow(row as Record<string, unknown>))
+}
+
 export async function createPatientPersisted(values: PatientFormValues & { patientId?: string }): Promise<Patient> {
   if (!supabase) throw new Error('Clinic database is not configured. Patient records cannot be saved safely.')
 

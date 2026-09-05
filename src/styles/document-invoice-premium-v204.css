@@ -1,0 +1,335 @@
+/* Shared premium surfaces for document upload and invoice setup dialogs. */
+
+.app-shell .doc149-upload-modal,
+.documents-v10-upload-panel {
+  width: min(760px, calc(100vw - 32px)) !important;
+  max-width: 760px !important;
+  border: 1px solid #cfe0f6 !important;
+  border-radius: 24px !important;
+  background: #f7faff !important;
+  box-shadow: 0 30px 90px rgba(15, 23, 42, .3) !important;
+}
+
+.app-shell .doc149-upload-modal > header,
+.documents-v10-upload-panel > header {
+  display: flex !important;
+  align-items: flex-start !important;
+  gap: 20px !important;
+  padding: 25px 28px 21px !important;
+  border-bottom: 1px solid #dce8f7 !important;
+  background: #f8fbff !important;
+}
+
+.app-shell .doc149-upload-modal > header > div,
+.documents-v10-upload-panel > header > div {
+  min-width: 0 !important;
+}
+
+.app-shell .doc149-upload-modal > header span,
+.documents-v10-upload-panel > header span {
+  color: #2563eb !important;
+  font-size: 10px !important;
+  font-weight: 850 !important;
+  letter-spacing: .12em !important;
+  text-transform: uppercase !important;
+}
+
+.app-shell .doc149-upload-modal > header h2,
+.documents-v10-upload-panel > header h3 {
+  margin: 7px 0 5px !important;
+  color: #0f172a !important;
+  font-size: clamp(24px, 3vw, 32px) !important;
+  line-height: 1.05 !important;
+  letter-spacing: -.02em !important;
+}
+
+.app-shell .doc149-upload-modal > header p,
+.documents-v10-upload-panel > header p {
+  max-width: 560px !important;
+  margin: 0 !important;
+  color: #64748b !important;
+  font-size: 13px !important;
+  line-height: 1.5 !important;
+}
+
+.app-shell .doc149-upload-modal > header .doc149-icon-button,
+.documents-v10-upload-panel > header .documents-v10-close {
+  flex: 0 0 auto !important;
+  margin-left: auto !important;
+  width: 40px !important;
+  height: 40px !important;
+  border: 1px solid #cfe0f6 !important;
+  border-radius: 13px !important;
+  background: #fff !important;
+  color: #334155 !important;
+  box-shadow: 0 8px 18px rgba(15, 23, 42, .08) !important;
+}
+
+.app-shell .doc149-upload-modal > .patient-search-field,
+.documents-v10-upload-body > .patient-search-field {
+  margin: 16px 28px 0 !important;
+  padding: 14px !important;
+  border: 1px solid #d5e4f6 !important;
+  border-radius: 16px !important;
+  background: #fff !important;
+  box-shadow: 0 8px 22px rgba(37, 99, 235, .05) !important;
+}
+
+.app-shell .doc149-upload-modal > .patient-search-field .patient-search-label,
+.documents-v10-upload-body > .patient-search-field .patient-search-label {
+  margin-bottom: 8px !important;
+  color: #475569 !important;
+  font-size: 11px !important;
+  font-weight: 800 !important;
+  letter-spacing: .04em !important;
+  text-transform: uppercase !important;
+}
+
+.app-shell .doc149-upload-modal .patient-search-selected,
+.documents-v10-upload-body .patient-search-selected {
+  min-height: 58px !important;
+  border-color: #c8dcf6 !important;
+  border-radius: 12px !important;
+  background: #f8fbff !important;
+}
+
+.app-shell .doc149-upload-modal .patient-search-input-wrap,
+.documents-v10-upload-body .patient-search-input-wrap {
+  min-height: 50px !important;
+  border-color: #c8dcf6 !important;
+  border-radius: 12px !important;
+  background: #fbfdff !important;
+}
+
+.app-shell .doc149-upload-modal .document-upload-panel-v10,
+.documents-v10-upload-body .document-upload-panel-v10 {
+  margin: 14px 28px 24px !important;
+  padding: 0 !important;
+}
+
+.app-shell .doc149-upload-modal .document-dropzone-v10,
+.documents-v10-upload-body .document-dropzone-v10 {
+  min-height: 126px !important;
+  grid-template-columns: 48px minmax(0, 1fr) auto !important;
+  gap: 14px !important;
+  padding: 21px !important;
+  border: 1px dashed #8eb8f4 !important;
+  border-radius: 18px !important;
+  background: #f4f8ff !important;
+}
+
+.app-shell .doc149-upload-modal .document-dropzone-v10 strong,
+.documents-v10-upload-body .document-dropzone-v10 strong {
+  color: #0f172a !important;
+  font-size: 15px !important;
+}
+
+.app-shell .doc149-upload-modal .document-dropzone-v10 small,
+.documents-v10-upload-body .document-dropzone-v10 small {
+  color: #64748b !important;
+  font-size: 12px !important;
+}
+
+.app-shell .doc149-upload-modal .document-upload-panel-v10 > .form-grid,
+.documents-v10-upload-body .document-upload-panel-v10 > .form-grid {
+  gap: 12px !important;
+  margin-top: 14px !important;
+  padding: 16px !important;
+  border: 1px solid #d5e4f6 !important;
+  border-radius: 18px !important;
+  background: #fff !important;
+}
+
+.app-shell .doc149-upload-modal .document-upload-panel-v10 > .textarea-field,
+.documents-v10-upload-body .document-upload-panel-v10 > .textarea-field {
+  margin-top: 14px !important;
+}
+
+.app-shell .doc149-upload-modal .document-share-toggle-v10,
+.documents-v10-upload-body .document-share-toggle-v10 {
+  margin-top: 14px !important;
+  padding: 12px 14px !important;
+  border: 1px solid #d5e4f6 !important;
+  border-radius: 14px !important;
+  background: #f8fbff !important;
+}
+
+.app-shell .doc149-upload-modal .document-upload-panel-v10 .modal-actions,
+.documents-v10-upload-body .document-upload-panel-v10 .modal-actions {
+  position: sticky !important;
+  bottom: 0 !important;
+  z-index: 2 !important;
+  margin: 18px 0 0 !important;
+  padding: 14px 0 0 !important;
+  border-top: 1px solid #dce8f7 !important;
+  background: #f7faff !important;
+}
+
+.bp153-invoice-dialog {
+  width: min(960px, calc(100vw - 32px)) !important;
+  max-width: 960px !important;
+  border-radius: 24px !important;
+  background: #f5f9ff !important;
+}
+
+.bp153-invoice-dialog .bp153-invoice-layout {
+  gap: 16px !important;
+  padding: 20px !important;
+}
+
+.bp153-invoice-dialog .bp153-invoice-panel,
+.bp153-invoice-dialog .bp153-invoice-summary,
+.bp153-invoice-dialog .bp153-invoice-notes {
+  border-color: #cfe0f6 !important;
+  border-radius: 18px !important;
+  background: #fff !important;
+  box-shadow: 0 10px 28px rgba(37, 99, 235, .05) !important;
+}
+
+.bp153-invoice-dialog .bp153-panel-title {
+  padding: 18px 20px 0 !important;
+}
+
+.bp153-invoice-dialog .bp153-invoice-grid {
+  gap: 12px !important;
+  padding: 14px 20px 20px !important;
+}
+
+.bp153-invoice-dialog .bp153-invoice-grid > .patient-search-field {
+  display: grid !important;
+  align-content: start !important;
+  gap: 8px !important;
+  min-width: 0 !important;
+  padding: 12px !important;
+  border: 1px solid #d5e4f6 !important;
+  border-radius: 14px !important;
+  background: #f8fbff !important;
+}
+
+.bp153-invoice-dialog .bp153-invoice-grid > .patient-search-field .patient-search-label,
+.bp153-invoice-dialog .bp153-invoice-grid > label > span {
+  color: #64748b !important;
+  font-size: 10px !important;
+  font-weight: 850 !important;
+  letter-spacing: .06em !important;
+  text-transform: uppercase !important;
+}
+
+.bp153-invoice-dialog .bp153-invoice-grid > .patient-search-field .patient-search-input-wrap,
+.bp153-invoice-dialog .bp153-invoice-grid > .patient-search-field .patient-search-selected {
+  min-height: 44px !important;
+  border-color: #cfe0f6 !important;
+  border-radius: 11px !important;
+  background: #fff !important;
+}
+
+.bp153-invoice-dialog .bp153-invoice-grid > label {
+  padding: 12px !important;
+  border-color: #d5e4f6 !important;
+  background: #f8fbff !important;
+}
+
+.bp153-invoice-dialog .bp153-line-editor {
+  overflow: hidden !important;
+}
+
+.bp153-invoice-dialog .bp153-line-head {
+  gap: 14px !important;
+  padding: 18px 20px !important;
+  background: #fbfdff !important;
+}
+
+.bp153-invoice-dialog .bp153-line-head .btn {
+  min-width: 132px !important;
+}
+
+.bp153-invoice-dialog .bp153-line-row {
+  margin: 0 14px 10px !important;
+  border-color: #d5e4f6 !important;
+  border-radius: 13px !important;
+  background: #fbfdff !important;
+}
+
+.bp153-invoice-dialog .bp153-invoice-summary {
+  padding: 20px !important;
+}
+
+.bp153-invoice-dialog .bp153-summary-total {
+  padding-bottom: 18px !important;
+  border-bottom: 1px solid #dce8f7 !important;
+}
+
+@media (max-width: 720px) {
+  .app-shell .doc149-upload-modal,
+  .documents-v10-upload-panel,
+  .bp153-invoice-dialog {
+    width: calc(100vw - 16px) !important;
+    max-width: none !important;
+    max-height: calc(100dvh - 16px) !important;
+    border-radius: 20px !important;
+  }
+
+  .app-shell .doc149-upload-modal > header,
+  .documents-v10-upload-panel > header {
+    padding: 19px 18px 16px !important;
+  }
+
+  .app-shell .doc149-upload-modal > .patient-search-field,
+  .documents-v10-upload-body > .patient-search-field {
+    margin: 12px 18px 0 !important;
+  }
+
+  .app-shell .doc149-upload-modal .document-upload-panel-v10,
+  .documents-v10-upload-body .document-upload-panel-v10 {
+    margin: 12px 18px 18px !important;
+  }
+
+  .app-shell .doc149-upload-modal .document-dropzone-v10,
+  .documents-v10-upload-body .document-dropzone-v10 {
+    grid-template-columns: 42px minmax(0, 1fr) !important;
+    padding: 17px !important;
+  }
+
+  .app-shell .doc149-upload-modal .document-dropzone-v10 .btn,
+  .documents-v10-upload-body .document-dropzone-v10 .btn {
+    grid-column: 1 / -1 !important;
+    width: 100% !important;
+  }
+
+  .bp153-invoice-dialog .bp153-invoice-layout {
+    padding: 12px !important;
+  }
+
+  .bp153-invoice-dialog .bp153-invoice-grid {
+    grid-template-columns: 1fr !important;
+    padding: 12px !important;
+  }
+
+  .bp153-invoice-dialog .bp153-invoice-summary {
+    padding: 16px !important;
+  }
+}
+
+@media (max-width: 430px) {
+  .app-shell .doc149-upload-modal,
+  .documents-v10-upload-panel,
+  .bp153-invoice-dialog {
+    width: 100vw !important;
+    max-height: 100dvh !important;
+    border-radius: 18px 18px 0 0 !important;
+  }
+
+  .app-shell .doc149-upload-modal > header h2,
+  .documents-v10-upload-panel > header h3 {
+    font-size: 23px !important;
+  }
+
+  .bp153-invoice-dialog .bp153-line-head {
+    align-items: stretch !important;
+    flex-direction: column !important;
+  }
+
+  .bp153-invoice-dialog .bp153-line-head .btn {
+    width: 100% !important;
+  }
+}

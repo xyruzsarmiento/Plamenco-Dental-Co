@@ -1,0 +1,166 @@
+/* Appointment workflow polish: aligned fields, reliable scrolling, and safe mobile actions. */
+
+.appointment37-modal {
+  width: min(1120px, calc(100vw - 40px)) !important;
+  max-height: calc(100dvh - 40px) !important;
+  border-color: #cfe0f6 !important;
+  box-shadow: 0 30px 90px rgba(15, 23, 42, .32) !important;
+}
+
+.appointment37-form {
+  min-height: 0 !important;
+  max-height: calc(100dvh - 128px) !important;
+}
+
+.appointment37-content {
+  min-height: 0 !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  overscroll-behavior: contain !important;
+  scroll-padding-bottom: 96px !important;
+  -webkit-overflow-scrolling: touch !important;
+}
+
+.appointment37-section .patient-search-field {
+  width: 100% !important;
+  min-width: 0 !important;
+  box-sizing: border-box !important;
+  padding: 0 !important;
+  border: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.appointment37-section .patient-search-input-wrap,
+.appointment37-section .patient-search-selected {
+  width: 100% !important;
+  box-sizing: border-box !important;
+  border-color: #cfe0f6 !important;
+  border-radius: 13px !important;
+  background: #fbfdff !important;
+  box-shadow: none !important;
+}
+
+.appointment37-section .patient-search-input-wrap:focus-within {
+  border-color: #2563eb !important;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, .1) !important;
+}
+
+.appointment37-section .patient-search-input-wrap input {
+  height: 34px !important;
+  padding: 0 !important;
+  border: 0 !important;
+  outline: 0 !important;
+  box-shadow: none !important;
+  appearance: none !important;
+}
+
+.appointment37-section .patient-search-selected {
+  min-height: 66px !important;
+  padding: 9px 11px !important;
+}
+
+.appointment37-section .patient-search-input-wrap {
+  min-height: 50px !important;
+}
+
+.appointment37-option-card {
+  position: relative !important;
+  z-index: 1 !important;
+  width: 100% !important;
+  min-height: 82px !important;
+  user-select: none !important;
+  -webkit-tap-highlight-color: transparent !important;
+  pointer-events: auto !important;
+}
+
+.appointment37-option-card:active {
+  transform: translateY(0) !important;
+}
+
+.appointment37-option-card.is-selected {
+  border-color: #2563eb !important;
+  background: #eff6ff !important;
+  box-shadow: inset 0 0 0 1px #2563eb, 0 8px 20px rgba(37, 99, 235, .1) !important;
+}
+
+.appointment37-footer {
+  flex: 0 0 auto !important;
+  margin-top: auto !important;
+  padding: 16px 24px max(16px, env(safe-area-inset-bottom)) !important;
+  border-top-color: #dbe7f5 !important;
+  box-shadow: 0 -10px 24px rgba(15, 23, 42, .05) !important;
+}
+
+.appointment37-footer > div {
+  flex-wrap: wrap !important;
+}
+
+.appointment37-footer .btn {
+  min-height: 42px !important;
+  padding-inline: 18px !important;
+}
+
+@media (max-width: 760px) {
+  .appointment37-backdrop {
+    padding: 8px !important;
+    align-items: flex-end !important;
+  }
+
+  .appointment37-modal {
+    width: 100% !important;
+    max-height: calc(100dvh - 16px) !important;
+    border-radius: 22px 22px 0 0 !important;
+  }
+
+  .appointment37-form {
+    max-height: calc(100dvh - 86px) !important;
+  }
+
+  .appointment37-content {
+    max-height: calc(100dvh - 86px) !important;
+    padding-bottom: 0 !important;
+  }
+
+  .appointment37-section {
+    padding-bottom: 24px !important;
+  }
+
+  .appointment37-footer {
+    position: sticky !important;
+    bottom: 0 !important;
+    padding: 12px 15px max(16px, env(safe-area-inset-bottom)) !important;
+  }
+}
+
+@media (max-width: 430px) {
+  .appointment37-backdrop {
+    padding: 0 !important;
+  }
+
+  .appointment37-modal {
+    max-height: 100dvh !important;
+    border-radius: 20px 20px 0 0 !important;
+  }
+
+  .appointment37-form,
+  .appointment37-content {
+    max-height: calc(100dvh - 78px) !important;
+  }
+
+  .appointment37-footer {
+    gap: 8px !important;
+    padding: 11px 12px max(16px, env(safe-area-inset-bottom)) !important;
+  }
+
+  .appointment37-footer > div {
+    width: 100% !important;
+    gap: 8px !important;
+  }
+
+  .appointment37-footer > .btn,
+  .appointment37-footer > div .btn {
+    min-width: 0 !important;
+    flex: 1 1 0 !important;
+  }
+}

@@ -9,7 +9,6 @@ import {
   CheckCircle2,
   Clock3,
   MapPin,
-  Search,
   Sparkles,
   Stethoscope,
   UserRound,
@@ -27,6 +26,7 @@ import { formatServicePrice, servicePriceToCents } from '../services/serviceStor
 import type { AppointmentFormValues } from './appointmentTypes'
 import { addMinutesToTime, getOperatories } from './appointmentStore'
 import { formatAppointmentTime, getAvailableAppointmentSlots } from './availabilityEngine'
+import { PatientSearchCombobox } from '../patients/PatientSearchCombobox'
 
 type AppointmentFormModalProps = {
   patients: Patient[]
@@ -54,7 +54,6 @@ export function AppointmentFormModal({
   values,
 }: AppointmentFormModalProps) {
   const [step, setStep] = useState(0)
-  const [patientSearch, setPatientSearch] = useState('')
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -68,19 +67,6 @@ export function AppointmentFormModal({
   const operatories = getOperatories().filter((operatory) => operatory.branchId === values.branchId && operatory.status === 'active')
   const selectedOperatory = operatories.find((operatory) => operatory.id === values.operatoryId)
   const activeServices = services.filter((service) => service.status === 'active')
-  const filteredPatients = useMemo(() => {
-    const query = patientSearch.trim().toLowerCase()
-    if (!query) return patients.slice(0, 24)
-    return patients.filter((patient) => [
-      patient.firstName,
-      patient.middleName,
-      patient.lastName,
-      patient.patientId,
-      patient.phone,
-      patient.email,
-    ].some((value) => (value ?? '').toLowerCase().includes(query))).slice(0, 24)
-  }, [patientSearch, patients])
-
   const availableSlots = useMemo(() => {
     if (!values.branchId || !values.serviceId || !values.date) return []
     return getAvailableAppointmentSlots({
@@ -196,18 +182,14 @@ export function AppointmentFormModal({
             {step === 0 && (
               <section className="appointment37-section">
                 <div className="appointment37-section-head"><div><span>Step 1</span><h3>Select patient</h3><p>Find the patient record linked to this appointment.</p></div><UserRound size={21} /></div>
-                <label className="appointment37-search" htmlFor="appointment-patient-search"><Search size={17} /><input id="appointment-patient-search" type="text" value={patientSearch} onChange={(event) => setPatientSearch(event.target.value)} placeholder="Search name, patient number, phone or email" autoFocus /></label>
-                <div className="appointment37-choice-list appointment37-patient-list">
-                  {filteredPatients.map((patient) => {
-                    const selected = values.patientId === patient.id || values.patientId === patient.patientId
-                    return <button key={patient.id} type="button" className={selected ? 'is-selected' : ''} onClick={() => onChange({ ...values, patientId: patient.id })}>
-                      <span className="appointment37-avatar">{`${patient.firstName?.[0] ?? ''}${patient.lastName?.[0] ?? ''}`.toUpperCase()}</span>
-                      <span className="appointment37-choice-copy"><strong>{patient.firstName} {patient.lastName}</strong><small>{patient.patientId} · {patient.phone || 'No phone'}{patient.email ? ` · ${patient.email}` : ''}</small></span>
-                      <span className="appointment37-check"><Check size={15} /></span>
-                    </button>
-                  })}
-                  {filteredPatients.length === 0 && <div className="appointment37-empty"><UsersRound size={22} /><strong>No matching patient</strong><span>Add or import the patient record first, then return to scheduling.</span></div>}
-                </div>
+                <PatientSearchCombobox
+                  patients={patients}
+                  value={values.patientId}
+                  required
+                  autoFocus
+                  placeholder="Search name, patient number, phone or email"
+                  onSelect={(patient) => onChange({ ...values, patientId: patient?.id ?? '' })}
+                />
               </section>
             )}
 
@@ -227,12 +209,13 @@ export function AppointmentFormModal({
             {step === 2 && (
               <section className="appointment37-section">
                 <div className="appointment37-section-head"><div><span>Step 3</span><h3>Select service</h3><p>Choose the procedure or consultation for this visit.</p></div><Stethoscope size={21} /></div>
-                <div className="appointment37-card-grid">
-                  {activeServices.map((service) => <button key={service.id} type="button" className={`appointment37-option-card ${values.serviceId === service.id ? 'is-selected' : ''}`} onClick={() => handleServiceChange(service.id)}>
+                <div className="appointment37-card-grid" aria-label="Available services">
+                  {activeServices.map((service) => <button key={service.id} type="button" aria-pressed={values.serviceId === service.id} className={`appointment37-option-card ${values.serviceId === service.id ? 'is-selected' : ''}`} onClick={() => handleServiceChange(service.id)}>
                     <span className="appointment37-option-icon"><Stethoscope size={18} /></span>
                     <span><strong>{service.name}</strong><small>{service.category || 'Dental service'}</small><em>{service.duration} min · {formatServicePrice(service.price)}</em></span>
                     <i><Check size={14} /></i>
                   </button>)}
+                  {activeServices.length === 0 && <div className="appointment37-empty appointment37-empty-wide"><Stethoscope size={22} /><strong>No active services available</strong><span>Services could not be loaded for this clinic. Refresh the page and try again.</span></div>}
                 </div>
               </section>
             )}
