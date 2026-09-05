@@ -3,6 +3,7 @@ import { BarChart3, CircleDollarSign } from 'lucide-react'
 import { BilledValueByServiceV52, MostAvailedServicesV52 } from '../components/ui/ServiceAnalyticsV52'
 import { buildEnterpriseReportSnapshot, formatReportCurrency } from '../features/reports/reportStore'
 import { ServicesPageV15 } from './ServicesPageV15'
+import '../styles/services-search-control.css'
 
 export function ServicesPageV49() {
   const snapshot = useMemo(() => buildEnterpriseReportSnapshot({ filters: { preset: 'this_month' } }), [])
