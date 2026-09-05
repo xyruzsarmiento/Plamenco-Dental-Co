@@ -1,0 +1,129 @@
+/* Billing dialogs render through a body portal, so these rules must not depend on .app-shell ancestry. */
+.bp153-dialog-layer {
+  overflow: auto !important;
+  overscroll-behavior: contain !important;
+}
+
+.bp153-dialog {
+  min-height: 0 !important;
+}
+
+.bp153-dialog-body {
+  min-height: 0 !important;
+  overflow-y: auto !important;
+  overscroll-behavior: contain !important;
+  -webkit-overflow-scrolling: touch !important;
+}
+
+.bp153-dialog-icon {
+  position: relative !important;
+  display: grid !important;
+  flex: 0 0 48px !important;
+  place-items: center !important;
+  width: 48px !important;
+  min-width: 48px !important;
+  max-width: 48px !important;
+  height: 48px !important;
+  min-height: 48px !important;
+  max-height: 48px !important;
+  padding: 0 !important;
+  overflow: hidden !important;
+  box-sizing: border-box !important;
+}
+
+.bp153-dialog-icon > svg,
+.bp153-dialog-icon svg {
+  position: static !important;
+  inset: auto !important;
+  display: block !important;
+  width: 20px !important;
+  height: 20px !important;
+  min-width: 20px !important;
+  max-width: 20px !important;
+  min-height: 20px !important;
+  max-height: 20px !important;
+  margin: 0 !important;
+  transform: none !important;
+}
+
+.bp153-dialog-titleline {
+  align-items: flex-start !important;
+}
+
+@media (max-width: 720px) {
+  .bp153-dialog-layer {
+    align-items: flex-end !important;
+    justify-content: center !important;
+    padding: 8px !important;
+  }
+
+  .bp153-dialog,
+  .bp153-invoice-dialog {
+    grid-template-rows: auto minmax(0, 1fr) auto !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    height: auto !important;
+    max-height: calc(100dvh - 16px) !important;
+    min-height: 0 !important;
+    overflow: hidden !important;
+    border-radius: 20px !important;
+  }
+
+  .bp153-dialog-head,
+  .bp153-invoice-head {
+    flex: 0 0 auto !important;
+    padding: 17px 16px !important;
+  }
+
+  .bp153-dialog-body,
+  .bp153-invoice-body {
+    min-height: 0 !important;
+    max-height: none !important;
+    overflow-y: auto !important;
+    overscroll-behavior: contain !important;
+    -webkit-overflow-scrolling: touch !important;
+  }
+
+  .bp153-dialog-footer,
+  .bp153-invoice-footer {
+    position: relative !important;
+    z-index: 2 !important;
+    flex: 0 0 auto !important;
+    padding: 12px 14px max(12px, env(safe-area-inset-bottom)) !important;
+    background: #fff !important;
+  }
+}
+
+@media (max-width: 560px) {
+  .bp153-dialog-footer,
+  .bp153-invoice-footer {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 8px !important;
+  }
+
+  .bp153-dialog-footer > div:last-child,
+  .bp153-invoice-footer > div:last-child {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    width: 100% !important;
+  }
+
+  .bp153-dialog-footer .btn,
+  .bp153-dialog-footer .button {
+    width: 100% !important;
+    justify-content: center !important;
+  }
+}
+
+@media (max-width: 430px) {
+  .bp153-dialog-layer {
+    padding: 5px !important;
+  }
+
+  .bp153-dialog,
+  .bp153-invoice-dialog {
+    max-height: calc(100dvh - 10px) !important;
+    border-radius: 17px !important;
+  }
+}
