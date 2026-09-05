@@ -1,30 +1,39 @@
 /*
  * Authoritative internal-portal modal positioning.
- * Desktop/tablet dialogs remain centered. Mobile dialogs become bottom sheets,
- * matching the Clinic Scheduling modal's positioning model.
+ *
+ * The existing Finance Operations modal and Clinic Scheduling modal are the
+ * reference implementations on mobile: the overlay fills the viewport while
+ * the modal surface is anchored to the bottom, uses the full available width,
+ * keeps rounded top corners, and owns its internal scrolling.
+ *
+ * This file is intentionally loaded AFTER App.tsx in main.tsx so page/module
+ * CSS cannot silently restore centered/floating mobile dialogs afterwards.
  */
 :root {
   --internal-sheet-backdrop: rgba(15, 23, 42, .52);
   --internal-sheet-radius: 24px;
-  --internal-sheet-mobile-height: 86dvh;
+  --internal-sheet-mobile-max-height: 94dvh;
 }
 
-/* Keep internal overlays above the application chrome. */
-.app-shell :is(
+/*
+ * These are the actual overlay families currently used by internal routes.
+ * Billing is important here: bp153 uses *-layer classes, not *-backdrop, which
+ * is why the previous shared rule never moved Create Invoice / Apply Collection.
+ */
+body:has(.app-shell) :is(
   .modal-backdrop,
   [class*='modal-backdrop'],
   [class*='drawer-backdrop'],
   [class*='dialog-backdrop'],
-  [class*='sheet-backdrop']
-),
-body > :is(
-  .modal-backdrop,
+  [class*='sheet-backdrop'],
+  .bp153-dialog-layer,
+  .bp153-drawer-layer,
+  .expense-modal-backdrop,
   .inv182-modal-backdrop,
   .inv56-backdrop,
   .doc149-modal-backdrop,
   .doc149-drawer-backdrop,
   .ex57-modal-backdrop,
-  .expense-modal-backdrop,
   .svc15-modal-backdrop,
   .rep162-modal-backdrop,
   .data-import-v21-modal-backdrop,
@@ -38,28 +47,28 @@ body > :is(
   position: fixed !important;
   inset: 0 !important;
   z-index: 16000 !important;
+  box-sizing: border-box !important;
   background: var(--internal-sheet-backdrop) !important;
-  backdrop-filter: blur(10px) saturate(115%);
-  -webkit-backdrop-filter: blur(10px) saturate(115%);
+  backdrop-filter: blur(10px) saturate(115%) !important;
+  -webkit-backdrop-filter: blur(10px) saturate(115%) !important;
 }
 
-/* Desktop and tablet keep the existing centered-dialog model. */
+/* Desktop/tablet keep their existing centered-dialog model. */
 @media (min-width: 761px) {
-  .app-shell :is(
+  body:has(.app-shell) :is(
     .modal-backdrop,
     [class*='modal-backdrop'],
     [class*='drawer-backdrop'],
     [class*='dialog-backdrop'],
-    [class*='sheet-backdrop']
-  ),
-  body > :is(
-    .modal-backdrop,
+    [class*='sheet-backdrop'],
+    .bp153-dialog-layer,
+    .bp153-drawer-layer,
+    .expense-modal-backdrop,
     .inv182-modal-backdrop,
     .inv56-backdrop,
     .doc149-modal-backdrop,
     .doc149-drawer-backdrop,
     .ex57-modal-backdrop,
-    .expense-modal-backdrop,
     .svc15-modal-backdrop,
     .rep162-modal-backdrop,
     .data-import-v21-modal-backdrop,
@@ -75,26 +84,26 @@ body > :is(
   }
 }
 
-/*
- * Mobile = Clinic Scheduling-style bottom sheet.
- * The backdrop owns the viewport; the dialog owns its own internal scroll.
- */
 @media (max-width: 760px) {
-  .app-shell :is(
+  /*
+   * Exact positioning model used by Finance Operations / Clinic Scheduling:
+   * no modal gutter, bottom anchored, backdrop remains visible above shorter
+   * dialogs, and long dialogs stop at a viewport-safe maximum.
+   */
+  body:has(.app-shell) :is(
     .modal-backdrop,
     [class*='modal-backdrop'],
     [class*='drawer-backdrop'],
     [class*='dialog-backdrop'],
-    [class*='sheet-backdrop']
-  ),
-  body > :is(
-    .modal-backdrop,
+    [class*='sheet-backdrop'],
+    .bp153-dialog-layer,
+    .bp153-drawer-layer,
+    .expense-modal-backdrop,
     .inv182-modal-backdrop,
     .inv56-backdrop,
     .doc149-modal-backdrop,
     .doc149-drawer-backdrop,
     .ex57-modal-backdrop,
-    .expense-modal-backdrop,
     .svc15-modal-backdrop,
     .rep162-modal-backdrop,
     .data-import-v21-modal-backdrop,
@@ -108,35 +117,26 @@ body > :is(
     display: flex !important;
     align-items: flex-end !important;
     justify-content: center !important;
+    place-items: unset !important;
     padding: 0 !important;
     overflow: hidden !important;
   }
 
-  /* Any direct modal surface in a recognized backdrop becomes a bottom sheet. */
-  .app-shell :is(
+  /* Direct modal surfaces inside every known internal overlay. */
+  body:has(.app-shell) :is(
     .modal-backdrop,
     [class*='modal-backdrop'],
     [class*='drawer-backdrop'],
     [class*='dialog-backdrop'],
-    [class*='sheet-backdrop']
-  ) > :is(
-    [role='dialog'],
-    .modal,
-    form,
-    section,
-    article,
-    [class*='modal'],
-    [class*='drawer'],
-    [class*='dialog']
-  ),
-  body > :is(
-    .modal-backdrop,
+    [class*='sheet-backdrop'],
+    .bp153-dialog-layer,
+    .bp153-drawer-layer,
+    .expense-modal-backdrop,
     .inv182-modal-backdrop,
     .inv56-backdrop,
     .doc149-modal-backdrop,
     .doc149-drawer-backdrop,
     .ex57-modal-backdrop,
-    .expense-modal-backdrop,
     .svc15-modal-backdrop,
     .rep162-modal-backdrop,
     .data-import-v21-modal-backdrop,
@@ -149,12 +149,23 @@ body > :is(
   ) > :is(
     [role='dialog'],
     .modal,
+    .expense-modal,
+    .bp153-dialog,
+    .bp153-drawer,
+    .team-v26-modal,
+    .team-v26-drawer,
+    .inv182-add-modal,
+    .inv183-manage-modal,
+    .inventory-action-modal,
+    .svc15-modal,
+    .doc149-upload-modal,
+    .doc149-drawer,
+    .dentists133-drawer,
+    .dv16-modal,
     form,
     section,
-    article,
-    [class*='modal'],
-    [class*='drawer'],
-    [class*='dialog']
+    aside,
+    article
   ) {
     position: relative !important;
     inset: auto !important;
@@ -165,92 +176,107 @@ body > :is(
     width: 100% !important;
     max-width: 100% !important;
     height: auto !important;
-    max-height: var(--internal-sheet-mobile-height) !important;
+    max-height: var(--internal-sheet-mobile-max-height) !important;
     margin: 0 !important;
-    border-radius: var(--internal-sheet-radius) var(--internal-sheet-radius) 0 0 !important;
-    border-inline: 0 !important;
-    border-bottom: 0 !important;
-    overflow: hidden !important;
     box-sizing: border-box !important;
-    transform: none !important;
-  }
-
-  /* Known modal families that sometimes are not direct role=dialog children. */
-  .team-v26-drawer.team-v26-account-modal-v153,
-  .team-v26-modal,
-  .bp153-dialog,
-  .bp153-drawer,
-  .doc149-upload-modal,
-  .doc149-drawer,
-  .inv182-add-modal,
-  .inv183-manage-modal,
-  .inventory-action-modal,
-  .svc15-modal,
-  .dentists133-drawer,
-  .dv16-modal {
-    width: 100% !important;
-    max-width: 100% !important;
-    height: auto !important;
-    max-height: var(--internal-sheet-mobile-height) !important;
-    margin: 0 !important;
     border-radius: var(--internal-sheet-radius) var(--internal-sheet-radius) 0 0 !important;
-    overflow: hidden !important;
+    border-bottom: 0 !important;
     transform: none !important;
+    overflow: hidden !important;
   }
 
-  /* Account modal previously carried an explicit near-full-screen height. */
-  .app-shell .team-v26-drawer.team-v26-account-modal-v153,
-  body .team-v26-drawer.team-v26-account-modal-v153 {
-    display: grid !important;
-    grid-template-rows: auto minmax(0, 1fr) auto !important;
-    height: auto !important;
-    max-height: var(--internal-sheet-mobile-height) !important;
-  }
-
-  /* Long modal content scrolls inside the sheet rather than stretching it. */
-  :is(
-    [role='dialog'],
-    .modal,
-    .team-v26-drawer,
-    .team-v26-modal,
+  /*
+   * Some modal surfaces are not a clean direct child because legacy wrappers
+   * differ by module. Force the known surfaces to use the same sheet geometry.
+   */
+  body:has(.app-shell) :is(
     .bp153-dialog,
     .bp153-drawer,
-    .doc149-upload-modal,
-    .doc149-drawer,
+    .expense-modal,
+    .team-v26-drawer.team-v26-account-modal-v153,
+    .team-v26-modal,
     .inv182-add-modal,
     .inv183-manage-modal,
     .inventory-action-modal,
+    .patient-modal,
+    .patient-intake-modal-v3,
     .svc15-modal,
+    .doc149-upload-modal,
+    .doc149-drawer,
+    .dentists133-drawer,
+    .dv16-modal
+  ) {
+    width: 100% !important;
+    max-width: 100% !important;
+    height: auto !important;
+    max-height: var(--internal-sheet-mobile-max-height) !important;
+    margin: 0 !important;
+    border-radius: var(--internal-sheet-radius) var(--internal-sheet-radius) 0 0 !important;
+    transform: none !important;
+    overflow: hidden !important;
+  }
+
+  /* Account details is a three-region grid: header / scroll body / footer. */
+  body:has(.app-shell) .team-v26-drawer.team-v26-account-modal-v153 {
+    display: grid !important;
+    grid-template-rows: auto minmax(0, 1fr) auto !important;
+  }
+
+  /* Long forms/lists scroll inside the sheet instead of moving the sheet. */
+  body:has(.app-shell) :is(
+    [role='dialog'],
+    .modal,
+    .bp153-dialog,
+    .bp153-drawer,
+    .expense-modal,
+    .team-v26-drawer,
+    .team-v26-modal,
+    .inv182-add-modal,
+    .inv183-manage-modal,
+    .inventory-action-modal,
+    .patient-modal,
+    .svc15-modal,
+    .doc149-upload-modal,
+    .doc149-drawer,
     .dentists133-drawer,
     .dv16-modal
   ) :is(
     [class*='body'],
     [class*='content'],
-    [class*='form-body'],
     [class*='drawer-body'],
-    [class*='modal-body']
+    [class*='modal-body'],
+    [class*='form-body'],
+    .patient-intake-body-v3
   ) {
     min-height: 0 !important;
     overflow-x: hidden !important;
     overflow-y: auto !important;
-    overscroll-behavior: contain;
+    overscroll-behavior: contain !important;
     -webkit-overflow-scrolling: touch;
   }
 
-  /* Keep action bars reachable while the body scrolls. */
-  :is(
+  /* Forms themselves must be allowed to shrink within the capped sheet. */
+  body:has(.app-shell) :is([role='dialog'], .modal, .patient-modal) > form {
+    min-height: 0 !important;
+    max-height: 100% !important;
+  }
+
+  /* Keep the action area reachable while the content scrolls. */
+  body:has(.app-shell) :is(
     [role='dialog'],
     .modal,
-    .team-v26-drawer,
-    .team-v26-modal,
     .bp153-dialog,
     .bp153-drawer,
-    .doc149-upload-modal,
-    .doc149-drawer,
+    .expense-modal,
+    .team-v26-drawer,
+    .team-v26-modal,
     .inv182-add-modal,
     .inv183-manage-modal,
     .inventory-action-modal,
+    .patient-modal,
     .svc15-modal,
+    .doc149-upload-modal,
+    .doc149-drawer,
     .dentists133-drawer,
     .dv16-modal
   ) > :is(
@@ -260,43 +286,45 @@ body > :is(
   ) {
     position: sticky !important;
     bottom: 0 !important;
-    z-index: 6 !important;
+    z-index: 8 !important;
     flex-shrink: 0 !important;
     padding-bottom: max(10px, env(safe-area-inset-bottom)) !important;
-    background: rgba(255,255,255,.97) !important;
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
+    background: rgba(255, 255, 255, .98) !important;
+    backdrop-filter: blur(12px) !important;
+    -webkit-backdrop-filter: blur(12px) !important;
   }
 
-  /* Preserve the native Clinic Scheduling modal as the reference implementation. */
-  .appointment37-backdrop {
+  /* Preserve the two reference implementations explicitly. */
+  body:has(.app-shell) .appointment37-backdrop,
+  body:has(.app-shell) .expense-modal-backdrop {
     display: flex !important;
     align-items: flex-end !important;
     justify-content: center !important;
     padding: 0 !important;
   }
 
-  .appointment37-modal {
+  body:has(.app-shell) .appointment37-modal,
+  body:has(.app-shell) .expense-modal {
     width: 100% !important;
     max-width: 100% !important;
-    max-height: 96dvh !important;
-    border-radius: 24px 24px 0 0 !important;
+    height: auto !important;
+    max-height: var(--internal-sheet-mobile-max-height) !important;
+    border-radius: var(--internal-sheet-radius) var(--internal-sheet-radius) 0 0 !important;
   }
 }
 
 @media (max-width: 430px) {
-  :root {
-    --internal-sheet-mobile-height: 84dvh;
-    --internal-sheet-radius: 20px;
-  }
-}
-
-@media (max-width: 360px) {
-  :root { --internal-sheet-mobile-height: 82dvh; }
+  :root { --internal-sheet-radius: 20px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  :is([role='dialog'], [class*='modal-backdrop'], [class*='drawer-backdrop']) {
+  body:has(.app-shell) :is(
+    [role='dialog'],
+    [class*='modal-backdrop'],
+    [class*='drawer-backdrop'],
+    .bp153-dialog-layer,
+    .bp153-drawer-layer
+  ) {
     transition: none !important;
     animation: none !important;
     scroll-behavior: auto !important;
