@@ -96,17 +96,31 @@ export function PatientSearchCombobox({
     if (!input) return
     const rect = input.getBoundingClientRect()
     const gutter = 8
-    const availableBelow = window.innerHeight - rect.bottom - gutter - 12
-    const availableAbove = rect.top - gutter - 12
+    const availableBelow = Math.max(0, window.innerHeight - rect.bottom - gutter)
+    const availableAbove = Math.max(0, rect.top - gutter)
     const shouldFlip = availableBelow < 220 && availableAbove > availableBelow
-    const maxHeight = Math.max(160, Math.min(360, shouldFlip ? availableAbove : availableBelow))
+    const availableHeight = shouldFlip ? availableAbove : availableBelow
+    const maxHeight = Math.max(120, Math.min(360, availableHeight))
     const width = Math.min(rect.width, window.innerWidth - gutter * 2)
     const left = Math.min(Math.max(gutter, rect.left), Math.max(gutter, window.innerWidth - width - gutter))
+
+    if (shouldFlip) {
+      setPopoverStyle({
+        left,
+        width,
+        maxHeight,
+        top: 'auto',
+        bottom: Math.max(gutter, window.innerHeight - rect.top + gutter),
+      })
+      return
+    }
+
     setPopoverStyle({
       left,
-      top: shouldFlip ? Math.max(gutter, rect.top - maxHeight - gutter) : Math.min(rect.bottom + gutter, window.innerHeight - maxHeight - gutter),
       width,
       maxHeight,
+      top: Math.min(rect.bottom + gutter, window.innerHeight - gutter),
+      bottom: 'auto',
     })
   }
 
