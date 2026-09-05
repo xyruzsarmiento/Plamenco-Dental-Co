@@ -1,11 +1,11 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Activity, CheckCircle2, Clock3, Eye, Filter, Layers3, PencilLine, Plus, Search, ShieldCheck, Stethoscope, X, XCircle } from 'lucide-react'
+import { Activity, CheckCircle2, Clock3, Database, Eye, Filter, Layers3, PencilLine, PhilippinePeso, Plus, Search, ShieldCheck, Stethoscope, X, XCircle } from 'lucide-react'
 import { PageScaffold } from '../components/ui/PageScaffold'
 import { Button } from '../components/ui/Button'
 import { Pagination } from '../components/ui/DesignSystem'
 import { ServiceFormModalV15 } from '../features/services/ServiceFormModalV15'
 import type { Service, ServiceFormValues, ServiceStatus } from '../features/services/serviceTypes'
-import { createServicePersisted, formatServicePrice, getStoredServices, loadServicesFromSupabase, toggleServiceStatus, updateServicePersisted } from '../features/services/serviceStore'
+import { createServicePersisted, formatServicePrice, getStoredServices, loadServicesFromSupabase, toggleServiceStatusPersisted, updateServicePersisted } from '../features/services/serviceStore'
 
 function keyFor(service: Service) {
   const name = service.name.trim().toLowerCase().replace(/\s+/g, ' ')
@@ -36,13 +36,23 @@ export function ServicesPageV15() {
   const [viewing, setViewing] = useState<Service | null>(null)
   const [feedback, setFeedback] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
+  const [togglingId, setTogglingId] = useState<string | null>(null)
   const [servicePage, setServicePage] = useState(1)
 
   useEffect(() => {
     let mounted = true
-    void loadServicesFromSupabase().then((loaded) => {
-      if (mounted) setServices(loaded)
-    })
+    void loadServicesFromSupabase({ strict: true })
+      .then((loaded) => {
+        if (!mounted) return
+        setServices(loaded)
+        setFeedback(null)
+      })
+      .catch((cause) => {
+        if (!mounted) return
+        setServices([])
+        setFeedback(cause instanceof Error ? cause.message : 'Unable to load services from the clinic database.')
+      })
+
     const sync = () => setServices(getStoredServices())
     window.addEventListener('plamenco:services-updated', sync)
     return () => {
@@ -69,13 +79,8 @@ export function ServicesPageV15() {
     return filtered.slice((safePage - 1) * SERVICE_PAGE_SIZE, safePage * SERVICE_PAGE_SIZE)
   }, [filtered, servicePage, servicePageCount])
 
-  useEffect(() => {
-    setServicePage(1)
-  }, [category, search, status])
-
-  useEffect(() => {
-    setServicePage((page) => Math.min(page, servicePageCount))
-  }, [servicePageCount])
+  useEffect(() => setServicePage(1), [category, search, status])
+  useEffect(() => setServicePage((page) => Math.min(page, servicePageCount)), [servicePageCount])
 
   const summary = useMemo(() => ({
     total: uniqueServices.length,
@@ -110,20 +115,34 @@ export function ServicesPageV15() {
     try {
       if (mode === 'add') await createServicePersisted(values)
       else if (editing) await updateServicePersisted(editing.id, values)
+      const fresh = await loadServicesFromSupabase({ strict: true })
+      setServices(fresh)
       setShowForm(false)
       setEditing(undefined)
-      refresh(mode === 'add' ? 'Service saved to the clinic catalogue.' : 'Service changes saved to the clinic catalogue.')
+      setFeedback(mode === 'add' ? 'Service saved to Supabase and added to the clinic catalogue.' : 'Service changes saved to Supabase.')
     } catch (cause) {
-      setFeedback(cause instanceof Error ? cause.message : 'The service could not be saved to the clinic catalogue.')
+      const message = cause instanceof Error ? cause.message : 'The service could not be saved to the clinic database.'
+      setFeedback(message)
       throw cause
     } finally {
       setSaving(false)
     }
   }
 
-  function toggle(service: Service) {
-    const updated = toggleServiceStatus(service.id)
-    if (updated) refresh(`${updated.name} is now ${updated.status}.`)
+  async function toggle(service: Service) {
+    if (togglingId) return
+    setTogglingId(service.id)
+    setFeedback(null)
+    try {
+      const updated = await toggleServiceStatusPersisted(service.id)
+      const fresh = await loadServicesFromSupabase({ strict: true })
+      setServices(fresh)
+      if (updated) setFeedback(`${updated.name} is now ${updated.status}. Change saved to Supabase.`)
+    } catch (cause) {
+      setFeedback(cause instanceof Error ? cause.message : 'Unable to update service status in the clinic database.')
+    } finally {
+      setTogglingId(null)
+    }
   }
 
   return (
@@ -148,7 +167,7 @@ export function ServicesPageV15() {
         </section>
 
         {duplicateCount > 0 && <div className="svc15-dedupe-note"><ShieldCheck size={17} /><div><strong>{duplicateCount} duplicate catalogue {duplicateCount === 1 ? 'entry' : 'entries'} hidden</strong><span>Cards with the same normalized service name and category are collapsed to the most recently updated record.</span></div></div>}
-        {feedback && <div className="svc15-feedback" role="status">{feedback}</div>}
+        {feedback && <div className="svc15-feedback" role="status"><Database size={16} />{feedback}</div>}
 
         <div className="svc15-section-head"><div><span>Service library</span><h3>{filtered.length} {filtered.length === 1 ? 'service' : 'services'}</h3></div><div className="svc15-view-label"><Filter size={15} /> Filtered catalogue</div></div>
 
@@ -161,23 +180,38 @@ export function ServicesPageV15() {
                 <h3>{service.name}</h3>
                 <p>{service.description || 'No description provided.'}</p>
                 <div className="svc15-card-metrics"><div><span>Catalogue price</span><strong>{formatServicePrice(service.price)}</strong></div><div><span>Duration</span><strong>{service.duration} min</strong></div></div>
-                <div className="svc15-card-actions"><Button variant="secondary" size="sm" icon={<Eye size={14} />} onClick={() => setViewing(service)}>Details</Button><Button variant="secondary" size="sm" icon={<PencilLine size={14} />} onClick={() => edit(service)}>Edit</Button><button type="button" className="svc15-toggle" onClick={() => toggle(service)}>{service.status === 'active' ? 'Deactivate' : 'Activate'}</button></div>
+                <div className="svc15-card-actions"><Button variant="secondary" size="sm" icon={<Eye size={14} />} onClick={() => setViewing(service)}>Details</Button><Button variant="secondary" size="sm" icon={<PencilLine size={14} />} onClick={() => edit(service)}>Edit</Button><button type="button" className="svc15-toggle" onClick={() => void toggle(service)} disabled={togglingId === service.id}>{togglingId === service.id ? 'Saving…' : service.status === 'active' ? 'Deactivate' : 'Activate'}</button></div>
               </article>
             ))}
           </div>
         ) : (
-          <div className="svc15-empty"><Search size={24} /><h3>No services match this view</h3><p>Adjust your filters or create a new service.</p><Button className="svc15-add-service-btn" onClick={add} icon={<Plus size={15} />}>Add service</Button></div>
+          <div className="svc15-empty"><Search size={24} /><h3>No services match this view</h3><p>{feedback ? 'The live catalogue is unavailable or empty. Check the database connection and try again.' : 'Adjust your filters or create a new service.'}</p><Button className="svc15-add-service-btn" onClick={add} icon={<Plus size={15} />}>Add service</Button></div>
         )}
         <Pagination page={servicePage} pageCount={servicePageCount} totalItems={filtered.length} pageSize={SERVICE_PAGE_SIZE} onPageChange={setServicePage} label="Service library pages" />
 
         {showForm && <ServiceFormModalV15 mode={mode} service={editing} existingServices={uniqueServices} onSubmit={save} onClose={() => { setShowForm(false); setEditing(undefined) }} isSubmitting={saving} />}
 
         {viewing && (
-          <div className="svc15-modal-backdrop" onClick={() => setViewing(null)}>
-            <aside className="svc15-detail" role="dialog" aria-modal="true" aria-labelledby="svc15-detail-title" onClick={(event) => event.stopPropagation()}>
-              <div className="svc15-detail-head"><div><span>Service detail</span><h2 id="svc15-detail-title">{viewing.name}</h2><p>{viewing.category} · {viewing.status}</p></div><button type="button" onClick={() => setViewing(null)} aria-label="Close service details"><X size={19} /></button></div>
-              <div className="svc15-detail-body"><div className="svc15-detail-icon"><Activity size={24} /></div><p>{viewing.description || 'No description provided.'}</p><div className="svc15-detail-metrics"><div><span>Catalogue price</span><strong>{formatServicePrice(viewing.price)}</strong></div><div><span>Duration</span><strong>{viewing.duration} minutes</strong></div><div><span>Status</span><strong>{viewing.status}</strong></div><div><span>Category</span><strong>{viewing.category}</strong></div></div></div>
-              <div className="svc15-detail-actions"><Button variant="secondary" onClick={() => setViewing(null)}>Close</Button><Button onClick={() => edit(viewing)}>Edit service</Button></div>
+          <div className="svc15-modal-backdrop svc-detail-backdrop" onClick={() => setViewing(null)}>
+            <aside className="svc15-detail svc-premium-detail" role="dialog" aria-modal="true" aria-labelledby="svc15-detail-title" onClick={(event) => event.stopPropagation()}>
+              <header className="svc15-detail-head svc-premium-detail-head">
+                <div className="svc-premium-detail-titleline">
+                  <span className="svc-premium-detail-icon"><Stethoscope size={22} /></span>
+                  <div><span>Service detail</span><h2 id="svc15-detail-title">{viewing.name}</h2><p>{viewing.category} catalogue service</p></div>
+                </div>
+                <button type="button" onClick={() => setViewing(null)} aria-label="Close service details"><X size={19} /></button>
+              </header>
+              <div className="svc15-detail-body svc-premium-detail-body">
+                <div className="svc-premium-detail-status"><span className={`svc15-status ${viewing.status === 'active' ? 'is-active' : ''}`}>{viewing.status}</span><span><Database size={14} /> Supabase catalogue record</span></div>
+                <section className="svc-premium-detail-description"><span>Patient-facing description</span><p>{viewing.description || 'No description provided.'}</p></section>
+                <div className="svc15-detail-metrics svc-premium-detail-metrics">
+                  <div><span><PhilippinePeso size={14} /> Catalogue price</span><strong>{formatServicePrice(viewing.price)}</strong></div>
+                  <div><span><Clock3 size={14} /> Duration</span><strong>{viewing.duration} minutes</strong></div>
+                  <div><span>Category</span><strong>{viewing.category}</strong></div>
+                  <div><span>Availability</span><strong>{viewing.status === 'active' ? 'Available' : 'Unavailable'}</strong></div>
+                </div>
+              </div>
+              <footer className="svc15-detail-actions svc-premium-detail-actions"><Button variant="secondary" onClick={() => setViewing(null)}>Close</Button><Button icon={<PencilLine size={15} />} onClick={() => edit(viewing)}>Edit service</Button></footer>
             </aside>
           </div>
         )}
