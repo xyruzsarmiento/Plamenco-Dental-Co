@@ -274,8 +274,8 @@ function WeekView(props: ViewProps) {
         <div className="week-time-axis" />
         {weekDays.map((date) => <div key={formatDate(date)} className="advanced-week-heading">{date.toLocaleDateString('en-US', { weekday: 'short', day: 'numeric' })}</div>)}
         {hours.map((hour) => (
-          <>
-            <div key={`label-${hour}`} className="week-time-axis">{formatAppointmentTime(`${String(hour).padStart(2, '0')}:00`)}</div>
+          <Fragment key={`hour-${hour}`}>
+            <div className="week-time-axis">{formatAppointmentTime(`${String(hour).padStart(2, '0')}:00`)}</div>
             {weekDays.map((date) => {
               const dateStr = formatDate(date)
               const time = `${String(hour).padStart(2, '0')}:00`
@@ -288,7 +288,7 @@ function WeekView(props: ViewProps) {
                 </div>
               )
             })}
-          </>
+          </Fragment>
         ))}
       </div>
     </CalendarShell>

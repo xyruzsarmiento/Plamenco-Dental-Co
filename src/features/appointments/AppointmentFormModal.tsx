@@ -61,7 +61,7 @@ export function AppointmentFormModal({
   }
 
   const selectedPatient = patients.find((patient) => patient.id === values.patientId || patient.patientId === values.patientId)
-  const selectedService = services.find((service) => service.id === values.serviceId)
+  const selectedService = services.find((service) => String(service.id) === String(values.serviceId))
   const selectedBranch = branches.find((branch) => branch.id === values.branchId)
   const selectedProvider = providers.find((provider) => provider.id === values.providerId)
   const operatories = getOperatories().filter((operatory) => operatory.branchId === values.branchId && operatory.status === 'active')
@@ -88,7 +88,7 @@ export function AppointmentFormModal({
   ]
 
   function handleServiceChange(serviceId: string) {
-    const service = services.find((entry) => entry.id === serviceId)
+    const service = services.find((entry) => String(entry.id) === String(serviceId))
     if (!service) {
       onChange({ ...values, serviceId })
       return
@@ -210,11 +210,15 @@ export function AppointmentFormModal({
               <section className="appointment37-section">
                 <div className="appointment37-section-head"><div><span>Step 3</span><h3>Select service</h3><p>Choose the procedure or consultation for this visit.</p></div><Stethoscope size={21} /></div>
                 <div className="appointment37-card-grid" aria-label="Available services">
-                  {activeServices.map((service) => <button key={service.id} type="button" aria-pressed={values.serviceId === service.id} className={`appointment37-option-card ${values.serviceId === service.id ? 'is-selected' : ''}`} onClick={() => handleServiceChange(service.id)}>
+                  {activeServices.map((service) => {
+                    const serviceId = String(service.id)
+                    const isSelected = String(values.serviceId) === serviceId
+                    return <button key={serviceId} data-service-id={serviceId} type="button" aria-pressed={isSelected} className={`appointment37-option-card ${isSelected ? 'is-selected' : ''}`} onClick={() => handleServiceChange(serviceId)}>
                     <span className="appointment37-option-icon"><Stethoscope size={18} /></span>
                     <span><strong>{service.name}</strong><small>{service.category || 'Dental service'}</small><em>{service.duration} min · {formatServicePrice(service.price)}</em></span>
                     <i><Check size={14} /></i>
-                  </button>)}
+                    </button>
+                  })}
                   {activeServices.length === 0 && <div className="appointment37-empty appointment37-empty-wide"><Stethoscope size={22} /><strong>No active services available</strong><span>Services could not be loaded for this clinic. Refresh the page and try again.</span></div>}
                 </div>
               </section>

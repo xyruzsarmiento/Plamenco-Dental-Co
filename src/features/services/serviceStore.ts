@@ -73,14 +73,15 @@ function remoteRow(service: Service) {
 function mapServiceRow(row: Record<string, any>, fallback?: Service): Service {
   const now = new Date().toISOString()
   return {
-    id: row.id,
+    // Keep catalog identifiers in the same string form used by appointments.serviceId.
+    id: String(row.id ?? fallback?.id ?? ''),
     name: row.name ?? fallback?.name ?? '',
     description: row.description ?? fallback?.description ?? '',
     duration: Number(row.duration ?? fallback?.duration ?? 30),
     price: Number(row.price ?? fallback?.price ?? 0),
     category: row.category ?? fallback?.category ?? 'General',
-    status: row.status ?? fallback?.status ?? 'active',
-    branchIds: Array.isArray(row.branch_ids) ? row.branch_ids : fallback?.branchIds ?? [],
+    status: String(row.status ?? fallback?.status ?? 'active').toLowerCase() as ServiceStatus,
+    branchIds: Array.isArray(row.branch_ids) ? row.branch_ids.map((id: unknown) => String(id)) : fallback?.branchIds ?? [],
     onlineBookable: Boolean(row.online_bookable ?? fallback?.onlineBookable ?? true),
     internalOnly: Boolean(row.internal_only ?? fallback?.internalOnly ?? false),
     showOnWebsite: Boolean(row.show_on_website ?? fallback?.showOnWebsite ?? true),
