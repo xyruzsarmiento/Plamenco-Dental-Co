@@ -4,6 +4,7 @@ import { Button } from '../components/ui/Button'
 import { Skeleton, SkeletonAvatar, SkeletonCard, SkeletonText } from '../components/ui/DesignSystem'
 import { useAuth } from '../features/auth/AuthContext'
 import { loadAppointmentsForBranchScope } from '../features/appointments/appointmentBranchLoader'
+import { DentistRequestAcceptancePanel } from '../features/appointments/DentistRequestAcceptancePanel'
 import { APPOINTMENT_STORAGE_KEY, getStoredAppointments } from '../features/appointments/appointmentStore'
 import type { Appointment } from '../features/appointments/appointmentTypes'
 import { useBranchContext } from '../features/branches/BranchContext'
@@ -306,12 +307,14 @@ export function AppointmentsPageV38() {
       const branchButtons = Array.from(modal?.querySelectorAll<HTMLButtonElement>('.appointment37-option-card') ?? [])
       if (branchButtons.length) {
         const activeButton = branchButtons.find((button) => button.textContent?.includes(activeBranch?.name ?? ''))
-        branchButtons.forEach((button) => {
-          const allowed = button === activeButton
-          button.hidden = !allowed
-          button.disabled = !allowed
-        })
-        if (activeButton && !activeButton.classList.contains('is-selected')) activeButton.click()
+        if (activeButton) {
+          branchButtons.forEach((button) => {
+            const allowed = button === activeButton
+            button.hidden = !allowed
+            button.disabled = !allowed
+          })
+          if (!activeButton.classList.contains('is-selected')) activeButton.click()
+        }
       }
     }
 
@@ -341,6 +344,7 @@ export function AppointmentsPageV38() {
         <Building2 size={16} />
         <div><strong>{isAllBranchesMode ? 'All Branches — Executive appointment view' : `${activeBranch?.name ?? 'Branch'} appointments`}</strong><span>{isAllBranchesMode ? 'KPIs and calendar may aggregate authorized branches. Choose a specific branch to operate today’s patient flow or create branch-owned records.' : 'Appointment KPIs, requests, calendar, volume and patient flow are limited to this branch workspace.'}</span></div>
       </div>
+      <DentistRequestAcceptancePanel />
       <AppointmentsPage key={`${branchScopeKey}:${renderVersion}`} />
       {notice && <AppointmentSuccessModal notice={notice} onClose={() => setNotice(null)} onContinue={handleContinue} />}
     </div>
