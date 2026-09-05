@@ -336,6 +336,48 @@
   }
 }
 
+/* Keep the close control inside the header when global modal rules are active. */
+.modal.patient-intake-modal-v3 > .patient-intake-header-v3 {
+  grid-template-columns: auto minmax(0, 1fr) auto !important;
+  padding-right: 24px !important;
+}
+
+.modal.patient-intake-modal-v3 .patient-intake-close-v3 {
+  position: static !important;
+  inset: auto !important;
+  align-self: start !important;
+  justify-self: end !important;
+  display: grid !important;
+  place-items: center !important;
+  flex: 0 0 38px !important;
+  width: 38px !important;
+  min-width: 38px !important;
+  height: 38px !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  box-sizing: border-box !important;
+}
+
+@media (max-width: 760px) {
+  .modal.patient-intake-modal-v3 > .patient-intake-header-v3 {
+    padding-right: 16px !important;
+  }
+}
+
+@media (max-width: 460px) {
+  .modal.patient-intake-modal-v3 > .patient-intake-header-v3 {
+    grid-template-columns: minmax(0, 1fr) auto !important;
+    padding-right: 16px !important;
+  }
+
+  .modal.patient-intake-modal-v3 .patient-intake-close-v3 {
+    flex-basis: 36px !important;
+    width: 36px !important;
+    min-width: 36px !important;
+    height: 36px !important;
+  }
+}
+
 .page-patients .patient-intake-backdrop-v3,
 .modal-backdrop.patient-intake-backdrop-v3 {
   padding: 18px !important;
