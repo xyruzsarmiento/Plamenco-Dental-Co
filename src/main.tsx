@@ -207,6 +207,7 @@ import App from './App.tsx'
 /* Must load after App's page/component stylesheet dependency tree. */
 import './styles/internal-mobile-bottom-sheet-v199.css'
 import './styles/modal-and-services-premium-v200.css'
+import './styles/billing-modal-mobile-hotfix-v201.css'
 import { registerPatientPortalPwa } from './features/patientPortal/pwaRegistration'
 import { registerAppointmentTrendChartInteractivity } from './lib/appointmentTrendInteractivity'
 import { registerAnalyticsChartInteractivity } from './lib/analyticsChartInteractivity'
