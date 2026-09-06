@@ -49,6 +49,7 @@ function formatDate(value: string) {
 export function PrescriptionsPage() {
   const { user } = useAuth()
   const permissions = usePermissions()
+  const canManagePrescriptions = user?.role === 'super_admin' || user?.role === 'dentist' || permissions.can('prescriptions.edit')
   const branchContext = useOptionalBranchContext()
   const [query, setQuery] = useState('')
   const [creating, setCreating] = useState(false)
@@ -142,7 +143,7 @@ export function PrescriptionsPage() {
         const nextPrescriptions = await loadPrescriptionsFromSupabase({ strict: true })
         if (!active) return
         setPrescriptions(nextPrescriptions)
-        if (permissions.can('prescriptions.edit')) {
+        if (canManagePrescriptions) {
           const expired = nextPrescriptions.filter((rx) => rx.status === 'active' && effectiveStatus(rx) === 'inactive')
           if (expired.length) {
             void Promise.all(expired.map((rx) => updatePrescriptionStatusPersisted(rx.id, 'inactive')))
@@ -160,7 +161,7 @@ export function PrescriptionsPage() {
 
     void loadClinicalWorkspace()
     return () => { active = false }
-  }, [permissions])
+  }, [canManagePrescriptions])
 
   function resetForm() {
     setEditingPrescription(null)
@@ -391,7 +392,7 @@ export function PrescriptionsPage() {
               {(selectedPrescription.items?.length ? selectedPrescription.items : [{ id: selectedPrescription.id, medication: selectedPrescription.medication, strength: '', dosage: selectedPrescription.dosage, frequency: selectedPrescription.frequency, duration: selectedPrescription.duration, instructions: selectedPrescription.instructions }]).map((item) => <section key={item.id}><strong>{item.medication}{item.strength ? ` · ${item.strength}` : ''}</strong><span>{[item.dosage, item.frequency, item.duration].filter(Boolean).join(' · ') || 'See clinical instructions'}</span>{item.instructions && <small>{item.instructions}</small>}</section>)}
             </div>
             {selectedPrescription.notes && <div className="rx116-context-note"><FileText size={15} /><span>{selectedPrescription.notes}</span></div>}
-            <footer className="rx116-footer rx-prescription-detail-footer"><Button variant="secondary" onClick={() => { setSelectedPrescription(null); setSelectedPatientId(null) }}>Close</Button>{permissions.can('prescriptions.edit') && effectiveStatus(selectedPrescription) !== 'voided' && <><Button variant="secondary" icon={<Pencil size={15} />} onClick={() => editPrescription(selectedPrescription)} disabled={statusBusy}>Edit</Button><Button variant="danger" icon={<Trash2 size={15} />} onClick={() => void deletePrescription()} disabled={statusBusy}>Delete</Button><Button onClick={() => void changeStatus(effectiveStatus(selectedPrescription) === 'active' ? 'inactive' : 'active')} disabled={statusBusy}>{statusBusy ? 'Saving...' : effectiveStatus(selectedPrescription) === 'active' ? 'Mark inactive' : 'Mark active'}</Button></>}</footer>
+            <footer className="rx116-footer rx-prescription-detail-footer"><Button variant="secondary" onClick={() => { setSelectedPrescription(null); setSelectedPatientId(null) }}>Close</Button>{canManagePrescriptions && effectiveStatus(selectedPrescription) !== 'voided' && <><Button variant="secondary" icon={<Pencil size={15} />} onClick={() => editPrescription(selectedPrescription)} disabled={statusBusy}>Edit</Button><Button variant="danger" icon={<Trash2 size={15} />} onClick={() => void deletePrescription()} disabled={statusBusy}>Delete</Button><Button onClick={() => void changeStatus(effectiveStatus(selectedPrescription) === 'active' ? 'inactive' : 'active')} disabled={statusBusy}>{statusBusy ? 'Saving...' : effectiveStatus(selectedPrescription) === 'active' ? 'Mark inactive' : 'Mark active'}</Button></>}</footer>
           </section>
         </div>
       )}
