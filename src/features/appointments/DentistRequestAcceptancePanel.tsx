@@ -1,10 +1,9 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { CheckCircle2, ShieldCheck } from 'lucide-react'
 import { Button } from '../../components/ui/Button'
 import { useAuth } from '../auth/AuthContext'
 import {
-  acceptNominatedAppointmentPersisted,
   acceptUnassignedAppointmentPersisted,
   loadAppointmentsFromSupabase,
 } from './appointmentPersistence'
@@ -25,6 +24,42 @@ export function DentistRequestAcceptancePanel() {
   const [savingId, setSavingId] = useState<string | null>(null)
   const [feedback, setFeedback] = useState<Feedback>(null)
   const [loadError, setLoadError] = useState<string | null>(null)
+
+  async function refreshRequests() {
+    const rows = await loadAppointmentsFromSupabase({ strict: true })
+    setRequests(rows.filter((appointment) => appointment.status === 'pending' && !appointment.providerId))
+    return rows
+  }
+
+  async function acceptRequest(request: Appointment) {
+    if (!isDentist || savingId) return
+    setSavingId(request.id)
+    setFeedback(null)
+
+    try {
+      const updated = await acceptUnassignedAppointmentPersisted({
+        appointmentId: request.id,
+        actor: user?.email || user?.name || 'Dentist',
+        expectedUpdatedAt: request.updatedAt,
+      })
+
+      await refreshRequests()
+      setLoadError(null)
+      setFeedback({
+        appointmentId: request.id,
+        tone: 'success',
+        message: `Appointment ${updated.appointmentNumber ?? updated.id} confirmed and assigned to your dentist profile.`,
+      })
+    } catch (error) {
+      setFeedback({
+        appointmentId: request.id,
+        tone: 'danger',
+        message: error instanceof Error ? error.message : 'The appointment request could not be approved.',
+      })
+    } finally {
+      setSavingId(null)
+    }
+  }
 
   useEffect(() => {
     if (!isDentist || !user?.id) {
@@ -75,84 +110,43 @@ export function DentistRequestAcceptancePanel() {
     return () => observer.disconnect()
   }, [isDentist])
 
-  const portals = useMemo(() => {
-    if (!isDentist || !cardTargets.length) return []
-
-    return cardTargets.map((target, index) => {
-      const request = requests[index]
-      if (!request) return null
-      const currentFeedback = feedback?.appointmentId === request.id ? feedback : null
-
-      return createPortal(
-        <div className="dentist-card-approval-v206" data-appointment-id={request.id}>
-          <div className="dentist-card-approval-copy-v206">
-            <span className="dentist-card-approval-kicker-v206"><ShieldCheck size={14} /> Dentist approval</span>
-            <strong>Approve and assign this request to yourself</strong>
-            <small>Your signed-in dentist profile will be assigned automatically after Supabase validates the branch and schedule.</small>
-          </div>
-
-          {currentFeedback && (
-            <div className={`dentist-card-feedback-v206 is-${currentFeedback.tone}`} role="status">
-              {currentFeedback.message}
-            </div>
-          )}
-
-          <Button
-            className="dentist-card-approve-button-v206"
-            disabled={Boolean(savingId)}
-            onClick={(event) => {
-              event.stopPropagation()
-              void acceptRequest(request)
-            }}
-          >
-            <CheckCircle2 size={16} />
-            {savingId === request.id ? 'Approving…' : 'Approve & assign to me'}
-          </Button>
-        </div>,
-        target,
-        `dentist-approval-${request.id}`,
-      )
-    }).filter(Boolean)
-  }, [cardTargets, feedback, isDentist, requests, savingId])
-
-  async function acceptRequest(request: Appointment) {
-    if (!isDentist || savingId) return
-    setSavingId(request.id)
-    setFeedback(null)
-
-    try {
-      const actor = user?.email || user?.name || 'Dentist'
-      const updated = request.proposedProviderId
-        ? await acceptNominatedAppointmentPersisted({
-            appointmentId: request.id,
-            actor,
-            expectedUpdatedAt: request.updatedAt,
-          })
-        : await acceptUnassignedAppointmentPersisted({
-            appointmentId: request.id,
-            actor,
-            expectedUpdatedAt: request.updatedAt,
-          })
-
-      const rows = await loadAppointmentsFromSupabase({ strict: true })
-      setRequests(rows.filter((appointment) => appointment.status === 'pending' && !appointment.providerId))
-      setFeedback({
-        appointmentId: request.id,
-        tone: 'success',
-        message: `Appointment ${updated.appointmentNumber ?? updated.id} confirmed and assigned to your dentist profile.`,
-      })
-    } catch (error) {
-      setFeedback({
-        appointmentId: request.id,
-        tone: 'danger',
-        message: error instanceof Error ? error.message : 'The appointment request could not be approved.',
-      })
-    } finally {
-      setSavingId(null)
-    }
-  }
-
   if (!isDentist) return null
+
+  const portals = cardTargets.map((target, index) => {
+    const request = requests[index]
+    if (!request) return null
+    const currentFeedback = feedback?.appointmentId === request.id ? feedback : null
+
+    return createPortal(
+      <div className="dentist-card-approval-v206" data-appointment-id={request.id}>
+        <div className="dentist-card-approval-copy-v206">
+          <span className="dentist-card-approval-kicker-v206"><ShieldCheck size={14} /> Dentist approval</span>
+          <strong>Approve and assign this request to yourself</strong>
+          <small>Your signed-in dentist profile is assigned automatically after Supabase validates your branch access and schedule.</small>
+        </div>
+
+        {currentFeedback && (
+          <div className={`dentist-card-feedback-v206 is-${currentFeedback.tone}`} role="status">
+            {currentFeedback.message}
+          </div>
+        )}
+
+        <Button
+          className="dentist-card-approve-button-v206"
+          disabled={Boolean(savingId)}
+          onClick={(event) => {
+            event.stopPropagation()
+            void acceptRequest(request)
+          }}
+        >
+          <CheckCircle2 size={16} />
+          {savingId === request.id ? 'Approving…' : 'Approve & assign to me'}
+        </Button>
+      </div>,
+      target,
+      `dentist-approval-${request.id}`,
+    )
+  }).filter(Boolean)
 
   return (
     <>
