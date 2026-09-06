@@ -1,4 +1,4 @@
-import { Building2, FileText, LoaderCircle, Pencil, Pill, Plus, Search, Stethoscope, Trash2, X } from 'lucide-react'
+import { Activity, Building2, CalendarDays, ChevronRight, FileText, LoaderCircle, Pencil, Pill, Plus, Search, Stethoscope, Trash2, UserRound, X } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 import { StatusBadge } from '../components/ui/Badge'
 import { Button } from '../components/ui/Button'
@@ -50,8 +50,10 @@ export function PrescriptionsPage() {
   const { user } = useAuth()
   const permissions = usePermissions()
   const canManagePrescriptions = user?.role === 'super_admin' || user?.role === 'dentist' || permissions.can('prescriptions.edit')
+  const canCreatePrescriptions = user?.role === 'super_admin' || user?.role === 'dentist' || permissions.can('prescriptions.create')
   const branchContext = useOptionalBranchContext()
   const [query, setQuery] = useState('')
+  const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive'>('all')
   const [creating, setCreating] = useState(false)
   const [busy, setBusy] = useState(false)
   const [loadingRecords, setLoadingRecords] = useState(true)
@@ -97,7 +99,7 @@ export function PrescriptionsPage() {
 
   const filtered = useMemo(() => {
     const needle = query.trim().toLowerCase()
-    const activeRecords = prescriptions.filter((rx) => rx.status !== 'voided')
+    const activeRecords = prescriptions.filter((rx) => rx.status !== 'voided' && (statusFilter === 'all' || effectiveStatus(rx) === statusFilter))
     if (!needle) return activeRecords
     return activeRecords.filter((rx) => {
       const patient = patients.get(rx.patientId)
@@ -106,7 +108,7 @@ export function PrescriptionsPage() {
         .filter(Boolean)
         .some((value) => String(value).toLowerCase().includes(needle))
     })
-  }, [branchMap, patients, prescriptions, query])
+  }, [branchMap, patients, prescriptions, query, statusFilter])
   const patientGroups = useMemo(() => {
     const groups = new Map<string, Prescription[]>()
     filtered.forEach((rx) => groups.set(rx.patientId, [...(groups.get(rx.patientId) ?? []), rx]))
@@ -122,6 +124,10 @@ export function PrescriptionsPage() {
     () => prescriptions.filter((rx) => rx.patientId === selectedPatientId).sort((a, b) => new Date(b.prescriptionDate).getTime() - new Date(a.prescriptionDate).getTime()),
     [prescriptions, selectedPatientId],
   )
+
+  useEffect(() => {
+    if (!selectedPatientId && patientGroups[0]) setSelectedPatientId(patientGroups[0].id)
+  }, [patientGroups, selectedPatientId])
 
 
   useEffect(() => { setPage(1) }, [query])
@@ -285,66 +291,61 @@ export function PrescriptionsPage() {
     <div className="prescriptions-workspace">
       <section className="prescriptions-hero">
         <div>
-          <p className="eyebrow">Clinical workspace</p>
-          <h2>Prescriptions</h2>
-          <p>Review and issue medication orders for patients from the dentist workspace.</p>
+          <p className="eyebrow">Medication workspace</p>
+          <h2>Prescription desk</h2>
+          <p>Keep every patient order organized by person, course, and visibility status.</p>
         </div>
         <div className="rx116-actions">
           <div className="prescriptions-kpis">
-            <span><small>Total</small><strong>{prescriptions.filter((rx) => rx.status !== 'voided').length}</strong></span>
-            <span><small>Active</small><strong>{prescriptions.filter((rx) => effectiveStatus(rx) === 'active').length}</strong></span>
+            <span><small>Total orders</small><strong>{prescriptions.filter((rx) => rx.status !== 'voided').length}</strong></span>
+            <span><small>Patient files</small><strong>{patientGroups.length}</strong></span>
+            <span><small>Visible to patients</small><strong>{prescriptions.filter((rx) => effectiveStatus(rx) === 'active').length}</strong></span>
           </div>
-          {permissions.can('prescriptions.create') && <Button icon={<Plus size={16} />} onClick={() => { resetForm(); setCreating(true) }}>New prescription</Button>}
+          {canCreatePrescriptions && <Button icon={<Plus size={16} />} onClick={() => { resetForm(); setCreating(true) }}>New prescription</Button>}
         </div>
       </section>
 
-      <section className="panel prescriptions-panel">
-        <div className="prescriptions-toolbar">
-          <label className="rx-prescription-search">
-            <Search size={16} />
-            <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search patient, medication, dentist..." />
-          </label>
-        </div>
-
+      <section className="prescription-desk">
         {loadError && <div className="rx116-load-error" role="alert">{loadError}<button type="button" onClick={() => { setLoadError(null); setLoadingRecords(true); void Promise.all([loadPatientsFromSupabase({ strict: true }), loadPrescriptionsFromSupabase({ strict: true })]).then(([nextPatients, nextPrescriptions]) => { setPatientList(nextPatients); setPrescriptions(nextPrescriptions); setLoadingRecords(false) }).catch((cause) => { setLoadError(cause instanceof Error ? cause.message : 'Unable to reload prescriptions.'); setLoadingRecords(false) }) }}>Retry</button></div>}
-
-        <div className="prescriptions-grid" aria-busy={loadingRecords}>
-          {loadingRecords && <div className="prescriptions-empty rx116-loading"><LoaderCircle size={28} /><strong>Loading prescriptions</strong><span>Reading patients and prescription records from the clinic database…</span></div>}
-          {!loadingRecords && visible.map(({ id, records }) => {
-            const rx = records[0]
-            const patient = patients.get(id)
-            const patientName = patient ? `${patient.firstName} ${patient.middleName ? `${patient.middleName} ` : ''}${patient.lastName}` : id
-            const activeCount = records.filter((entry) => effectiveStatus(entry) === 'active').length
-            return (
-              <article key={id} className="prescription-admin-card prescription-patient-card" role="button" tabIndex={0} onClick={() => { setSelectedPatientId(id); setSelectedPrescription(rx) }} onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); setSelectedPatientId(id); setSelectedPrescription(rx) } }}>
-                <header>
-                  <span><Pill size={18} /></span>
-                  <StatusBadge status={activeCount ? 'active' : effectiveStatus(rx)} variant="compact" />
-                </header>
-                <small>{formatDate(rx.prescriptionDate)}</small>
-                <h3>{patientName}</h3>
-                <p className="prescription-patient-id">{id} · {records.length} prescription{records.length === 1 ? '' : 's'}</p>
-                <div className="prescription-medications prescription-order-list">
-                  {records.slice(0, 3).map((record) => {
-                    const item = record.items?.[0]
-                    return <div key={record.id} className="prescription-order-summary">
-                      <span className="prescription-order-copy"><strong>{item?.medication || record.medication || 'Medication details'}{item?.strength ? ` · ${item.strength}` : ''}</strong><span>{[item?.dosage || record.dosage, item?.frequency || record.frequency, item?.duration || record.duration].filter(Boolean).join(' · ') || 'See clinical instructions'}</span></span>
-                      <StatusBadge status={effectiveStatus(record)} variant="compact" />
-                    </div>
-                  })}
-                  {records.length > 3 && <small className="prescription-more-orders">+ {records.length - 3} more orders in details</small>}
-                </div>
-                <footer>
-                  <span><Stethoscope size={14} /> {rx.providerNameSnapshot || rx.prescribedBy || 'Clinical provider'}</span>
-                  <span><Building2 size={14} /> {rx.branchId ? branchMap.get(rx.branchId) ?? 'Unknown branch' : 'No branch recorded'}</span>
-                  <span><FileText size={14} /> View patient orders</span>
-                </footer>
-              </article>
-            )
-          })}
-          {!loadingRecords && !filtered.length && <div className="prescriptions-empty"><Pill size={28} /><strong>No prescriptions found</strong><span>Prescription records matching your filter will appear here.</span></div>}
+        <div className="prescription-desk-toolbar">
+          <div><span className="rx-desk-kicker">Patient directory</span><strong>{patientGroups.length} patient files</strong></div>
+          <div className="prescription-desk-filters">
+            <label className="rx-prescription-search"><Search size={16} /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search patient, medication, or dentist" /></label>
+            <select value={statusFilter} onChange={(event) => setStatusFilter(event.target.value as typeof statusFilter)} aria-label="Filter prescription status"><option value="all">All statuses</option><option value="active">Active only</option><option value="inactive">Inactive only</option></select>
+          </div>
         </div>
-        {!loadingRecords && patientGroups.length > PRESCRIPTION_PAGE_SIZE && <div className="rx116-pagination"><span>Showing {(effectivePage - 1) * PRESCRIPTION_PAGE_SIZE + 1}-{Math.min(effectivePage * PRESCRIPTION_PAGE_SIZE, patientGroups.length)} of {patientGroups.length} patients</span><Pagination page={effectivePage} pageCount={pageCount} onPageChange={setPage} label="Prescription patient pagination" /></div>}
+
+        <div className="prescription-desk-layout" aria-busy={loadingRecords}>
+          <aside className="prescription-patient-rail">
+            <div className="prescription-rail-heading"><span><UserRound size={17} /></span><div><strong>Patients</strong><small>Choose a file to review</small></div></div>
+            <div className="prescription-rail-list">
+              {loadingRecords && <div className="prescription-rail-state"><LoaderCircle size={18} /><span>Loading database records…</span></div>}
+              {!loadingRecords && visible.map(({ id, records }) => {
+                const patient = patients.get(id)
+                const patientName = patient ? `${patient.firstName} ${patient.middleName ? `${patient.middleName} ` : ''}${patient.lastName}` : id
+                const activeCount = records.filter((entry) => effectiveStatus(entry) === 'active').length
+                return <button key={id} type="button" className={`prescription-patient-row${selectedPatientId === id ? ' is-selected' : ''}`} onClick={() => setSelectedPatientId(id)}><span className="prescription-patient-avatar">{patientName.split(/\s+/).map((part) => part[0]).join('').slice(0, 2).toUpperCase()}</span><span><strong>{patientName}</strong><small>{records.length} order{records.length === 1 ? '' : 's'} · {activeCount} active</small></span><ChevronRight size={15} /></button>
+              })}
+              {!loadingRecords && !visible.length && <div className="prescription-rail-state"><Pill size={18} /><span>No patient files match.</span></div>}
+            </div>
+            {!loadingRecords && patientGroups.length > PRESCRIPTION_PAGE_SIZE && <Pagination page={effectivePage} pageCount={pageCount} onPageChange={setPage} label="Prescription patient pagination" />}
+          </aside>
+
+          <main className="prescription-desk-main">
+            {loadingRecords && <div className="prescription-desk-empty"><LoaderCircle size={28} /><strong>Loading prescriptions</strong><span>Reading patient orders from Supabase…</span></div>}
+            {!loadingRecords && selectedPatientId && patients.get(selectedPatientId) && (() => {
+              const patient = patients.get(selectedPatientId)!
+              const records = selectedPatientRecords.filter((record) => record.status !== 'voided')
+              const activeCount = records.filter((record) => effectiveStatus(record) === 'active').length
+              return <>
+                <section className="prescription-patient-banner"><div className="prescription-patient-avatar prescription-patient-avatar-lg">{`${patient.firstName[0] ?? ''}${patient.lastName[0] ?? ''}`.toUpperCase()}</div><div><span className="rx-desk-kicker">Selected patient</span><h2>{patient.firstName} {patient.middleName ? `${patient.middleName} ` : ''}{patient.lastName}</h2><p>{patient.patientId} · {patient.phone || 'No phone'} · {patient.email || 'No email'}</p></div><div className="prescription-patient-banner-meta"><span><Activity size={14} /> {activeCount} active</span><small>{records.length} total orders</small></div></section>
+                <div className="prescription-summary-strip"><div><span>Active courses</span><strong>{activeCount}</strong></div><div><span>Inactive history</span><strong>{records.length - activeCount}</strong></div><div><span>Latest issue</span><strong>{records[0] ? formatDate(records[0].prescriptionDate) : '—'}</strong></div></div>
+                <section className="prescription-order-section"><div className="prescription-section-heading"><div><span className="rx-desk-kicker">Medication history</span><h3>Prescription orders</h3><p>Open an order to edit instructions or change patient visibility.</p></div><Pill size={19} /></div><div className="prescription-order-grid">{records.map((record) => { const item = record.items?.[0]; return <button type="button" key={record.id} className="prescription-order-card" onClick={() => setSelectedPrescription(record)}><div className="prescription-order-card-top"><span className="prescription-order-icon"><Pill size={17} /></span><StatusBadge status={effectiveStatus(record)} variant="compact" /></div><span className="prescription-order-date"><CalendarDays size={13} /> {formatDate(record.prescriptionDate)}</span><strong>{item?.medication || record.medication || 'Medication details'}{item?.strength ? ` · ${item.strength}` : ''}</strong><span className="prescription-order-instructions">{[item?.dosage || record.dosage, item?.frequency || record.frequency, item?.duration || record.duration].filter(Boolean).join(' · ') || 'See clinical instructions'}</span><footer><span><Stethoscope size={13} /> {record.providerNameSnapshot || record.prescribedBy || 'Clinical provider'}</span><ChevronRight size={15} /></footer></button> })}</div></section>
+              </>
+            })()}
+            {!loadingRecords && (!selectedPatientId || !patients.get(selectedPatientId)) && <div className="prescription-desk-empty"><UserRound size={28} /><strong>Select a patient</strong><span>Choose a patient file from the directory to review prescriptions.</span></div>}
+          </main>
+        </div>
       </section>
 
       {creating && (
