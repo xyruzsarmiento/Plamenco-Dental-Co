@@ -31,6 +31,81 @@
   scrollbar-color: #b7c7dc transparent;
 }
 
+/* Search inputs use one visible shell. The outer combobox wrapper must stay
+   structural so upload and prescription modals do not render two borders. */
+.patient-search-field {
+  display: grid !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  gap: 7px !important;
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.patient-search-input-wrap,
+.patient-search-selected,
+.prescription-rail-search,
+.doc149-search {
+  box-sizing: border-box !important;
+  width: 100% !important;
+  min-width: 0 !important;
+}
+
+.dr11-search {
+  box-sizing: border-box !important;
+  width: calc(100% - 32px) !important;
+  min-width: 0 !important;
+  margin: 0 16px 12px !important;
+}
+
+.patient-search-input-wrap input,
+.patient-search-query,
+.prescription-rail-search input,
+.dr11-search input,
+.doc149-search input {
+  min-width: 0 !important;
+  width: 100% !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  outline: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+/* Premium order cards align their information to the reading edge instead of
+   centering the entire grid inside a wide card. */
+.prescription-order-card {
+  align-items: start !important;
+  justify-items: stretch !important;
+  align-content: start !important;
+  grid-template-rows: auto auto auto 1fr auto !important;
+  text-align: left !important;
+}
+
+.prescription-order-card-top,
+.prescription-order-card footer {
+  width: 100% !important;
+}
+
+/* Document rows stay in a contained library as the result set grows. */
+.app-shell .doc149-library {
+  min-height: 0 !important;
+  max-height: min(760px, calc(100dvh - 260px)) !important;
+}
+
+.app-shell .doc149-list {
+  min-height: 0 !important;
+  max-height: min(560px, calc(100dvh - 360px)) !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  overscroll-behavior: contain;
+}
+
 @media (max-width: 980px) {
   .tp13-patient-list,
   .tx43-patient-list,
@@ -57,6 +132,14 @@
     max-height: 460px;
     min-height: 240px;
   }
+
+  .app-shell .doc149-library {
+    max-height: 620px !important;
+  }
+
+  .app-shell .doc149-list {
+    max-height: 440px !important;
+  }
 }
 
 @media (max-width: 680px) {
@@ -70,5 +153,13 @@
   .patients36-list {
     max-height: 420px;
     min-height: 220px;
+  }
+
+  .app-shell .doc149-library {
+    max-height: 540px !important;
+  }
+
+  .app-shell .doc149-list {
+    max-height: 380px !important;
   }
 }
