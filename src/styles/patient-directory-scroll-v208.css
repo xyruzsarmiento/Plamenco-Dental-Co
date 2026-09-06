@@ -301,6 +301,20 @@ html body .dr11-page label.dr11-search > input.dr11-search-input:focus-visible {
   gap: 8px;
 }
 
+.rx-prescription-detail-footer .btn-danger,
+.rx116-delete-confirm .btn-danger {
+  color: #fff !important;
+  background: #dc2626 !important;
+  border-color: #dc2626 !important;
+}
+
+.rx-prescription-detail-footer .btn-danger:hover,
+.rx116-delete-confirm .btn-danger:hover {
+  color: #fff !important;
+  background: #b91c1c !important;
+  border-color: #b91c1c !important;
+}
+
 /* Document rows stay in a contained library as the result set grows. */
 .app-shell .doc149-library {
   min-height: 0 !important;
