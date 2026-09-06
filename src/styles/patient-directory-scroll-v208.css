@@ -308,11 +308,25 @@ html body .dr11-page label.dr11-search > input.dr11-search-input:focus-visible {
   border-color: #dc2626 !important;
 }
 
+.rx-prescription-detail-footer .btn-danger span,
+.rx-prescription-detail-footer .btn-danger svg,
+.rx116-delete-confirm .btn-danger span,
+.rx116-delete-confirm .btn-danger svg {
+  color: #fff !important;
+}
+
 .rx-prescription-detail-footer .btn-danger:hover,
 .rx116-delete-confirm .btn-danger:hover {
   color: #fff !important;
   background: #b91c1c !important;
   border-color: #b91c1c !important;
+}
+
+.rx-prescription-detail-footer .btn-danger:hover span,
+.rx-prescription-detail-footer .btn-danger:hover svg,
+.rx116-delete-confirm .btn-danger:hover span,
+.rx116-delete-confirm .btn-danger:hover svg {
+  color: #fff !important;
 }
 
 /* Document rows stay in a contained library as the result set grows. */
