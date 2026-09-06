@@ -112,7 +112,8 @@ html body .dr11-search > input,
 html body .doc149-search > input {
   display: block !important;
   flex: 1 1 0 !important;
-  width: auto !important;
+  flex-basis: 0 !important;
+  width: 0 !important;
   min-width: 0 !important;
   max-width: none !important;
   height: 100% !important;
@@ -129,6 +130,17 @@ html body .doc149-search > input {
   background: transparent !important;
   appearance: none !important;
   -webkit-appearance: none !important;
+}
+
+/* Match the more-specific Dental Records input rule so the input cannot
+   reclaim the shell width and get clipped beside the search icon. */
+html body .dr11-page .dr11-search > input,
+html body .prescription-patient-rail .prescription-rail-search > input {
+  flex: 1 1 0 !important;
+  flex-basis: 0 !important;
+  width: 0 !important;
+  min-width: 0 !important;
+  max-width: none !important;
 }
 
 /* Premium order cards align their information to the reading edge instead of
