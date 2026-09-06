@@ -30,6 +30,11 @@
   box-shadow:none!important;
   gap:7px!important;
 }
+.rx116-patient-search .patient-search-field:focus-within{
+  border:0!important;
+  outline:0!important;
+  box-shadow:none!important;
+}
 .rx116-patient-search,
 .rx116-patient-search *{box-sizing:border-box!important}
 .rx116-patient-search .patient-search-label{
@@ -65,7 +70,7 @@
   flex:0 0 auto!important;
   color:#64748b!important;
 }
-.rx116-patient-search .patient-search-input-wrap input{
+.rx116-patient-search .patient-search-input-wrap .patient-search-query{
   width:100%!important;
   min-width:0!important;
   height:46px!important;
@@ -79,8 +84,10 @@
   box-shadow:none!important;
   color:#172033!important;
   font-size:14px!important;
+  appearance:none!important;
+  -webkit-appearance:none!important;
 }
-.rx116-patient-search .patient-search-input-wrap input:focus{
+.rx116-patient-search .patient-search-input-wrap .patient-search-query:focus{
   border:0!important;
   outline:0!important;
   box-shadow:none!important;

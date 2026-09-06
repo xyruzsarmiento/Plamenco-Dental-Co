@@ -254,6 +254,7 @@ export function PatientSearchCombobox({
           <Search size={17} aria-hidden="true" />
           <input
             ref={inputRef}
+            className="patient-search-query"
             id={`${listId}-input`}
             type="search"
             role="combobox"
