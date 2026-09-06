@@ -16,3 +16,16 @@
 .modal-backdrop.modal-layer-child {
   z-index: 6300 !important;
 }
+
+/*
+ * Modals are intentionally immediate throughout the application.
+ * Keep hover/focus motion on controls intact, but never animate the overlay or
+ * dialog itself when it is mounted/opened.
+ */
+.modal-backdrop,
+[role='dialog'],
+.modal-backdrop > .modal,
+.modal-backdrop > [role='dialog'] {
+  animation: none !important;
+  transition: none !important;
+}
