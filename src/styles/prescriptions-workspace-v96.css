@@ -12,6 +12,7 @@
 /* Prescription modal patient lookup: one clean field, one focus ring, full-width results. */
 .rx116-patient-search{
   width:100%!important;
+  display:block!important;
   min-width:0!important;
   padding:0!important;
   border:0!important;
@@ -20,6 +21,7 @@
   box-shadow:none!important;
 }
 .rx116-patient-search>.patient-search-field{
+  display:grid!important;
   width:100%!important;
   min-width:0!important;
   padding:0!important;
@@ -28,6 +30,8 @@
   box-shadow:none!important;
   gap:7px!important;
 }
+.rx116-patient-search,
+.rx116-patient-search *{box-sizing:border-box!important}
 .rx116-patient-search .patient-search-label{
   display:block!important;
   margin:0!important;
@@ -90,6 +94,8 @@
   height:34px!important;
 }
 .patient-search-popover{
+  z-index:23000!important;
+  pointer-events:auto!important;
   border-color:#d6e1ef!important;
   border-radius:12px!important;
   box-shadow:0 18px 44px rgba(15,23,42,.16)!important;
