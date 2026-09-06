@@ -1,0 +1,183 @@
+/* Compact appointment workspace refinements. */
+
+.appointments-v40 .journey-care-block > span {
+  gap: 0 !important;
+}
+
+.appointments-v40 .journey-care-block > span > span:last-child {
+  min-width: 0 !important;
+  color: #64748b !important;
+  font-size: 11px !important;
+  font-weight: 700 !important;
+  line-height: 1.35 !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+
+.sa-appointments-requests-panel {
+  min-width: 0;
+}
+
+.sa-appointments-requests-panel .sa-appointments-requests-heading {
+  padding-bottom: 12px !important;
+  margin-bottom: 12px !important;
+}
+
+.sa-appointments-requests-panel .sa-appointments-request-grid,
+.sa-appointments-requests-panel .request-list {
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  align-items: start !important;
+  align-content: start !important;
+  gap: 12px !important;
+  max-height: 610px !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  padding: 2px 8px 6px 2px !important;
+  scrollbar-gutter: stable;
+}
+
+.sa-appointments-requests-panel .sa-appointments-request-card {
+  width: 100% !important;
+  max-width: none !important;
+  padding: 14px !important;
+  border-radius: 15px !important;
+  box-shadow: 0 7px 20px rgba(15, 23, 42, .055) !important;
+}
+
+.sa-appointments-requests-panel .sa-appointments-request-card::before {
+  width: 3px !important;
+}
+
+.sa-appointments-requests-panel .request-header {
+  gap: 10px !important;
+  padding-bottom: 10px !important;
+  margin-bottom: 10px !important;
+}
+
+.sa-appointments-requests-panel .request-main {
+  gap: 5px !important;
+}
+
+.sa-appointments-requests-panel .request-patient strong {
+  font-size: 13px !important;
+}
+
+.sa-appointments-requests-panel .request-patient small,
+.sa-appointments-requests-panel .request-service p {
+  font-size: 10px !important;
+}
+
+.sa-appointments-requests-panel .request-details {
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  gap: 7px !important;
+  margin-bottom: 10px !important;
+}
+
+.sa-appointments-requests-panel .detail-col {
+  gap: 4px !important;
+  padding: 9px 10px !important;
+  border-radius: 10px !important;
+}
+
+.sa-appointments-requests-panel .detail-label {
+  font-size: 8px !important;
+}
+
+.sa-appointments-requests-panel .detail-col p,
+.sa-appointments-requests-panel .detail-col strong {
+  font-size: 10px !important;
+  line-height: 1.35 !important;
+}
+
+.sa-appointments-requests-panel .request-provider-select {
+  grid-template-columns: minmax(90px, .3fr) minmax(170px, .8fr) minmax(180px, 1fr) !important;
+  gap: 8px !important;
+  margin-bottom: 10px !important;
+  padding: 10px !important;
+  border-radius: 11px !important;
+}
+
+.sa-appointments-requests-panel .request-provider-select select {
+  min-height: 36px !important;
+  border-radius: 9px !important;
+}
+
+.sa-appointments-requests-panel .request-notes {
+  gap: 5px !important;
+  margin-bottom: 10px !important;
+  padding: 10px 11px !important;
+  border-radius: 10px !important;
+}
+
+.sa-appointments-requests-panel .request-notes p {
+  font-size: 10px !important;
+}
+
+.sa-appointments-requests-panel .request-actions {
+  gap: 8px !important;
+  padding-top: 10px !important;
+}
+
+.sa-appointments-requests-panel .request-actions .btn {
+  min-height: 36px !important;
+  font-size: 10px !important;
+}
+
+.dentist-card-approval-v206 {
+  gap: 8px 12px !important;
+  margin-top: 10px !important;
+  padding: 10px 11px !important;
+  border-radius: 11px !important;
+}
+
+.dentist-card-approval-copy-v206 {
+  gap: 2px !important;
+}
+
+.dentist-card-approval-copy-v206 strong {
+  font-size: 11px !important;
+}
+
+.dentist-card-approval-copy-v206 small,
+.dentist-card-feedback-v206 {
+  font-size: 9px !important;
+}
+
+.dentist-card-approve-button-v206 {
+  min-width: 164px !important;
+  min-height: 36px !important;
+  font-size: 10px !important;
+}
+
+@media (max-width: 1180px) {
+  .sa-appointments-requests-panel .sa-appointments-request-grid,
+  .sa-appointments-requests-panel .request-list {
+    grid-template-columns: 1fr !important;
+    max-height: 560px !important;
+  }
+}
+
+@media (max-width: 720px) {
+  .sa-appointments-requests-panel .sa-appointments-request-grid,
+  .sa-appointments-requests-panel .request-list {
+    max-height: none !important;
+    overflow: visible !important;
+    padding-right: 0 !important;
+  }
+
+  .sa-appointments-requests-panel .request-details {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+
+  .sa-appointments-requests-panel .request-provider-select {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .sa-appointments-requests-panel .request-details {
+    grid-template-columns: 1fr !important;
+  }
+}
