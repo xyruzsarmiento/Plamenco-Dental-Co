@@ -255,6 +255,9 @@ export function PrescriptionsPage() {
         }],
         notes: notes.trim(),
         prescribedBy: prescriber,
+        // Editing medication details must not change patient visibility. The
+        // status is changed explicitly from the prescription details modal.
+        status: editingPrescription?.status ?? 'active',
       }
       const confirmed = editingPrescription
         ? await updatePrescriptionPersisted(editingPrescription.id, input)
