@@ -61,6 +61,25 @@ export function DentistRequestAcceptancePanel() {
     }
   }
 
+  // The legacy request page reuses its error state for the successful staff assignment
+  // message. Keep the underlying behavior intact, but classify confirmed messages as
+  // success so they are not presented as failures.
+  useEffect(() => {
+    const classifyAlerts = () => {
+      document.querySelectorAll<HTMLElement>('.sa-appointments-requests-panel .inline-alert').forEach((alert) => {
+        const message = alert.textContent?.trim() ?? ''
+        const isConfirmed = /^Appointment\s+.+\s+confirmed\.?$/i.test(message)
+        alert.classList.toggle('appointment-request-success-v206', isConfirmed)
+        if (isConfirmed) alert.setAttribute('role', 'status')
+      })
+    }
+
+    classifyAlerts()
+    const observer = new MutationObserver(classifyAlerts)
+    observer.observe(document.body, { childList: true, subtree: true, characterData: true })
+    return () => observer.disconnect()
+  }, [])
+
   useEffect(() => {
     if (!isDentist || !user?.id) {
       setRequests([])
