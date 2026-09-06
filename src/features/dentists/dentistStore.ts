@@ -45,7 +45,7 @@ function saveList<T>(key: string, rows: T[]) {
   window.localStorage.setItem(key, JSON.stringify(rows))
 }
 
-function mapProviderRow(row: Record<string, any>): Provider {
+function mapProviderRow(row: Record<string, any>, profileAvatarUrl = ''): Provider {
   return {
     id: row.id,
     profileId: row.profile_id ?? undefined,
@@ -56,11 +56,41 @@ function mapProviderRow(row: Record<string, any>): Provider {
     specialization: row.specialization ?? '',
     licenseNumber: row.license_number ?? '',
     bio: row.bio ?? '',
-    photoUrl: row.photo_url ?? '',
+    photoUrl: profileAvatarUrl || row.photo_url || '',
     status: row.status ?? 'active',
     createdAt: row.created_at ?? nowIso(),
     updatedAt: row.updated_at ?? row.created_at ?? nowIso(),
   }
+}
+
+async function hydrateProviderRows(rows: Record<string, any>[]) {
+  const profileIds = Array.from(new Set(
+    rows
+      .map((row) => String(row.profile_id ?? '').trim())
+      .filter(Boolean),
+  ))
+
+  if (!profileIds.length || !supabase) return rows.map((row) => mapProviderRow(row))
+
+  const { data, error } = await supabase
+    .from('profiles')
+    .select('id, avatar_url')
+    .in('id', profileIds)
+
+  if (error) {
+    if (import.meta.env.DEV) console.warn('[dentists] profile avatar hydration failed', error)
+    return rows.map((row) => mapProviderRow(row))
+  }
+
+  const avatarByProfileId = new Map<string, string>()
+  for (const profile of data ?? []) {
+    avatarByProfileId.set(String(profile.id), String(profile.avatar_url ?? '').trim())
+  }
+
+  return rows.map((row) => mapProviderRow(
+    row,
+    row.profile_id ? avatarByProfileId.get(String(row.profile_id)) ?? '' : '',
+  ))
 }
 
 function mapAssignmentRow(row: Record<string, any>): ProviderBranchAssignment {
@@ -165,7 +195,10 @@ export async function loadProviderFoundationFromSupabase(options: { strict?: boo
     throw new Error(`Unable to load ${failures[0][0]}: ${failures[0][1].message}`)
   }
 
-  if (!providerResult.error && Array.isArray(providerResult.data)) saveStoredProviders(providerResult.data.map(mapProviderRow))
+  if (!providerResult.error && Array.isArray(providerResult.data)) {
+    const providers = await hydrateProviderRows(providerResult.data as Record<string, any>[])
+    saveStoredProviders(providers)
+  }
   if (!assignmentResult.error && Array.isArray(assignmentResult.data)) saveProviderBranchAssignments(assignmentResult.data.map(mapAssignmentRow))
   if (!scheduleResult.error && Array.isArray(scheduleResult.data)) saveProviderScheduleBlocks(scheduleResult.data.map(mapScheduleRow))
   if (!overrideResult.error && Array.isArray(overrideResult.data)) saveProviderAvailabilityOverrides(overrideResult.data.map(mapOverrideRow))
