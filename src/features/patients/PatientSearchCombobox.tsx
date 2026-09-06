@@ -81,12 +81,13 @@ export function PatientSearchCombobox({
       .slice(0, 12)
   }, [query, scopedPatients])
   const results = useMemo(() => {
-    const merged = [...remoteResults, ...localResults]
+    const merged = [...localResults, ...remoteResults]
     const seen = new Set<string>()
     return merged.filter((patient) => {
       if (scopeFilter && !scopeFilter(patient)) return false
-      if (seen.has(patient.id)) return false
-      seen.add(patient.id)
+      const identity = patient.id || patient.patientId
+      if (seen.has(identity)) return false
+      seen.add(identity)
       return true
     }).slice(0, 12)
   }, [localResults, remoteResults, scopeFilter])
@@ -94,7 +95,8 @@ export function PatientSearchCombobox({
   function updatePopoverPosition() {
     const input = inputRef.current
     if (!input) return
-    const rect = input.getBoundingClientRect()
+    const control = input.closest('.patient-search-input-wrap') as HTMLElement | null
+    const rect = (control ?? input).getBoundingClientRect()
     const gutter = 8
     const availableBelow = Math.max(0, window.innerHeight - rect.bottom - gutter)
     const availableAbove = Math.max(0, rect.top - gutter)
@@ -155,9 +157,9 @@ export function PatientSearchCombobox({
         if (!alive) return
         setRemoteResults([])
         setLoading(false)
-        setSearchError('Patients could not be loaded from the clinic database.')
+        setSearchError('Clinic database search is temporarily unavailable.')
       })
-    }, 250)
+    }, 180)
     return () => {
       alive = false
       window.clearTimeout(timer)
@@ -183,6 +185,7 @@ export function PatientSearchCombobox({
     setQuery('')
     setOpen(false)
     setRemoteResults([])
+    setSearchError(null)
     setActiveIndex(-1)
   }
 
@@ -205,16 +208,14 @@ export function PatientSearchCombobox({
     }
   }
 
+  const hasQuery = Boolean(query.trim())
   const listContent = open && !disabled && typeof document !== 'undefined' ? createPortal(
     <div className="patient-search-popover" style={popoverStyle} role="listbox" id={listId} aria-label="Patient search results">
-      {loading && <div className="patient-search-state"><LoaderCircle size={16} className="patient-search-spin" /> Searching patients...</div>}
-      {!loading && searchError && <div className="patient-search-state is-error">{searchError}</div>}
-      {!loading && !searchError && !query.trim() && <div className="patient-search-state">Start typing to search patients</div>}
-      {!loading && !searchError && query.trim() && results.length === 0 && <div className="patient-search-state">No patients match “{query.trim()}”</div>}
-      {!loading && !searchError && results.map((patient, index) => (
-          <button
-            key={patient.id}
-            id={`${listId}-option-${patient.id}`}
+      {!hasQuery && <div className="patient-search-state">Start typing to search patients</div>}
+      {hasQuery && results.map((patient, index) => (
+        <button
+          key={patient.id}
+          id={`${listId}-option-${patient.id}`}
           type="button"
           className={`patient-search-result ${index === activeIndex ? 'is-active' : ''}`.trim()}
           role="option"
@@ -231,6 +232,10 @@ export function PatientSearchCombobox({
           {patient.id === selectedPatient?.id && <Check size={16} aria-hidden="true" />}
         </button>
       ))}
+      {hasQuery && loading && <div className="patient-search-state is-loading"><LoaderCircle size={15} className="patient-search-spin" /> Checking clinic database…</div>}
+      {hasQuery && !loading && results.length === 0 && !searchError && <div className="patient-search-state">No patients match “{query.trim()}”</div>}
+      {hasQuery && !loading && searchError && results.length === 0 && <div className="patient-search-state is-error">{searchError}</div>}
+      {hasQuery && !loading && searchError && results.length > 0 && <div className="patient-search-state is-warning">Showing loaded patient records while live search reconnects.</div>}
     </div>,
     document.body,
   ) : null
@@ -269,7 +274,7 @@ export function PatientSearchCombobox({
           <ChevronDown size={16} className="patient-search-chevron" aria-hidden="true" />
         </div>
       )}
-      {(error || searchError) && <span className="patient-search-error" role="alert">{error || searchError}</span>}
+      {error && <span className="patient-search-error" role="alert">{error}</span>}
       {listContent}
     </div>
   )
