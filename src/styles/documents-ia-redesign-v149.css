@@ -202,7 +202,11 @@
 }
 
 .app-shell .doc149-library {
-  overflow: visible;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  max-height: min(760px, calc(100vh - 260px));
+  min-height: 0;
+  overflow: hidden;
 }
 
 .app-shell .doc149-library > header {
@@ -223,7 +227,54 @@
 .app-shell .doc149-list {
   display: grid;
   gap: 9px;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
   padding: 12px;
+  background: #f8fbff;
+}
+
+/* Keep the field and its focus state on one geometry; global input rules must
+   not add a second border inside this shell. */
+.app-shell .doc149-search {
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  border: 1px solid #d5e2f2;
+  box-shadow: none;
+  transition: border-color .15s ease, box-shadow .15s ease, background .15s ease;
+}
+
+.app-shell .doc149-search:focus-within {
+  border-color: #93c5fd;
+  background: #fff;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, .12);
+}
+
+.app-shell .doc149-search input,
+.app-shell .doc149-search input:focus {
+  min-width: 0;
+  height: 40px;
+  margin: 0;
+  padding: 0;
+  border: 0 !important;
+  border-radius: 0;
+  outline: 0 !important;
+  box-shadow: none !important;
+}
+
+.app-shell .doc149-list::-webkit-scrollbar {
+  width: 9px;
+}
+
+.app-shell .doc149-list::-webkit-scrollbar-thumb {
+  border: 2px solid #f8fbff;
+  border-radius: 999px;
+  background: #c8d8ee;
+}
+
+.app-shell .doc149-list::-webkit-scrollbar-track {
   background: #f8fbff;
 }
 
@@ -630,6 +681,10 @@
   .app-shell .doc149-row,
   .app-shell .doc149-upload-modal {
     border-radius: 16px;
+  }
+
+  .app-shell .doc149-library {
+    max-height: min(680px, calc(100vh - 180px));
   }
 
   .app-shell .doc149-actions {
