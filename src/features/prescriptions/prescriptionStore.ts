@@ -242,7 +242,7 @@ export function saveStoredPrescriptions(prescriptions: Prescription[]) {
 export function getPrescriptionsByPatient(patientId: string): Prescription[] {
   const patientReferences = getPatientReferences(patientId)
   return getStoredPrescriptions()
-    .filter((prescription) => patientReferences.has(prescription.patientId) && prescription.status !== 'voided')
+    .filter((prescription) => patientReferences.has(prescription.patientId) && prescription.status === 'active')
     .sort((a, b) => new Date(b.prescriptionDate).getTime() - new Date(a.prescriptionDate).getTime())
 }
 

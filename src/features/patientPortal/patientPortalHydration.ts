@@ -55,7 +55,7 @@ export async function hydratePatientPortalFromDatabase() {
     db.from('prescriptions')
       .select('id,patient_id,dental_record_id,appointment_id,branch_id,provider_id,provider_name_snapshot,items,prescribed_by,prescription_date,status,created_at,updated_at')
       .in('patient_id', patientReferences)
-      .neq('status', 'voided')
+      .eq('status', 'active')
       .order('prescription_date', { ascending: false }),
     db.from('invoices')
       .select('id,invoice_number,patient_id,branch_id,invoice_date,due_date,items,subtotal_cents,discount_cents,total_cents,amount_paid_cents,balance_cents,status,created_at,updated_at')
