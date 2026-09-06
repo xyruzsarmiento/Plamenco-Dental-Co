@@ -129,16 +129,20 @@ function isBranchSlotOpen({
   if (!branch) return false
   if (startTime < branch.openingTime || endTime > branch.closingTime) return false
 
-  const { activeOperatories, capacity } = getBranchCapacity(branchId)
-  if (activeOperatories.length) {
-    const candidateOperatories = operatoryId ? activeOperatories.filter((operatory) => operatory.id === operatoryId) : activeOperatories
-    return candidateOperatories.some((operatory) =>
-      !checkScheduleConflict(date, startTime, endTime, excludeAppointmentId, undefined, branchId, operatory.id) &&
-      !isBookingBusy({ branchId, operatoryId: operatory.id, date, startTime, endTime, excludeAppointmentId }),
+  // A branch/time interval is a single bookable slot. Operatories remain useful
+  // operational metadata, but they no longer create parallel patient-booking
+  // capacity for the exact same interval. PostgreSQL enforces the same rule.
+  if (branchOverlapCount(branchId, date, startTime, endTime, excludeAppointmentId) > 0) return false
+
+  if (operatoryId) {
+    const activeOperatory = getOperatories().find(
+      (operatory) => operatory.id === operatoryId && operatory.branchId === branchId && operatory.status === 'active',
     )
+    if (!activeOperatory) return false
+    if (isBookingBusy({ branchId, operatoryId, date, startTime, endTime, excludeAppointmentId })) return false
   }
 
-  return branchOverlapCount(branchId, date, startTime, endTime, excludeAppointmentId) < capacity
+  return true
 }
 
 export function isProviderAvailable({
@@ -209,42 +213,42 @@ export function getAppointmentAvailability({
     const endTime = addMinutesToTime(startTime, service.duration)
 
     if (!providerId) {
+      if (!isBranchSlotOpen({ branchId, date, startTime, endTime, excludeAppointmentId, operatoryId })) continue
+
       const availableProviders = providers.filter((provider) =>
         isProviderAvailable({ branchId, providerId: provider.id, date, startTime, endTime, excludeAppointmentId }),
       )
-      if (availableProviders.length || isBranchSlotOpen({ branchId, date, startTime, endTime, excludeAppointmentId, operatoryId })) {
-        const openOperatory = candidateOperatories.find((operatory) =>
-          availableProviders.some((provider) =>
-            isProviderAvailable({ branchId, providerId: provider.id, operatoryId: operatory.id, date, startTime, endTime, excludeAppointmentId }),
-          ) || isBranchSlotOpen({ branchId, operatoryId: operatory.id, date, startTime, endTime, excludeAppointmentId }),
-        )
-        slots.push({
-          startTime,
-          endTime,
-          providerId: '',
-          providerName: 'Dentist to be assigned',
-          operatoryId: openOperatory?.id,
-          operatoryName: openOperatory?.name,
-          remainingCapacity: availableProviders.length,
-        })
-      }
+      const openOperatory = candidateOperatories.find((operatory) =>
+        !isBookingBusy({ branchId, operatoryId: operatory.id, date, startTime, endTime, excludeAppointmentId }),
+      )
+
+      slots.push({
+        startTime,
+        endTime,
+        providerId: '',
+        providerName: 'Dentist to be assigned',
+        operatoryId: openOperatory?.id,
+        operatoryName: openOperatory?.name,
+        remainingCapacity: availableProviders.length,
+      })
       continue
     }
 
     providers.forEach((provider) => {
       if (candidateOperatories.length) {
-        candidateOperatories.forEach((operatory) => {
-          if (isProviderAvailable({ branchId, providerId: provider.id, operatoryId: operatory.id, date, startTime, endTime, excludeAppointmentId })) {
-            slots.push({
-              startTime,
-              endTime,
-              providerId: provider.id,
-              providerName: provider.displayName,
-              operatoryId: operatory.id,
-              operatoryName: operatory.name,
-            })
-          }
-        })
+        const openOperatory = candidateOperatories.find((operatory) =>
+          isProviderAvailable({ branchId, providerId: provider.id, operatoryId: operatory.id, date, startTime, endTime, excludeAppointmentId }),
+        )
+        if (openOperatory) {
+          slots.push({
+            startTime,
+            endTime,
+            providerId: provider.id,
+            providerName: provider.displayName,
+            operatoryId: openOperatory.id,
+            operatoryName: openOperatory.name,
+          })
+        }
       } else if (isProviderAvailable({ branchId, providerId: provider.id, date, startTime, endTime, excludeAppointmentId })) {
         slots.push({
           startTime,
@@ -259,7 +263,7 @@ export function getAppointmentAvailability({
   const unique = new Map<string, AvailabilitySlot>()
   slots
     .sort((a, b) => `${a.startTime}-${a.providerName}-${a.operatoryName ?? ''}`.localeCompare(`${b.startTime}-${b.providerName}-${b.operatoryName ?? ''}`))
-    .forEach((slot) => unique.set(`${slot.startTime}-${slot.providerId ?? 'unassigned'}-${slot.operatoryId ?? 'no-operatory'}`, slot))
+    .forEach((slot) => unique.set(`${slot.startTime}-${slot.providerId ?? 'unassigned'}`, slot))
 
   const availableSlots = Array.from(unique.values())
   if (availableSlots.length) {
