@@ -106,6 +106,56 @@
   overscroll-behavior: contain;
 }
 
+/* Upload document modal: match the real PatientSearchCombobox structure. */
+.app-shell .doc149-upload-modal {
+  grid-template-rows: auto auto minmax(0, 1fr) !important;
+  gap: 0 !important;
+  overflow: hidden !important;
+}
+
+.app-shell .doc149-upload-modal > .patient-search-field {
+  display: grid !important;
+  gap: 7px !important;
+  min-width: 0 !important;
+  margin: 0 !important;
+  padding: 18px 26px 0 !important;
+  background: #f8fbff !important;
+}
+
+.app-shell .doc149-upload-modal > .patient-search-field .patient-search-label {
+  color: #475569 !important;
+  font-size: .8rem !important;
+  font-weight: 800 !important;
+}
+
+.app-shell .doc149-upload-modal > .patient-search-field .patient-search-input-wrap,
+.app-shell .doc149-upload-modal > .patient-search-field .patient-search-selected {
+  min-height: 48px !important;
+  padding: 0 13px !important;
+  border: 1px solid #d5e2f2 !important;
+  border-radius: 12px !important;
+  background: #fff !important;
+  box-shadow: none !important;
+}
+
+.app-shell .doc149-upload-modal > .patient-search-field .patient-search-input-wrap:focus-within,
+.app-shell .doc149-upload-modal > .patient-search-field .patient-search-selected:focus-within {
+  border-color: #2563eb !important;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, .1) !important;
+}
+
+.app-shell .doc149-upload-modal > .document-upload-panel-v10 {
+  min-width: 0 !important;
+  min-height: 0 !important;
+  overflow-x: hidden !important;
+  overflow-y: auto !important;
+  padding: 18px 26px 24px !important;
+}
+
+.app-shell .doc149-upload-modal > .document-upload-panel-v10 .modal-actions {
+  margin: 0 -26px -24px !important;
+}
+
 @media (max-width: 980px) {
   .tp13-patient-list,
   .tx43-patient-list,
@@ -139,6 +189,18 @@
 
   .app-shell .doc149-list {
     max-height: 440px !important;
+  }
+
+  .app-shell .doc149-upload-modal > .patient-search-field {
+    padding: 16px 18px 0 !important;
+  }
+
+  .app-shell .doc149-upload-modal > .document-upload-panel-v10 {
+    padding: 16px 18px 22px !important;
+  }
+
+  .app-shell .doc149-upload-modal > .document-upload-panel-v10 .modal-actions {
+    margin: 0 -18px -22px !important;
   }
 }
 
