@@ -2,7 +2,6 @@ import { useEffect, useMemo, useState } from 'react'
 import { ArrowRight, CalendarDays, Import, Mail, Phone, Plus, Search, UserRound, UsersRound } from 'lucide-react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { Button } from '../components/ui/Button'
-import { Pagination } from '../components/ui/DesignSystem'
 import { StatusBadge } from '../components/ui/Badge'
 import { PatientFormModal } from '../features/patients/PatientFormModal'
 import { PatientImportModal } from '../features/patients/PatientImportModal'
@@ -14,7 +13,6 @@ import {
   findPotentialPatientDuplicates,
   filterPatients,
   getPatientDisplayName,
-  getStoredPatients,
 } from '../features/patients/patientStore'
 import { createPatientPersisted, loadPatientsFromSupabase } from '../features/patients/patientPersistence'
 import type { Patient, PatientFormValues, PatientOrigin } from '../features/patients/patientTypes'
@@ -26,8 +24,6 @@ const originLabels: Record<PatientOrigin, string> = {
   historical_import: 'Historical import',
   staff_created: 'Staff created',
 }
-
-const PATIENT_PAGE_SIZE_OPTIONS = [10, 20, 50]
 
 function manilaToday() {
   return new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Manila', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date())
@@ -126,7 +122,7 @@ export function PatientsPageV36() {
   const { patientId: routePatientId } = useParams()
   const navigate = useNavigate()
   const permissions = usePermissions()
-  const [patients, setPatients] = useState<Patient[]>(() => getStoredPatients())
+  const [patients, setPatients] = useState<Patient[]>([])
   const [query, setQuery] = useState('')
   const [statusFilter, setStatusFilter] = useState('all')
   const [branchFilter, setBranchFilter] = useState('all')
@@ -139,8 +135,6 @@ export function PatientsPageV36() {
   const [allowDuplicate, setAllowDuplicate] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
   const [loadError, setLoadError] = useState<string | null>(null)
-  const [patientPage, setPatientPage] = useState(1)
-  const [patientPageSize, setPatientPageSize] = useState(10)
 
   const branches = useMemo(() => getStoredBranches(), [])
   const appointments = useMemo(() => getStoredAppointments(), [patients])
@@ -190,20 +184,6 @@ export function PatientsPageV36() {
   }, [branchFilter, originFilter, patients, query, statusFilter])
 
   const growth = useMemo(() => registrationSeries(patients), [patients])
-  const patientPageCount = Math.max(1, Math.ceil(filteredPatients.length / patientPageSize))
-  const visiblePatients = useMemo(() => {
-    const safePage = Math.min(patientPage, patientPageCount)
-    const start = (safePage - 1) * patientPageSize
-    return filteredPatients.slice(start, start + patientPageSize)
-  }, [filteredPatients, patientPage, patientPageCount, patientPageSize])
-
-  useEffect(() => {
-    setPatientPage(1)
-  }, [branchFilter, originFilter, query, statusFilter, patientPageSize])
-
-  useEffect(() => {
-    setPatientPage((page) => Math.min(page, patientPageCount))
-  }, [patientPageCount])
 
   if (routePatientId) return <PatientsPageV10 />
 
@@ -284,7 +264,7 @@ export function PatientsPageV36() {
 
         <div className="patients36-list-head"><span>Patient</span><span>Contact</span><span>Care context</span><span>Next visit</span><span>Open</span></div>
         <div className="patients36-list">
-          {visiblePatients.map((patient) => {
+          {filteredPatients.map((patient) => {
             const visit = nextAppointment(patient)
             const treatmentCount = getTreatmentsByPatient(patient.patientId).length
             const branchName = patient.preferredBranchId ? branchMap.get(patient.preferredBranchId) ?? 'Unknown branch' : 'No preferred branch'
@@ -301,7 +281,6 @@ export function PatientsPageV36() {
           })}
           {!filteredPatients.length && <div className="patients36-empty"><span><UsersRound size={22} /></span><h3>{noFilters ? 'No patient records yet' : 'No matching patients'}</h3><p>{noFilters ? 'Patient records will appear here after they are created or imported.' : 'Try clearing one or more filters or searching with a different name, patient ID, phone or email.'}</p>{!noFilters && <Button variant="secondary" onClick={() => { setQuery(''); setStatusFilter('all'); setBranchFilter('all'); setOriginFilter('all') }}>Clear filters</Button>}</div>}
         </div>
-        <Pagination page={patientPage} pageCount={patientPageCount} totalItems={filteredPatients.length} pageSize={patientPageSize} pageSizeOptions={PATIENT_PAGE_SIZE_OPTIONS} onPageChange={setPatientPage} onPageSizeChange={setPatientPageSize} label="Patient record pages" />
       </section>
 
       {showForm && <PatientFormModal error={formError ?? (isSaving ? 'Saving patient to clinic database…' : null)} mode="add" values={formValues} onChange={setFormValues} onClose={() => { if (!isSaving) setShowForm(false) }} onSubmit={() => void savePatient()} duplicateMatches={duplicateMatches} onOpenDuplicate={(patientId) => { setShowForm(false); navigate(`/app/patients/${encodeURIComponent(patientId)}`) }} onContinueDuplicate={() => { setAllowDuplicate(true); setDuplicateMatches([]); setFormError(null) }} />}

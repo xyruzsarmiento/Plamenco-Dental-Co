@@ -19,6 +19,18 @@
   min-width: 0 !important;
 }
 
+/* The patient records table keeps filters and column labels visible while the
+   complete Supabase-backed result set scrolls inside the directory card. */
+.patients36-list {
+  min-height: 280px;
+  max-height: min(560px, calc(100dvh - 430px));
+  overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: #b7c7dc transparent;
+}
+
 @media (max-width: 980px) {
   .tp13-patient-list,
   .tx43-patient-list,
@@ -40,6 +52,11 @@
     width: 100% !important;
     scroll-snap-align: none !important;
   }
+
+  .patients36-list {
+    max-height: 460px;
+    min-height: 240px;
+  }
 }
 
 @media (max-width: 680px) {
@@ -48,5 +65,10 @@
   .tx43-patient-list,
   .dr11-patient-list {
     max-height: 280px !important;
+  }
+
+  .patients36-list {
+    max-height: 420px;
+    min-height: 220px;
   }
 }
