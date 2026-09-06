@@ -5,3 +5,144 @@
 @media(max-width:960px){.rx116-actions{width:100%;align-items:stretch;flex-direction:column}.rx116-actions>.btn,.rx116-actions>button{width:100%;justify-content:center}.prescriptions-kpis{width:100%;display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}.rx116-pagination{align-items:flex-start;flex-direction:column}.rx116-pagination>div{width:100%;justify-content:space-between}}
 
 @media(max-width:560px){.prescriptions-workspace{gap:12px}.prescriptions-hero,.prescriptions-panel{border-radius:16px;padding:16px}.prescriptions-hero h2{font-size:1.28rem}.prescriptions-kpis{grid-template-columns:1fr 1fr}.prescriptions-kpis>span{min-width:0;padding:10px}.prescription-admin-card{padding:14px}.prescription-admin-card footer{display:grid;grid-template-columns:1fr}.rx116-backdrop{align-items:stretch;place-items:stretch;padding:8px}.rx116-modal{width:100%;max-height:calc(100vh - 16px);border-radius:16px}.rx116-head{padding:16px;gap:12px}.rx116-head h2{font-size:1.18rem}.rx116-form{padding:16px;gap:12px}.rx116-footer{padding:12px 16px;display:grid;grid-template-columns:1fr}.rx116-footer .btn,.rx116-footer button{width:100%;justify-content:center}}
+
+/* Prescription modal patient lookup: one clean field, one focus ring, full-width results. */
+.rx116-patient-search{
+  width:100%!important;
+  min-width:0!important;
+  padding:0!important;
+  border:0!important;
+  border-radius:0!important;
+  background:transparent!important;
+  box-shadow:none!important;
+}
+.rx116-patient-search>.patient-search-field{
+  width:100%!important;
+  min-width:0!important;
+  padding:0!important;
+  border:0!important;
+  background:transparent!important;
+  box-shadow:none!important;
+  gap:7px!important;
+}
+.rx116-patient-search .patient-search-label{
+  display:block!important;
+  margin:0!important;
+  padding:0!important;
+  border:0!important;
+  color:#344054!important;
+  background:transparent!important;
+  font-size:12px!important;
+  font-weight:800!important;
+  line-height:1.25!important;
+}
+.rx116-patient-search .patient-search-input-wrap,
+.rx116-patient-search .patient-search-selected{
+  width:100%!important;
+  min-width:0!important;
+  min-height:48px!important;
+  margin:0!important;
+  padding:0 13px!important;
+  border:1px solid #d7e0ec!important;
+  border-radius:12px!important;
+  background:#fff!important;
+  box-shadow:none!important;
+  outline:0!important;
+}
+.rx116-patient-search .patient-search-input-wrap:focus-within,
+.rx116-patient-search .patient-search-selected:focus-within{
+  border-color:#3b82f6!important;
+  box-shadow:0 0 0 3px rgba(59,130,246,.11)!important;
+}
+.rx116-patient-search .patient-search-input-wrap>svg:first-child{
+  flex:0 0 auto!important;
+  color:#64748b!important;
+}
+.rx116-patient-search .patient-search-input-wrap input{
+  width:100%!important;
+  min-width:0!important;
+  height:46px!important;
+  min-height:0!important;
+  margin:0!important;
+  padding:0!important;
+  border:0!important;
+  border-radius:0!important;
+  outline:0!important;
+  background:transparent!important;
+  box-shadow:none!important;
+  color:#172033!important;
+  font-size:14px!important;
+}
+.rx116-patient-search .patient-search-input-wrap input:focus{
+  border:0!important;
+  outline:0!important;
+  box-shadow:none!important;
+}
+.rx116-patient-search .patient-search-selected{
+  padding:6px 8px!important;
+}
+.rx116-patient-search .patient-search-clear{
+  flex:0 0 34px!important;
+  width:34px!important;
+  height:34px!important;
+}
+.patient-search-popover{
+  border-color:#d6e1ef!important;
+  border-radius:12px!important;
+  box-shadow:0 18px 44px rgba(15,23,42,.16)!important;
+}
+.patient-search-popover .patient-search-state.is-loading{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:6px;
+  padding:9px 12px;
+  border-top:1px solid #eef2f7;
+  color:#64748b;
+}
+.patient-search-popover .patient-search-state.is-warning{
+  padding:9px 12px;
+  border-top:1px solid #fef3c7;
+  background:#fffbeb;
+  color:#92400e;
+}
+.rx116-load-error{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  margin-bottom:14px;
+  padding:11px 13px;
+  border:1px solid #fecaca;
+  border-radius:11px;
+  background:#fff7f7;
+  color:#b42318;
+  font-size:12px;
+}
+.rx116-load-error button{
+  flex:0 0 auto;
+  padding:6px 10px;
+  border:1px solid #fca5a5;
+  border-radius:8px;
+  background:#fff;
+  color:#b42318;
+  font:inherit;
+  font-weight:800;
+  cursor:pointer;
+}
+.rx116-loading svg{animation:patient-search-spin .8s linear infinite}
+
+@media(max-width:760px){
+  .rx116-patient-search .patient-search-input-wrap,
+  .rx116-patient-search .patient-search-selected{min-height:46px!important}
+  .rx116-patient-search .patient-search-input-wrap input{height:44px!important;font-size:16px!important}
+  .patient-search-popover{max-width:calc(100vw - 16px)!important}
+  .rx116-load-error{align-items:flex-start;flex-direction:column}
+}
+
+@media(max-width:420px){
+  .rx116-patient-search .patient-search-label{font-size:11px!important}
+  .rx116-patient-search .patient-search-input-wrap{padding:0 11px!important}
+  .patient-search-result{grid-template-columns:auto minmax(0,1fr) auto;gap:8px;padding:8px}
+  .patient-search-avatar{width:32px;height:32px;flex-basis:32px}
+}
