@@ -1,4 +1,5 @@
 @import './prescription-details-premium-v133.css';
+@import './prescription-details-layout-v134.css';
 
 /* Final internal hero contract: decorative blue circles/rings are not part of
    internal workspace heroes. This file is loaded after the parity stylesheet,
