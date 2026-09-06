@@ -39,6 +39,7 @@ import './styles/internal-reports-branch-v124.css'
 import './styles/branch-assignment-admin-v126.css'
 import './styles/part11-documents-import-forms-v127.css'
 import './styles/operational-workspace-parity-part1.css'
+import './styles/dentist-portal-card-parity-v131.css'
 
 const PATIENT_PORTAL_CACHE_KEYS = [
   'plamenco.appointments',
@@ -121,145 +122,95 @@ function DataBootstrap({ children }: { children: React.ReactNode }) {
     (!identityIsCurrent || bootstrapPhase !== 'ready')
 
   useEffect(() => {
-    let active = true
-    let backgroundTimer: number | undefined
-    let watchdogTimer: number | undefined
-    let patientDataChanged = false
+    if (isLoading) return
 
-    if (isLoading || !isAuthenticated || !user?.id) {
-      setBootstrapIdentity('')
+    if (!isAuthenticated || !user?.id) {
       setBootstrapPhase('idle')
-      return () => { active = false }
+      setBootstrapIdentity('')
+      return
     }
 
-    const currentIdentity = `${user.id}:${user.role}`
-    const currentScope = `user:${user.id}`
-    const currentBootstrapKey = `workspace-bootstrap:${user.role}`
-    const hadWarmBootstrap = readCachedQuery<boolean>(currentBootstrapKey, currentScope) === true
+    let cancelled = false
+    const nextIdentity = `${user.id}:${user.role}`
+    setBootstrapIdentity(nextIdentity)
+    setBootstrapPhase('loading')
 
-    setBootstrapIdentity(currentIdentity)
-    setBootstrapPhase(hadWarmBootstrap ? 'ready' : 'loading')
+    const bootstrap = async () => {
+      const commonLoaders = [
+        safeLoad(() => loadBranchesFromSupabase()),
+        safeLoad(() => loadProviderFoundationFromSupabase()),
+        safeLoad(() => loadPatientsFromSupabase()),
+        safeLoad(() => loadServicesFromSupabase()),
+      ]
 
-    // Independent UI watchdog: even if the query cache, a loader, or a network
-    // request behaves unexpectedly, the skeleton itself can never become an
-    // infinite blocking state.
-    if (!hadWarmBootstrap) {
-      watchdogTimer = window.setTimeout(() => {
-        if (!active) return
-        console.warn('[workspace bootstrap] UI watchdog released the portal skeleton.')
+      if (user.role === 'patient') {
+        clearPatientPortalCaches()
+        const before = patientPortalSnapshot()
+        await Promise.all(commonLoaders)
+        await settleWithin(hydratePatientPortalFromDatabase(user.id), BOOTSTRAP_TIMEOUT_MS, 'patient portal bootstrap')
+        const after = patientPortalSnapshot()
+        if (!cancelled && before !== after) setDataRevision((value) => value + 1)
+      } else {
+        await Promise.all(commonLoaders)
+        await settleWithin(syncSupabaseToLocalStorage(), BOOTSTRAP_TIMEOUT_MS, 'internal workspace bootstrap')
+        if (!cancelled) setDataRevision((value) => value + 1)
+      }
+
+      if (!cancelled) {
+        cachedQuery(bootstrapKey, async () => true, queryCachePolicy.medium, scope).catch(() => undefined)
         setBootstrapPhase('ready')
-      }, BOOTSTRAP_WATCHDOG_MS)
+      }
     }
 
-    const bootstrap = cachedQuery(
-      currentBootstrapKey,
-      async () => {
-        const essentialLoads: Promise<unknown>[] = [
-          safeLoad(() => loadBranchesFromSupabase({ strict: false })),
-          safeLoad(() => loadProviderFoundationFromSupabase({ strict: false })),
-          safeLoad(() => loadPatientsFromSupabase({ strict: false })),
-          safeLoad(() => loadServicesFromSupabase({ strict: false })),
-        ]
+    void bootstrap()
 
-        if (user.role === 'patient') {
-          if (!hadWarmBootstrap) clearPatientPortalCaches()
-          const before = patientPortalSnapshot()
-          essentialLoads.push(
-            safeLoad(() => hydratePatientPortalFromDatabase()).finally(() => {
-              patientDataChanged = before !== patientPortalSnapshot()
-            }),
-          )
-        }
-
-        await settleWithin(
-          Promise.allSettled(essentialLoads).then(() => undefined),
-          BOOTSTRAP_TIMEOUT_MS,
-          'workspace bootstrap',
-        )
-        return true
-      },
-      {
-        ...(user.role === 'patient' ? queryCachePolicy.frequent : queryCachePolicy.moderate),
-        tags: ['workspace-bootstrap', 'branches', 'providers', 'patients', 'services', user.role === 'patient' ? 'patient-portal' : 'internal-portal'],
-        scope: currentScope,
-      },
-    )
-
-    void bootstrap
-      .catch((error) => {
-        console.error('[workspace bootstrap failed]', error)
-      })
-      .finally(() => {
-        if (!active) return
-        if (watchdogTimer !== undefined) {
-          window.clearTimeout(watchdogTimer)
-          watchdogTimer = undefined
-        }
-        setBootstrapPhase('ready')
-
-        if (user.role === 'patient') {
-          if (patientDataChanged) setDataRevision((value) => value + 1)
-          return
-        }
-
-        backgroundTimer = window.setTimeout(() => {
-          void cachedQuery(
-            'internal-background-sync',
-            async () => {
-              await settleWithin(
-                syncSupabaseToLocalStorage(),
-                BACKGROUND_SYNC_TIMEOUT_MS,
-                'internal background sync',
-              )
-              if (active) setDataRevision((value) => value + 1)
-              return true
-            },
-            { ...queryCachePolicy.frequent, tags: ['internal-sync'], scope: currentScope, force: !hadWarmBootstrap },
-          ).catch((error) => {
-            console.error('[background clinic sync failed]', error)
-          })
-        }, 0)
-      })
+    const watchdog = window.setTimeout(() => {
+      if (!cancelled) setBootstrapPhase('ready')
+    }, BOOTSTRAP_WATCHDOG_MS)
 
     return () => {
-      active = false
-      if (watchdogTimer !== undefined) window.clearTimeout(watchdogTimer)
-      if (backgroundTimer !== undefined) window.clearTimeout(backgroundTimer)
+      cancelled = true
+      window.clearTimeout(watchdog)
     }
-  }, [isAuthenticated, isLoading, user?.id, user?.role])
+  }, [bootstrapKey, isAuthenticated, isLoading, scope, user?.id, user?.role])
 
-  if (shouldShowPortalSkeleton) {
-    return (
-      <PortalSkeleton
-        variant={user?.role === 'patient' ? 'patient' : 'internal'}
-        message={user?.role === 'patient' ? 'Loading your patient portal' : 'Loading clinic workspace'}
-      />
-    )
-  }
+  useEffect(() => {
+    if (!isAuthenticated || !user?.id || user.role === 'patient') return
+    let cancelled = false
+    const timer = window.setInterval(() => {
+      void settleWithin(syncSupabaseToLocalStorage(), BACKGROUND_SYNC_TIMEOUT_MS, 'background clinic sync').then(() => {
+        if (!cancelled) setDataRevision((value) => value + 1)
+      })
+    }, 60_000)
+    return () => {
+      cancelled = true
+      window.clearInterval(timer)
+    }
+  }, [isAuthenticated, user?.id, user?.role])
 
-  return <Fragment key={`${user?.id ?? 'public'}:${dataRevision}`}>{children}</Fragment>
+  if (shouldShowPortalSkeleton) return <PortalSkeleton />
+  return <Fragment key={dataRevision}>{children}</Fragment>
 }
 
-function App() {
+export default function App() {
   return (
     <AppErrorBoundary>
       <AuthProvider>
-        <WorkspaceAccountIsolationGuard />
-        <DataBootstrap>
-          <ModalAccessibilityManager />
-          <AdaptivePaginationEnhancer />
-          <AppointmentJourneyAvatarEnhancer />
-          <ExpenseTrendEnhancer />
-          <InternalUiActionsEnhancerV116 />
-          <InventoryBranchScopeEnhancerV118 />
-          <OfflineStatusBanner />
-          <PersistenceStatusNotice />
-          <PatientDocumentLinkInterceptor />
-          <AppRouter />
-        </DataBootstrap>
+        <OfflineStatusBanner />
+        <WorkspaceAccountIsolationGuard>
+          <DataBootstrap>
+            <AppRouter />
+            <PersistenceStatusNotice />
+            <ModalAccessibilityManager />
+            <AdaptivePaginationEnhancer />
+            <AppointmentJourneyAvatarEnhancer />
+            <ExpenseTrendEnhancer />
+            <InternalUiActionsEnhancerV116 />
+            <InventoryBranchScopeEnhancerV118 />
+            <PatientDocumentLinkInterceptor />
+          </DataBootstrap>
+        </WorkspaceAccountIsolationGuard>
       </AuthProvider>
     </AppErrorBoundary>
   )
 }
-
-export default App
