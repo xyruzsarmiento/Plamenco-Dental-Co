@@ -175,8 +175,6 @@
 
 /* Detail modal content rhythm and constrained history column. */
 .rx116-detail-modal{width:min(680px,calc(100vw - 32px));max-height:calc(100vh - 32px);overflow:hidden}
-.rx116-detail-modal .rx-prescription-history{width:min(560px,calc(100% - 40px));max-height:190px;margin:16px auto 0;overflow:auto;padding:0 2px 2px}
-.rx116-detail-modal .rx-prescription-history-item{box-sizing:border-box;min-height:58px;padding:10px 12px}
 .rx116-detail-modal .rx116-detail-grid{width:min(560px,calc(100% - 40px));margin:16px auto 0;padding:0;box-sizing:border-box}
 .rx116-detail-modal .rx116-detail-medications{display:grid;gap:10px;width:min(560px,calc(100% - 40px));margin:16px auto 0;padding:0;box-sizing:border-box}
 .rx116-detail-modal .rx116-detail-medications>section{display:grid;gap:5px;min-width:0;padding:12px 14px;border:1px solid #e2eaf4;border-radius:12px;background:#f8fbff}
@@ -187,6 +185,5 @@
 
 @media(max-width:560px){
   .rx116-detail-modal{width:100%;max-height:calc(100vh - 16px)}
-  .rx116-detail-modal .rx-prescription-history{width:calc(100% - 24px);max-height:170px}
   .rx116-detail-modal .rx116-detail-grid,.rx116-detail-modal .rx116-detail-medications,.rx116-detail-modal>.rx116-context-note{width:calc(100% - 24px)}
 }

@@ -120,11 +120,6 @@ export function PrescriptionsPage() {
     const start = (effectivePage - 1) * PRESCRIPTION_PAGE_SIZE
     return patientGroups.slice(start, start + PRESCRIPTION_PAGE_SIZE)
   }, [effectivePage, patientGroups])
-  const selectedPatientRecords = useMemo(
-    () => prescriptions.filter((rx) => rx.patientId === selectedPatientId).sort((a, b) => new Date(b.prescriptionDate).getTime() - new Date(a.prescriptionDate).getTime()),
-    [prescriptions, selectedPatientId],
-  )
-
   useEffect(() => {
     if (!selectedPatientId && patientGroups[0]) setSelectedPatientId(patientGroups[0].id)
   }, [patientGroups, selectedPatientId])
@@ -335,7 +330,7 @@ export function PrescriptionsPage() {
             {loadingRecords && <div className="prescription-desk-empty"><LoaderCircle size={28} /><strong>Loading prescriptions</strong><span>Reading patient orders from Supabase…</span></div>}
             {!loadingRecords && selectedPatientId && patients.get(selectedPatientId) && (() => {
               const patient = patients.get(selectedPatientId)!
-              const records = selectedPatientRecords.filter((record) => record.status !== 'voided')
+              const records = prescriptions.filter((record) => record.patientId === selectedPatientId && record.status !== 'voided').sort((a, b) => new Date(b.prescriptionDate).getTime() - new Date(a.prescriptionDate).getTime())
               const activeCount = records.filter((record) => effectiveStatus(record) === 'active').length
               return <>
                 <section className="prescription-patient-banner"><div className="prescription-patient-avatar prescription-patient-avatar-lg">{`${patient.firstName[0] ?? ''}${patient.lastName[0] ?? ''}`.toUpperCase()}</div><div><span className="rx-desk-kicker">Selected patient</span><h2>{patient.firstName} {patient.middleName ? `${patient.middleName} ` : ''}{patient.lastName}</h2><p>{patient.patientId} · {patient.phone || 'No phone'} · {patient.email || 'No email'}</p></div><div className="prescription-patient-banner-meta"><span><Activity size={14} /> {activeCount} active</span><small>{records.length} total orders</small></div></section>
@@ -379,9 +374,6 @@ export function PrescriptionsPage() {
               <div><span className="eyebrow">Prescription details</span><h2 id="rx116-detail-title">{selectedPrescription.medication || 'Prescription'}</h2><p>{formatDate(selectedPrescription.prescriptionDate)} · {branchMap.get(selectedPrescription.branchId ?? '') ?? 'Branch not recorded'}</p></div>
               <button type="button" aria-label="Close prescription details" onClick={() => { setSelectedPrescription(null); setSelectedPatientId(null) }}><X size={18} /></button>
             </header>
-            <div className="rx-prescription-history" aria-label="Prescription history">
-              {selectedPatientRecords.map((record) => <button type="button" key={record.id} className={`rx-prescription-history-item${record.id === selectedPrescription.id ? ' is-selected' : ''}`} onClick={() => setSelectedPrescription(record)}><span><strong>{record.medication || record.items?.map((item) => item.medication).filter(Boolean).join(', ') || 'Prescription'}</strong><small>{formatDate(record.prescriptionDate)} · {record.duration || record.items?.[0]?.duration || 'Duration not recorded'}</small></span><StatusBadge status={effectiveStatus(record)} variant="compact" /></button>)}
-            </div>
             <div className="rx116-detail-grid">
               <div><span>Patient</span><strong>{patients.get(selectedPrescription.patientId)?.firstName ?? ''} {patients.get(selectedPrescription.patientId)?.lastName ?? selectedPrescription.patientId}</strong></div>
               <div><span>Dentist</span><strong>{selectedPrescription.providerNameSnapshot || selectedPrescription.prescribedBy || 'Clinical provider'}</strong></div>
