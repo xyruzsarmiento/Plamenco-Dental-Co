@@ -278,14 +278,15 @@ export function PrescriptionsPage() {
                 <small>{formatDate(rx.prescriptionDate)}</small>
                 <h3>{patientName}</h3>
                 <p className="prescription-patient-id">{id} · {records.length} prescription{records.length === 1 ? '' : 's'}</p>
-                <div className="prescription-medications">
-                  {(rx.items?.length ? rx.items : [{ id: rx.id, medication: rx.medication, strength: '', dosage: rx.dosage, frequency: rx.frequency, duration: rx.duration, instructions: rx.instructions }]).map((item) => (
-                    <div key={item.id}>
-                      <strong>{item.medication}{item.strength ? ` · ${item.strength}` : ''}</strong>
-                      <span>{[item.dosage, item.frequency, item.duration].filter(Boolean).join(' · ') || 'See clinical instructions'}</span>
-                      {item.instructions && <small>{item.instructions}</small>}
+                <div className="prescription-medications prescription-order-list">
+                  {records.slice(0, 3).map((record) => {
+                    const item = record.items?.[0]
+                    return <div key={record.id} className="prescription-order-summary">
+                      <span className="prescription-order-copy"><strong>{item?.medication || record.medication || 'Medication details'}{item?.strength ? ` · ${item.strength}` : ''}</strong><span>{[item?.dosage || record.dosage, item?.frequency || record.frequency, item?.duration || record.duration].filter(Boolean).join(' · ') || 'See clinical instructions'}</span></span>
+                      <StatusBadge status={effectiveStatus(record)} variant="compact" />
                     </div>
-                  ))}
+                  })}
+                  {records.length > 3 && <small className="prescription-more-orders">+ {records.length - 3} more orders in details</small>}
                 </div>
                 <footer>
                   <span><Stethoscope size={14} /> {rx.providerNameSnapshot || rx.prescribedBy || 'Clinical provider'}</span>
