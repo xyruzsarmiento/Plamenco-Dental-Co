@@ -1,21 +1,29 @@
 @import './prescription-details-premium-v133.css';
 
-/* Remove decorative blue circle/ring artwork from dentist-facing hero cards.
-   Keep layout, gradient surfaces, borders, shadows and functional controls unchanged. */
-.dentist130 .dentist130-hero::before,
-.dentist130 .dentist130-hero::after,
-.patients36-page > .patients36-hero::before,
-.patients36-page > .patients36-hero::after,
-.patients-workspace > .patients-header::before,
-.patients-workspace > .patients-header::after,
-.premium-page-scaffold > .portal-page-hero::before,
-.premium-page-scaffold > .portal-page-hero::after,
-.premium-page-scaffold > .premium-page-header::before,
-.premium-page-scaffold > .premium-page-header::after,
-.internal-profile-page > .internal-profile-hero::before,
-.internal-profile-page > .internal-profile-hero::after {
+/* Remove decorative blue circle/ring artwork from internal portal hero cards.
+   This stylesheet is loaded by AppLayout, so the rule applies consistently to
+   dentist, staff, associate dentist and super-admin workspaces. Functional
+   controls, layout spacing, borders, gradients and shadows remain unchanged. */
+.app-shell .dentist130-hero::before,
+.app-shell .dentist130-hero::after,
+.app-shell .patients36-hero::before,
+.app-shell .patients36-hero::after,
+.app-shell .patients-header::before,
+.app-shell .patients-header::after,
+.app-shell .portal-page-hero::before,
+.app-shell .portal-page-hero::after,
+.app-shell .premium-page-header::before,
+.app-shell .premium-page-header::after,
+.app-shell .internal-profile-hero::before,
+.app-shell .internal-profile-hero::after,
+.app-shell .dental-records-hero::before,
+.app-shell .dental-records-hero::after,
+.app-shell .page-hero::before,
+.app-shell .page-hero::after {
   content: none !important;
   display: none !important;
   background: none !important;
+  background-image: none !important;
+  border: 0 !important;
   box-shadow: none !important;
 }
