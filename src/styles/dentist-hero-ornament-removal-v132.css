@@ -1,9 +1,9 @@
 @import './prescription-details-premium-v133.css';
 
-/* Remove decorative blue circle/ring artwork from internal portal hero cards.
-   This stylesheet is loaded by AppLayout, so the rule applies consistently to
-   dentist, staff, associate dentist and super-admin workspaces. Functional
-   controls, layout spacing, borders, gradients and shadows remain unchanged. */
+/* Final internal hero contract: decorative blue circles/rings are not part of
+   internal workspace heroes. This file is loaded after the parity stylesheet,
+   so it deliberately neutralizes both pseudo-element artwork and any legacy
+   radial-gradient layer applied directly to the hero surface. */
 .app-shell .dentist130-hero::before,
 .app-shell .dentist130-hero::after,
 .app-shell .patients36-hero::before,
@@ -26,4 +26,18 @@
   background-image: none !important;
   border: 0 !important;
   box-shadow: none !important;
+}
+
+/* Preserve the premium card surface while explicitly removing radial artwork
+   from the hero element itself. The only allowed background is the shared
+   restrained linear gradient. */
+.app-shell .dentist130-hero,
+.app-shell .patients36-hero,
+.app-shell .patients-header,
+.app-shell .portal-page-hero,
+.app-shell .premium-page-header,
+.app-shell .internal-profile-hero,
+.app-shell .dental-records-hero,
+.app-shell .page-hero {
+  background-image: linear-gradient(135deg, #ffffff 0%, #fbfdff 70%, #f3f7ff 100%) !important;
 }
