@@ -164,6 +164,37 @@ html body .prescription-patient-rail .prescription-rail-search > input::placehol
   opacity: 1 !important;
 }
 
+html body .dr11-page label.dr11-search > input.dr11-search-input,
+html body .dr11-page label.dr11-search > input.dr11-search-input:focus,
+html body .dr11-page label.dr11-search > input.dr11-search-input:focus-visible {
+  all: unset !important;
+  box-sizing: border-box !important;
+  display: block !important;
+  flex: 1 1 0 !important;
+  flex-basis: 0 !important;
+  width: 0 !important;
+  min-width: 0 !important;
+  max-width: none !important;
+  height: 100% !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  color: #172033 !important;
+  font: inherit !important;
+  line-height: normal !important;
+  background: transparent !important;
+  background-image: none !important;
+  border: none !important;
+  border-top: 0 !important;
+  border-right: 0 !important;
+  border-bottom: 0 !important;
+  border-left: 0 !important;
+  outline: none !important;
+  box-shadow: none !important;
+  border-radius: 0 !important;
+  appearance: none !important;
+  -webkit-appearance: none !important;
+}
+
 /* Premium order cards align their information to the reading edge instead of
    centering the entire grid inside a wide card. */
 .prescription-order-card {

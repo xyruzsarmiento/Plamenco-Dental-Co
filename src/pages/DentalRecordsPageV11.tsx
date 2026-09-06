@@ -337,7 +337,7 @@ export function DentalRecordsPageV11() {
 
             <label className="dr11-search">
               <Search size={16} />
-              <input value={patientSearch} onChange={(event) => setPatientSearch(event.target.value)} placeholder="Search name, ID, phone..." />
+              <input className="dr11-search-input" value={patientSearch} onChange={(event) => setPatientSearch(event.target.value)} placeholder="Search name, ID, phone..." />
             </label>
 
             <div className="dr11-patient-list">
