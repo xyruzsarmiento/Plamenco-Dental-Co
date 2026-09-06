@@ -75,6 +75,7 @@ export function PrescriptionsPage() {
   const [selectedPatientId, setSelectedPatientId] = useState<string | null>(null)
   const [editingPrescription, setEditingPrescription] = useState<Prescription | null>(null)
   const [statusBusy, setStatusBusy] = useState(false)
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false)
 
   const patients = useMemo(() => {
     const map = new Map<string, Patient>()
@@ -187,6 +188,7 @@ export function PrescriptionsPage() {
   async function changeStatus(status: PrescriptionStatus) {
     if (!selectedPrescription || statusBusy) return
     setStatusBusy(true)
+    setError(null)
     try {
       const confirmed = await updatePrescriptionStatusPersisted(selectedPrescription.id, status)
       setSelectedPrescription(confirmed)
@@ -199,13 +201,15 @@ export function PrescriptionsPage() {
   }
 
   async function deletePrescription() {
-    if (!selectedPrescription || statusBusy || !window.confirm('Delete this prescription from the active workspace?')) return
+    if (!selectedPrescription || statusBusy) return
     setStatusBusy(true)
+    setError(null)
     try {
       await updatePrescriptionStatusPersisted(selectedPrescription.id, 'voided')
       setPrescriptions((current) => current.filter((entry) => entry.id !== selectedPrescription.id))
       setSelectedPrescription(null)
       setSelectedPatientId(null)
+      setDeleteConfirmOpen(false)
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : 'Prescription could not be deleted.')
     } finally {
@@ -226,6 +230,7 @@ export function PrescriptionsPage() {
     setInstructions(item?.instructions ?? prescription.instructions)
     setNotes(prescription.notes)
     setError(null)
+    setDeleteConfirmOpen(false)
     setSelectedPrescription(null)
     setCreating(true)
   }
@@ -371,7 +376,9 @@ export function PrescriptionsPage() {
               {(selectedPrescription.items?.length ? selectedPrescription.items : [{ id: selectedPrescription.id, medication: selectedPrescription.medication, strength: '', dosage: selectedPrescription.dosage, frequency: selectedPrescription.frequency, duration: selectedPrescription.duration, instructions: selectedPrescription.instructions }]).map((item) => <section key={item.id}><strong>{item.medication}{item.strength ? ` · ${item.strength}` : ''}</strong><span>{[item.dosage, item.frequency, item.duration].filter(Boolean).join(' · ') || 'See clinical instructions'}</span>{item.instructions && <small>{item.instructions}</small>}</section>)}
             </div>
             {selectedPrescription.notes && <div className="rx116-context-note"><FileText size={15} /><span>{selectedPrescription.notes}</span></div>}
-            <footer className="rx116-footer rx-prescription-detail-footer"><Button variant="secondary" onClick={() => { setSelectedPrescription(null); setSelectedPatientId(null) }}>Close</Button>{canManagePrescriptions && effectiveStatus(selectedPrescription) !== 'voided' && <><Button variant="secondary" icon={<Pencil size={15} />} onClick={() => editPrescription(selectedPrescription)} disabled={statusBusy}>Edit</Button><Button variant="danger" icon={<Trash2 size={15} />} onClick={() => void deletePrescription()} disabled={statusBusy}>Delete</Button><Button onClick={() => void changeStatus(effectiveStatus(selectedPrescription) === 'active' ? 'inactive' : 'active')} disabled={statusBusy}>{statusBusy ? 'Saving...' : effectiveStatus(selectedPrescription) === 'active' ? 'Mark inactive' : 'Mark active'}</Button></>}</footer>
+            {error && <div className="rx116-error rx116-detail-error" role="alert">{error}</div>}
+            {deleteConfirmOpen && <div className="rx116-delete-confirm" role="alertdialog" aria-labelledby="rx116-delete-title" aria-describedby="rx116-delete-copy"><div><strong id="rx116-delete-title">Delete this prescription?</strong><span id="rx116-delete-copy">It will be removed from this workspace and the patient portal.</span></div><div><Button variant="secondary" size="sm" onClick={() => setDeleteConfirmOpen(false)} disabled={statusBusy}>Cancel</Button><Button variant="danger" size="sm" onClick={() => void deletePrescription()} disabled={statusBusy}>{statusBusy ? 'Deleting...' : 'Delete prescription'}</Button></div></div>}
+            <footer className="rx116-footer rx-prescription-detail-footer"><Button variant="secondary" onClick={() => { setSelectedPrescription(null); setSelectedPatientId(null); setDeleteConfirmOpen(false) }}>Close</Button>{canManagePrescriptions && effectiveStatus(selectedPrescription) !== 'voided' && <><Button variant="secondary" icon={<Pencil size={15} />} onClick={() => editPrescription(selectedPrescription)} disabled={statusBusy}>Edit</Button><Button variant="danger" icon={<Trash2 size={15} />} onClick={() => setDeleteConfirmOpen(true)} disabled={statusBusy}>Delete</Button><Button onClick={() => void changeStatus(effectiveStatus(selectedPrescription) === 'active' ? 'inactive' : 'active')} disabled={statusBusy}>{statusBusy ? 'Saving...' : effectiveStatus(selectedPrescription) === 'active' ? 'Mark inactive' : 'Mark active'}</Button></>}</footer>
           </section>
         </div>
       )}

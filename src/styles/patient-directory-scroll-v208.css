@@ -214,6 +214,62 @@ html body .prescription-patient-rail .prescription-rail-search > input::placehol
   align-self: stretch !important;
 }
 
+/* Keep a long medication history contained while preserving the two-column
+   scan pattern on larger screens. */
+.prescription-order-grid {
+  min-height: 0 !important;
+  max-height: min(620px, calc(100dvh - 430px)) !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  align-content: start !important;
+  padding: 2px 4px 4px 0 !important;
+  scrollbar-width: thin;
+  scrollbar-color: #b7c7dc transparent;
+}
+
+.rx116-detail-error {
+  width: min(560px, calc(100% - 40px)) !important;
+  margin: 14px auto 0 !important;
+  box-sizing: border-box !important;
+}
+
+.rx116-delete-confirm {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  width: min(560px, calc(100% - 40px));
+  margin: 14px auto 0;
+  padding: 12px 14px;
+  box-sizing: border-box;
+  border: 1px solid #fecaca;
+  border-radius: 12px;
+  background: #fff7f7;
+  color: #7f1d1d;
+}
+
+.rx116-delete-confirm > div:first-child {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+
+.rx116-delete-confirm strong {
+  font-size: 12px;
+}
+
+.rx116-delete-confirm span {
+  color: #991b1b;
+  font-size: 11px;
+  line-height: 1.4;
+}
+
+.rx116-delete-confirm > div:last-child {
+  display: flex;
+  flex: 0 0 auto;
+  gap: 8px;
+}
+
 /* Document rows stay in a contained library as the result set grows. */
 .app-shell .doc149-library {
   min-height: 0 !important;
@@ -337,6 +393,29 @@ html body .prescription-patient-rail .prescription-rail-search > input::placehol
   .tx43-patient-list,
   .dr11-patient-list {
     max-height: 280px !important;
+  }
+
+  .prescription-order-grid {
+    max-height: 440px !important;
+    grid-template-columns: 1fr !important;
+  }
+
+  .rx116-detail-error,
+  .rx116-delete-confirm {
+    width: calc(100% - 24px) !important;
+  }
+
+  .rx116-delete-confirm {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .rx116-delete-confirm > div:last-child {
+    width: 100%;
+  }
+
+  .rx116-delete-confirm .btn {
+    flex: 1;
   }
 
   .patients36-list {
