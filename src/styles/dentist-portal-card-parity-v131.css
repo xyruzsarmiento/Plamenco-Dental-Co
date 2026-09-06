@@ -2,6 +2,17 @@
    Uses the same restrained surface language as the current Super Admin workspaces:
    white cards, cool neutral borders, subtle blue gradients, compact typography and low-elevation shadows. */
 
+/* Remove decorative blue circle/ring ornaments from the dentist portal hero surfaces. */
+.dentist130 .dentist130-hero::after,
+.patients-workspace > .patients-header::after,
+.premium-page-scaffold > .portal-page-hero::after,
+.premium-page-scaffold > .premium-page-header::after,
+.internal-profile-page > .internal-profile-hero::after {
+  content: none !important;
+  display: none !important;
+  background: none !important;
+}
+
 /* Shared PageScaffold hero used by Dental Records, Treatments and Treatment Plans. */
 .premium-page-scaffold > .portal-page-hero,
 .premium-page-scaffold > .premium-page-header {
