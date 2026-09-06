@@ -33,7 +33,7 @@
 
 /* Search inputs use one visible shell. The outer combobox wrapper must stay
    structural so upload and prescription modals do not render two borders. */
-.patient-search-field {
+html body .patient-search-field {
   display: grid !important;
   width: 100% !important;
   min-width: 0 !important;
@@ -42,6 +42,12 @@
   border: 0 !important;
   border-radius: 0 !important;
   background: transparent !important;
+  box-shadow: none !important;
+}
+
+html body .patient-search-field:focus-within {
+  border: 0 !important;
+  outline: 0 !important;
   box-shadow: none !important;
 }
 
@@ -136,7 +142,10 @@ html body .doc149-search input {
   min-width: 0 !important;
   margin: 0 !important;
   padding: 18px 26px 0 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
   background: #f8fbff !important;
+  box-shadow: none !important;
 }
 
 .app-shell .doc149-upload-modal > .patient-search-field .patient-search-label {
