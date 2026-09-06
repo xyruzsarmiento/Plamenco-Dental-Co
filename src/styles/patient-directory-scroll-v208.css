@@ -1,0 +1,52 @@
+/* Keep long patient directories contained inside their own workspace card. */
+.prescription-rail-list,
+.tp13-patient-list,
+.tx43-patient-list,
+.dr11-patient-list {
+  min-height: 0 !important;
+  max-height: 390px !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: #b7c7dc transparent;
+}
+
+.prescription-rail-list > *,
+.tp13-patient-list > *,
+.tx43-patient-list > *,
+.dr11-patient-list > * {
+  min-width: 0 !important;
+}
+
+@media (max-width: 980px) {
+  .tp13-patient-list,
+  .tx43-patient-list,
+  .dr11-patient-list {
+    display: grid !important;
+    grid-auto-flow: row !important;
+    grid-auto-columns: auto !important;
+    max-height: 300px !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    padding: 0 9px 11px !important;
+    scroll-snap-type: none !important;
+  }
+
+  .tp13-patient-list button,
+  .tx43-patient-list button,
+  .dr11-patient-list button {
+    flex: 0 1 auto !important;
+    width: 100% !important;
+    scroll-snap-align: none !important;
+  }
+}
+
+@media (max-width: 680px) {
+  .prescription-rail-list,
+  .tp13-patient-list,
+  .tx43-patient-list,
+  .dr11-patient-list {
+    max-height: 280px !important;
+  }
+}

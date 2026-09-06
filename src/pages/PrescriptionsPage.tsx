@@ -286,7 +286,7 @@ export function PrescriptionsPage() {
     <div className="prescriptions-workspace">
       <section className="prescriptions-hero">
         <div className="prescription-hero-identity"><span className="prescription-hero-icon"><Pill size={21} /></span><div><p className="eyebrow">Clinical medication</p><h2>Prescriptions</h2><p>Issue clear medication instructions, monitor course status, and keep patient visibility intentional.</p></div></div>
-        {canCreatePrescriptions && <Button icon={<Plus size={16} />} onClick={() => { resetForm(); setCreating(true) }}>New prescription</Button>}
+        {canCreatePrescriptions && <Button className="prescription-create-btn" icon={<Plus size={15} />} onClick={() => { resetForm(); setCreating(true) }}>New Rx</Button>}
       </section>
 
       <section className="prescription-desk">
