@@ -3,21 +3,24 @@ import { AppointmentRequestAlert } from '../components/dashboard/AppointmentRequ
 import { DashboardGreeting } from '../components/dashboard/DashboardGreeting'
 import { SuperAdminBranchDashboardV128 } from '../features/admin/SuperAdminBranchDashboardV128'
 import { useAuth } from '../features/auth/AuthContext'
-import { DentistTodayWorkspace } from '../features/dentalRecords/DentistTodayWorkspace'
+import { DentistPremiumDashboardV130 } from '../features/dentalRecords/DentistPremiumDashboardV130'
 import { StaffTodayWorkspace } from '../features/staff/StaffTodayWorkspace'
 
 export function RoleHomePage() {
   const { user } = useAuth()
+  const isDentist = user?.role === 'dentist' || user?.role === 'associate_dentist'
 
-  let workspace: React.ReactNode
-
-  if (user?.role === 'super_admin') {
-    workspace = <SuperAdminBranchDashboardV128 />
-  } else if (user?.role === 'dentist' || user?.role === 'associate_dentist') {
-    workspace = <DentistTodayWorkspace />
-  } else {
-    workspace = <StaffTodayWorkspace />
+  if (isDentist) {
+    return (
+      <div className="role-home-with-greeting dentist-premium-home-v130">
+        <DentistPremiumDashboardV130 />
+      </div>
+    )
   }
+
+  const workspace = user?.role === 'super_admin'
+    ? <SuperAdminBranchDashboardV128 />
+    : <StaffTodayWorkspace />
 
   return (
     <div className="role-home-with-greeting">
