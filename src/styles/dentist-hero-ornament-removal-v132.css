@@ -1,0 +1,19 @@
+/* Remove decorative blue circle/ring artwork from dentist-facing hero cards.
+   Keep layout, gradient surfaces, borders, shadows and functional controls unchanged. */
+.dentist130 .dentist130-hero::before,
+.dentist130 .dentist130-hero::after,
+.patients36-page > .patients36-hero::before,
+.patients36-page > .patients36-hero::after,
+.patients-workspace > .patients-header::before,
+.patients-workspace > .patients-header::after,
+.premium-page-scaffold > .portal-page-hero::before,
+.premium-page-scaffold > .portal-page-hero::after,
+.premium-page-scaffold > .premium-page-header::before,
+.premium-page-scaffold > .premium-page-header::after,
+.internal-profile-page > .internal-profile-hero::before,
+.internal-profile-page > .internal-profile-hero::after {
+  content: none !important;
+  display: none !important;
+  background: none !important;
+  box-shadow: none !important;
+}
