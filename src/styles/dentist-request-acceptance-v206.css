@@ -171,6 +171,12 @@
   min-height: 42px !important;
 }
 
+.sa-appointments-requests-panel .inline-alert.appointment-request-success-v206 {
+  border-color: #bbf7d0 !important;
+  background: #f0fdf4 !important;
+  color: #15803d !important;
+}
+
 /* Dentists never choose a provider. Approval is injected into the same request card. */
 .page-appointments.role-dentist .sa-appointments-request-card .request-provider-select,
 .page-appointments.role-associate_dentist .sa-appointments-request-card .request-provider-select,
