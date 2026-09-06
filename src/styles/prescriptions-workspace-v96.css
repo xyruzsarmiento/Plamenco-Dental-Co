@@ -172,3 +172,21 @@
   .patient-search-avatar{width:32px;height:32px;flex-basis:32px}
   .prescription-desk-filters{align-items:stretch;flex-direction:column}.prescription-desk-filters select{width:100%}.prescription-patient-banner{align-items:flex-start;flex-wrap:wrap}.prescription-patient-banner-meta{width:100%;margin-left:0;text-align:left}.prescription-patient-banner-meta span{justify-content:flex-start}.prescription-summary-strip{grid-template-columns:1fr 1fr}.prescription-summary-strip>div:last-child{grid-column:1/-1}
 }
+
+/* Detail modal content rhythm and constrained history column. */
+.rx116-detail-modal{width:min(680px,calc(100vw - 32px));max-height:calc(100vh - 32px);overflow:hidden}
+.rx116-detail-modal .rx-prescription-history{width:min(560px,calc(100% - 40px));max-height:190px;margin:16px auto 0;overflow:auto;padding:0 2px 2px}
+.rx116-detail-modal .rx-prescription-history-item{box-sizing:border-box;min-height:58px;padding:10px 12px}
+.rx116-detail-modal .rx116-detail-grid{width:min(560px,calc(100% - 40px));margin:16px auto 0;padding:0;box-sizing:border-box}
+.rx116-detail-modal .rx116-detail-medications{display:grid;gap:10px;width:min(560px,calc(100% - 40px));margin:16px auto 0;padding:0;box-sizing:border-box}
+.rx116-detail-modal .rx116-detail-medications>section{display:grid;gap:5px;min-width:0;padding:12px 14px;border:1px solid #e2eaf4;border-radius:12px;background:#f8fbff}
+.rx116-detail-modal .rx116-detail-medications>section strong{display:block;overflow-wrap:anywhere;color:#172033;font-size:13px;line-height:1.35}
+.rx116-detail-modal .rx116-detail-medications>section span,.rx116-detail-modal .rx116-detail-medications>section small{display:block;overflow-wrap:anywhere;color:#667085;font-size:11px;line-height:1.45}
+.rx116-detail-modal .rx116-detail-medications>section small{color:#8490a3}
+.rx116-detail-modal>.rx116-context-note{width:min(560px,calc(100% - 40px));margin:14px auto 0;box-sizing:border-box}
+
+@media(max-width:560px){
+  .rx116-detail-modal{width:100%;max-height:calc(100vh - 16px)}
+  .rx116-detail-modal .rx-prescription-history{width:calc(100% - 24px);max-height:170px}
+  .rx116-detail-modal .rx116-detail-grid,.rx116-detail-modal .rx116-detail-medications,.rx116-detail-modal>.rx116-context-note{width:calc(100% - 24px)}
+}
