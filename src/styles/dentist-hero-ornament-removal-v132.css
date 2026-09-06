@@ -1,3 +1,5 @@
+@import './prescription-details-premium-v133.css';
+
 /* Remove decorative blue circle/ring artwork from dentist-facing hero cards.
    Keep layout, gradient surfaces, borders, shadows and functional controls unchanged. */
 .dentist130 .dentist130-hero::before,
