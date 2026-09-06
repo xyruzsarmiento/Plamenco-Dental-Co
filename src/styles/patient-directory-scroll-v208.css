@@ -60,6 +60,15 @@ html body .patient-search-field:focus-within {
   min-width: 0 !important;
 }
 
+html body .prescription-rail-search,
+html body .dr11-search {
+  box-sizing: border-box !important;
+  display: flex !important;
+  align-items: center !important;
+  min-width: 0 !important;
+  overflow: hidden !important;
+}
+
 .dr11-search {
   box-sizing: border-box !important;
   width: calc(100% - 32px) !important;
@@ -91,6 +100,33 @@ html body .doc149-search input {
   flex: 1 1 0 !important;
   width: auto !important;
   max-width: none !important;
+  appearance: none !important;
+  -webkit-appearance: none !important;
+}
+
+html body .patient-search-field .patient-search-input-wrap input.patient-search-query,
+html body .patient-search-field .patient-search-input-wrap input.patient-search-query:focus,
+html body .patient-search-field .patient-search-input-wrap input.patient-search-query:focus-visible,
+html body .prescription-rail-search > input,
+html body .dr11-search > input,
+html body .doc149-search > input {
+  display: block !important;
+  flex: 1 1 0 !important;
+  width: auto !important;
+  min-width: 0 !important;
+  max-width: none !important;
+  height: 100% !important;
+  min-height: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  border-width: 0 !important;
+  border-style: none !important;
+  border-color: transparent !important;
+  border-radius: 0 !important;
+  outline: 0 !important;
+  box-shadow: none !important;
+  background: transparent !important;
   appearance: none !important;
   -webkit-appearance: none !important;
 }
@@ -136,7 +172,9 @@ html body .doc149-search input {
   overflow: hidden !important;
 }
 
-.app-shell .doc149-upload-modal > .patient-search-field {
+.app-shell .doc149-upload-modal > .patient-search-field,
+.documents-v10-upload-body > .patient-search-field {
+  box-sizing: border-box !important;
   display: grid !important;
   gap: 7px !important;
   min-width: 0 !important;
