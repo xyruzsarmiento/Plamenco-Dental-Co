@@ -6,7 +6,7 @@ import { getStoredProviders } from '../dentists/dentistStore'
 import { getStoredPatients } from '../patients/patientStore'
 import { recordAuditEntry } from '../security/auditLogStore'
 
-export type PrescriptionStatus = 'active' | 'completed' | 'voided'
+export type PrescriptionStatus = 'active' | 'inactive' | 'completed' | 'voided'
 
 export type PrescriptionItem = {
   id: string
@@ -282,6 +282,29 @@ export async function createPrescriptionPersisted(input: PrescriptionInput): Pro
       throw new Error('Choose the clinic branch for this prescription before saving.')
     }
     throw new Error(message || 'Prescription could not be saved. Your changes were not submitted.')
+  }
+
+  const confirmed = mapPrescriptionRow(data as Record<string, any>)
+  saveStoredPrescriptions([confirmed, ...getStoredPrescriptions().filter((entry) => entry.id !== confirmed.id)])
+  return confirmed
+}
+
+/** Persist a clinician-approved lifecycle change in PostgreSQL first. */
+export async function updatePrescriptionStatusPersisted(id: string, status: PrescriptionStatus): Promise<Prescription> {
+  if (!supabase) throw new Error('Clinic database is not configured. Prescription status cannot be saved safely.')
+  if (!id.trim()) throw new Error('Prescription is required.')
+  if (!['active', 'inactive', 'completed', 'voided'].includes(status)) throw new Error('Unsupported prescription status.')
+
+  const { data, error } = await supabase
+    .from('prescriptions')
+    .update({ status, updated_at: new Date().toISOString() })
+    .eq('id', id)
+    .select('*')
+    .single()
+
+  if (error || !data) {
+    if (import.meta.env.DEV && error?.message) console.error('[prescription persistence] status update', error)
+    throw new Error(error?.message || 'Prescription status could not be saved.')
   }
 
   const confirmed = mapPrescriptionRow(data as Record<string, any>)
