@@ -285,34 +285,17 @@ export function PrescriptionsPage() {
   return (
     <div className="prescriptions-workspace">
       <section className="prescriptions-hero">
-        <div>
-          <p className="eyebrow">Medication workspace</p>
-          <h2>Prescription desk</h2>
-          <p>Keep every patient order organized by person, course, and visibility status.</p>
-        </div>
-        <div className="rx116-actions">
-          <div className="prescriptions-kpis">
-            <span><small>Total orders</small><strong>{prescriptions.filter((rx) => rx.status !== 'voided').length}</strong></span>
-            <span><small>Patient files</small><strong>{patientGroups.length}</strong></span>
-            <span><small>Visible to patients</small><strong>{prescriptions.filter((rx) => effectiveStatus(rx) === 'active').length}</strong></span>
-          </div>
-          {canCreatePrescriptions && <Button icon={<Plus size={16} />} onClick={() => { resetForm(); setCreating(true) }}>New prescription</Button>}
-        </div>
+        <div className="prescription-hero-identity"><span className="prescription-hero-icon"><Pill size={21} /></span><div><p className="eyebrow">Clinical medication</p><h2>Prescriptions</h2><p>Issue clear medication instructions, monitor course status, and keep patient visibility intentional.</p></div></div>
+        {canCreatePrescriptions && <Button icon={<Plus size={16} />} onClick={() => { resetForm(); setCreating(true) }}>New prescription</Button>}
       </section>
 
       <section className="prescription-desk">
         {loadError && <div className="rx116-load-error" role="alert">{loadError}<button type="button" onClick={() => { setLoadError(null); setLoadingRecords(true); void Promise.all([loadPatientsFromSupabase({ strict: true }), loadPrescriptionsFromSupabase({ strict: true })]).then(([nextPatients, nextPrescriptions]) => { setPatientList(nextPatients); setPrescriptions(nextPrescriptions); setLoadingRecords(false) }).catch((cause) => { setLoadError(cause instanceof Error ? cause.message : 'Unable to reload prescriptions.'); setLoadingRecords(false) }) }}>Retry</button></div>}
-        <div className="prescription-desk-toolbar">
-          <div><span className="rx-desk-kicker">Patient directory</span><strong>{patientGroups.length} patient files</strong></div>
-          <div className="prescription-desk-filters">
-            <label className="rx-prescription-search"><Search size={16} /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search patient, medication, or dentist" /></label>
-            <select value={statusFilter} onChange={(event) => setStatusFilter(event.target.value as typeof statusFilter)} aria-label="Filter prescription status"><option value="all">All statuses</option><option value="active">Active only</option><option value="inactive">Inactive only</option></select>
-          </div>
-        </div>
-
         <div className="prescription-desk-layout" aria-busy={loadingRecords}>
           <aside className="prescription-patient-rail">
-            <div className="prescription-rail-heading"><span><UserRound size={17} /></span><div><strong>Patients</strong><small>Choose a file to review</small></div></div>
+            <div className="prescription-rail-heading"><div><span className="rx-desk-kicker">Patient directory</span><strong>{patientGroups.length} patient files</strong></div><UserRound size={18} /></div>
+            <label className="prescription-rail-search"><Search size={16} /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search patient or order" /></label>
+            <select className="prescription-rail-filter" value={statusFilter} onChange={(event) => setStatusFilter(event.target.value as typeof statusFilter)} aria-label="Filter prescription status"><option value="all">All prescription statuses</option><option value="active">Active only</option><option value="inactive">Inactive only</option></select>
             <div className="prescription-rail-list">
               {loadingRecords && <div className="prescription-rail-state"><LoaderCircle size={18} /><span>Loading database records…</span></div>}
               {!loadingRecords && visible.map(({ id, records }) => {
