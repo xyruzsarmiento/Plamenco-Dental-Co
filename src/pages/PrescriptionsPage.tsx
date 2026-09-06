@@ -1,4 +1,4 @@
-import { Building2, FileText, LoaderCircle, Pill, Plus, Search, Stethoscope, X } from 'lucide-react'
+import { Building2, FileText, LoaderCircle, Pencil, Pill, Plus, Search, Stethoscope, Trash2, X } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 import { StatusBadge } from '../components/ui/Badge'
 import { Button } from '../components/ui/Button'
@@ -10,7 +10,7 @@ import { getStoredBranches } from '../features/branches/branchStore'
 import { PatientSearchCombobox } from '../features/patients/PatientSearchCombobox'
 import { loadPatientsFromSupabase } from '../features/patients/patientPersistence'
 import type { Patient } from '../features/patients/patientTypes'
-import { createPrescriptionPersisted, type Prescription, type PrescriptionStatus, updatePrescriptionStatusPersisted } from '../features/prescriptions/prescriptionStore'
+import { createPrescriptionPersisted, type Prescription, type PrescriptionInput, type PrescriptionStatus, updatePrescriptionPersisted, updatePrescriptionStatusPersisted } from '../features/prescriptions/prescriptionStore'
 import { loadPrescriptionsFromSupabase } from '../features/prescriptions/prescriptionPersistence'
 import '../styles/prescriptions-workspace-v96.css'
 
@@ -69,6 +69,8 @@ export function PrescriptionsPage() {
   const [notes, setNotes] = useState('')
   const [page, setPage] = useState(1)
   const [selectedPrescription, setSelectedPrescription] = useState<Prescription | null>(null)
+  const [selectedPatientId, setSelectedPatientId] = useState<string | null>(null)
+  const [editingPrescription, setEditingPrescription] = useState<Prescription | null>(null)
   const [statusBusy, setStatusBusy] = useState(false)
 
   const patients = useMemo(() => {
@@ -94,8 +96,9 @@ export function PrescriptionsPage() {
 
   const filtered = useMemo(() => {
     const needle = query.trim().toLowerCase()
-    if (!needle) return prescriptions
-    return prescriptions.filter((rx) => {
+    const activeRecords = prescriptions.filter((rx) => rx.status !== 'voided')
+    if (!needle) return activeRecords
+    return activeRecords.filter((rx) => {
       const patient = patients.get(rx.patientId)
       const patientName = patient ? `${patient.firstName} ${patient.middleName ?? ''} ${patient.lastName}` : rx.patientId
       return [patientName, rx.patientId, rx.providerNameSnapshot, rx.medication, effectiveStatus(rx), rx.branchId ? branchMap.get(rx.branchId) : '']
@@ -114,6 +117,10 @@ export function PrescriptionsPage() {
     const start = (effectivePage - 1) * PRESCRIPTION_PAGE_SIZE
     return patientGroups.slice(start, start + PRESCRIPTION_PAGE_SIZE)
   }, [effectivePage, patientGroups])
+  const selectedPatientRecords = useMemo(
+    () => prescriptions.filter((rx) => rx.patientId === selectedPatientId).sort((a, b) => new Date(b.prescriptionDate).getTime() - new Date(a.prescriptionDate).getTime()),
+    [prescriptions, selectedPatientId],
+  )
 
 
   useEffect(() => { setPage(1) }, [query])
@@ -156,6 +163,7 @@ export function PrescriptionsPage() {
   }, [permissions])
 
   function resetForm() {
+    setEditingPrescription(null)
     setPatientId('')
     setBranchId(branchContext?.isAllBranchesMode ? '' : branchContext?.activeBranchId ?? '')
     setMedication('')
@@ -188,6 +196,38 @@ export function PrescriptionsPage() {
     }
   }
 
+  async function deletePrescription() {
+    if (!selectedPrescription || statusBusy || !window.confirm('Delete this prescription from the active workspace?')) return
+    setStatusBusy(true)
+    try {
+      await updatePrescriptionStatusPersisted(selectedPrescription.id, 'voided')
+      setPrescriptions((current) => current.filter((entry) => entry.id !== selectedPrescription.id))
+      setSelectedPrescription(null)
+      setSelectedPatientId(null)
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : 'Prescription could not be deleted.')
+    } finally {
+      setStatusBusy(false)
+    }
+  }
+
+  function editPrescription(prescription: Prescription) {
+    const item = prescription.items?.[0]
+    setEditingPrescription(prescription)
+    setPatientId(prescription.patientId)
+    setBranchId(prescription.branchId ?? branchContext?.activeBranchId ?? '')
+    setMedication(item?.medication ?? prescription.medication)
+    setStrength(item?.strength ?? '')
+    setDosage(item?.dosage ?? prescription.dosage)
+    setFrequency(item?.frequency ?? prescription.frequency)
+    setDuration(item?.duration ?? prescription.duration)
+    setInstructions(item?.instructions ?? prescription.instructions)
+    setNotes(prescription.notes)
+    setError(null)
+    setSelectedPrescription(null)
+    setCreating(true)
+  }
+
   async function savePrescription() {
     if (busy) return
     if (!patientId) return setError('Select a patient.')
@@ -200,7 +240,7 @@ export function PrescriptionsPage() {
     setBusy(true)
     setError(null)
     try {
-      const confirmed = await createPrescriptionPersisted({
+      const input: PrescriptionInput = {
         patientId,
         branchId: resolvedBranchId,
         items: [{
@@ -213,12 +253,17 @@ export function PrescriptionsPage() {
         }],
         notes: notes.trim(),
         prescribedBy: prescriber,
-      })
+      }
+      const confirmed = editingPrescription
+        ? await updatePrescriptionPersisted(editingPrescription.id, input)
+        : await createPrescriptionPersisted(input)
 
       // The RPC-confirmed PostgreSQL row is immediately safe to display. A
       // fresh database read then reconciles the complete registry without ever
       // treating browser storage as the source of truth.
-      setPrescriptions((current) => [confirmed, ...current.filter((entry) => entry.id !== confirmed.id)])
+      setPrescriptions((current) => editingPrescription
+        ? current.map((entry) => entry.id === confirmed.id ? confirmed : entry)
+        : [confirmed, ...current.filter((entry) => entry.id !== confirmed.id)])
       resetForm()
       setCreating(false)
       try {
@@ -245,7 +290,7 @@ export function PrescriptionsPage() {
         </div>
         <div className="rx116-actions">
           <div className="prescriptions-kpis">
-            <span><small>Total</small><strong>{prescriptions.length}</strong></span>
+            <span><small>Total</small><strong>{prescriptions.filter((rx) => rx.status !== 'voided').length}</strong></span>
             <span><small>Active</small><strong>{prescriptions.filter((rx) => effectiveStatus(rx) === 'active').length}</strong></span>
           </div>
           {permissions.can('prescriptions.create') && <Button icon={<Plus size={16} />} onClick={() => { resetForm(); setCreating(true) }}>New prescription</Button>}
@@ -270,7 +315,7 @@ export function PrescriptionsPage() {
             const patientName = patient ? `${patient.firstName} ${patient.middleName ? `${patient.middleName} ` : ''}${patient.lastName}` : id
             const activeCount = records.filter((entry) => effectiveStatus(entry) === 'active').length
             return (
-              <article key={id} className="prescription-admin-card prescription-patient-card" role="button" tabIndex={0} onClick={() => setSelectedPrescription(rx)} onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); setSelectedPrescription(rx) } }}>
+              <article key={id} className="prescription-admin-card prescription-patient-card" role="button" tabIndex={0} onClick={() => { setSelectedPatientId(id); setSelectedPrescription(rx) }} onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); setSelectedPatientId(id); setSelectedPrescription(rx) } }}>
                 <header>
                   <span><Pill size={18} /></span>
                   <StatusBadge status={activeCount ? 'active' : effectiveStatus(rx)} variant="compact" />
@@ -305,7 +350,7 @@ export function PrescriptionsPage() {
         <div className="rx116-backdrop" role="presentation" onMouseDown={(event) => event.target === event.currentTarget && !busy && setCreating(false)}>
           <section className="rx116-modal" role="dialog" aria-modal="true" aria-labelledby="rx116-title">
             <header className="rx116-head">
-              <div><span className="eyebrow">Clinical prescription</span><h2 id="rx116-title">New prescription</h2><p>Select a patient and enter the medication instructions. The authenticated dentist is recorded by the database.</p></div>
+              <div><span className="eyebrow">Clinical prescription</span><h2 id="rx116-title">{editingPrescription ? 'Edit prescription' : 'New prescription'}</h2><p>{editingPrescription ? 'Update the medication instructions and save the revised clinical order.' : 'Select a patient and enter the medication instructions. The authenticated dentist is recorded by the database.'}</p></div>
               <button type="button" aria-label="Close prescription dialog" onClick={() => setCreating(false)} disabled={busy}><X size={18} /></button>
             </header>
             <div className="rx116-form">
@@ -326,12 +371,15 @@ export function PrescriptionsPage() {
         </div>
       )}
       {selectedPrescription && (
-        <div className="rx116-backdrop" role="presentation" onMouseDown={(event) => event.target === event.currentTarget && setSelectedPrescription(null)}>
+        <div className="rx116-backdrop" role="presentation" onMouseDown={(event) => event.target === event.currentTarget && (setSelectedPrescription(null), setSelectedPatientId(null))}>
           <section className="rx116-modal rx116-detail-modal" role="dialog" aria-modal="true" aria-labelledby="rx116-detail-title">
             <header className="rx116-head">
               <div><span className="eyebrow">Prescription details</span><h2 id="rx116-detail-title">{selectedPrescription.medication || 'Prescription'}</h2><p>{formatDate(selectedPrescription.prescriptionDate)} · {branchMap.get(selectedPrescription.branchId ?? '') ?? 'Branch not recorded'}</p></div>
-              <button type="button" aria-label="Close prescription details" onClick={() => setSelectedPrescription(null)}><X size={18} /></button>
+              <button type="button" aria-label="Close prescription details" onClick={() => { setSelectedPrescription(null); setSelectedPatientId(null) }}><X size={18} /></button>
             </header>
+            <div className="rx-prescription-history" aria-label="Prescription history">
+              {selectedPatientRecords.map((record) => <button type="button" key={record.id} className={`rx-prescription-history-item${record.id === selectedPrescription.id ? ' is-selected' : ''}`} onClick={() => setSelectedPrescription(record)}><span><strong>{record.medication || record.items?.map((item) => item.medication).filter(Boolean).join(', ') || 'Prescription'}</strong><small>{formatDate(record.prescriptionDate)} · {record.duration || record.items?.[0]?.duration || 'Duration not recorded'}</small></span><StatusBadge status={effectiveStatus(record)} variant="compact" /></button>)}
+            </div>
             <div className="rx116-detail-grid">
               <div><span>Patient</span><strong>{patients.get(selectedPrescription.patientId)?.firstName ?? ''} {patients.get(selectedPrescription.patientId)?.lastName ?? selectedPrescription.patientId}</strong></div>
               <div><span>Dentist</span><strong>{selectedPrescription.providerNameSnapshot || selectedPrescription.prescribedBy || 'Clinical provider'}</strong></div>
@@ -343,7 +391,7 @@ export function PrescriptionsPage() {
               {(selectedPrescription.items?.length ? selectedPrescription.items : [{ id: selectedPrescription.id, medication: selectedPrescription.medication, strength: '', dosage: selectedPrescription.dosage, frequency: selectedPrescription.frequency, duration: selectedPrescription.duration, instructions: selectedPrescription.instructions }]).map((item) => <section key={item.id}><strong>{item.medication}{item.strength ? ` · ${item.strength}` : ''}</strong><span>{[item.dosage, item.frequency, item.duration].filter(Boolean).join(' · ') || 'See clinical instructions'}</span>{item.instructions && <small>{item.instructions}</small>}</section>)}
             </div>
             {selectedPrescription.notes && <div className="rx116-context-note"><FileText size={15} /><span>{selectedPrescription.notes}</span></div>}
-            <footer className="rx116-footer rx-prescription-detail-footer"><Button variant="secondary" onClick={() => setSelectedPrescription(null)}>Close</Button>{permissions.can('prescriptions.edit') && effectiveStatus(selectedPrescription) !== 'voided' && <Button onClick={() => void changeStatus(effectiveStatus(selectedPrescription) === 'active' ? 'inactive' : 'active')} disabled={statusBusy}>{statusBusy ? 'Saving...' : effectiveStatus(selectedPrescription) === 'active' ? 'Mark inactive' : 'Mark active'}</Button>}</footer>
+            <footer className="rx116-footer rx-prescription-detail-footer"><Button variant="secondary" onClick={() => { setSelectedPrescription(null); setSelectedPatientId(null) }}>Close</Button>{permissions.can('prescriptions.edit') && effectiveStatus(selectedPrescription) !== 'voided' && <><Button variant="secondary" icon={<Pencil size={15} />} onClick={() => editPrescription(selectedPrescription)} disabled={statusBusy}>Edit</Button><Button variant="danger" icon={<Trash2 size={15} />} onClick={() => void deletePrescription()} disabled={statusBusy}>Delete</Button><Button onClick={() => void changeStatus(effectiveStatus(selectedPrescription) === 'active' ? 'inactive' : 'active')} disabled={statusBusy}>{statusBusy ? 'Saving...' : effectiveStatus(selectedPrescription) === 'active' ? 'Mark inactive' : 'Mark active'}</Button></>}</footer>
           </section>
         </div>
       )}

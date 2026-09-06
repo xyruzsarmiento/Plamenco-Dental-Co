@@ -312,6 +312,37 @@ export async function updatePrescriptionStatusPersisted(id: string, status: Pres
   return confirmed
 }
 
+/** Update the clinical order in PostgreSQL before refreshing the local cache. */
+export async function updatePrescriptionPersisted(id: string, input: PrescriptionInput): Promise<Prescription> {
+  if (!supabase) throw new Error('Clinic database is not configured. Prescriptions cannot be edited safely.')
+  if (!id.trim()) throw new Error('Prescription is required.')
+  if (!input.patientId.trim()) throw new Error('Patient is required.')
+  const cleanItems = cleanPrescriptionItems(input)
+  const branchId = resolvePrescriptionBranchId(input)
+  const { data, error } = await supabase
+    .from('prescriptions')
+    .update({
+      patient_id: patientPublicReference(input.patientId),
+      dental_record_id: input.dentalRecordId ?? null,
+      appointment_id: input.appointmentId ?? null,
+      branch_id: branchId,
+      items: cleanItems,
+      notes: input.notes?.trim() ?? '',
+      prescribed_by: input.prescribedBy.trim(),
+      prescription_date: input.prescriptionDate ?? new Date().toISOString().slice(0, 10),
+      status: input.status ?? 'active',
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', id)
+    .select('*')
+    .single()
+
+  if (error || !data) throw new Error(error?.message || 'Prescription could not be edited.')
+  const confirmed = mapPrescriptionRow(data as Record<string, any>)
+  saveStoredPrescriptions([confirmed, ...getStoredPrescriptions().filter((entry) => entry.id !== confirmed.id)])
+  return confirmed
+}
+
 /**
  * Legacy local-only helper retained for inactive/test code.
  * Active routed UI must use createPrescriptionPersisted instead.
