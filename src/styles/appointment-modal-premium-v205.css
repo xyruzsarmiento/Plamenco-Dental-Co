@@ -164,3 +164,202 @@
     flex: 1 1 0 !important;
   }
 }
+
+/*
+ * Global icon-action hardening.
+ * This stylesheet is intentionally loaded after the portal/page style stack so
+ * close, remove, delete and trash controls retain a visible Lucide icon in every
+ * portal even when an older page stylesheet overrides button color/layout.
+ */
+:is(
+  button[aria-label*="close" i],
+  button[aria-label*="remove" i],
+  button[aria-label*="delete" i],
+  button[title*="close" i],
+  button[title*="remove" i],
+  button[title*="delete" i],
+  button[class*="-close"],
+  button[class*="-remove"],
+  button[class*="-delete"],
+  button[class*="-trash"]
+):has(svg) {
+  position: relative !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  flex: 0 0 auto !important;
+  box-sizing: border-box !important;
+  min-width: 36px !important;
+  min-height: 36px !important;
+  padding: 0 !important;
+  line-height: 1 !important;
+}
+
+:is(
+  button[aria-label*="close" i],
+  button[aria-label*="remove" i],
+  button[aria-label*="delete" i],
+  button[title*="close" i],
+  button[title*="remove" i],
+  button[title*="delete" i],
+  button[class*="-close"],
+  button[class*="-remove"],
+  button[class*="-delete"],
+  button[class*="-trash"]
+):has(svg) > svg {
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  width: 18px !important;
+  height: 18px !important;
+  min-width: 18px !important;
+  min-height: 18px !important;
+  flex: 0 0 18px !important;
+  color: currentColor !important;
+  stroke: currentColor !important;
+  stroke-width: 2.15 !important;
+  pointer-events: none !important;
+}
+
+:is(
+  button[aria-label*="close" i],
+  button[title*="close" i],
+  button[class*="-close"]
+):has(svg) {
+  border: 1px solid #d8e2ef !important;
+  border-radius: 11px !important;
+  background: #ffffff !important;
+  color: #475569 !important;
+  box-shadow: 0 5px 14px rgba(15, 23, 42, .07) !important;
+}
+
+:is(
+  button[aria-label*="close" i],
+  button[title*="close" i],
+  button[class*="-close"]
+):has(svg):hover:not(:disabled) {
+  border-color: #b9c9dd !important;
+  background: #f8fafc !important;
+  color: #0f172a !important;
+}
+
+:is(
+  button[aria-label*="remove" i],
+  button[aria-label*="delete" i],
+  button[title*="remove" i],
+  button[title*="delete" i],
+  button[class*="-remove"],
+  button[class*="-delete"],
+  button[class*="-trash"]
+):has(svg) {
+  border: 1px solid #fecaca !important;
+  border-radius: 10px !important;
+  background: #fffafa !important;
+  color: #dc2626 !important;
+  box-shadow: none !important;
+}
+
+:is(
+  button[aria-label*="remove" i],
+  button[aria-label*="delete" i],
+  button[title*="remove" i],
+  button[title*="delete" i],
+  button[class*="-remove"],
+  button[class*="-delete"],
+  button[class*="-trash"]
+):has(svg):hover:not(:disabled) {
+  border-color: #fca5a5 !important;
+  background: #fef2f2 !important;
+  color: #b91c1c !important;
+}
+
+:is(
+  button[aria-label*="close" i],
+  button[aria-label*="remove" i],
+  button[aria-label*="delete" i],
+  button[title*="close" i],
+  button[title*="remove" i],
+  button[title*="delete" i],
+  button[class*="-close"],
+  button[class*="-remove"],
+  button[class*="-delete"],
+  button[class*="-trash"]
+):has(svg):focus-visible {
+  outline: none !important;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, .16) !important;
+}
+
+:is(
+  button[aria-label*="close" i],
+  button[aria-label*="remove" i],
+  button[aria-label*="delete" i],
+  button[title*="close" i],
+  button[title*="remove" i],
+  button[title*="delete" i],
+  button[class*="-close"],
+  button[class*="-remove"],
+  button[class*="-delete"],
+  button[class*="-trash"]
+):has(svg):disabled {
+  cursor: not-allowed !important;
+  opacity: .48 !important;
+}
+
+/* Treatment-plan procedure removal: explicit sizing prevents the price column
+   from collapsing the control and guarantees the Trash2 glyph stays visible. */
+.tp80-item {
+  grid-template-columns: auto minmax(0, 1fr) 130px 38px !important;
+}
+
+.tp80-remove {
+  width: 38px !important;
+  height: 38px !important;
+  min-width: 38px !important;
+  min-height: 38px !important;
+  align-self: center !important;
+  justify-self: end !important;
+  overflow: visible !important;
+}
+
+.tp80-remove > svg {
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  width: 17px !important;
+  height: 17px !important;
+  color: #dc2626 !important;
+  stroke: #dc2626 !important;
+}
+
+@media (max-width: 760px) {
+  :is(
+    button[aria-label*="close" i],
+    button[aria-label*="remove" i],
+    button[aria-label*="delete" i],
+    button[title*="close" i],
+    button[title*="remove" i],
+    button[title*="delete" i],
+    button[class*="-close"],
+    button[class*="-remove"],
+    button[class*="-delete"],
+    button[class*="-trash"]
+  ):has(svg) {
+    min-width: 40px !important;
+    min-height: 40px !important;
+  }
+
+  .tp80-item {
+    grid-template-columns: auto minmax(0, 1fr) 40px !important;
+  }
+
+  .tp80-item-total {
+    grid-column: 2 !important;
+  }
+
+  .tp80-remove {
+    grid-column: 3 !important;
+    grid-row: 1 / span 2 !important;
+    width: 40px !important;
+    height: 40px !important;
+  }
+}
