@@ -1,0 +1,173 @@
+/* Final Prescription Details layout contract.
+   Keeps the existing Supabase-backed handlers intact and only corrects layout,
+   action visibility and responsive presentation. */
+
+.rx116-detail-modal {
+  box-sizing: border-box !important;
+  display: flex !important;
+  flex-direction: column !important;
+  width: min(720px, calc(100vw - 48px)) !important;
+  max-width: 720px !important;
+}
+
+.rx116-detail-modal > .rx116-detail-grid,
+.rx116-detail-modal > .rx116-detail-medications,
+.rx116-detail-modal > .rx116-context-note,
+.rx116-detail-modal > .rx116-error,
+.rx116-detail-modal > .rx116-delete-confirm {
+  box-sizing: border-box !important;
+  width: calc(100% - 48px) !important;
+  max-width: none !important;
+  align-self: stretch !important;
+  margin-left: 24px !important;
+  margin-right: 24px !important;
+}
+
+.rx116-detail-modal > .rx116-detail-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  gap: 10px !important;
+}
+
+.rx116-detail-modal > .rx116-detail-grid > div {
+  width: auto !important;
+  max-width: none !important;
+  min-width: 0 !important;
+}
+
+.rx116-detail-modal > .rx116-detail-grid > div:nth-child(5) {
+  grid-column: 1 / -1 !important;
+}
+
+.rx116-detail-modal > .rx116-detail-medications {
+  width: calc(100% - 48px) !important;
+}
+
+.rx116-detail-modal > .rx116-detail-medications > section {
+  width: 100% !important;
+  max-width: none !important;
+  box-sizing: border-box !important;
+}
+
+.rx116-detail-modal > .rx-prescription-detail-footer {
+  box-sizing: border-box !important;
+  width: 100% !important;
+  display: grid !important;
+  grid-template-columns: auto minmax(24px, 1fr) auto auto minmax(126px, auto) !important;
+  align-items: center !important;
+  column-gap: 8px !important;
+  row-gap: 8px !important;
+  padding: 13px 24px !important;
+}
+
+.rx116-detail-modal > .rx-prescription-detail-footer > *:first-child {
+  grid-column: 1 !important;
+}
+
+.rx116-detail-modal > .rx-prescription-detail-footer > *:nth-child(2) {
+  grid-column: 3 !important;
+}
+
+.rx116-detail-modal > .rx-prescription-detail-footer > *:nth-child(3) {
+  grid-column: 4 !important;
+}
+
+.rx116-detail-modal > .rx-prescription-detail-footer > *:last-child {
+  grid-column: 5 !important;
+}
+
+/* Delete must remain a readable destructive secondary action, not white text
+   on a faint surface. Target the actual third action as well as danger classes
+   so global button rules cannot override it. */
+.rx116-detail-modal > .rx-prescription-detail-footer > *:nth-child(3),
+.rx116-detail-modal > .rx-prescription-detail-footer .btn-danger,
+.rx116-detail-modal > .rx-prescription-detail-footer button.btn-danger {
+  border-color: #fca5a5 !important;
+  background: #fff7f7 !important;
+  color: #dc2626 !important;
+  -webkit-text-fill-color: #dc2626 !important;
+  opacity: 1 !important;
+  box-shadow: none !important;
+}
+
+.rx116-detail-modal > .rx-prescription-detail-footer > *:nth-child(3) svg,
+.rx116-detail-modal > .rx-prescription-detail-footer .btn-danger svg,
+.rx116-detail-modal > .rx-prescription-detail-footer button.btn-danger svg {
+  color: #dc2626 !important;
+  stroke: #dc2626 !important;
+  opacity: 1 !important;
+}
+
+.rx116-detail-modal > .rx-prescription-detail-footer > *:nth-child(3):hover:not(:disabled),
+.rx116-detail-modal > .rx-prescription-detail-footer .btn-danger:hover:not(:disabled) {
+  border-color: #ef4444 !important;
+  background: #fee2e2 !important;
+  color: #b91c1c !important;
+  -webkit-text-fill-color: #b91c1c !important;
+}
+
+.rx116-detail-modal > .rx-prescription-detail-footer > *:nth-child(3):disabled,
+.rx116-detail-modal > .rx-prescription-detail-footer .btn-danger:disabled {
+  border-color: #fecaca !important;
+  background: #fff7f7 !important;
+  color: #ef4444 !important;
+  -webkit-text-fill-color: #ef4444 !important;
+  opacity: .72 !important;
+}
+
+@media (max-width: 760px) {
+  .rx116-detail-modal {
+    width: 100% !important;
+    max-width: none !important;
+  }
+
+  .rx116-detail-modal > .rx116-detail-grid,
+  .rx116-detail-modal > .rx116-detail-medications,
+  .rx116-detail-modal > .rx116-context-note,
+  .rx116-detail-modal > .rx116-error,
+  .rx116-detail-modal > .rx116-delete-confirm {
+    width: calc(100% - 36px) !important;
+    margin-left: 18px !important;
+    margin-right: 18px !important;
+  }
+
+  .rx116-detail-modal > .rx-prescription-detail-footer {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    padding: 12px 18px calc(12px + env(safe-area-inset-bottom)) !important;
+  }
+
+  .rx116-detail-modal > .rx-prescription-detail-footer > * {
+    grid-column: auto !important;
+    width: 100% !important;
+    min-width: 0 !important;
+  }
+}
+
+@media (max-width: 560px) {
+  .rx116-detail-modal > .rx116-detail-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .rx116-detail-modal > .rx116-detail-grid > div:nth-child(5) {
+    grid-column: auto !important;
+  }
+
+  .rx116-detail-modal > .rx-prescription-detail-footer {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .rx116-detail-modal > .rx116-detail-grid,
+  .rx116-detail-modal > .rx116-detail-medications,
+  .rx116-detail-modal > .rx116-context-note,
+  .rx116-detail-modal > .rx116-error,
+  .rx116-detail-modal > .rx116-delete-confirm {
+    width: calc(100% - 28px) !important;
+    margin-left: 14px !important;
+    margin-right: 14px !important;
+  }
+
+  .rx116-detail-modal > .rx-prescription-detail-footer {
+    padding: 10px 14px calc(10px + env(safe-area-inset-bottom)) !important;
+  }
+}
