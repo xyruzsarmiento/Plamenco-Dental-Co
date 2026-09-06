@@ -136,11 +136,32 @@ html body .doc149-search > input {
    reclaim the shell width and get clipped beside the search icon. */
 html body .dr11-page .dr11-search > input,
 html body .prescription-patient-rail .prescription-rail-search > input {
+  all: unset !important;
+  box-sizing: border-box !important;
+  display: block !important;
   flex: 1 1 0 !important;
   flex-basis: 0 !important;
   width: 0 !important;
   min-width: 0 !important;
   max-width: none !important;
+  height: 100% !important;
+  color: #172033 !important;
+  font: inherit !important;
+  line-height: normal !important;
+  text-align: start !important;
+  background: transparent !important;
+  border: 0 !important;
+  outline: 0 !important;
+  box-shadow: none !important;
+  border-radius: 0 !important;
+  appearance: none !important;
+  -webkit-appearance: none !important;
+}
+
+html body .dr11-page .dr11-search > input::placeholder,
+html body .prescription-patient-rail .prescription-rail-search > input::placeholder {
+  color: #8491a5 !important;
+  opacity: 1 !important;
 }
 
 /* Premium order cards align their information to the reading edge instead of
