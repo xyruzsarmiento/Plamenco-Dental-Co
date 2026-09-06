@@ -3,7 +3,8 @@ import '../../styles/internal-portal-responsive-v105.css'
 import '../../styles/internal-portal-shell-fix-v106.css'
 import '../../styles/portal-shell-premium-v1.css'
 import '../../styles/super-admin-branch-workspace-v119.css'
-import { Menu, X } from 'lucide-react'
+import '../../styles/dentist-hero-ornament-removal-v132.css'
+import { Menu } from 'lucide-react'
 import { useEffect, useState, type CSSProperties } from 'react'
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../features/auth/AuthContext'
@@ -122,9 +123,6 @@ export function AppLayout() {
               <small>Dental Co.</small>
             </span>
           </div>
-          <button className="icon-button mobile-only" type="button" aria-label="Close navigation" onClick={() => setIsMobileNavOpen(false)}>
-            <X size={18} />
-          </button>
         </div>
 
         <nav className="sidebar-nav" aria-label="Main navigation">
