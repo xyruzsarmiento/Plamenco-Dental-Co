@@ -1,114 +1,128 @@
 import { useEffect, useMemo, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { CalendarDays, CheckCircle2, Clock3, Stethoscope, UserRound } from 'lucide-react'
+import { CheckCircle2, ShieldCheck } from 'lucide-react'
 import { Button } from '../../components/ui/Button'
 import { useAuth } from '../auth/AuthContext'
 import {
   acceptNominatedAppointmentPersisted,
   acceptUnassignedAppointmentPersisted,
+  loadAppointmentsFromSupabase,
 } from './appointmentPersistence'
-import { getStoredAppointments } from './appointmentStore'
 import type { Appointment } from './appointmentTypes'
-import { getStoredBranches } from '../branches/branchStore'
-import { getStoredProviders } from '../dentists/dentistStore'
-import { getStoredPatients } from '../patients/patientStore'
-import { getStoredServices } from '../services/serviceStore'
 import '../../styles/dentist-request-acceptance-v206.css'
 
-function formatRequestDate(value: string) {
-  if (!value) return 'Date unavailable'
-  return new Date(`${value}T00:00:00+08:00`).toLocaleDateString('en-PH', {
-    timeZone: 'Asia/Manila',
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric',
-  })
-}
-
-function formatRequestTime(value: string) {
-  if (!value) return 'Time unavailable'
-  const [hour, minute] = value.split(':').map(Number)
-  const date = new Date()
-  date.setHours(hour || 0, minute || 0, 0, 0)
-  return date.toLocaleTimeString('en-PH', { hour: 'numeric', minute: '2-digit' })
-}
-
-function normalize(value?: string) {
-  return value?.trim().toLowerCase() ?? ''
-}
+type Feedback = {
+  appointmentId: string
+  tone: 'success' | 'danger'
+  message: string
+} | null
 
 export function DentistRequestAcceptancePanel() {
   const { user } = useAuth()
   const isDentist = user?.role === 'dentist' || user?.role === 'associate_dentist'
-  const [appointments, setAppointments] = useState<Appointment[]>(() => getStoredAppointments())
+  const [requests, setRequests] = useState<Appointment[]>([])
+  const [cardTargets, setCardTargets] = useState<HTMLElement[]>([])
   const [savingId, setSavingId] = useState<string | null>(null)
-  const [feedback, setFeedback] = useState<string | null>(null)
-  const [portalTarget, setPortalTarget] = useState<HTMLElement | null>(null)
+  const [feedback, setFeedback] = useState<Feedback>(null)
+  const [loadError, setLoadError] = useState<string | null>(null)
 
   useEffect(() => {
-    if (!isDentist) return
-    const refresh = () => setAppointments(getStoredAppointments())
-    refresh()
-    const timer = window.setInterval(refresh, 500)
-    return () => window.clearInterval(timer)
-  }, [isDentist])
-
-  useEffect(() => {
-    if (!isDentist) {
-      setPortalTarget(null)
+    if (!isDentist || !user?.id) {
+      setRequests([])
       return
     }
 
-    const resolveTarget = () => {
-      const target = document.querySelector<HTMLElement>('.sa-appointments-requests-panel')
-      setPortalTarget((current) => current === target ? current : target)
+    let active = true
+
+    const load = async () => {
+      try {
+        const rows = await loadAppointmentsFromSupabase({ strict: true })
+        if (!active) return
+        setRequests(rows.filter((appointment) => appointment.status === 'pending' && !appointment.providerId))
+        setLoadError(null)
+      } catch (error) {
+        if (!active) return
+        setLoadError(error instanceof Error ? error.message : 'Appointment requests could not be loaded from Supabase.')
+      }
     }
 
-    resolveTarget()
-    const observer = new MutationObserver(resolveTarget)
+    void load()
+    const timer = window.setInterval(() => void load(), 15_000)
+
+    return () => {
+      active = false
+      window.clearInterval(timer)
+    }
+  }, [isDentist, user?.id])
+
+  useEffect(() => {
+    if (!isDentist) {
+      setCardTargets([])
+      return
+    }
+
+    const resolveTargets = () => {
+      const next = Array.from(document.querySelectorAll<HTMLElement>('.sa-appointments-requests-panel .sa-appointments-request-card'))
+      setCardTargets((current) => {
+        if (current.length === next.length && current.every((target, index) => target === next[index])) return current
+        return next
+      })
+    }
+
+    resolveTargets()
+    const observer = new MutationObserver(resolveTargets)
     observer.observe(document.body, { childList: true, subtree: true })
     return () => observer.disconnect()
   }, [isDentist])
 
-  const provider = useMemo(() => {
-    if (!user || !isDentist) return undefined
-    const email = normalize(user.email)
-    const name = normalize(user.name)
+  const portals = useMemo(() => {
+    if (!isDentist || !cardTargets.length) return []
 
-    return getStoredProviders().find((entry) =>
-      entry.status === 'active' && (
-        entry.profileId === user.id ||
-        (email && normalize(entry.email) === email) ||
-        (name && normalize(entry.displayName) === name)
-      ),
-    )
-  }, [isDentist, user])
+    return cardTargets.map((target, index) => {
+      const request = requests[index]
+      if (!request) return null
+      const currentFeedback = feedback?.appointmentId === request.id ? feedback : null
 
-  const requests = useMemo(() => {
-    if (!provider) return []
-    return appointments
-      .filter((appointment) =>
-        appointment.status === 'pending' &&
-        !appointment.providerId &&
-        (!appointment.proposedProviderId || appointment.proposedProviderId === provider.id),
+      return createPortal(
+        <div className="dentist-card-approval-v206" data-appointment-id={request.id}>
+          <div className="dentist-card-approval-copy-v206">
+            <span className="dentist-card-approval-kicker-v206"><ShieldCheck size={14} /> Dentist approval</span>
+            <strong>Approve and assign this request to yourself</strong>
+            <small>Your signed-in dentist profile will be assigned automatically after Supabase validates the branch and schedule.</small>
+          </div>
+
+          {currentFeedback && (
+            <div className={`dentist-card-feedback-v206 is-${currentFeedback.tone}`} role="status">
+              {currentFeedback.message}
+            </div>
+          )}
+
+          <Button
+            className="dentist-card-approve-button-v206"
+            disabled={Boolean(savingId)}
+            onClick={(event) => {
+              event.stopPropagation()
+              void acceptRequest(request)
+            }}
+          >
+            <CheckCircle2 size={16} />
+            {savingId === request.id ? 'Approving…' : 'Approve & assign to me'}
+          </Button>
+        </div>,
+        target,
+        `dentist-approval-${request.id}`,
       )
-      .sort((a, b) => `${a.date} ${a.startTime}`.localeCompare(`${b.date} ${b.startTime}`))
-  }, [appointments, provider])
-
-  if (!isDentist || !portalTarget) return null
-
-  const patientMap = new Map(getStoredPatients().map((patient) => [patient.id, patient]))
-  const serviceMap = new Map(getStoredServices().map((service) => [String(service.id), service]))
-  const branchMap = new Map(getStoredBranches().map((branch) => [branch.id, branch]))
+    }).filter(Boolean)
+  }, [cardTargets, feedback, isDentist, requests, savingId])
 
   async function acceptRequest(request: Appointment) {
-    if (!provider || savingId) return
+    if (!isDentist || savingId) return
     setSavingId(request.id)
     setFeedback(null)
 
     try {
-      const actor = user?.email || provider.displayName || 'Dentist'
-      const updated = request.proposedProviderId === provider.id
+      const actor = user?.email || user?.name || 'Dentist'
+      const updated = request.proposedProviderId
         ? await acceptNominatedAppointmentPersisted({
             appointmentId: request.id,
             actor,
@@ -116,74 +130,37 @@ export function DentistRequestAcceptancePanel() {
           })
         : await acceptUnassignedAppointmentPersisted({
             appointmentId: request.id,
-            providerId: provider.id,
             actor,
             expectedUpdatedAt: request.updatedAt,
           })
 
-      setAppointments(getStoredAppointments())
-      setFeedback(`Appointment ${updated.appointmentNumber ?? updated.id} accepted. You are now the assigned dentist.`)
+      const rows = await loadAppointmentsFromSupabase({ strict: true })
+      setRequests(rows.filter((appointment) => appointment.status === 'pending' && !appointment.providerId))
+      setFeedback({
+        appointmentId: request.id,
+        tone: 'success',
+        message: `Appointment ${updated.appointmentNumber ?? updated.id} confirmed and assigned to your dentist profile.`,
+      })
     } catch (error) {
-      setFeedback(error instanceof Error ? error.message : 'The appointment request could not be accepted.')
+      setFeedback({
+        appointmentId: request.id,
+        tone: 'danger',
+        message: error instanceof Error ? error.message : 'The appointment request could not be approved.',
+      })
     } finally {
       setSavingId(null)
     }
   }
 
-  const content = !provider ? (
-    <section className="dentist-request-panel-v206 is-warning" aria-label="Dentist appointment requests">
-      <div>
-        <strong>Appointment approval unavailable</strong>
-        <span>Your account could not be matched to an active dentist profile. Check that the dentist profile uses the same account/email.</span>
-      </div>
-    </section>
-  ) : requests.length ? (
-    <section className="dentist-request-panel-v206 is-inline" aria-label="Dentist appointment requests">
-      <header>
-        <div>
-          <span className="dentist-request-kicker-v206"><Stethoscope size={14} /> Dentist approval</span>
-          <h2>Accept a request and assign it to yourself</h2>
-          <p>Dentists do not need to choose a provider here. Approval automatically assigns the selected request to your dentist profile and confirms it after database conflict checks.</p>
-        </div>
-        <span className="dentist-request-count-v206">{requests.length}</span>
-      </header>
+  if (!isDentist) return null
 
-      {feedback && <div className="dentist-request-feedback-v206" role="status">{feedback}</div>}
-
-      <div className="dentist-request-list-v206">
-        {requests.map((request) => {
-          const patient = patientMap.get(request.patientId)
-          const service = serviceMap.get(String(request.serviceId))
-          const branch = request.branchId ? branchMap.get(request.branchId) : undefined
-          const nominated = request.proposedProviderId === provider.id
-
-          return (
-            <article key={request.id} className="dentist-request-card-v206">
-              <div className="dentist-request-main-v206">
-                <span className="dentist-request-icon-v206"><UserRound size={18} /></span>
-                <div>
-                  <strong>{patient ? `${patient.firstName} ${patient.lastName}` : 'Patient'}</strong>
-                  <span>{service?.name ?? 'Dental service'} · {branch?.name ?? 'Clinic branch'}</span>
-                </div>
-              </div>
-              <div className="dentist-request-schedule-v206">
-                <span><CalendarDays size={14} />{formatRequestDate(request.date)}</span>
-                <span><Clock3 size={14} />{formatRequestTime(request.startTime)}</span>
-              </div>
-              <div className="dentist-request-action-v206">
-                {nominated && <small>Requested specifically for you</small>}
-                <Button disabled={Boolean(savingId)} onClick={() => void acceptRequest(request)}>
-                  <CheckCircle2 size={16} />{savingId === request.id ? 'Approving…' : 'Approve & assign to me'}
-                </Button>
-              </div>
-            </article>
-          )
-        })}
-      </div>
-    </section>
-  ) : feedback ? (
-    <div className="dentist-request-feedback-v206" role="status">{feedback}</div>
-  ) : null
-
-  return content ? createPortal(content, portalTarget) : null
+  return (
+    <>
+      {loadError && cardTargets[0] && createPortal(
+        <div className="dentist-card-feedback-v206 is-danger dentist-card-load-error-v206" role="alert">{loadError}</div>,
+        cardTargets[0],
+      )}
+      {portals}
+    </>
+  )
 }
