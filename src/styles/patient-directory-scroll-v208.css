@@ -146,10 +146,34 @@ html body .prescription-patient-rail .prescription-rail-search > input {
 /* Premium order cards align their information to the reading edge instead of
    centering the entire grid inside a wide card. */
 .prescription-order-card {
-  align-items: start !important;
-  justify-items: stretch !important;
-  align-content: start !important;
-  grid-template-rows: auto auto auto 1fr auto !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: stretch !important;
+  justify-content: flex-start !important;
+  justify-items: initial !important;
+  align-content: initial !important;
+  gap: 7px !important;
+  min-width: 0 !important;
+  min-height: 150px !important;
+  text-align: left !important;
+}
+
+.prescription-order-card-top {
+  display: flex !important;
+  width: 100% !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 8px !important;
+}
+
+.prescription-order-card .prescription-order-date,
+.prescription-order-card > strong,
+.prescription-order-card .prescription-order-instructions {
+  display: block !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  justify-self: auto !important;
+  align-self: stretch !important;
   text-align: left !important;
 }
 
@@ -160,7 +184,13 @@ html body .prescription-patient-rail .prescription-rail-search > input {
 
 .prescription-order-card > * {
   width: 100% !important;
-  justify-self: stretch !important;
+  max-width: none !important;
+  justify-self: auto !important;
+}
+
+.prescription-order-card footer {
+  margin-top: auto !important;
+  align-self: stretch !important;
 }
 
 /* Document rows stay in a contained library as the result set grows. */
