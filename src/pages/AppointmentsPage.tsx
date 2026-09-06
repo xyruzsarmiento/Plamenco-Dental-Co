@@ -50,7 +50,7 @@ import { formatAppointmentTime, getAvailableAppointmentSlots, getEligibleProvide
 import { usePermissions } from '../features/auth/permissions'
 import { getStoredBranches } from '../features/branches/branchStore'
 import type { Branch } from '../features/branches/branchTypes'
-import { getStoredProviders } from '../features/dentists/dentistStore'
+import { getStoredProviders, loadProviderFoundationFromSupabase } from '../features/dentists/dentistStore'
 import type { Provider } from '../features/dentists/dentistTypes'
 import { getStoredPatients } from '../features/patients/patientStore'
 import { loadPatientsFromSupabase } from '../features/patients/patientPersistence'
@@ -110,6 +110,12 @@ function shortDateLabel(date: string) {
 function patientInitials(patient?: Patient) {
   if (!patient) return 'P'
   return `${patient.firstName?.[0] ?? ''}${patient.lastName?.[0] ?? ''}`.toUpperCase() || 'P'
+}
+
+function providerInitials(provider?: Provider) {
+  if (!provider?.displayName) return 'D'
+  const parts = provider.displayName.replace(/^dr\.?\s*/i, '').trim().split(/\s+/).filter(Boolean)
+  return `${parts[0]?.[0] ?? ''}${parts.at(-1)?.[0] ?? ''}`.toUpperCase() || 'D'
 }
 
 function AppointmentTrendChart({ data }: { data: TrendPoint[] }) {
@@ -221,7 +227,7 @@ export function AppointmentsPage() {
   const [patients, setPatients] = useState<Patient[]>(getStoredPatients())
   const [services, setServices] = useState<Service[]>(getStoredServices())
   const [branches] = useState<Branch[]>(getStoredBranches().filter((branch) => branch.status === 'active'))
-  const [providers] = useState<Provider[]>(getStoredProviders())
+  const [providers, setProviders] = useState<Provider[]>(getStoredProviders())
   const [viewTab, setViewTab] = useState<ViewTab>('queue')
   const [statusFilter, setStatusFilter] = useState<AppointmentStatus | 'all'>('all')
   const [serviceFilter, setServiceFilter] = useState('all')
@@ -271,6 +277,18 @@ export function AppointmentsPage() {
       })
       .catch((error) => {
         if (import.meta.env.DEV) console.warn('[appointments] patient refresh failed', error)
+      })
+    return () => { active = false }
+  }, [])
+
+  useEffect(() => {
+    let active = true
+    void loadProviderFoundationFromSupabase()
+      .then((foundation) => {
+        if (active) setProviders(foundation.providers)
+      })
+      .catch((error) => {
+        if (import.meta.env.DEV) console.warn('[appointments] dentist refresh failed', error)
       })
     return () => { active = false }
   }, [])
@@ -353,7 +371,14 @@ export function AppointmentsPage() {
   }, [patients])
   const serviceMap = useMemo(() => new Map(services.map((s) => [s.id, s])), [services])
   const branchMap = useMemo(() => new Map(branches.map((branch) => [branch.id, branch])), [branches])
-  const providerMap = useMemo(() => new Map(providers.map((provider) => [provider.id, provider])), [providers])
+  const providerMap = useMemo(() => {
+    const map = new Map<string, Provider>()
+    providers.forEach((provider) => {
+      map.set(provider.id, provider)
+      if (provider.profileId) map.set(provider.profileId, provider)
+    })
+    return map
+  }, [providers])
   const operatoryMap = useMemo(() => new Map(getOperatories().map((operatory) => [operatory.id, operatory])), [])
 
   function openPatientRecordForAppointment(appointment: Appointment) {
@@ -926,7 +951,7 @@ export function AppointmentsPage() {
               <p>Move patients through the existing appointment states without leaving the scheduling workspace.</p>
             </div>
             <div className="operations-flow">
-              <span>{confirmedCount} confirmed</span>
+              <span>{confirmedTodayCount} confirmed</span>
               <span>{waitingCount} waiting</span>
               <span>{completedTodayCount} completed</span>
               <span>{noShowTodayCount} no show</span>
@@ -977,7 +1002,15 @@ export function AppointmentsPage() {
                         >
                           <div className="journey-card-main">
                             <div className="journey-patient-block">
-                              <span className="journey-avatar" style={patient?.profileImage ? { backgroundImage: `url(${patient.profileImage})` } : undefined}>
+                              <span
+                                className="journey-avatar"
+                                style={patient?.profileImage ? {
+                                  backgroundImage: `url(${patient.profileImage})`,
+                                  backgroundPosition: 'center',
+                                  backgroundSize: 'cover',
+                                  backgroundRepeat: 'no-repeat',
+                                } : undefined}
+                              >
                                 {!patient?.profileImage && patientInitials(patient)}
                               </span>
                               <span className="journey-patient-copy">
@@ -987,7 +1020,36 @@ export function AppointmentsPage() {
                             </div>
                             <div className="journey-care-block">
                               <strong>{service?.name ?? 'Service not assigned'}</strong>
-                              <span><Stethoscope size={13} />{provider?.displayName ?? 'Dentist not assigned'}</span>
+                              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
+                                <span
+                                  aria-hidden="true"
+                                  title={provider?.displayName ?? 'Dentist not assigned'}
+                                  style={{
+                                    width: 26,
+                                    height: 26,
+                                    flex: '0 0 26px',
+                                    borderRadius: '50%',
+                                    display: 'inline-grid',
+                                    placeItems: 'center',
+                                    overflow: 'hidden',
+                                    backgroundColor: 'var(--surface-muted)',
+                                    backgroundImage: provider?.photoUrl ? `url(${provider.photoUrl})` : undefined,
+                                    backgroundPosition: 'center',
+                                    backgroundSize: 'cover',
+                                    backgroundRepeat: 'no-repeat',
+                                    border: '1px solid var(--border)',
+                                    fontSize: 9,
+                                    fontWeight: 800,
+                                    lineHeight: 1,
+                                    color: 'var(--text-muted)',
+                                  }}
+                                >
+                                  {!provider?.photoUrl && providerInitials(provider)}
+                                </span>
+                                <span style={{ minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                  {provider?.displayName ?? 'Dentist not assigned'}
+                                </span>
+                              </span>
                               {waitMinutes !== null && <em>{appointment.status === 'waiting' ? 'Waiting' : 'In clinic'} {waitMinutes} min</em>}
                             </div>
                             <div className="journey-schedule-block">
