@@ -9,6 +9,7 @@ import {
 } from './appointmentPersistence'
 import type { Appointment } from './appointmentTypes'
 import '../../styles/dentist-request-acceptance-v206.css'
+import '../../styles/appointment-workspace-compact-v207.css'
 
 type Feedback = {
   appointmentId: string
@@ -48,7 +49,7 @@ export function DentistRequestAcceptancePanel() {
       setFeedback({
         appointmentId: request.id,
         tone: 'success',
-        message: `Appointment ${updated.appointmentNumber ?? updated.id} confirmed and assigned to your dentist profile.`,
+        message: `Appointment ${updated.appointmentNumber ?? updated.id} confirmed and assigned to you.`,
       })
     } catch (error) {
       setFeedback({
@@ -61,9 +62,6 @@ export function DentistRequestAcceptancePanel() {
     }
   }
 
-  // The legacy request page reuses its error state for the successful staff assignment
-  // message. Keep the underlying behavior intact, but classify confirmed messages as
-  // success so they are not presented as failures.
   useEffect(() => {
     const classifyAlerts = () => {
       document.querySelectorAll<HTMLElement>('.sa-appointments-requests-panel .inline-alert').forEach((alert) => {
@@ -141,7 +139,7 @@ export function DentistRequestAcceptancePanel() {
         <div className="dentist-card-approval-copy-v206">
           <span className="dentist-card-approval-kicker-v206"><ShieldCheck size={14} /> Dentist approval</span>
           <strong>Approve and assign this request to yourself</strong>
-          <small>Your signed-in dentist profile is assigned automatically after Supabase validates your branch access and schedule.</small>
+          <small>Supabase will confirm your branch assignment and appointment availability before assigning the request to you.</small>
         </div>
 
         {currentFeedback && (
