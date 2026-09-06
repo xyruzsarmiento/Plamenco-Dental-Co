@@ -40,6 +40,7 @@ import './styles/branch-assignment-admin-v126.css'
 import './styles/part11-documents-import-forms-v127.css'
 import './styles/operational-workspace-parity-part1.css'
 import './styles/dentist-portal-card-parity-v131.css'
+import './styles/dentist-hero-ornament-removal-v132.css'
 
 const PATIENT_PORTAL_CACHE_KEYS = [
   'plamenco.appointments',
