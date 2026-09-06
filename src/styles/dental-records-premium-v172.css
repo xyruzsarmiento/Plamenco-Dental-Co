@@ -81,9 +81,12 @@ html body .dr11-timeline-card { border-radius: 8px; }
 .dr11-page .dr11-search input,
 .dr11-page .dr11-search input:focus,
 .dr11-page .dr11-search input:focus-visible {
-  width: 100%;
+  flex: 1 1 0;
+  flex-basis: 0;
+  width: 0;
   min-width: 0;
-  height: 40px;
+  max-width: none;
+  height: 100%;
   padding: 0;
   border: 0;
   border-radius: 0;
