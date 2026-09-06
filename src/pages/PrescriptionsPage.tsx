@@ -201,7 +201,7 @@ export function PrescriptionsPage() {
 
       <section className="panel prescriptions-panel">
         <div className="prescriptions-toolbar">
-          <label>
+          <label className="rx-prescription-search">
             <Search size={16} />
             <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search patient, medication, dentist..." />
           </label>
