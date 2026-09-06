@@ -49,7 +49,7 @@ function formatDate(value: string) {
 export function PrescriptionsPage() {
   const { user } = useAuth()
   const permissions = usePermissions()
-  const canManagePrescriptions = user?.role === 'super_admin' || user?.role === 'dentist' || permissions.can('prescriptions.edit')
+  const canManagePrescriptions = user?.role === 'super_admin' || user?.role === 'dentist' || user?.role === 'associate_dentist' || permissions.can('prescriptions.edit')
   const canCreatePrescriptions = user?.role === 'super_admin' || user?.role === 'dentist' || permissions.can('prescriptions.create')
   const branchContext = useOptionalBranchContext()
   const [query, setQuery] = useState('')
