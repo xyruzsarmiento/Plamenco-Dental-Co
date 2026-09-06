@@ -1,4 +1,4 @@
-import { Building2, FileText, Pill, Plus, Search, Stethoscope, X } from 'lucide-react'
+import { Building2, FileText, LoaderCircle, Pill, Plus, Search, Stethoscope, X } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 import { StatusBadge } from '../components/ui/Badge'
 import { Button } from '../components/ui/Button'
@@ -7,9 +7,11 @@ import { useAuth } from '../features/auth/AuthContext'
 import { usePermissions } from '../features/auth/permissions'
 import { useOptionalBranchContext } from '../features/branches/BranchContext'
 import { getStoredBranches } from '../features/branches/branchStore'
-import { getStoredPatients } from '../features/patients/patientStore'
 import { PatientSearchCombobox } from '../features/patients/PatientSearchCombobox'
-import { createPrescriptionPersisted, getStoredPrescriptions, type Prescription } from '../features/prescriptions/prescriptionStore'
+import { loadPatientsFromSupabase } from '../features/patients/patientPersistence'
+import type { Patient } from '../features/patients/patientTypes'
+import { createPrescriptionPersisted, type Prescription } from '../features/prescriptions/prescriptionStore'
+import { loadPrescriptionsFromSupabase } from '../features/prescriptions/prescriptionPersistence'
 import '../styles/prescriptions-workspace-v96.css'
 
 const PRESCRIPTION_PAGE_SIZE = 10
@@ -25,10 +27,13 @@ export function PrescriptionsPage() {
   const permissions = usePermissions()
   const branchContext = useOptionalBranchContext()
   const [query, setQuery] = useState('')
-  const [revision, setRevision] = useState(0)
   const [creating, setCreating] = useState(false)
   const [busy, setBusy] = useState(false)
+  const [loadingRecords, setLoadingRecords] = useState(true)
+  const [loadError, setLoadError] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [patientList, setPatientList] = useState<Patient[]>([])
+  const [prescriptions, setPrescriptions] = useState<Prescription[]>([])
   const [patientId, setPatientId] = useState('')
   const [branchId, setBranchId] = useState('')
   const [medication, setMedication] = useState('')
@@ -41,26 +46,27 @@ export function PrescriptionsPage() {
   const [page, setPage] = useState(1)
   const [selectedPrescription, setSelectedPrescription] = useState<Prescription | null>(null)
 
-  const patientList = useMemo(() => getStoredPatients(), [revision])
   const patients = useMemo(() => {
-    const map = new Map<string, (typeof patientList)[number]>()
+    const map = new Map<string, Patient>()
     patientList.forEach((patient) => {
       map.set(patient.id, patient)
       map.set(patient.patientId, patient)
     })
     return map
   }, [patientList])
-  const branches = useMemo(() => getStoredBranches(), [revision])
+
+  const branches = useMemo(() => {
+    const branchMap = new Map(getStoredBranches().map((branch) => [branch.id, branch]))
+    branchContext?.availableBranches.forEach((branch) => branchMap.set(branch.id, branch))
+    return Array.from(branchMap.values())
+  }, [branchContext?.availableBranches])
   const branchMap = useMemo(() => new Map(branches.map((branch) => [branch.id, branch.name])), [branches])
   const branchOptions = branchContext?.isAllBranchesMode
     ? branchContext.availableBranches
     : branchContext?.activeBranch
       ? [branchContext.activeBranch]
       : branchContext?.availableBranches ?? []
-  const prescriptions = useMemo(() => {
-    void revision
-    return getStoredPrescriptions().sort((a, b) => b.prescriptionDate.localeCompare(a.prescriptionDate))
-  }, [revision])
+
   const filtered = useMemo(() => {
     const needle = query.trim().toLowerCase()
     if (!needle) return prescriptions
@@ -82,6 +88,34 @@ export function PrescriptionsPage() {
   useEffect(() => { setPage(1) }, [query])
   useEffect(() => { setPage((current) => Math.min(current, pageCount)) }, [pageCount])
 
+  useEffect(() => {
+    let active = true
+
+    async function loadClinicalWorkspace() {
+      setLoadingRecords(true)
+      setLoadError(null)
+      try {
+        // Patients load first because prescription rows store the durable public
+        // patient number and the page resolves that reference for display/search.
+        const nextPatients = await loadPatientsFromSupabase({ strict: true })
+        if (!active) return
+        setPatientList(nextPatients)
+
+        const nextPrescriptions = await loadPrescriptionsFromSupabase({ strict: true })
+        if (!active) return
+        setPrescriptions(nextPrescriptions)
+      } catch (cause) {
+        if (!active) return
+        setLoadError(cause instanceof Error ? cause.message : 'Unable to load the clinical prescription workspace.')
+      } finally {
+        if (active) setLoadingRecords(false)
+      }
+    }
+
+    void loadClinicalWorkspace()
+    return () => { active = false }
+  }, [])
+
   function resetForm() {
     setPatientId('')
     setBranchId(branchContext?.isAllBranchesMode ? '' : branchContext?.activeBranchId ?? '')
@@ -95,6 +129,12 @@ export function PrescriptionsPage() {
     setError(null)
   }
 
+  async function refreshPrescriptions() {
+    const nextPrescriptions = await loadPrescriptionsFromSupabase({ strict: true })
+    setPrescriptions(nextPrescriptions)
+    setLoadError(null)
+  }
+
   async function savePrescription() {
     if (busy) return
     if (!patientId) return setError('Select a patient.')
@@ -103,10 +143,11 @@ export function PrescriptionsPage() {
     const prescriber = user?.name || user?.email || ''
     if (!prescriber) return setError('A signed-in prescriber is required.')
     if (!medication.trim() || !dosage.trim() || !frequency.trim()) return setError('Medication, dosage, and frequency are required.')
+
     setBusy(true)
     setError(null)
     try {
-      await createPrescriptionPersisted({
+      const confirmed = await createPrescriptionPersisted({
         patientId,
         branchId: resolvedBranchId,
         items: [{
@@ -120,9 +161,20 @@ export function PrescriptionsPage() {
         notes: notes.trim(),
         prescribedBy: prescriber,
       })
+
+      // The RPC-confirmed PostgreSQL row is immediately safe to display. A
+      // fresh database read then reconciles the complete registry without ever
+      // treating browser storage as the source of truth.
+      setPrescriptions((current) => [confirmed, ...current.filter((entry) => entry.id !== confirmed.id)])
       resetForm()
       setCreating(false)
-      setRevision((value) => value + 1)
+      try {
+        await refreshPrescriptions()
+      } catch (refreshCause) {
+        setLoadError(refreshCause instanceof Error
+          ? `Prescription was saved, but the list could not be refreshed: ${refreshCause.message}`
+          : 'Prescription was saved, but the list could not be refreshed from the clinic database.')
+      }
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : 'Unable to save prescription.')
     } finally {
@@ -155,8 +207,11 @@ export function PrescriptionsPage() {
           </label>
         </div>
 
-        <div className="prescriptions-grid">
-          {visible.map((rx) => {
+        {loadError && <div className="rx116-load-error" role="alert">{loadError}<button type="button" onClick={() => { setLoadError(null); setLoadingRecords(true); void Promise.all([loadPatientsFromSupabase({ strict: true }), loadPrescriptionsFromSupabase({ strict: true })]).then(([nextPatients, nextPrescriptions]) => { setPatientList(nextPatients); setPrescriptions(nextPrescriptions); setLoadingRecords(false) }).catch((cause) => { setLoadError(cause instanceof Error ? cause.message : 'Unable to reload prescriptions.'); setLoadingRecords(false) }) }}>Retry</button></div>}
+
+        <div className="prescriptions-grid" aria-busy={loadingRecords}>
+          {loadingRecords && <div className="prescriptions-empty rx116-loading"><LoaderCircle size={28} /><strong>Loading prescriptions</strong><span>Reading patients and prescription records from the clinic database…</span></div>}
+          {!loadingRecords && visible.map((rx) => {
             const patient = patients.get(rx.patientId)
             const patientName = patient ? `${patient.firstName} ${patient.middleName ? `${patient.middleName} ` : ''}${patient.lastName}` : rx.patientId
             return (
@@ -185,9 +240,9 @@ export function PrescriptionsPage() {
               </article>
             )
           })}
-          {!filtered.length && <div className="prescriptions-empty"><Pill size={28} /><strong>No prescriptions found</strong><span>Prescription records matching your filter will appear here.</span></div>}
+          {!loadingRecords && !filtered.length && <div className="prescriptions-empty"><Pill size={28} /><strong>No prescriptions found</strong><span>Prescription records matching your filter will appear here.</span></div>}
         </div>
-        {filtered.length > PRESCRIPTION_PAGE_SIZE && <div className="rx116-pagination"><span>Showing {(effectivePage - 1) * PRESCRIPTION_PAGE_SIZE + 1}-{Math.min(effectivePage * PRESCRIPTION_PAGE_SIZE, filtered.length)} of {filtered.length}</span><Pagination page={effectivePage} pageCount={pageCount} onPageChange={setPage} label="Prescription list pagination" /></div>}
+        {!loadingRecords && filtered.length > PRESCRIPTION_PAGE_SIZE && <div className="rx116-pagination"><span>Showing {(effectivePage - 1) * PRESCRIPTION_PAGE_SIZE + 1}-{Math.min(effectivePage * PRESCRIPTION_PAGE_SIZE, filtered.length)} of {filtered.length}</span><Pagination page={effectivePage} pageCount={pageCount} onPageChange={setPage} label="Prescription list pagination" /></div>}
       </section>
 
       {creating && (
@@ -198,7 +253,7 @@ export function PrescriptionsPage() {
               <button type="button" aria-label="Close prescription dialog" onClick={() => setCreating(false)} disabled={busy}><X size={18} /></button>
             </header>
             <div className="rx116-form">
-              <div className="rx116-span-2"><PatientSearchCombobox patients={patientList} value={patientId} required disabled={busy} placeholder="Search by name, patient ID, phone or email" onSelect={(patient) => setPatientId(patient?.patientId ?? '')} /></div>
+              <div className="rx116-span-2 rx116-patient-search"><PatientSearchCombobox patients={patientList} value={patientId} required disabled={busy || loadingRecords} placeholder={loadingRecords ? 'Loading patients from clinic database…' : 'Search by name, patient ID, phone or email'} scopeFilter={(patient) => patient.status === 'active'} onSelect={(patient) => setPatientId(patient?.patientId ?? '')} /></div>
               <label className="rx116-span-2"><span>Clinic branch</span><select value={branchContext?.isAllBranchesMode ? branchId : branchContext?.activeBranchId ?? branchId} onChange={(event) => setBranchId(event.target.value)} disabled={busy || (!branchContext?.isAllBranchesMode && Boolean(branchContext?.activeBranchId))}><option value="">Select branch</option>{branchOptions.map((branch) => <option key={branch.id} value={branch.id}>{branch.name}</option>)}</select></label>
               <div className="rx116-span-2 rx116-context-note"><Building2 size={15} /><span>{branchContext?.isAllBranchesMode ? 'Select the branch that owns this prescription record.' : `Prescription will be linked to ${branchContext?.activeBranch?.name ?? 'the active clinic branch'}.`}</span></div>
               <label><span>Medication</span><input value={medication} onChange={(event) => setMedication(event.target.value)} placeholder="e.g. Amoxicillin" disabled={busy} /></label>
@@ -210,7 +265,7 @@ export function PrescriptionsPage() {
               <label className="rx116-span-2"><span>Clinical notes</span><textarea value={notes} onChange={(event) => setNotes(event.target.value)} placeholder="Optional notes" disabled={busy} /></label>
               {error && <div className="rx116-error" role="alert">{error}</div>}
             </div>
-            <footer className="rx116-footer"><Button variant="secondary" onClick={() => setCreating(false)} disabled={busy}>Cancel</Button><Button onClick={() => void savePrescription()} disabled={busy}>{busy ? 'Saving…' : 'Save prescription'}</Button></footer>
+            <footer className="rx116-footer"><Button variant="secondary" onClick={() => setCreating(false)} disabled={busy}>Cancel</Button><Button onClick={() => void savePrescription()} disabled={busy || loadingRecords}>{busy ? 'Saving to database…' : 'Save prescription'}</Button></footer>
           </section>
         </div>
       )}
