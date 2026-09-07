@@ -1,0 +1,48 @@
+/* Shared page-card headings used by staff, dentist, and super-admin workspaces. */
+.app-shell .portal-card-heading-with-icon {
+  display: grid !important;
+  grid-template-columns: 44px minmax(0, 1fr);
+  grid-template-rows: auto auto auto;
+  align-items: center;
+  column-gap: 14px;
+  min-width: 0;
+}
+
+.app-shell .portal-card-heading-with-icon > .portal-card-heading-icon {
+  grid-column: 1;
+  grid-row: 1 / -1;
+  display: grid !important;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 1px solid #bfd7ff;
+  border-radius: 8px;
+  background: #eff6ff;
+  color: #2563eb !important;
+  line-height: 1;
+}
+
+.app-shell .portal-card-heading-with-icon > :not(.portal-card-heading-icon) {
+  grid-column: 2;
+  min-width: 0;
+}
+
+.app-shell .portal-card-heading-with-icon > h1,
+.app-shell .portal-card-heading-with-icon > h2,
+.app-shell .portal-card-heading-with-icon > p {
+  max-width: 100%;
+}
+
+@media (max-width: 560px) {
+  .app-shell .portal-card-heading-with-icon {
+    grid-template-columns: 40px minmax(0, 1fr);
+    column-gap: 11px;
+  }
+
+  .app-shell .portal-card-heading-with-icon > .portal-card-heading-icon {
+    width: 40px;
+    height: 40px;
+  }
+}

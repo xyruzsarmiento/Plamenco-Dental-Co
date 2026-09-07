@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { Activity, CalendarDays, ChevronRight, CircleDollarSign, Filter, Plus, Search, Sparkles, Stethoscope, UserRound } from 'lucide-react'
 import { Button } from '../components/ui/Button'
 import { Pagination } from '../components/ui/DesignSystem'
+import { ClinicalWorkspaceSkeleton } from '../components/ui/ClinicalWorkspaceSkeleton'
 import { MostPerformedTreatmentsV45, PlannedVsPerformedV45 } from '../components/ui/TreatmentAnalyticsV45'
 import { TreatmentFormDrawerV12 } from '../features/treatments/TreatmentFormDrawerV12'
 import { getStoredPatients } from '../features/patients/patientStore'
@@ -226,10 +227,13 @@ export function TreatmentsPageV43() {
     }
   }
 
+  if (isLoadingTreatments) return <ClinicalWorkspaceSkeleton label="Loading treatments" />
+
   return (
     <section className="tx43-page">
-      <header className="tx43-hero">
-        <div className="tx43-hero-copy">
+      <header className="tx43-hero clinical-standard-hero">
+        <div className="tx43-hero-copy portal-card-heading-with-icon clinical-standard-hero-copy">
+          <span className="portal-card-heading-icon" aria-hidden="true"><Stethoscope size={21} /></span>
           <span className="tx43-eyebrow"><Sparkles size={14} /> Procedure execution</span>
           <h2>Treatments</h2>
           <p>Track actual procedures that are planned, in progress, or completed. Proposed care belongs in Treatment Plans; visit notes belong in Dental Records.</p>
@@ -238,8 +242,6 @@ export function TreatmentsPageV43() {
       </header>
 
       {mutationError && <div className="tx12-form-error" role="alert">{mutationError}</div>}
-      {isLoadingTreatments && <div className="tx43-loading" role="status">Loading treatments from the clinic database...</div>}
-
       <section className="tx43-analytics">
         <article className="tx43-insight tx43-insight-primary">
           <div className="tx43-insight-head">

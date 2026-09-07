@@ -18,7 +18,7 @@ import {
 } from 'lucide-react'
 import { Badge } from '../components/ui/Badge'
 import { Button } from '../components/ui/Button'
-import { Pagination } from '../components/ui/DesignSystem'
+import { Pagination, SkeletonList } from '../components/ui/DesignSystem'
 import { useAuth } from '../features/auth/AuthContext'
 import { usePermissions } from '../features/auth/permissions'
 import {
@@ -271,7 +271,7 @@ export function NotificationsPageV25() {
           </div>
 
           {isLoadingNotifications ? (
-            <div className="notifications-v25-empty"><Bell size={28} /><h3>Loading notifications</h3><p>Checking your authorized inbox.</p></div>
+            <SkeletonList items={6} withAvatar className="notifications-v25-loading" />
           ) : filtered.length === 0 ? (
             <div className="notifications-v25-empty"><Sparkles size={28} /><h3>You're all caught up</h3><p>No notifications match this view.</p></div>
           ) : (

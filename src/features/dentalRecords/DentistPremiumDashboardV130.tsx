@@ -18,6 +18,7 @@ import {
 import { PremiumLineChartV35 } from '../../components/ui/PremiumInteractiveChartV35'
 import { StatusBadge } from '../../components/ui/Badge'
 import { Button } from '../../components/ui/Button'
+import { ClinicalWorkspaceSkeleton } from '../../components/ui/ClinicalWorkspaceSkeleton'
 import { loadAppointmentsForBranchScope } from '../appointments/appointmentBranchLoader'
 import { acceptUnassignedAppointmentPersisted, transitionAppointmentStatusPersisted } from '../appointments/appointmentPersistence'
 import { getStoredAppointments } from '../appointments/appointmentStore'
@@ -130,6 +131,10 @@ export function DentistPremiumDashboardV130() {
   const [busyId, setBusyId] = useState<string | null>(null)
   const [message, setMessage] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
+  const [providerLoading, setProviderLoading] = useState(true)
+  const [patientsLoading, setPatientsLoading] = useState(true)
+  const [servicesLoading, setServicesLoading] = useState(true)
+  const [appointmentsLoaded, setAppointmentsLoaded] = useState(false)
   const today = manilaDate()
 
   useEffect(() => {
@@ -137,6 +142,7 @@ export function DentistPremiumDashboardV130() {
     void loadProviderFoundationFromSupabase()
       .then(() => { if (active) setProviderRevision((value) => value + 1) })
       .catch((cause) => { if (import.meta.env.DEV) console.warn('[dentist dashboard] provider refresh failed', cause) })
+      .finally(() => { if (active) setProviderLoading(false) })
     return () => { active = false }
   }, [user?.id])
 
@@ -145,6 +151,7 @@ export function DentistPremiumDashboardV130() {
     void loadPatientsFromSupabase({ strict: true })
       .then((rows) => { if (active) setPatients(rows) })
       .catch((cause) => { if (active) setMessage(cause instanceof Error ? cause.message : 'Unable to load patients from the clinic database.') })
+      .finally(() => { if (active) setPatientsLoading(false) })
     return () => { active = false }
   }, [user?.id])
 
@@ -153,6 +160,7 @@ export function DentistPremiumDashboardV130() {
     void loadServicesFromSupabase({ strict: true })
       .then(() => { if (active) setServiceRevision((value) => value + 1) })
       .catch((cause) => { if (import.meta.env.DEV) console.warn('[dentist dashboard] service refresh failed', cause) })
+      .finally(() => { if (active) setServicesLoading(false) })
     return () => { active = false }
   }, [])
 
@@ -169,7 +177,7 @@ export function DentistPremiumDashboardV130() {
     })
       .then((rows) => { if (active) setAppointments(rows) })
       .catch((cause) => { if (active) setMessage(cause instanceof Error ? cause.message : 'Unable to load appointments from the clinic database.') })
-      .finally(() => { if (active) setLoading(false) })
+      .finally(() => { if (active) { setLoading(false); setAppointmentsLoaded(true) } })
     return () => { active = false }
   }, [activeBranchId, isAllBranchesMode, user?.id])
 
@@ -274,6 +282,10 @@ export function DentistPremiumDashboardV130() {
     } finally {
       setBusyId(null)
     }
+  }
+
+  if (providerLoading || patientsLoading || servicesLoading || !appointmentsLoaded) {
+    return <ClinicalWorkspaceSkeleton variant="dashboard" label="Loading dentist dashboard" />
   }
 
   if (!provider) {

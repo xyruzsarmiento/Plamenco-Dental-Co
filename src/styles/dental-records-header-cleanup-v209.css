@@ -1,0 +1,12 @@
+/* Keep the clinical header clean; legacy global hero styles add decorative rings. */
+html body .page-dental-records .dr11-command-header {
+  background-image: none !important;
+}
+
+html body .page-dental-records .dr11-command-header::before,
+html body .page-dental-records .dr11-command-header::after,
+html body .page-dental-records .dr11-command-header > .hero-orb,
+html body .page-dental-records .dr11-command-header > .hero-circle {
+  content: none !important;
+  display: none !important;
+}

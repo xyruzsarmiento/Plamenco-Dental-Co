@@ -3,6 +3,7 @@ import { ArrowRight, CalendarDays, Import, Mail, Phone, Plus, Search, UserRound,
 import { useNavigate, useParams } from 'react-router-dom'
 import { Button } from '../components/ui/Button'
 import { StatusBadge } from '../components/ui/Badge'
+import { ClinicalWorkspaceSkeleton } from '../components/ui/ClinicalWorkspaceSkeleton'
 import { PatientFormModal } from '../features/patients/PatientFormModal'
 import { PatientImportModal } from '../features/patients/PatientImportModal'
 import { usePermissions } from '../features/auth/permissions'
@@ -135,6 +136,7 @@ export function PatientsPageV36() {
   const [allowDuplicate, setAllowDuplicate] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
   const [loadError, setLoadError] = useState<string | null>(null)
+  const [isLoadingPatients, setIsLoadingPatients] = useState(true)
 
   const branches = useMemo(() => getStoredBranches(), [])
   const appointments = useMemo(() => getStoredAppointments(), [patients])
@@ -155,6 +157,7 @@ export function PatientsPageV36() {
         if (!active) return
         setLoadError(cause instanceof Error ? cause.message : 'Unable to load patient records from Supabase.')
       })
+      .finally(() => { if (active) setIsLoadingPatients(false) })
     return () => { active = false }
   }, [])
 
@@ -235,10 +238,12 @@ export function PatientsPageV36() {
 
   const noFilters = !query.trim() && statusFilter === 'all' && branchFilter === 'all' && originFilter === 'all'
 
+  if (isLoadingPatients) return <ClinicalWorkspaceSkeleton label="Loading patient records" />
+
   return (
     <section className="patients36-page">
       <header className="patients36-hero">
-        <div className="patients36-hero-copy"><span>PATIENT INTELLIGENCE</span><h1>Patient Records</h1><p>Search, review and manage the clinic's patient population from one workspace.</p></div>
+        <div className="patients36-hero-copy portal-card-heading-with-icon"><span className="portal-card-heading-icon" aria-hidden="true"><UsersRound size={21} /></span><span>PATIENT INTELLIGENCE</span><h1>Patient Records</h1><p>Search, review and manage the clinic's patient population from one workspace.</p></div>
         <div className="patients36-hero-actions">{canImport && <Button variant="secondary" onClick={() => setShowImport(true)}><Import size={16} />Import</Button>}{canCreate && <Button onClick={openAdd}><Plus size={16} />Add patient</Button>}</div>
       </header>
 

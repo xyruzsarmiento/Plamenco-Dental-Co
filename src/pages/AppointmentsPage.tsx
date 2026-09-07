@@ -14,6 +14,7 @@ import {
   Plus,
   RefreshCw,
   Search,
+  Sparkles,
   Stethoscope,
   UserRound,
   UserRoundCheck,
@@ -841,9 +842,10 @@ export function AppointmentsPage() {
 
   return (
     <section className="page-stack premium-appointments-page sa-appointments-page-v8">
-      <header className="sa-appointments-header">
-        <div className="sa-appointments-header-copy">
-          <span className="sa-appointments-kicker">Scheduling command center</span>
+      <header className="sa-appointments-header clinical-standard-hero">
+        <div className="sa-appointments-header-copy portal-card-heading-with-icon clinical-standard-hero-copy">
+          <span className="portal-card-heading-icon" aria-hidden="true"><CalendarDays size={21} /></span>
+          <span className="sa-appointments-kicker"><Sparkles size={14} /> Scheduling command center</span>
           <h2>Appointments</h2>
           <p>Coordinate multi-branch appointments, patient flow, requests, and dentist assignments from one operational workspace.</p>
         </div>

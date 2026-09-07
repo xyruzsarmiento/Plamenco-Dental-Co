@@ -1,0 +1,1 @@
+.clinical-loading-shell .ui-skeleton{max-width:100%}@media(max-width:480px){.clinical-loading-title>div>.ui-skeleton{width:calc(100vw - 140px)!important}.clinical-loading-title>div>.ui-skeleton:first-child{width:min(132px,calc(100vw - 140px))!important}.clinical-loading-title>div>.ui-skeleton:last-child{width:calc(100vw - 175px)!important}}

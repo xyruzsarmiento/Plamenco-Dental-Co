@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { CalendarDays, CheckCircle2, ChevronRight, ClipboardList, FileText, Plus, Search, Send, ShieldCheck, Sparkles, Stethoscope, Trash2, UserRound, X } from 'lucide-react'
 import { Button } from '../components/ui/Button'
 import { Pagination, SkeletonList } from '../components/ui/DesignSystem'
+import { ClinicalWorkspaceSkeleton } from '../components/ui/ClinicalWorkspaceSkeleton'
 import { PageScaffold } from '../components/ui/PageScaffold'
 import { usePermissions } from '../features/auth/permissions'
 import { getStoredBranches } from '../features/branches/branchStore'
@@ -68,6 +69,7 @@ export function TreatmentPlansPageV80() {
   const [plans, setPlans] = useState<TreatmentPlan[]>([])
   const [selectedPlan, setSelectedPlan] = useState<TreatmentPlan | null>(null)
   const [loading, setLoading] = useState(false)
+  const [isLoadingPatients, setIsLoadingPatients] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [showCreate, setShowCreate] = useState(false)
   const [saving, setSaving] = useState(false)
@@ -90,7 +92,7 @@ export function TreatmentPlansPageV80() {
       setSelectedPatientId((current) => current || nextPatients[0]?.patientId || '')
     }).catch((cause) => {
       if (active) setError(cause instanceof Error ? cause.message : 'Could not load patients from the clinic database.')
-    })
+    }).finally(() => { if (active) setIsLoadingPatients(false) })
     return () => { active = false }
   }, [])
 
@@ -253,11 +255,13 @@ export function TreatmentPlansPageV80() {
     }
   }
 
+  if (isLoadingPatients) return <ClinicalWorkspaceSkeleton label="Loading treatment plans" />
+
   return (
     <PageScaffold title="Treatment Plans" description="Recommended care and planned procedures. Estimates and patient decisions stay separate from performed treatments.">
       <section className="tp80-page">
-        <header className="tp80-hero">
-          <div className="tp80-hero-title"><span className="tp80-hero-icon"><ClipboardList size={22} /></span><div><span className="tp80-eyebrow"><Sparkles size={14} /> Care roadmap</span><h2>Treatment plans</h2><p>Build clear care recommendations, share estimates, and track patient decisions.</p></div></div>
+        <header className="tp80-hero clinical-standard-hero">
+          <div className="tp80-hero-title clinical-standard-hero-copy"><span className="tp80-hero-icon" aria-hidden="true"><ClipboardList size={21} /></span><span className="tp80-eyebrow"><Sparkles size={14} /> Care roadmap</span><h2>Treatment plans</h2><p>Build clear care recommendations, share estimates, and track patient decisions.</p></div>
           {can('treatments.create') && <Button icon={<Plus size={16} />} onClick={openCreate} disabled={!selectedPatient}>New plan</Button>}
         </header>
 

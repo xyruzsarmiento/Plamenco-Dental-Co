@@ -13,6 +13,7 @@ import {
   MoreHorizontal,
   Search,
   Share2,
+  Sparkles,
   Upload,
   UserRound,
   X,
@@ -210,9 +211,10 @@ export function DocumentsBranchWorkspaceV127() {
 
   return (
     <section className="doc149-page">
-      <header className="doc149-hero">
-        <div>
-          <span>Documents</span>
+      <header className="doc149-hero clinical-standard-hero">
+        <div className="portal-card-heading-with-icon clinical-standard-hero-copy">
+          <span className="portal-card-heading-icon" aria-hidden="true"><Files size={21} /></span>
+          <span><Sparkles size={14} /> Documents</span>
           <h1>Manage patient files</h1>
           <p>Manage patient files and clinic-shared documents.</p>
         </div>

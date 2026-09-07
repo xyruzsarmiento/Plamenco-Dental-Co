@@ -1,8 +1,9 @@
-import { Activity, Building2, CalendarDays, ChevronRight, FileText, LoaderCircle, Pencil, Pill, Plus, Search, Stethoscope, Trash2, UserRound, X } from 'lucide-react'
+import { Activity, Building2, CalendarDays, ChevronRight, FileText, Pencil, Pill, Plus, Search, Sparkles, Stethoscope, Trash2, UserRound, X } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 import { StatusBadge } from '../components/ui/Badge'
 import { Button } from '../components/ui/Button'
 import { Pagination } from '../components/ui/DesignSystem'
+import { ClinicalWorkspaceSkeleton } from '../components/ui/ClinicalWorkspaceSkeleton'
 import { useAuth } from '../features/auth/AuthContext'
 import { usePermissions } from '../features/auth/permissions'
 import { useOptionalBranchContext } from '../features/branches/BranchContext'
@@ -290,10 +291,12 @@ export function PrescriptionsPage() {
     }
   }
 
+  if (loadingRecords) return <ClinicalWorkspaceSkeleton label="Loading prescriptions" />
+
   return (
     <div className="prescriptions-workspace">
-      <section className="prescriptions-hero">
-        <div className="prescription-hero-identity"><span className="prescription-hero-icon"><Pill size={21} /></span><div><p className="eyebrow">Clinical medication</p><h2>Prescriptions</h2><p>Issue clear medication instructions, monitor course status, and keep patient visibility intentional.</p></div></div>
+      <section className="prescriptions-hero clinical-standard-hero">
+        <div className="prescription-hero-identity clinical-standard-hero-copy"><span className="prescription-hero-icon" aria-hidden="true"><Pill size={21} /></span><span className="eyebrow"><Sparkles size={14} /> Clinical medication</span><h2>Prescriptions</h2><p>Issue clear medication instructions, monitor course status, and keep patient visibility intentional.</p></div>
         {canCreatePrescriptions && <Button className="prescription-create-btn" icon={<Plus size={15} />} onClick={() => { resetForm(); setCreating(true) }}>New Rx</Button>}
       </section>
 
@@ -305,7 +308,6 @@ export function PrescriptionsPage() {
             <label className="prescription-rail-search"><Search size={16} /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search patient or order" /></label>
             <select className="prescription-rail-filter" value={statusFilter} onChange={(event) => setStatusFilter(event.target.value as typeof statusFilter)} aria-label="Filter prescription status"><option value="all">All prescription statuses</option><option value="active">Active only</option><option value="inactive">Inactive only</option></select>
             <div className="prescription-rail-list">
-              {loadingRecords && <div className="prescription-rail-state"><LoaderCircle size={18} /><span>Loading database records…</span></div>}
               {!loadingRecords && visible.map(({ id, records }) => {
                 const patient = patients.get(id)
                 const patientName = patient ? `${patient.firstName} ${patient.middleName ? `${patient.middleName} ` : ''}${patient.lastName}` : id
@@ -318,7 +320,6 @@ export function PrescriptionsPage() {
           </aside>
 
           <main className="prescription-desk-main">
-            {loadingRecords && <div className="prescription-desk-empty"><LoaderCircle size={28} /><strong>Loading prescriptions</strong><span>Reading patient orders from Supabase…</span></div>}
             {!loadingRecords && selectedPatientId && patients.get(selectedPatientId) && (() => {
               const patient = patients.get(selectedPatientId)!
               const records = prescriptions.filter((record) => record.patientId === selectedPatientId && record.status !== 'voided').sort((a, b) => new Date(b.prescriptionDate).getTime() - new Date(a.prescriptionDate).getTime())

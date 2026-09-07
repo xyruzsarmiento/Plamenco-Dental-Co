@@ -11,6 +11,7 @@ import {
   Plus,
   Search,
   ShieldAlert,
+  Sparkles,
   UserRound,
   X,
 } from 'lucide-react'
@@ -18,6 +19,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { Button } from '../components/ui/Button'
 import { PageScaffold } from '../components/ui/PageScaffold'
 import { StatusBadge } from '../components/ui/Badge'
+import { ClinicalWorkspaceSkeleton } from '../components/ui/ClinicalWorkspaceSkeleton'
 import { DentalRecordFormModal } from '../features/dentalRecords/DentalRecordFormModal'
 import {
   createDentalRecord,
@@ -302,6 +304,8 @@ export function DentalRecordsPageV11() {
     }
   }
 
+  if (isLoadingRecords) return <ClinicalWorkspaceSkeleton label="Loading dental records" />
+
   if (!selectedPatient) {
     return (
       <PageScaffold title="Dental Records" description="Clinical documentation, visit history, follow-up, and care continuity.">
@@ -317,10 +321,12 @@ export function DentalRecordsPageV11() {
   return (
     <PageScaffold title="Dental Records" description="Clinical visit documentation: findings, diagnosis, notes, and finalized care summaries.">
       <section className="dr11-page">
-        <header className="dr11-command-header">
-          <div className="dr11-command-title">
-            <span className="dr11-command-icon"><FileText size={22} /></span>
-            <div><span className="dr11-kicker">Patient chart</span><h2>Dental records</h2><p>Review visit notes, clinical findings, diagnoses, and follow-up care.</p></div>
+        <header className="dr11-command-header clinical-standard-hero">
+          <div className="dr11-command-title clinical-standard-hero-copy">
+            <span className="dr11-command-icon" aria-hidden="true"><FileText size={21} /></span>
+            <span className="dr11-kicker"><Sparkles size={14} /> Patient chart</span>
+            <h2>Dental records</h2>
+            <p>Review visit notes, clinical findings, diagnoses, and follow-up care.</p>
           </div>
           <Button onClick={openCreateRecord} icon={<ClipboardPlus size={17} />}>New record</Button>
         </header>
@@ -417,8 +423,6 @@ export function DentalRecordsPageV11() {
 
             {successMessage && <div className="dr11-success" role="status">{successMessage}</div>}
             {recordError && !showRecordForm && <div className="tp13-error" role="alert">{recordError}</div>}
-            {isLoadingRecords && <div className="dr11-loading" role="status">Loading clinical records from the clinic database...</div>}
-
             <section className="dr11-timeline-card">
               <div className="dr11-section-head dr11-timeline-head">
                 <div><span className="dr11-kicker">Visit history</span><h3>Clinical records</h3><p>Open a record to review its findings, diagnosis, care notes, and follow-up.</p></div>
