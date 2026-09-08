@@ -123,7 +123,7 @@ function SettlementModal({ branches, initialBranchId, pending, onClose, onSaved 
 
 export function ReportsPremiumWorkspaceV163() {
   const { user } = useAuth()
-  const { activeBranch, activeBranchId, availableBranches, isAllBranchesMode } = useBranchContext()
+  const { activeBranch, activeBranchId, availableBranches, isAllBranchesMode, isLoading: branchLoading } = useBranchContext()
   const isSuperAdmin = user?.role === 'super_admin'
   const initial = presetRange('this_month')
   const [preset, setPreset] = useState<ReportPreset>('this_month')
@@ -138,12 +138,15 @@ export function ReportsPremiumWorkspaceV163() {
   const [settlementOpen, setSettlementOpen] = useState(false)
   const [exportMenuOpen, setExportMenuOpen] = useState(false)
   const exportRootRef = useRef<HTMLDivElement>(null)
+  const refreshRequestRef = useRef(0)
   const branchScope = isSuperAdmin && isAllBranchesMode ? 'all' : activeBranchId ?? ''
   const scopeName = isSuperAdmin && isAllBranchesMode ? 'All Branches' : activeBranch?.name ?? 'Selected branch'
 
   async function refresh() {
     if (!supabase) { setError('Clinic database is not configured.'); setLoading(false); return }
-    if (!isSuperAdmin && !activeBranchId) { setError('Your account needs an active branch assignment before reports can be opened.'); setReport(null); setLoading(false); return }
+    if (branchLoading) return
+    if (!isAllBranchesMode && !activeBranchId) { setError('Your account needs an active branch assignment before reports can be opened.'); setReport(null); setLoading(false); return }
+    const requestId = ++refreshRequestRef.current
     setLoading(true); setError(null)
     const reportRequest = isSuperAdmin
       ? supabase.rpc('get_management_report_v129', { p_start_date: startDate, p_end_date: endDate, p_branch_id: branchScope })
@@ -153,13 +156,14 @@ export function ReportsPremiumWorkspaceV163() {
       isSuperAdmin ? supabase.rpc('get_qrph_settlement_summary', { p_branch_id: branchScope }) : Promise.resolve({ data: null, error: null }),
       isSuperAdmin ? loadReportTaxConfiguration() : Promise.resolve(null),
     ])
+    if (requestId !== refreshRequestRef.current) return
     if (reportResult.error) { setError(reportResult.error.message); setReport(null) } else setReport(reportResult.data as ReportPayload)
     if (isSuperAdmin && !qrphResult.error && qrphResult.data) setQrph(qrphResult.data as QrphSummary)
     setTaxConfig(config)
     setLoading(false)
   }
 
-  useEffect(() => { void refresh() }, [startDate, endDate, branchScope, isSuperAdmin, activeBranchId]) // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { if (!branchLoading) void refresh() }, [startDate, endDate, branchScope, isSuperAdmin, activeBranchId, branchLoading]) // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => {
     if (!exportMenuOpen) return
     const close = (event: PointerEvent) => { if (!exportRootRef.current?.contains(event.target as Node)) setExportMenuOpen(false) }
@@ -188,7 +192,8 @@ export function ReportsPremiumWorkspaceV163() {
   const chartRows = useMemo(() => report?.trend ?? [], [report])
   const providerRows = report?.provider_performance ?? []
 
-  if (!isSuperAdmin && !activeBranchId) return <section className="rep162 rep163"><div className="rep162-status is-error">Your account needs an active branch assignment before reports can be opened.</div></section>
+  if (branchLoading) return <section className="rep162 rep163"><div className="rep162-status">Loading authorized branch reporting...</div></section>
+  if (!isAllBranchesMode && !activeBranchId) return <section className="rep162 rep163"><div className="rep162-status is-error">Your account needs an active branch assignment before reports can be opened.</div></section>
 
   return <section className="rep162 rep163">
     <header className="rep162-toolbar">

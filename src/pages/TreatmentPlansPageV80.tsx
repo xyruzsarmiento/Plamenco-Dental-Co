@@ -7,10 +7,10 @@ import { PageScaffold } from '../components/ui/PageScaffold'
 import { usePermissions } from '../features/auth/permissions'
 import { getStoredBranches } from '../features/branches/branchStore'
 import { useBranchContext } from '../features/branches/BranchContext'
-import { getStoredProviders } from '../features/dentists/dentistStore'
+import { getStoredProviders, loadProviderFoundationFromSupabase } from '../features/dentists/dentistStore'
 import { getStoredPatients } from '../features/patients/patientStore'
 import { loadPatientsFromSupabase } from '../features/patients/patientPersistence'
-import { getStoredServices, servicePriceToCents } from '../features/services/serviceStore'
+import { getStoredServices, loadServicesFromSupabase, servicePriceToCents } from '../features/services/serviceStore'
 import {
   createTreatmentPlan,
   formatTreatmentPlanCurrency,
@@ -58,11 +58,11 @@ export function TreatmentPlansPageV80() {
   const { can } = usePermissions()
   const { activeBranchId, availableBranches, isAllBranchesMode } = useBranchContext()
   const [patients, setPatients] = useState(() => getStoredPatients())
-  const services = useMemo(() => getStoredServices().filter((service) => service.status === 'active'), [])
+  const [services, setServices] = useState(() => getStoredServices().filter((service) => service.status === 'active'))
   const branches = useMemo(() => availableBranches.length
     ? availableBranches.filter((branch) => branch.status === 'active')
     : getStoredBranches().filter((branch) => branch.status === 'active'), [availableBranches])
-  const providers = useMemo(() => getStoredProviders().filter((provider) => provider.status === 'active'), [])
+  const [providers, setProviders] = useState(() => getStoredProviders().filter((provider) => provider.status === 'active'))
 
   const [patientSearch, setPatientSearch] = useState('')
   const [selectedPatientId, setSelectedPatientId] = useState(patients[0]?.patientId ?? '')
@@ -86,9 +86,15 @@ export function TreatmentPlansPageV80() {
 
   useEffect(() => {
     let active = true
-    void loadPatientsFromSupabase({ strict: true }).then((nextPatients) => {
+    void Promise.all([
+      loadPatientsFromSupabase({ strict: true }),
+      loadServicesFromSupabase({ strict: true }),
+      loadProviderFoundationFromSupabase({ strict: true }),
+    ]).then(([nextPatients, nextServices, providerFoundation]) => {
       if (!active) return
       setPatients(nextPatients)
+      setServices(nextServices.filter((service) => service.status === 'active'))
+      setProviders(providerFoundation.providers.filter((provider) => provider.status === 'active'))
       setSelectedPatientId((current) => current || nextPatients[0]?.patientId || '')
     }).catch((cause) => {
       if (active) setError(cause instanceof Error ? cause.message : 'Could not load patients from the clinic database.')

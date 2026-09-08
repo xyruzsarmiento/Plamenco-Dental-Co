@@ -7,10 +7,9 @@ import { MostPerformedTreatmentsV45, PlannedVsPerformedV45 } from '../components
 import { TreatmentFormDrawerV12 } from '../features/treatments/TreatmentFormDrawerV12'
 import { getStoredPatients } from '../features/patients/patientStore'
 import { loadPatientsFromSupabase } from '../features/patients/patientPersistence'
-import { getStoredServices } from '../features/services/serviceStore'
-import { getStoredBranches } from '../features/branches/branchStore'
+import { getStoredServices, loadServicesFromSupabase } from '../features/services/serviceStore'
 import { useBranchContext } from '../features/branches/BranchContext'
-import { getStoredProviders } from '../features/dentists/dentistStore'
+import { getStoredProviders, loadProviderFoundationFromSupabase } from '../features/dentists/dentistStore'
 import { createTreatment, deleteTreatment, loadTreatmentsFromSupabase, updateTreatment } from '../features/treatments/treatmentStore'
 import type { Treatment, TreatmentFormValues, TreatmentStatus } from '../features/treatments/treatmentTypes'
 import { buildEnterpriseReportSnapshot, formatReportCurrency } from '../features/reports/reportStore'
@@ -59,11 +58,11 @@ function statusLabel(status: TreatmentStatus) {
 }
 
 export function TreatmentsPageV43() {
-  const { activeBranchId } = useBranchContext()
+  const { activeBranchId, availableBranches } = useBranchContext()
   const [patients, setPatients] = useState(() => getStoredPatients())
-  const services = useMemo(() => getStoredServices(), [])
-  const branches = useMemo(() => getStoredBranches(), [])
-  const providers = useMemo(() => getStoredProviders(), [])
+  const [services, setServices] = useState(() => getStoredServices())
+  const branches = availableBranches
+  const [providers, setProviders] = useState(() => getStoredProviders())
   const [treatments, setTreatments] = useState<Treatment[]>([])
   const [isLoadingTreatments, setIsLoadingTreatments] = useState(true)
   const [patientSearch, setPatientSearch] = useState('')
@@ -86,10 +85,16 @@ export function TreatmentsPageV43() {
     let active = true
     setIsLoadingTreatments(true)
     setMutationError(null)
-    void loadPatientsFromSupabase({ strict: true }).then(async (nextPatients) => {
-      const rows = await loadTreatmentsFromSupabase({ strict: true })
+    void Promise.all([
+      loadPatientsFromSupabase({ strict: true }),
+      loadTreatmentsFromSupabase({ strict: true }),
+      loadServicesFromSupabase({ strict: true }),
+      loadProviderFoundationFromSupabase({ strict: true }),
+    ]).then(([nextPatients, rows, nextServices, providerFoundation]) => {
       if (!active) return
       setPatients(nextPatients)
+      setServices(nextServices)
+      setProviders(providerFoundation.providers)
       setSelectedPatientId((current) => current || nextPatients[0]?.patientId || '')
       setTreatments(rows)
     }).catch((cause) => {
@@ -145,7 +150,7 @@ export function TreatmentsPageV43() {
     setTreatmentPage((current) => Math.min(current, treatmentPageCount))
   }, [treatmentPageCount])
 
-  const snapshot = useMemo(() => buildEnterpriseReportSnapshot({ filters: { preset: 'this_month' } }), [treatments])
+  const snapshot = useMemo(() => buildEnterpriseReportSnapshot({ filters: { preset: 'this_month' }, treatments, patients, services, branches, providers }), [branches, patients, providers, services, treatments])
   const treatmentRows = useMemo(() => [...snapshot.treatments].sort((a, b) => b.performedCount - a.performedCount).slice(0, 7), [snapshot])
   const analyticsRows = useMemo(() => treatmentRows.map((row) => ({
     label: row.serviceName,

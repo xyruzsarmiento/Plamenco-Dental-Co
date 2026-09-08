@@ -29,10 +29,10 @@ import {
   updateDentalRecord,
 } from '../features/dentalRecords/dentalRecordStore'
 import type { DentalRecord, DentalRecordFormValues } from '../features/dentalRecords/dentalRecordTypes'
-import { getAppointmentsByPatient } from '../features/appointments/appointmentStore'
-import { getStoredBranches } from '../features/branches/branchStore'
+import { loadAppointmentsFromSupabase } from '../features/appointments/appointmentPersistence'
+import type { Appointment } from '../features/appointments/appointmentTypes'
 import { useBranchContext } from '../features/branches/BranchContext'
-import { getStoredProviders } from '../features/dentists/dentistStore'
+import { getStoredProviders, loadProviderFoundationFromSupabase } from '../features/dentists/dentistStore'
 import { getStoredPatients } from '../features/patients/patientStore'
 import { loadPatientsFromSupabase } from '../features/patients/patientPersistence'
 import { loadTreatmentsFromSupabase } from '../features/treatments/treatmentStore'
@@ -89,8 +89,10 @@ function initials(firstName: string, lastName: string) {
 export function DentalRecordsPageV11() {
   const { activeBranchId, availableBranches, isAllBranchesMode } = useBranchContext()
   const [patients, setPatients] = useState(() => [...getStoredPatients()].sort((a, b) => a.lastName.localeCompare(b.lastName)))
-  const branchMap = useMemo(() => new Map(getStoredBranches().map((branch) => [branch.id, branch.name])), [])
-  const providerMap = useMemo(() => new Map(getStoredProviders().map((provider) => [provider.id, provider.displayName])), [])
+  const branchMap = useMemo(() => new Map(availableBranches.map((branch) => [branch.id, branch.name])), [availableBranches])
+  const [providers, setProviders] = useState(() => getStoredProviders())
+  const providerMap = useMemo(() => new Map(providers.map((provider) => [provider.id, provider.displayName])), [providers])
+  const [appointments, setAppointments] = useState<Appointment[]>([])
   const [patientSearch, setPatientSearch] = useState('')
   const [selectedPatientId, setSelectedPatientId] = useState<string>(patients[0]?.patientId ?? '')
   const [recordDraft, setRecordDraft] = useState<DentalRecordFormValues>(() => createEmptyRecordValues(patients[0]?.patientId ?? '', activeBranchId ?? ''))
@@ -110,15 +112,19 @@ export function DentalRecordsPageV11() {
     setIsLoadingRecords(true)
     setRecordError(null)
     void loadPatientsFromSupabase({ strict: true }).then(async (nextPatients) => {
-      const [nextRecords, nextTreatments] = await Promise.all([
+      const [nextRecords, nextTreatments, nextAppointments, providerFoundation] = await Promise.all([
         loadDentalRecordsFromSupabase({ strict: true }),
         loadTreatmentsFromSupabase({ strict: true }),
+        loadAppointmentsFromSupabase({ strict: true }),
+        loadProviderFoundationFromSupabase({ strict: true }),
       ])
       if (!active) return
       setPatients([...nextPatients].sort((a, b) => a.lastName.localeCompare(b.lastName)))
       setSelectedPatientId((current) => current || nextPatients[0]?.patientId || '')
       setRecords(nextRecords)
       setTreatments(nextTreatments)
+      setAppointments(nextAppointments)
+      setProviders(providerFoundation.providers)
     }).catch((cause) => {
       if (!active) return
       setRecordError(cause instanceof Error ? cause.message : 'Clinical data could not be loaded from the clinic database.')
@@ -146,8 +152,8 @@ export function DentalRecordsPageV11() {
       .sort((a, b) => new Date(b.recordDate).getTime() - new Date(a.recordDate).getTime())
   }, [records, selectedPatient])
   const patientAppointments = useMemo(
-    () => selectedPatient ? getAppointmentsByPatient(selectedPatient.patientId).sort((a, b) => `${a.date}T${a.startTime}`.localeCompare(`${b.date}T${b.startTime}`)) : [],
-    [selectedPatient],
+    () => selectedPatient ? appointments.filter((appointment) => appointment.patientId === selectedPatient.patientId || appointment.patientId === selectedPatient.id).sort((a, b) => `${a.date}T${a.startTime}`.localeCompare(`${b.date}T${b.startTime}`)) : [],
+    [appointments, selectedPatient],
   )
   const patientTreatments = useMemo(() => selectedPatient
     ? treatments.filter((treatment) => treatment.patientId === selectedPatient.patientId || treatment.patientId === selectedPatient.id)

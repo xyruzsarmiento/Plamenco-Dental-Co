@@ -27,11 +27,6 @@ import {
   getCommunicationSettings,
 } from '../features/communications/communicationStore'
 import { previewEligibleAppointmentReminders, queueAppointmentReminders } from '../features/communications/reminderScheduler'
-import {
-  getNotificationsByUser,
-  markAllNotificationsAsRead,
-  markNotificationAsRead,
-} from '../features/notifications/notificationStore'
 import { loadCurrentUserNotifications, markAllLiveNotificationsRead, markLiveNotificationRead } from '../features/notifications/notificationLiveStore'
 import type { AppNotification, NotificationKind } from '../features/notifications/notificationTypes'
 
@@ -73,7 +68,6 @@ function priorityTone(priority: AppNotification['priority']): 'danger' | 'warnin
 export function NotificationsPageV25() {
   const { user } = useAuth()
   const permissions = usePermissions()
-  const userId = user?.id ?? user?.email ?? 'admin'
   const actor = user?.email ?? 'clinic-user'
   const [refreshKey, setRefreshKey] = useState(0)
   const [filter, setFilter] = useState<NotificationFilter>('all')
@@ -85,11 +79,7 @@ export function NotificationsPageV25() {
   const [isLoadingNotifications, setIsLoadingNotifications] = useState(true)
   const [notificationError, setNotificationError] = useState('')
 
-  const fallbackNotifications = useMemo(() => {
-    void refreshKey
-    return getNotificationsByUser(userId)
-  }, [refreshKey, userId])
-  const notifications = liveNotifications ?? fallbackNotifications
+  const notifications = liveNotifications ?? []
   const unread = notifications.filter((notification) => !notification.isRead)
   const settings = useMemo(() => {
     void refreshKey
@@ -143,7 +133,7 @@ export function NotificationsPageV25() {
         setNotificationError('')
       } catch (cause) {
         if (!active) return
-        setLiveNotifications(null)
+        setLiveNotifications([])
         setNotificationError(cause instanceof Error ? cause.message : 'Notifications could not be loaded.')
       } finally {
         if (active) setIsLoadingNotifications(false)
@@ -163,15 +153,11 @@ export function NotificationsPageV25() {
   }
 
   async function markRead(id: string) {
-    if (liveNotifications) {
-      try {
-        await markLiveNotificationRead(id)
-      } catch (cause) {
-        setNotificationError(cause instanceof Error ? cause.message : 'Could not mark this notification as read.')
-        return
-      }
-    } else {
-      markNotificationAsRead(id)
+    try {
+      await markLiveNotificationRead(id)
+    } catch (cause) {
+      setNotificationError(cause instanceof Error ? cause.message : 'Could not mark this notification as read.')
+      return
     }
     setLiveNotifications((current) => current ? current.map((row) => row.id === id ? { ...row, isRead: true, readAt: new Date().toISOString() } : row) : current)
     window.dispatchEvent(new Event('plamenco:notifications-refresh'))
@@ -179,15 +165,11 @@ export function NotificationsPageV25() {
   }
 
   async function markAllRead() {
-    if (liveNotifications) {
-      try {
-        await markAllLiveNotificationsRead()
-      } catch (cause) {
-        setNotificationError(cause instanceof Error ? cause.message : 'Could not mark notifications as read.')
-        return
-      }
-    } else {
-      markAllNotificationsAsRead(userId)
+    try {
+      await markAllLiveNotificationsRead()
+    } catch (cause) {
+      setNotificationError(cause instanceof Error ? cause.message : 'Could not mark notifications as read.')
+      return
     }
     setLiveNotifications((current) => current ? current.map((row) => ({ ...row, isRead: true, readAt: row.readAt ?? new Date().toISOString() })) : current)
     window.dispatchEvent(new Event('plamenco:notifications-refresh'))
@@ -262,7 +244,7 @@ export function NotificationsPageV25() {
             <div><span>Your inbox</span><h3>Clinic notifications</h3><p>Database-backed updates scoped to your account and authorized branches.</p></div>
             <div><Badge tone={unread.length ? 'warning' : 'neutral'}>{unread.length} unread</Badge><Button size="sm" variant="secondary" disabled={!unread.length} onClick={() => void markAllRead()}>Mark all read</Button></div>
           </header>
-          {notificationError && <div className="notifications-v25-feedback is-warning">{notificationError} Showing local fallback notifications if available.</div>}
+          {notificationError && <div className="notifications-v25-feedback is-warning">{notificationError} Live notifications are unavailable until the database request succeeds.</div>}
 
           <div className="notifications-v25-tabs" role="tablist" aria-label="Notification filters">
             {(['all', 'unread', 'appointment', 'clinical', 'financial_group', 'document'] as NotificationFilter[]).map((entry) => (

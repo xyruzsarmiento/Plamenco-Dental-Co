@@ -2,16 +2,22 @@ import { Activity, BarChart3, Building2, CalendarCheck2, CircleDollarSign, FileT
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { PremiumLineChartV35 } from '../../components/ui/PremiumInteractiveChartV35'
+import { SkeletonList } from '../../components/ui/DesignSystem'
 import { loadAppointmentsForBranchScope } from '../appointments/appointmentBranchLoader'
 import { getStoredAppointments } from '../appointments/appointmentStore'
 import { useAuth } from '../auth/AuthContext'
+import { hydrateBranchBillingFromDatabase } from '../billing/billingHydration'
 import { useBranchContext } from '../branches/BranchContext'
-import { getProviderBranchAssignments } from '../dentists/dentistStore'
-import { getStoredDocuments } from '../documents/documentStore'
+import { getProviderBranchAssignments, loadProviderFoundationFromSupabase } from '../dentists/dentistStore'
+import { getStoredDocuments, loadDocumentsFromSupabase } from '../documents/documentStore'
+import { hydrateExpenseWorkspaceFromSupabase } from '../expenses/expensePersistence'
 import { getExpenses } from '../expenses/expenseStore'
 import { getBranchInventory, getInventoryBatches, getStockStatus, getExpiryStatus } from '../inventory/inventoryStore'
-import { getStoredPatientRecalls } from '../recalls/recallStore'
+import { refreshInventoryOperationalCaches } from '../inventory/inventoryPersistence'
+import { loadPatientsFromSupabase } from '../patients/patientPersistence'
+import { getStoredPatientRecalls, listRecallQueue, saveStoredPatientRecalls } from '../recalls/recallStore'
 import { buildEnterpriseReportSnapshot, formatReportCurrency } from '../reports/reportStore'
+import { loadServicesFromSupabase } from '../services/serviceStore'
 
 function manilaDateKey() { return new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Manila', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date()) }
 function manilaDateLabel() { return new Intl.DateTimeFormat('en-PH', { timeZone: 'Asia/Manila', weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' }).format(new Date()) }
@@ -23,6 +29,8 @@ export function SuperAdminBranchDashboardV128() {
   const { user } = useAuth()
   const { activeBranch, activeBranchId, availableBranches, authorizedBranchIds, isAllBranchesMode } = useBranchContext()
   const [appointmentRevision, setAppointmentRevision] = useState(0)
+  const [isLoading, setIsLoading] = useState(true)
+  const [loadError, setLoadError] = useState('')
   const today = manilaDateKey()
   const scopeKey = isAllBranchesMode ? 'all' : activeBranchId ?? 'none'
   const scopeName = isAllBranchesMode ? 'All Branches' : activeBranch?.name ?? 'No branch selected'
@@ -30,10 +38,28 @@ export function SuperAdminBranchDashboardV128() {
   useEffect(() => {
     if (!user?.id) return
     let active = true
-    void loadAppointmentsForBranchScope({ branchId: activeBranchId, isAllBranchesMode, userId: user.id, strict: false, bypassCache: true })
-      .then(() => { if (active) setAppointmentRevision((value) => value + 1) })
+    setIsLoading(true)
+    setLoadError('')
+    const branchIds = isAllBranchesMode ? authorizedBranchIds : activeBranchId ? [activeBranchId] : []
+    void Promise.all([
+      loadAppointmentsForBranchScope({ branchId: activeBranchId, isAllBranchesMode, userId: user.id, strict: true, bypassCache: true }),
+      loadPatientsFromSupabase({ strict: true }),
+      loadServicesFromSupabase({ strict: true }),
+      loadProviderFoundationFromSupabase({ strict: true }),
+      hydrateBranchBillingFromDatabase(isAllBranchesMode ? undefined : activeBranchId ?? undefined),
+      loadDocumentsFromSupabase(),
+      refreshInventoryOperationalCaches({ branchIds: branchIds.length ? branchIds : undefined }),
+      hydrateExpenseWorkspaceFromSupabase(),
+      listRecallQueue({ branchId: isAllBranchesMode ? undefined : activeBranchId ?? undefined, limit: 500 }),
+    ]).then(([, , , , , , , , recalls]) => {
+      if (!active) return
+      saveStoredPatientRecalls(recalls)
+      setAppointmentRevision((value) => value + 1)
+    }).catch((cause) => {
+      if (active) setLoadError(cause instanceof Error ? cause.message : 'Dashboard data could not be loaded from the clinic database.')
+    }).finally(() => { if (active) setIsLoading(false) })
     return () => { active = false }
-  }, [activeBranchId, isAllBranchesMode, user?.id])
+  }, [activeBranchId, authorizedBranchIds, isAllBranchesMode, user?.id])
 
   const report = useMemo(() => buildEnterpriseReportSnapshot({ filters: { preset: 'this_month', branchId: isAllBranchesMode ? 'all' : activeBranchId ?? undefined, authorizedBranchIds } }), [activeBranchId, appointmentRevision, authorizedBranchIds, isAllBranchesMode])
   const appointments = useMemo(() => { void appointmentRevision; return getStoredAppointments().filter((appointment) => isAllBranchesMode ? authorizedBranchIds.includes(appointment.branchId ?? '') : appointment.branchId === activeBranchId) }, [activeBranchId, appointmentRevision, authorizedBranchIds, isAllBranchesMode])
@@ -65,6 +91,8 @@ export function SuperAdminBranchDashboardV128() {
   const netCashMovement = report.executive.collectedCashCents - report.executive.expensePaymentsCents
   const comparisonRows = availableBranches.map((branch) => ({ branch, row: report.branches.find((entry) => entry.branchId === branch.id) }))
 
+  if (isLoading) return <section className="sav56" aria-label="Loading executive dashboard"><SkeletonList items={10} withAvatar /></section>
+  if (loadError) return <section className="sav56"><div className="sav56-empty"><RotateCcw size={24}/><strong>Dashboard data could not be loaded</strong><span>{loadError}</span></div></section>
   if (!isAllBranchesMode && !activeBranchId) return <section className="sav56"><div className="sav56-empty"><Building2 size={24}/><strong>Select a branch workspace</strong><span>Dashboard operational data requires a concrete branch.</span></div></section>
 
   return <section className="sav56" aria-label={`Super Admin dashboard · ${scopeName}`} data-dashboard-branch-scope={scopeKey}>

@@ -4,19 +4,23 @@ import { useNavigate } from 'react-router-dom'
 import { Badge, StatusBadge } from '../../components/ui/Badge'
 import { Button } from '../../components/ui/Button'
 import { DashboardBarChart, DashboardTrendChart } from '../../components/ui/DashboardChart'
-import { Pagination } from '../../components/ui/DesignSystem'
+import { Pagination, SkeletonList } from '../../components/ui/DesignSystem'
 import { getStoredAppointments } from '../appointments/appointmentStore'
 import { loadAppointmentsForBranchScope } from '../appointments/appointmentBranchLoader'
 import { getStoredInvoices, getStoredPayments } from '../billing/billingStore'
+import { hydrateBranchBillingFromDatabase } from '../billing/billingHydration'
 import { useAuth } from '../auth/AuthContext'
 import { useBranchContext } from '../branches/BranchContext'
 import { getStoredBranches } from '../branches/branchStore'
-import { getStoredProviders } from '../dentists/dentistStore'
-import { getStoredDocuments } from '../documents/documentStore'
+import { getStoredProviders, loadProviderFoundationFromSupabase } from '../dentists/dentistStore'
+import { getStoredDocuments, loadDocumentsFromSupabase } from '../documents/documentStore'
+import { hydrateExpenseWorkspaceFromSupabase } from '../expenses/expensePersistence'
 import { getBranchInventory, getStockStatus } from '../inventory/inventoryStore'
+import { refreshInventoryOperationalCaches } from '../inventory/inventoryPersistence'
 import { getPatientDisplayName, getStoredPatients } from '../patients/patientStore'
-import { getStoredPatientRecalls } from '../recalls/recallStore'
-import { getStoredServices } from '../services/serviceStore'
+import { loadPatientsFromSupabase } from '../patients/patientPersistence'
+import { getStoredPatientRecalls, listRecallQueue, saveStoredPatientRecalls } from '../recalls/recallStore'
+import { getStoredServices, loadServicesFromSupabase } from '../services/serviceStore'
 
 function manilaToday() {
   return new Intl.DateTimeFormat('en-CA', {
@@ -72,10 +76,10 @@ export function StaffTodayWorkspace() {
     void revision
     return getStoredAppointments().filter((appointment) => branchId ? appointment.branchId === branchId : true)
   }, [branchId, revision])
-  const patients = useMemo(() => getStoredPatients(), [])
-  const services = useMemo(() => new Map(getStoredServices().map((row) => [row.id, row])), [])
-  const providers = useMemo(() => new Map(getStoredProviders().map((row) => [row.id, row])), [])
-  const branches = useMemo(() => new Map(getStoredBranches().map((row) => [row.id, row])), [])
+  const patients = useMemo(() => { void revision; return getStoredPatients() }, [revision])
+  const services = useMemo(() => { void revision; return new Map(getStoredServices().map((row) => [row.id, row])) }, [revision])
+  const providers = useMemo(() => { void revision; return new Map(getStoredProviders().map((row) => [row.id, row])) }, [revision])
+  const branches = useMemo(() => { void revision; return new Map(getStoredBranches().map((row) => [row.id, row])) }, [revision])
   const patientMap = useMemo(() => new Map(patients.flatMap((row) => [[row.patientId, row], [row.id, row]] as const)), [patients])
 
   const todayAppointments = useMemo(
@@ -142,18 +146,29 @@ export function StaffTodayWorkspace() {
     let active = true
     setIsLoading(true)
     setLoadError('')
-    void loadAppointmentsForBranchScope({
-      branchId,
-      isAllBranchesMode: !branchId,
-      userId: user.id,
-      strict: false,
-      bypassCache: true,
-    })
-      .then(() => { if (active) setRevision((value) => value + 1) })
+    void Promise.all([
+      loadAppointmentsForBranchScope({ branchId, isAllBranchesMode: !branchId, userId: user.id, strict: true, bypassCache: true }),
+      loadPatientsFromSupabase({ strict: true }),
+      loadServicesFromSupabase({ strict: true }),
+      loadProviderFoundationFromSupabase({ strict: true }),
+      hydrateBranchBillingFromDatabase(branchId ?? undefined),
+      loadDocumentsFromSupabase(),
+      refreshInventoryOperationalCaches({ branchIds: branchId ? [branchId] : undefined }),
+      hydrateExpenseWorkspaceFromSupabase(),
+      listRecallQueue({ branchId: branchId ?? undefined, limit: 500 }),
+    ])
+      .then(([, , , , , , , , recalls]) => {
+        if (!active) return
+        saveStoredPatientRecalls(recalls)
+        setRevision((value) => value + 1)
+      })
       .catch((cause) => { if (active) setLoadError(cause instanceof Error ? cause.message : 'Dashboard data could not be refreshed.') })
       .finally(() => { if (active) setIsLoading(false) })
     return () => { active = false }
   }, [branchId, user?.id])
+
+  if (isLoading) return <section className="staff-today-workspace" aria-label="Loading staff dashboard"><SkeletonList items={8} withAvatar /></section>
+  if (loadError) return <section className="staff-today-workspace"><div className="staff-empty-state"><RefreshCw size={22} /><strong>Dashboard data could not be loaded</strong><span>{loadError}</span></div></section>
 
   return (
     <div className="staff-today-workspace">
@@ -169,8 +184,6 @@ export function StaffTodayWorkspace() {
           <Button variant="secondary" onClick={() => navigate('/app/patients')}><UserPlus size={16} /> Add patient</Button>
         </div>
       </section>
-      {loadError && <div className="staff-empty-state compact"><RefreshCw size={18} /><span>{loadError}</span></div>}
-
       <section className="staff-metric-grid" aria-label="Today summary">
         <article><span className="staff-metric-icon"><CalendarPlus size={18} /></span><div><strong>{pending.length}</strong><span>Pending requests</span></div></article>
         <article><span className="staff-metric-icon"><Clock3 size={18} /></span><div><strong>{confirmed.length}</strong><span>Confirmed today</span></div></article>

@@ -68,7 +68,10 @@ export function DocumentsLiveWorkspaceV131() {
 
     async function hydratePatients() {
       if (!supabase) {
-        if (alive) setState('ready')
+        if (alive) {
+          setError('Clinic database is not configured. Documents cannot be loaded safely.')
+          setState('error')
+        }
         return
       }
 

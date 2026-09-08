@@ -1,0 +1,18 @@
+/* Final mobile topbar contract: component-level styles must not reintroduce the role pill. */
+@media (max-width: 430px) {
+  .app-shell .topbar {
+    grid-template-columns: 36px minmax(0, 1fr) 36px !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    overflow: visible !important;
+  }
+
+  .app-shell .topbar-actions {
+    min-width: 36px !important;
+    max-width: 36px !important;
+  }
+
+  .app-shell .topbar-account-pill {
+    display: none !important;
+  }
+}

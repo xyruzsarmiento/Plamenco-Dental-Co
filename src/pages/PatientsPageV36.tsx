@@ -16,6 +16,7 @@ import {
   getPatientDisplayName,
 } from '../features/patients/patientStore'
 import { createPatientPersisted, loadPatientsFromSupabase } from '../features/patients/patientPersistence'
+import { loadAppointmentsFromSupabase } from '../features/appointments/appointmentPersistence'
 import type { Patient, PatientFormValues, PatientOrigin } from '../features/patients/patientTypes'
 import { PatientsPageV10 } from './PatientsPageV10'
 
@@ -139,7 +140,7 @@ export function PatientsPageV36() {
   const [isLoadingPatients, setIsLoadingPatients] = useState(true)
 
   const branches = useMemo(() => getStoredBranches(), [])
-  const appointments = useMemo(() => getStoredAppointments(), [patients])
+  const [appointments, setAppointments] = useState(() => getStoredAppointments())
   const today = manilaToday()
   const branchMap = useMemo(() => new Map(branches.map((branch) => [branch.id, branch.name])), [branches])
   const canCreate = permissions.can('patients.create')
@@ -147,10 +148,14 @@ export function PatientsPageV36() {
 
   useEffect(() => {
     let active = true
-    void loadPatientsFromSupabase({ strict: true })
-      .then((rows) => {
+    void Promise.all([
+      loadPatientsFromSupabase({ strict: true }),
+      loadAppointmentsFromSupabase({ strict: true }),
+    ])
+      .then(([rows, appointmentRows]) => {
         if (!active) return
         setPatients(rows)
+        setAppointments(appointmentRows)
         setLoadError(null)
       })
       .catch((cause) => {
