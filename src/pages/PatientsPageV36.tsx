@@ -18,6 +18,7 @@ import {
 import { createPatientPersisted, loadPatientsFromSupabase } from '../features/patients/patientPersistence'
 import { loadAppointmentsFromSupabase } from '../features/appointments/appointmentPersistence'
 import type { Patient, PatientFormValues, PatientOrigin } from '../features/patients/patientTypes'
+import { PatientAvatar } from '../features/patients/PatientAvatar'
 import { PatientsPageV10 } from './PatientsPageV10'
 
 const originLabels: Record<PatientOrigin, string> = {
@@ -38,10 +39,6 @@ function emptyPatientValues(): PatientFormValues {
     emergencyContact: '', emergencyContactPhone: '', emergencyContactRelationship: '', preferredBranchId: '', origin: 'walk_in', registrationDate: manilaToday(), status: 'active',
     allergies: '', medicalConditions: '', currentMedications: '', previousSurgeries: '', medicalNotes: '', administrativeNotes: '', profileImage: '',
   }
-}
-
-function initials(patient: Patient) {
-  return `${patient.firstName?.[0] ?? ''}${patient.lastName?.[0] ?? ''}`.toUpperCase()
 }
 
 function formatDate(value?: string) {
@@ -281,7 +278,7 @@ export function PatientsPageV36() {
             const origin = originLabels[patient.origin ?? 'staff_created']
             return (
               <button key={patient.id} type="button" className="patients36-row" onClick={() => navigate(`/app/patients/${encodeURIComponent(patient.patientId)}`)}>
-                <span className="patients36-person"><span className="patients36-avatar">{patient.profileImage ? <img src={patient.profileImage} alt="" /> : initials(patient)}</span><span className="patients36-person-copy"><strong>{getPatientDisplayName(patient)}</strong><span>{patient.patientId}</span><StatusBadge status={patient.status} variant="compact" /></span></span>
+                <span className="patients36-person"><PatientAvatar patient={patient} size={42} className="patients36-avatar" /><span className="patients36-person-copy"><strong>{getPatientDisplayName(patient)}</strong><span>{patient.patientId}</span><StatusBadge status={patient.status} variant="compact" /></span></span>
                 <span className="patients36-contact"><span><Mail size={14} />{patient.email || 'No email recorded'}</span><span><Phone size={14} />{patient.phone || 'No phone recorded'}</span></span>
                 <span className="patients36-context"><strong>{branchName}</strong><span>{origin} · {treatmentCount} treatment{treatmentCount === 1 ? '' : 's'}</span></span>
                 <span className="patients36-next"><strong>{visit ? formatDate(visit.date) : 'No upcoming visit'}</strong><span>{visit ? `${formatTime(visit.startTime)} · ${visit.status.replaceAll('_', ' ')}` : 'No appointment scheduled'}</span></span>

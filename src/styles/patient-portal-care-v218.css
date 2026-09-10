@@ -1,0 +1,1101 @@
+/* Patient care workspaces v218 */
+.pv3-care-page-v218 {
+  --care218-ink: #101828;
+  --care218-text: #344054;
+  --care218-muted: #667085;
+  --care218-line: #d9e4f1;
+  --care218-soft: #f6f9fd;
+  --care218-blue: #2563eb;
+  --care218-blue-dark: #1746b3;
+  --care218-blue-soft: #edf5ff;
+  --care218-green: #138a4b;
+  --care218-amber: #ad6800;
+  --care218-red: #d92d20;
+  display: grid;
+  gap: 16px;
+  min-width: 0;
+}
+
+.pv3-care-page-v218 button,
+.pv3-care-page-v218 input,
+.pv3-care-page-v218 select {
+  letter-spacing: 0;
+}
+
+.care218-hero {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 20px 28px;
+  min-width: 0;
+  padding: 25px 28px 0;
+  overflow: hidden;
+  border: 1px solid #cfe0f5;
+  border-radius: 8px;
+  background: linear-gradient(100deg, #ffffff 0%, #ffffff 64%, #edf5ff 100%);
+  box-shadow: 0 16px 38px rgba(16, 24, 40, .055);
+}
+
+.care218-hero::after {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 6px;
+  height: 100%;
+  background: #2563eb;
+  content: '';
+}
+
+.care218-hero-heading {
+  display: flex;
+  align-items: flex-start;
+  gap: 15px;
+  min-width: 0;
+}
+
+.care218-hero-icon {
+  display: grid;
+  flex: 0 0 auto;
+  place-items: center;
+  width: 46px;
+  height: 46px;
+  margin-top: 1px;
+  border: 1px solid #bcd6fb;
+  border-radius: 8px;
+  background: #f4f8ff;
+  color: var(--care218-blue);
+}
+
+.care218-eyebrow {
+  display: block;
+  margin: 0 0 5px;
+  color: var(--care218-blue);
+  font-size: .63rem;
+  font-weight: 900;
+  line-height: 1.2;
+  text-transform: uppercase;
+}
+
+.care218-hero h2 {
+  margin: 0;
+  color: var(--care218-ink);
+  font-size: 2rem;
+  line-height: 1.08;
+}
+
+.care218-hero-heading p {
+  max-width: 700px;
+  margin: 7px 0 0;
+  color: var(--care218-muted);
+  font-size: .78rem;
+  line-height: 1.55;
+}
+
+.care218-hero-action {
+  align-self: center;
+}
+
+.care218-hero-action button {
+  min-height: 41px;
+  border-radius: 7px;
+  box-shadow: 0 10px 20px rgba(37, 99, 235, .18);
+}
+
+.care218-hero-facts {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  margin: 0;
+  border-top: 1px solid #dce7f4;
+}
+
+.care218-hero-facts > div {
+  position: relative;
+  min-width: 0;
+  padding: 15px 18px 16px 0;
+}
+
+.care218-hero-facts > div + div {
+  padding-left: 22px;
+  border-left: 1px solid #dce7f4;
+}
+
+.care218-hero-facts dt {
+  margin: 0;
+  color: #758198;
+  font-size: .57rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.care218-hero-facts dd {
+  max-width: 100%;
+  margin: 4px 0 0;
+  overflow: hidden;
+  color: var(--care218-ink);
+  font-size: .98rem;
+  font-weight: 850;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+  text-overflow: ellipsis;
+}
+
+.care218-hero-facts small {
+  display: block;
+  margin-top: 3px;
+  overflow: hidden;
+  color: var(--care218-muted);
+  font-size: .6rem;
+  line-height: 1.3;
+  overflow-wrap: anywhere;
+  text-overflow: ellipsis;
+}
+
+.care218-hero-facts > .is-success dd { color: var(--care218-green); }
+.care218-hero-facts > .is-warning dd { color: var(--care218-amber); }
+.care218-hero-facts > .is-danger dd { color: var(--care218-red); }
+
+.care218-progress-track {
+  width: calc(100% - 2px);
+  height: 6px;
+  margin: -17px 1px 0;
+  overflow: hidden;
+  border-radius: 0 0 6px 6px;
+  background: #e8eef7;
+}
+
+.care218-progress-track > span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #2563eb 0%, #10a56f 100%);
+}
+
+.care218-privacy-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid #dbe5f0;
+  color: #53627a;
+  font-size: .63rem;
+  line-height: 1.45;
+}
+
+.care218-privacy-note svg {
+  flex: 0 0 auto;
+  color: var(--care218-blue);
+}
+
+/* Dental record timeline */
+.care218-records .pv3-history-panel {
+  display: grid;
+  grid-template-columns: minmax(230px, 285px) minmax(0, 1fr);
+  align-items: stretch;
+  min-width: 0;
+  overflow: hidden;
+  border: 1px solid var(--care218-line);
+  border-radius: 8px;
+  background: #ffffff;
+  box-shadow: 0 14px 34px rgba(16, 24, 40, .045);
+}
+
+.care218-records .pv3-history-panel > header {
+  display: block;
+  padding: 28px 24px;
+  border: 0;
+  border-right: 1px solid var(--care218-line);
+  background: linear-gradient(180deg, #f9fbff 0%, #f4f8fd 100%);
+}
+
+.care218-records .pv3-history-panel > header span:first-child,
+.care218-plans .pv3-treatment-panel-v4 > header span,
+.care218-treatments .pv3-treatment-panel-v4 > header span {
+  color: var(--care218-blue);
+  font-size: .59rem;
+  font-weight: 900;
+}
+
+.care218-records .pv3-history-panel > header h3,
+.care218-plans .pv3-treatment-panel-v4 > header h3,
+.care218-treatments .pv3-treatment-panel-v4 > header h3 {
+  margin: 7px 0 8px;
+  color: var(--care218-ink);
+  font-size: 1.12rem;
+}
+
+.care218-records .pv3-history-panel > header p,
+.care218-plans .pv3-treatment-panel-v4 > header p,
+.care218-treatments .pv3-treatment-panel-v4 > header p {
+  margin: 0;
+  color: var(--care218-muted);
+  font-size: .69rem;
+  line-height: 1.55;
+}
+
+.care218-records .pv3-history-timeline {
+  max-height: 430px;
+  gap: 0;
+  padding: 0;
+  overflow-y: auto;
+  background: #ffffff;
+}
+
+.care218-records .pv3-history-timeline::before { display: none; }
+
+.care218-records .pv3-history-timeline > button {
+  grid-template-columns: 42px minmax(0, 1fr) auto;
+  min-height: 104px;
+  padding: 18px 20px;
+  border: 0;
+  border-bottom: 1px solid #e4ebf3;
+  border-radius: 0;
+  background: #ffffff;
+  box-shadow: none;
+}
+
+.care218-records .pv3-history-timeline > button:last-child { border-bottom: 0; }
+.care218-records .pv3-history-timeline > button:hover { background: #f7faff; transform: none; }
+
+.care218-records .pv3-history-dot {
+  width: 38px;
+  height: 38px;
+  border: 1px solid #bdd6fb;
+  border-radius: 8px;
+  background: #edf5ff;
+}
+
+.care218-records .pv3-contained-pagination {
+  grid-column: 2;
+}
+
+/* Recall action agenda */
+.care218-recalls .pv3-care-toolbar {
+  justify-self: start;
+  margin: 0;
+  padding: 4px;
+  border: 1px solid var(--care218-line);
+  border-radius: 8px;
+  background: #eef3f9;
+}
+
+.care218-recalls .pv3-care-toolbar button {
+  min-height: 34px;
+  padding: 0 15px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: #5e6b80;
+}
+
+.care218-recalls .pv3-care-toolbar button.is-active {
+  background: #ffffff;
+  color: var(--care218-blue-dark);
+  box-shadow: 0 3px 9px rgba(16, 24, 40, .1);
+}
+
+.care218-recalls .pv3-recall-list-v5 {
+  max-height: 520px;
+  gap: 0;
+  padding: 0;
+  overflow-y: auto;
+  border: 1px solid var(--care218-line);
+  border-radius: 8px;
+  background: #ffffff;
+  box-shadow: 0 14px 34px rgba(16, 24, 40, .045);
+}
+
+.care218-recalls .pv3-recall-card-v5 {
+  grid-template-columns: 48px minmax(0, 1fr) minmax(170px, 210px);
+  gap: 18px;
+  min-height: 150px;
+  padding: 22px 24px;
+  border: 0;
+  border-bottom: 1px solid #e2eaf3;
+  border-radius: 0;
+  background: #ffffff;
+  box-shadow: none;
+}
+
+.care218-recalls .pv3-recall-card-v5:last-child { border-bottom: 0; }
+.care218-recalls .pv3-recall-card-v5:hover { background: #f9fbff; transform: none; }
+
+.care218-recalls .pv3-recall-icon-v5 {
+  width: 42px;
+  height: 42px;
+  border-radius: 8px;
+}
+
+.care218-recalls .pv3-recall-main-v5 dl {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0;
+  margin-top: 16px;
+  border-top: 1px solid #e5ebf3;
+}
+
+.care218-recalls .pv3-recall-main-v5 dl > div {
+  padding: 12px 12px 0 0;
+  border: 0;
+  background: transparent;
+}
+
+.care218-recalls .pv3-recall-main-v5 dl > div + div {
+  padding-left: 12px;
+  border-left: 1px solid #e5ebf3;
+}
+
+.care218-recalls .pv3-recall-action-v5 {
+  min-width: 0;
+  padding: 12px 0 12px 20px;
+  border: 0;
+  border-left: 1px solid #e1e9f2;
+  border-radius: 0;
+  background: transparent;
+}
+
+/* Care roadmaps */
+.care218-plans .pv3-treatment-panel-v4,
+.care218-treatments .pv3-treatment-panel-v4 {
+  display: grid;
+  grid-template-columns: minmax(230px, 285px) minmax(0, 1fr);
+  overflow: hidden;
+  border: 1px solid var(--care218-line);
+  border-radius: 8px;
+  background: #ffffff;
+  box-shadow: 0 14px 34px rgba(16, 24, 40, .045);
+}
+
+.care218-plans .pv3-treatment-panel-v4 > header,
+.care218-treatments .pv3-treatment-panel-v4 > header {
+  padding: 28px 24px;
+  border: 0;
+  border-right: 1px solid var(--care218-line);
+  background: linear-gradient(180deg, #f9fbff 0%, #f4f8fd 100%);
+}
+
+.care218-plans .pv3-treatment-cards-v4,
+.care218-treatments .pv3-treatment-cards-v4 {
+  position: relative;
+  max-height: 520px;
+  gap: 0;
+  padding: 0 22px;
+  overflow-y: auto;
+  background: #ffffff;
+}
+
+.care218-records .pv3-history-timeline,
+.care218-recalls .pv3-recall-list-v5,
+.care218-plans .pv3-treatment-cards-v4,
+.care218-treatments .pv3-treatment-cards-v4 {
+  grid-auto-rows: max-content !important;
+  align-content: start;
+  min-height: 0;
+  overscroll-behavior: contain;
+  scrollbar-color: #9fb8df transparent;
+  scrollbar-gutter: stable;
+  scrollbar-width: thin;
+}
+
+.care218-records .pv3-history-timeline::-webkit-scrollbar,
+.care218-recalls .pv3-recall-list-v5::-webkit-scrollbar,
+.care218-plans .pv3-treatment-cards-v4::-webkit-scrollbar,
+.care218-treatments .pv3-treatment-cards-v4::-webkit-scrollbar {
+  width: 8px;
+}
+
+.care218-records .pv3-history-timeline::-webkit-scrollbar-thumb,
+.care218-recalls .pv3-recall-list-v5::-webkit-scrollbar-thumb,
+.care218-plans .pv3-treatment-cards-v4::-webkit-scrollbar-thumb,
+.care218-treatments .pv3-treatment-cards-v4::-webkit-scrollbar-thumb {
+  border: 2px solid transparent;
+  border-radius: 8px;
+  background: #9fb8df;
+  background-clip: padding-box;
+}
+
+.care218-plans .pv3-treatment-cards-v4 > article,
+.care218-treatments .pv3-treatment-cards-v4 > article {
+  grid-template-columns: 38px minmax(0, 1fr);
+  gap: 16px;
+  min-height: 150px;
+  padding: 22px 0;
+  border: 0 !important;
+  border-bottom: 1px solid #e2e9f2 !important;
+  border-radius: 0 !important;
+  background: #ffffff !important;
+  box-shadow: none !important;
+}
+
+.care218-plans .pv3-treatment-cards-v4 > article:last-child,
+.care218-treatments .pv3-treatment-cards-v4 > article:last-child {
+  border-bottom: 0 !important;
+}
+
+.care218-plans .pv3-treatment-marker,
+.care218-treatments .pv3-treatment-marker {
+  position: relative;
+  z-index: 1;
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  background: #edf5ff;
+}
+
+.care218-plans .pv3-treatment-cards-v4 dl,
+.care218-treatments .pv3-treatment-cards-v4 dl {
+  gap: 0;
+  margin-top: 16px;
+  border-top: 1px solid #e6ecf3;
+}
+
+.care218-plans .pv3-treatment-cards-v4 dl > div,
+.care218-treatments .pv3-treatment-cards-v4 dl > div {
+  padding: 11px 12px 0 0;
+  border: 0;
+  background: transparent;
+}
+
+.care218-plans .pv3-treatment-cards-v4 dl > div + div,
+.care218-treatments .pv3-treatment-cards-v4 dl > div + div {
+  padding-left: 12px;
+  border-left: 1px solid #e6ecf3;
+}
+
+.care218-plans .pv3-contained-pagination,
+.care218-treatments .pv3-treatment-pagination-v6 {
+  grid-column: 2;
+}
+
+/* Medication register */
+.care218-prescriptions .pv3-rx-summary-redesign {
+  min-height: 54px;
+  margin: 0;
+  padding: 10px 16px;
+  border: 1px solid #bfe3d1;
+  border-left: 4px solid #16a05d;
+  border-radius: 7px;
+  background: #f5fcf8;
+  box-shadow: none;
+}
+
+.care218-prescriptions .pv3-rx-toolbar-redesign {
+  margin: 0;
+  padding: 8px;
+  border: 1px solid var(--care218-line);
+  border-radius: 8px;
+  background: #ffffff;
+  box-shadow: none;
+}
+
+.care218-prescriptions .pv3-rx-registry-redesign {
+  padding: 0;
+  overflow: hidden;
+  border: 1px solid var(--care218-line);
+  border-radius: 8px;
+  background: #ffffff;
+  box-shadow: 0 14px 34px rgba(16, 24, 40, .045);
+}
+
+.care218-prescriptions .pv3-rx-registry-redesign > header {
+  margin: 0;
+  padding: 17px 20px;
+  border-bottom: 1px solid var(--care218-line);
+  background: #f9fbfe;
+}
+
+.care218-prescriptions .pv3-rx-card-grid-redesign {
+  grid-template-columns: 1fr;
+  grid-auto-rows: max-content !important;
+  align-content: start;
+  max-height: 600px;
+  gap: 10px;
+  padding: 12px;
+  overflow-y: auto;
+  scrollbar-gutter: stable;
+  background: #f4f7fb;
+}
+
+.care218-prescriptions .pv3-rx-card-grid-redesign > button {
+  grid-template-columns: 44px minmax(0, 1fr) 154px !important;
+  grid-template-rows: auto !important;
+  align-items: start !important;
+  height: auto !important;
+  min-height: 0 !important;
+  max-height: none !important;
+  gap: 15px !important;
+  margin: 0;
+  padding: 17px 18px !important;
+  overflow: hidden;
+  border: 1px solid #d8e3f0 !important;
+  border-radius: 8px !important;
+  background: #ffffff !important;
+  box-shadow: 0 7px 18px rgba(16, 24, 40, .035) !important;
+}
+
+.care218-prescriptions .pv3-rx-card-grid-redesign > button:hover {
+  border-color: #a9c7fb !important;
+  background: #fbfdff !important;
+  box-shadow: 0 10px 24px rgba(37, 99, 235, .07) !important;
+  transform: translateY(-1px);
+}
+
+.care218-prescriptions .pv3-rx-card-grid-redesign > button.is-active {
+  border-left: 3px solid var(--care218-blue) !important;
+}
+
+.care218-prescriptions .pv3-rx-record-icon {
+  width: 42px;
+  height: 42px;
+  border-radius: 8px;
+  background: #eff6ff;
+}
+
+.care218-prescriptions .pv3-rx-record-main {
+  gap: 8px;
+}
+
+.care218-prescriptions .pv3-rx-record-main header small {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.care218-prescriptions .pv3-rx-name {
+  display: flex;
+  align-items: baseline;
+  gap: 9px;
+  min-width: 0;
+}
+
+.care218-prescriptions .pv3-rx-name h3 {
+  font-size: 1rem !important;
+}
+
+.care218-prescriptions .pv3-rx-name .pv3-rx-strength {
+  margin: 0 !important;
+  padding-left: 9px;
+  border-left: 1px solid #d8e1ec;
+  white-space: nowrap;
+}
+
+.care218-prescriptions .pv3-rx-dose-grid {
+  gap: 0;
+  margin-top: 2px;
+  overflow: hidden;
+  border: 1px solid #e1e8f2;
+  border-radius: 7px;
+  background: #f8fafc;
+}
+
+.care218-prescriptions .pv3-rx-dose-grid > div {
+  padding: 9px 12px !important;
+  border: 0 !important;
+  border-radius: 0;
+  background: transparent !important;
+}
+
+.care218-prescriptions .pv3-rx-dose-grid > div + div {
+  border-left: 1px solid #e1e8f2 !important;
+}
+
+.care218-prescriptions .pv3-rx-directions {
+  padding-left: 1px;
+}
+
+.care218-prescriptions .pv3-rx-record-redesign footer {
+  justify-content: flex-start !important;
+  gap: 7px 18px !important;
+  margin-top: 1px !important;
+  padding-top: 8px !important;
+}
+
+.care218-prescriptions .pv3-rx-record-redesign > aside {
+  display: flex !important;
+  align-self: stretch;
+  align-items: center !important;
+  justify-content: flex-end !important;
+  gap: 7px;
+  padding-left: 16px;
+  border-left: 1px solid #e2e9f2;
+  color: #1d5fe9 !important;
+  font-size: .72rem;
+  font-weight: 850;
+  white-space: nowrap;
+}
+
+.care218-prescriptions .pv3-rx-care-context-redesign { margin: 0; }
+
+/* Financial ledger */
+.care218-payments .pv3-payments-layout-v6 {
+  grid-template-columns: minmax(0, 1.55fr) minmax(300px, .75fr);
+  gap: 16px;
+}
+
+.care218-payments .pv3-payments-panel-v6 {
+  overflow: hidden;
+  border: 1px solid var(--care218-line);
+  border-radius: 8px;
+  background: #ffffff;
+  box-shadow: 0 14px 34px rgba(16, 24, 40, .045);
+}
+
+.care218-payments .pv3-payments-panel-head-v6 {
+  min-height: 76px;
+  padding: 18px 20px;
+  border-bottom: 1px solid var(--care218-line);
+  background: #f9fbfe;
+}
+
+.care218-payments .pv3-invoice-list-v6,
+.care218-payments .pv3-payment-history-v6 {
+  max-height: 590px;
+  gap: 0;
+  padding: 0;
+  overflow-y: auto;
+  background: #ffffff;
+}
+
+.care218-payments .pv3-invoice-list-v6 > article,
+.care218-payments .pv3-payment-history-v6 > article {
+  margin: 0;
+  padding: 20px;
+  border: 0;
+  border-bottom: 1px solid #e2e9f2;
+  border-radius: 0;
+  background: #ffffff;
+  box-shadow: none;
+}
+
+.care218-payments .pv3-invoice-list-v6 > article:last-child,
+.care218-payments .pv3-payment-history-v6 > article:last-child {
+  border-bottom: 0;
+}
+
+.care218-payments .pv3-invoice-list-v6 > article.is-open {
+  border-left: 4px solid #ef4444;
+}
+
+.care218-payments .pv3-invoice-money > div {
+  padding: 10px 12px;
+  border: 0;
+  border-left: 1px solid #dfe7f0;
+  border-radius: 0;
+  background: transparent;
+}
+
+.care218-payments .pv3-invoice-money > div:first-child {
+  border-left: 0;
+}
+
+.care218-payments .pv3-payment-filter-v7 {
+  margin: 12px 14px 0;
+}
+
+.care218-payments .pv3-receipts-v6 {
+  margin: 12px 14px 14px;
+}
+
+/* Secure document library */
+.care218-documents .pv3-file-toolbar-redesign {
+  grid-template-columns: minmax(260px, 1fr) 170px;
+  margin: 0;
+  padding: 10px;
+  border: 1px solid var(--care218-line);
+  border-radius: 8px;
+  box-shadow: none;
+}
+
+.care218-documents .pv3-document-list-redesign {
+  max-height: 620px;
+  gap: 0;
+  overflow-y: auto;
+  border: 1px solid var(--care218-line);
+  border-radius: 8px;
+  background: #ffffff;
+  box-shadow: 0 14px 34px rgba(16, 24, 40, .045);
+}
+
+.care218-documents .shared-document-card-patient {
+  min-height: 112px;
+  margin: 0;
+  padding: 18px 20px;
+  border: 0;
+  border-bottom: 1px solid #e2e9f2;
+  border-radius: 0;
+  background: #ffffff;
+  box-shadow: none;
+}
+
+.care218-documents .shared-document-card-patient:last-child { border-bottom: 0; }
+.care218-documents .shared-document-card-patient:hover { background: #f9fbff; }
+
+.care218-documents .shared-document-card-patient .shared-document-icon {
+  border-radius: 8px;
+}
+
+.care218-documents .shared-document-card-patient .shared-document-actions button {
+  min-width: 126px;
+  min-height: 38px;
+  border-radius: 7px;
+  box-shadow: 0 8px 18px rgba(37, 99, 235, .14);
+}
+
+.pv3-care-page-v218 .pv3-contained-pagination,
+.pv3-care-page-v218 .pv3-treatment-pagination-v6 {
+  background: #f9fbfe;
+}
+
+@media (max-width: 1120px) {
+  .care218-records .pv3-history-panel,
+  .care218-plans .pv3-treatment-panel-v4,
+  .care218-treatments .pv3-treatment-panel-v4 {
+    grid-template-columns: 220px minmax(0, 1fr);
+  }
+
+  .care218-recalls .pv3-recall-main-v5 dl {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .care218-payments .pv3-payments-layout-v6 {
+    grid-template-columns: minmax(0, 1fr) minmax(280px, .72fr);
+  }
+}
+
+@media (max-width: 900px) {
+  .care218-hero {
+    padding: 22px 22px 0;
+  }
+
+  .care218-records .pv3-history-panel,
+  .care218-plans .pv3-treatment-panel-v4,
+  .care218-treatments .pv3-treatment-panel-v4,
+  .care218-payments .pv3-payments-layout-v6 {
+    grid-template-columns: 1fr;
+  }
+
+  .care218-records .pv3-history-panel > header,
+  .care218-plans .pv3-treatment-panel-v4 > header,
+  .care218-treatments .pv3-treatment-panel-v4 > header {
+    padding: 20px 22px;
+    border-right: 0;
+    border-bottom: 1px solid var(--care218-line);
+  }
+
+  .care218-privacy-note {
+    margin-top: 13px;
+    padding-top: 12px;
+  }
+
+  .care218-records .pv3-contained-pagination,
+  .care218-plans .pv3-contained-pagination,
+  .care218-treatments .pv3-treatment-pagination-v6 {
+    grid-column: 1;
+  }
+
+  .care218-recalls .pv3-recall-card-v5 {
+    grid-template-columns: 44px minmax(0, 1fr);
+  }
+
+  .care218-recalls .pv3-recall-action-v5 {
+    grid-column: 2;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 0 0;
+    border-left: 0;
+    border-top: 1px solid #e1e9f2;
+  }
+}
+
+@media (min-width: 681px) and (max-width: 900px) {
+  .care218-prescriptions .pv3-rx-card-grid-redesign > .pv3-rx-record-redesign {
+    grid-template-columns: 40px minmax(0, 1fr) 138px !important;
+  }
+
+  .care218-prescriptions .pv3-rx-card-grid-redesign > .pv3-rx-record-redesign > aside {
+    grid-column: auto !important;
+    justify-content: flex-end !important;
+    justify-items: end !important;
+  }
+}
+
+@media (max-width: 680px) {
+  .pv3-care-page-v218 { gap: 12px; }
+
+  .care218-records .pv3-history-timeline,
+  .care218-recalls .pv3-recall-list-v5,
+  .care218-plans .pv3-treatment-cards-v4,
+  .care218-treatments .pv3-treatment-cards-v4 {
+    max-height: min(480px, 62dvh);
+  }
+
+  .care218-hero {
+    grid-template-columns: 1fr;
+    gap: 17px;
+    padding: 20px 18px 0;
+    background: linear-gradient(150deg, #ffffff 0%, #ffffff 70%, #edf5ff 100%);
+  }
+
+  .care218-hero-heading {
+    display: grid;
+    gap: 13px;
+  }
+
+  .care218-hero-icon {
+    width: 44px;
+    height: 44px;
+  }
+
+  .care218-hero h2 { font-size: 1.55rem; }
+  .care218-hero-heading p { font-size: .73rem; }
+
+  .care218-hero-action {
+    width: 100%;
+  }
+
+  .care218-hero-action button {
+    width: 100%;
+  }
+
+  .care218-hero-facts {
+    grid-template-columns: 1fr;
+  }
+
+  .care218-hero-facts > div,
+  .care218-hero-facts > div + div {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 3px 12px;
+    padding: 12px 0;
+    border-left: 0;
+    border-bottom: 1px solid #dce7f4;
+  }
+
+  .care218-hero-facts > div:last-child { border-bottom: 0; }
+  .care218-hero-facts dd { grid-row: 1 / span 2; grid-column: 2; align-self: center; text-align: right; }
+  .care218-hero-facts small { grid-column: 1; }
+
+  .care218-records .pv3-history-panel > header,
+  .care218-plans .pv3-treatment-panel-v4 > header,
+  .care218-treatments .pv3-treatment-panel-v4 > header {
+    padding: 18px;
+  }
+
+  .care218-records .pv3-history-timeline > button {
+    grid-template-columns: 38px minmax(0, 1fr);
+    padding: 16px;
+  }
+
+  .care218-records .pv3-history-timeline > button > svg {
+    display: none;
+  }
+
+  .care218-recalls .pv3-care-toolbar {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    width: 100%;
+  }
+
+  .care218-recalls .pv3-recall-card-v5 {
+    grid-template-columns: 1fr;
+    gap: 12px;
+    padding: 18px;
+  }
+
+  .care218-recalls .pv3-recall-icon-v5 { display: none; }
+
+  .care218-recalls .pv3-recall-main-v5 dl {
+    grid-template-columns: 1fr;
+  }
+
+  .care218-recalls .pv3-recall-main-v5 dl > div,
+  .care218-recalls .pv3-recall-main-v5 dl > div + div {
+    display: grid;
+    grid-template-columns: minmax(90px, .7fr) minmax(0, 1.3fr);
+    gap: 10px;
+    padding: 9px 0;
+    border-left: 0;
+    border-bottom: 1px solid #edf1f6;
+  }
+
+  .care218-recalls .pv3-recall-action-v5 {
+    grid-column: 1;
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .care218-recalls .pv3-recall-action-v5 button { width: 100%; }
+
+  .care218-plans .pv3-treatment-cards-v4,
+  .care218-treatments .pv3-treatment-cards-v4 {
+    padding: 0 16px;
+  }
+
+  .care218-plans .pv3-treatment-cards-v4 > article,
+  .care218-treatments .pv3-treatment-cards-v4 > article {
+    grid-template-columns: 1fr;
+    gap: 10px;
+    padding: 18px 0;
+  }
+
+  .care218-plans .pv3-treatment-cards-v4 dl,
+  .care218-treatments .pv3-treatment-cards-v4 dl {
+    grid-template-columns: 1fr;
+  }
+
+  .care218-plans .pv3-treatment-cards-v4 dl > div,
+  .care218-plans .pv3-treatment-cards-v4 dl > div + div,
+  .care218-treatments .pv3-treatment-cards-v4 dl > div,
+  .care218-treatments .pv3-treatment-cards-v4 dl > div + div {
+    padding: 9px 0;
+    border-left: 0;
+    border-bottom: 1px solid #edf1f6;
+  }
+
+  .care218-prescriptions .pv3-rx-registry-redesign > header,
+  .care218-prescriptions .pv3-rx-card-grid-redesign > button {
+    padding: 17px;
+  }
+
+  .care218-prescriptions .pv3-rx-registry-redesign > header {
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .care218-prescriptions .pv3-rx-registry-redesign > header > small {
+    white-space: normal;
+  }
+
+  .care218-prescriptions .pv3-rx-card-grid-redesign {
+    gap: 8px;
+    padding: 8px;
+  }
+
+  .care218-prescriptions .pv3-rx-card-grid-redesign > button {
+    grid-template-columns: 40px minmax(0, 1fr) !important;
+    gap: 12px !important;
+    padding: 14px !important;
+  }
+
+  .care218-prescriptions .pv3-rx-record-icon {
+    width: 40px;
+    height: 40px;
+  }
+
+  .care218-prescriptions .pv3-rx-record-main header {
+    align-items: flex-start !important;
+    flex-direction: column;
+    gap: 7px !important;
+  }
+
+  .care218-prescriptions .pv3-rx-name {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 3px;
+  }
+
+  .care218-prescriptions .pv3-rx-name .pv3-rx-strength {
+    padding-left: 0;
+    border-left: 0;
+  }
+
+  .care218-prescriptions .pv3-rx-dose-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .care218-prescriptions .pv3-rx-dose-grid > div,
+  .care218-prescriptions .pv3-rx-dose-grid > div + div {
+    padding: 9px 11px !important;
+    border-left: 0 !important;
+    border-radius: 0 !important;
+  }
+
+  .care218-prescriptions .pv3-rx-dose-grid > div + div {
+    border-top: 1px solid #e1e8f2 !important;
+    border-bottom: 0 !important;
+  }
+
+  .care218-prescriptions .pv3-rx-record-redesign footer {
+    align-items: flex-start !important;
+    flex-direction: column;
+    gap: 7px !important;
+  }
+
+  .care218-prescriptions .pv3-rx-record-redesign > aside {
+    grid-column: 1 / -1 !important;
+    justify-content: flex-end !important;
+    padding: 10px 0 0;
+    border-top: 1px solid #e2e9f2;
+    border-left: 0;
+  }
+
+  .care218-payments .pv3-invoice-list-v6 > article,
+  .care218-payments .pv3-payment-history-v6 > article {
+    padding: 17px;
+  }
+
+  .care218-payments .pv3-payment-filter-v7 {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    width: auto;
+  }
+
+  .care218-payments .pv3-payment-filter-v7 button {
+    width: auto;
+  }
+
+  .care218-payments .pv3-invoice-money {
+    grid-template-columns: 1fr;
+  }
+
+  .care218-payments .pv3-invoice-money > div,
+  .care218-payments .pv3-invoice-money > div:first-child {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 9px 0;
+    border-left: 0;
+    border-bottom: 1px solid #edf1f6;
+  }
+
+  .care218-documents .pv3-file-toolbar-redesign {
+    grid-template-columns: 1fr;
+  }
+
+  .care218-documents .pv3-document-list-redesign {
+    gap: 10px;
+    overflow: visible;
+    border: 0;
+    background: transparent;
+    box-shadow: none;
+  }
+
+  .care218-documents .shared-document-card-patient {
+    grid-template-columns: 42px minmax(0, 1fr);
+    height: auto !important;
+    min-height: 0;
+    max-height: none !important;
+    padding: 17px;
+    border: 1px solid var(--care218-line);
+    border-radius: 8px;
+  }
+
+  .care218-documents .shared-document-card-patient .shared-document-actions {
+    grid-column: 1 / -1 !important;
+    margin-top: 4px;
+  }
+
+  .care218-documents .shared-document-card-patient .shared-document-actions button {
+    width: 100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pv3-care-page-v218 *,
+  .pv3-care-page-v218 *::before,
+  .pv3-care-page-v218 *::after {
+    scroll-behavior: auto !important;
+    transition-duration: .01ms !important;
+  }
+}

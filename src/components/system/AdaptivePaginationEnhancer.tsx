@@ -7,7 +7,7 @@ type PageConfig = {
 }
 
 const configs: PageConfig[] = [
-  { selector: '.pv3-appointment-list', itemSelector: ':scope > .pv3-appointment-card', pageSize: 5 },
+  { selector: '.pv3-appointment-list:not(.pv3-appointments-v135-list)', itemSelector: ':scope > .pv3-appointment-card', pageSize: 5 },
   { selector: '.pv3-record-list', itemSelector: ':scope > button', pageSize: 6 },
   { selector: '.pv3-treatment-list', itemSelector: ':scope > article', pageSize: 5 },
   { selector: '.pv3-rx-grid', itemSelector: ':scope > article', pageSize: 6 },

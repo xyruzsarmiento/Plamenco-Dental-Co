@@ -19,6 +19,7 @@ import { getBranchInventory, getStockStatus } from '../inventory/inventoryStore'
 import { refreshInventoryOperationalCaches } from '../inventory/inventoryPersistence'
 import { getPatientDisplayName, getStoredPatients } from '../patients/patientStore'
 import { loadPatientsFromSupabase } from '../patients/patientPersistence'
+import { PatientAvatar } from '../patients/PatientAvatar'
 import { getStoredPatientRecalls, listRecallQueue, saveStoredPatientRecalls } from '../recalls/recallStore'
 import { getStoredServices, loadServicesFromSupabase } from '../services/serviceStore'
 
@@ -218,9 +219,10 @@ export function StaffTodayWorkspace() {
                 return (
                   <button key={appointment.id} type="button" className="staff-appointment-row" onClick={() => navigate('/app/appointments')}>
                     <time>{formatTime(appointment.startTime)}</time>
-                    <div className="staff-appointment-main">
-                      <strong>{patient ? getPatientDisplayName(patient) : appointment.patientId}</strong>
-                      <span>{services.get(appointment.serviceId)?.name ?? 'Dental appointment'} · {providers.get(appointment.providerId ?? '')?.displayName ?? 'Dentist unassigned'}</span>
+                    <div className="staff-appointment-main patient-identity-inline">
+                      {patient && <PatientAvatar patient={patient} size="small" decorative />}
+                      <span className="patient-identity-copy"><strong>{patient ? getPatientDisplayName(patient) : appointment.patientId}</strong>
+                      <span>{services.get(appointment.serviceId)?.name ?? 'Dental appointment'} · {providers.get(appointment.providerId ?? '')?.displayName ?? 'Dentist unassigned'}</span></span>
                     </div>
                     <div className="staff-appointment-meta">
                       <span>{branches.get(appointment.branchId ?? '')?.name ?? 'Branch not set'}</span>
@@ -238,7 +240,7 @@ export function StaffTodayWorkspace() {
           <section className="staff-panel">
             <div className="staff-section-header"><div><p className="eyebrow">Live queue</p><h2>Patients in clinic</h2></div><Badge tone="info">{queue.length}</Badge></div>
             {queue.length === 0 ? <div className="staff-empty-state compact"><UsersRound size={20} /><span>No patients currently queued.</span></div> : (
-              <div className="staff-queue-list">{visibleQueue.map((row) => <div key={row.id}><span>{formatTime(row.startTime)}</span><strong>{patientMap.get(row.patientId) ? getPatientDisplayName(patientMap.get(row.patientId)!) : row.patientId}</strong><StatusBadge status={row.status} variant="compact" /></div>)}</div>
+              <div className="staff-queue-list">{visibleQueue.map((row) => { const patient = patientMap.get(row.patientId); return <div key={row.id}><span>{formatTime(row.startTime)}</span><span className="patient-identity-inline">{patient && <PatientAvatar patient={patient} size="compact" decorative />}<strong>{patient ? getPatientDisplayName(patient) : row.patientId}</strong></span><StatusBadge status={row.status} variant="compact" /></div> })}</div>
             )}
             <Pagination page={queuePage} pageCount={queuePageCount} totalItems={queue.length} pageSize={QUEUE_PAGE_SIZE} onPageChange={setQueuePage} label="Patients in clinic pages" />
           </section>
@@ -246,7 +248,7 @@ export function StaffTodayWorkspace() {
           <section className="staff-panel">
             <div className="staff-section-header"><div><p className="eyebrow">Patient lookup</p><h2>Find a patient</h2></div></div>
             <label className="staff-search"><Search size={16} /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Name, patient ID, phone, email" /></label>
-            {query && <div className="staff-search-results">{patientResults.length ? patientResults.map((patient) => <button key={patient.id} type="button" onClick={() => navigate(`/app/patients/${patient.patientId}`)}><strong>{getPatientDisplayName(patient)}</strong><span>{patient.patientId} · {patient.phone || 'No phone'}</span></button>) : <span className="staff-no-result">No matching patients.</span>}</div>}
+            {query && <div className="staff-search-results">{patientResults.length ? patientResults.map((patient) => <button key={patient.id} type="button" onClick={() => navigate(`/app/patients/${patient.patientId}`)}><PatientAvatar patient={patient} size="small" decorative /><span className="patient-identity-copy"><strong>{getPatientDisplayName(patient)}</strong><span>{patient.patientId} · {patient.phone || 'No phone'}</span></span></button>) : <span className="staff-no-result">No matching patients.</span>}</div>}
           </section>
         </aside>
       </div>

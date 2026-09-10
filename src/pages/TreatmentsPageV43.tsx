@@ -7,6 +7,7 @@ import { MostPerformedTreatmentsV45, PlannedVsPerformedV45 } from '../components
 import { TreatmentFormDrawerV12 } from '../features/treatments/TreatmentFormDrawerV12'
 import { getStoredPatients } from '../features/patients/patientStore'
 import { loadPatientsFromSupabase } from '../features/patients/patientPersistence'
+import { PatientAvatar } from '../features/patients/PatientAvatar'
 import { getStoredServices, loadServicesFromSupabase } from '../features/services/serviceStore'
 import { useBranchContext } from '../features/branches/BranchContext'
 import { getStoredProviders, loadProviderFoundationFromSupabase } from '../features/dentists/dentistStore'
@@ -47,10 +48,6 @@ function formatDate(value?: string) {
 
 function formatMoney(cents: number) {
   return new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP', maximumFractionDigits: 0 }).format(cents / 100)
-}
-
-function initials(firstName: string, lastName: string) {
-  return `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase()
 }
 
 function statusLabel(status: TreatmentStatus) {
@@ -276,7 +273,7 @@ export function TreatmentsPageV43() {
               const count = treatments.filter((treatment) => treatment.patientId === patient.patientId).length
               return (
                 <button type="button" key={patient.id} className={patient.patientId === selectedPatientId ? 'is-active' : ''} onClick={() => setSelectedPatientId(patient.patientId)}>
-                  <span className="tx43-avatar">{initials(patient.firstName, patient.lastName)}</span>
+                  <PatientAvatar patient={patient} size={38} className="tx43-avatar" />
                   <span className="tx43-patient-copy"><strong>{patient.firstName} {patient.lastName}</strong><small>{patient.patientId}</small></span>
                   <span className="tx43-count">{count}</span>
                   <ChevronRight size={15} />
@@ -291,7 +288,7 @@ export function TreatmentsPageV43() {
           {selectedPatient ? <>
             <section className="tx43-patient-context">
               <div className="tx43-identity">
-                <span className="tx43-avatar tx43-avatar-lg">{initials(selectedPatient.firstName, selectedPatient.lastName)}</span>
+                <PatientAvatar patient={selectedPatient} size={52} className="tx43-avatar tx43-avatar-lg" loading="eager" />
                 <div><span className="tx43-eyebrow">Selected patient</span><h3>{selectedPatient.firstName} {selectedPatient.lastName}</h3><p>{selectedPatient.patientId} · {selectedPatient.phone || 'No phone'} · {selectedPatient.email || 'No email'}</p></div>
               </div>
               <span className={`tx43-patient-status ${selectedPatient.status === 'active' ? 'is-active' : ''}`}>{selectedPatient.status}</span>

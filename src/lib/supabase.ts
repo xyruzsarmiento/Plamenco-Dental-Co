@@ -20,5 +20,13 @@ if (!isSupabaseConfigured && import.meta.env.DEV) {
 }
 
 export const supabase = isSupabaseConfigured
-  ? createClient(supabaseUrl as string, supabaseAnonKey as string)
+  ? createClient(supabaseUrl as string, supabaseAnonKey as string, {
+      auth: {
+        // AuthProvider owns callback validation so stale recovery/OAuth hashes are
+        // removed before GoTrue attempts to exchange their expired refresh tokens.
+        detectSessionInUrl: false,
+        persistSession: true,
+        autoRefreshToken: true,
+      },
+    })
   : null

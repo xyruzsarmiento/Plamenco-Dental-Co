@@ -10,6 +10,7 @@ import { useBranchContext } from '../features/branches/BranchContext'
 import { getStoredProviders, loadProviderFoundationFromSupabase } from '../features/dentists/dentistStore'
 import { getStoredPatients } from '../features/patients/patientStore'
 import { loadPatientsFromSupabase } from '../features/patients/patientPersistence'
+import { PatientAvatar } from '../features/patients/PatientAvatar'
 import { getStoredServices, loadServicesFromSupabase, servicePriceToCents } from '../features/services/serviceStore'
 import {
   createTreatmentPlan,
@@ -31,10 +32,6 @@ const PLAN_PAGE_SIZE_OPTIONS = [10, 20, 50]
 
 function humanize(value: string) {
   return value.replaceAll('_', ' ').replace(/\b\w/g, (char) => char.toUpperCase())
-}
-
-function initials(firstName: string, lastName: string) {
-  return `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase()
 }
 
 function formatDate(value?: string) {
@@ -276,13 +273,13 @@ export function TreatmentPlansPageV80() {
             <div className="tp80-rail-title"><div><span>Patient directory</span><strong>{patients.length} patients</strong></div><UserRound size={18} /></div>
             <label className="tp80-search"><Search size={16} /><input value={patientSearch} onChange={(event) => setPatientSearch(event.target.value)} placeholder="Search patient or ID" /></label>
             <div className="tp80-patient-list">
-              {filteredPatients.map((patient) => <button key={patient.id} type="button" className={selectedPatientId === patient.patientId ? 'is-active' : ''} onClick={() => setSelectedPatientId(patient.patientId)}><span className="tp80-avatar">{initials(patient.firstName, patient.lastName)}</span><span><strong>{patient.firstName} {patient.lastName}</strong><small>{patient.patientId}</small></span><ChevronRight size={15} /></button>)}
+              {filteredPatients.map((patient) => <button key={patient.id} type="button" className={selectedPatientId === patient.patientId ? 'is-active' : ''} onClick={() => setSelectedPatientId(patient.patientId)}><PatientAvatar patient={patient} size={34} className="tp80-avatar" /><span><strong>{patient.firstName} {patient.lastName}</strong><small>{patient.patientId}</small></span><ChevronRight size={15} /></button>)}
             </div>
           </aside>
 
           <main className="tp80-main">
             {selectedPatient ? <>
-              <section className="tp80-patient-card"><div className="tp80-identity"><span className="tp80-avatar is-large">{initials(selectedPatient.firstName, selectedPatient.lastName)}</span><div><span className="tp80-eyebrow">Planning care for</span><h3>{selectedPatient.firstName} {selectedPatient.lastName}</h3><p>{selectedPatient.patientId} · {selectedPatient.phone || 'No phone'} · {selectedPatient.email || 'No email'}</p></div></div><span className="tp80-patient-status">{selectedPatient.status}</span></section>
+              <section className="tp80-patient-card"><div className="tp80-identity"><PatientAvatar patient={selectedPatient} size={52} className="tp80-avatar is-large" loading="eager" /><div><span className="tp80-eyebrow">Planning care for</span><h3>{selectedPatient.firstName} {selectedPatient.lastName}</h3><p>{selectedPatient.patientId} · {selectedPatient.phone || 'No phone'} · {selectedPatient.email || 'No email'}</p></div></div><span className="tp80-patient-status">{selectedPatient.status}</span></section>
 
               <section className="tp80-metrics"><article><span>Active plans</span><strong>{metrics.active}</strong><small>Open care recommendations</small></article><article><span>Accepted</span><strong>{metrics.accepted}</strong><small>Patient-approved plans</small></article><article><span>Quoted value</span><strong>{formatTreatmentPlanCurrency(metrics.value)}</strong><small>Estimate, not billed amount</small></article><article><span>Procedures</span><strong>{metrics.procedures}</strong><small>Across all plans</small></article></section>
 
@@ -338,6 +335,10 @@ export function TreatmentPlansPageV80() {
             <section className="tp80-detail-modal" role="dialog" aria-modal="true" aria-labelledby="tp80-detail-title">
               <header className="tp80-detail-hero"><div className="tp80-detail-heading"><span className="tp80-modal-icon"><ShieldCheck size={20} /></span><div><span className="tp80-eyebrow">{selectedPlan.planNumber} · Version {selectedPlan.versionNumber}</span><h2 id="tp80-detail-title">{selectedPlan.name}</h2><p>{selectedPlan.providerNameSnapshot || 'Dentist not assigned'} · {branches.find((branch) => branch.id === selectedPlan.branchId)?.name || 'Branch not assigned'}</p></div></div><button type="button" onClick={() => setSelectedPlan(null)} aria-label="Close full plan"><X size={19} /></button></header>
               <div className="tp80-detail-body">
+                {(() => {
+                  const patient = patients.find((entry) => entry.patientId === selectedPlan.patientId || entry.id === selectedPlan.patientId)
+                  return patient ? <section className="tp80-detail-section"><div className="patient-identity-inline"><PatientAvatar patient={patient} size="card" /><span className="patient-identity-copy"><small>Patient</small><strong>{patient.firstName} {patient.lastName}</strong><span>{patient.patientId}</span></span></div></section> : null
+                })()}
                 <div className="tp80-detail-metrics"><article><span>Status</span><strong className={`tp80-status status-${selectedPlan.status}`}>{humanize(selectedPlan.status)}</strong></article><article><span>Quoted estimate</span><strong>{formatTreatmentPlanCurrency(selectedPlan.quotedTotalCents)}</strong></article><article><span>Procedures</span><strong>{selectedPlan.items.length}</strong></article><article><span>Created</span><strong>{formatDate(selectedPlan.createdAt)}</strong></article></div>
                 {selectedPlan.description && <section className="tp80-detail-section"><div className="tp80-detail-section-title"><FileText size={16} /><span>Plan summary</span></div><p>{selectedPlan.description}</p></section>}
                 <section className="tp80-detail-section"><div className="tp80-detail-section-title"><Stethoscope size={16} /><span>Recommended procedures</span></div><div className="tp80-detail-items">{selectedPlan.items.map((item, index) => <article key={item.id}><span className="tp80-item-index">{String(index + 1).padStart(2, '0')}</span><div><strong>{item.serviceNameSnapshot}</strong><small>{item.phase || 'No phase assigned'} · Quantity {item.quantity}</small></div><div className="tp80-detail-price"><span>Quoted</span><strong>{formatTreatmentPlanCurrency(item.quotedPriceCents)}</strong></div><em className={`tp80-status status-${item.status}`}>{humanize(item.status)}</em></article>)}</div></section>

@@ -32,6 +32,7 @@ import { getProviderBranchAssignments, getStoredProviders, loadProviderFoundatio
 import { getStoredPatients } from '../patients/patientStore'
 import { loadPatientsFromSupabase } from '../patients/patientPersistence'
 import type { Patient } from '../patients/patientTypes'
+import { PatientAvatar } from '../patients/PatientAvatar'
 import { getStoredServices, loadServicesFromSupabase } from '../services/serviceStore'
 import { createClinicalVisitFromAppointment } from './dentalRecordStore'
 import '../../styles/dentist-premium-dashboard-v130.css'
@@ -214,6 +215,7 @@ export function DentistPremiumDashboardV130() {
   const completedCount = todayAppointments.filter((appointment) => appointment.status === 'completed').length
   const remainingCount = todayAppointments.filter((appointment) => ['pending', 'confirmed', 'checked_in', 'waiting', 'in_progress'].includes(appointment.status)).length
   const nextAppointment = todayAppointments.find((appointment) => !['completed', 'cancelled', 'rejected', 'no_show', 'rescheduled'].includes(appointment.status))
+  const nextPatient = nextAppointment ? patientMap.get(nextAppointment.patientId) : undefined
   const uniquePatientsThisWeek = useMemo(() => {
     const start = manilaDate(-6)
     return new Set(assignedAppointments.filter((appointment) => appointment.date >= start && appointment.date <= today && appointment.status === 'completed').map((appointment) => appointment.patientId)).size
@@ -356,8 +358,8 @@ export function DentistPremiumDashboardV130() {
             ))}
           </div>
           <div className="dentist130-next-patient">
-            <span className="dentist130-card-icon"><UserRound size={17} /></span>
-            <div><small>Next patient</small><strong>{nextAppointment ? patientName(patientMap.get(nextAppointment.patientId)) : 'Schedule clear'}</strong><span>{nextAppointment ? `${formatTime(nextAppointment.startTime)} · ${serviceMap.get(nextAppointment.serviceId)?.name ?? nextAppointment.reasonForVisit ?? 'Dental visit'}` : 'No remaining patient is scheduled today.'}</span></div>
+            {nextPatient ? <PatientAvatar patient={nextPatient} size={35} /> : <span className="dentist130-card-icon"><UserRound size={17} /></span>}
+            <div><small>Next patient</small><strong>{nextAppointment ? patientName(nextPatient) : 'Schedule clear'}</strong><span>{nextAppointment ? `${formatTime(nextAppointment.startTime)} · ${serviceMap.get(nextAppointment.serviceId)?.name ?? nextAppointment.reasonForVisit ?? 'Dental visit'}` : 'No remaining patient is scheduled today.'}</span></div>
           </div>
         </aside>
       </div>
@@ -373,7 +375,7 @@ export function DentistPremiumDashboardV130() {
               return (
                 <article key={appointment.id} className="dentist130-visit-row">
                   <div className="dentist130-time"><strong>{formatTime(appointment.startTime)}</strong><small>{appointment.endTime ? `to ${formatTime(appointment.endTime)}` : appointment.date}</small></div>
-                  <div className="dentist130-patient"><strong>{patientName(patient)}</strong><span>{service?.name ?? appointment.reasonForVisit ?? 'Dental visit'}</span><small>{appointment.branchId ? branchMap.get(appointment.branchId)?.name ?? 'Clinic branch' : 'Branch not recorded'}</small></div>
+                  <div className="dentist130-patient patient-identity-inline">{patient && <PatientAvatar patient={patient} size="small" decorative />}<span className="patient-identity-copy"><strong>{patientName(patient)}</strong><span>{service?.name ?? appointment.reasonForVisit ?? 'Dental visit'}</span><small>{appointment.branchId ? branchMap.get(appointment.branchId)?.name ?? 'Clinic branch' : 'Branch not recorded'}</small></span></div>
                   <div className="dentist130-row-actions"><StatusBadge status={appointment.status} label={appointmentStatusLabel(appointment.status)} variant="compact" />{canStart && <Button size="sm" disabled={Boolean(busyId)} onClick={() => void startVisit(appointment)}>{busyId === `start:${appointment.id}` ? 'Starting…' : 'Start visit'}</Button>}{patient && <Link className="dentist130-text-link" to={`/app/patients/${encodeURIComponent(patient.patientId)}`}>Patient</Link>}</div>
                 </article>
               )
@@ -404,7 +406,7 @@ export function DentistPremiumDashboardV130() {
             return (
               <article key={appointment.id} className="dentist130-request-row">
                 <div className="dentist130-time"><strong>{formatTime(appointment.startTime)}</strong><small>{appointment.date}</small></div>
-                <div className="dentist130-patient"><strong>{patientName(patient)}</strong><span>{service?.name ?? appointment.reasonForVisit ?? 'Dental visit'} · {service?.duration ?? appointment.durationMinutes ?? 30} min</span><small>{branch?.name ?? 'Clinic branch'}</small></div>
+                <div className="dentist130-patient patient-identity-inline">{patient && <PatientAvatar patient={patient} size="small" decorative />}<span className="patient-identity-copy"><strong>{patientName(patient)}</strong><span>{service?.name ?? appointment.reasonForVisit ?? 'Dental visit'} · {service?.duration ?? appointment.durationMinutes ?? 30} min</span><small>{branch?.name ?? 'Clinic branch'}</small></span></div>
                 <div className="dentist130-row-actions"><StatusBadge status="pending" label="Unassigned" variant="compact" /><Button size="sm" disabled={Boolean(busyId)} onClick={() => void acceptRequest(appointment)}><CheckCircle2 size={14} />{accepting ? 'Accepting…' : 'Accept appointment'}</Button></div>
               </article>
             )

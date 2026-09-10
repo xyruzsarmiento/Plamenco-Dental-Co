@@ -216,6 +216,15 @@ Deno.serve(async (request) => {
           p_transaction_id: payment.gateway_transaction_id,
         })
         if (applyError) {
+          console.error('[patient-paymongo-qrph] ledger reconciliation failed', {
+            paymentId: payment.id,
+            paymentNumber: payment.payment_number,
+            gatewayTransactionId: payment.gateway_transaction_id,
+            code: applyError.code,
+            message: applyError.message,
+            details: applyError.details,
+            hint: applyError.hint,
+          })
           const latest = await latestLedgerState(adminClient, payment.id, patient.id)
           if (latest?.status === 'completed') return json({ paymentId: payment.id, paymentNumber: latest.payment_number ?? payment.payment_number, status, completed: true })
           return json({

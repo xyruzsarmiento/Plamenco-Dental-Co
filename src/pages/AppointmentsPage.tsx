@@ -56,6 +56,7 @@ import type { Provider } from '../features/dentists/dentistTypes'
 import { getStoredPatients } from '../features/patients/patientStore'
 import { loadPatientsFromSupabase } from '../features/patients/patientPersistence'
 import type { Patient } from '../features/patients/patientTypes'
+import { PatientAvatar } from '../features/patients/PatientAvatar'
 import { getStoredServices, loadServicesFromSupabase } from '../features/services/serviceStore'
 import type { Service } from '../features/services/serviceTypes'
 import type { CommunicationTemplateKey } from '../features/communications/communicationTypes'
@@ -106,11 +107,6 @@ function shortDateLabel(date: string) {
     weekday: 'short',
     day: 'numeric',
   })
-}
-
-function patientInitials(patient?: Patient) {
-  if (!patient) return 'P'
-  return `${patient.firstName?.[0] ?? ''}${patient.lastName?.[0] ?? ''}`.toUpperCase() || 'P'
 }
 
 function providerInitials(provider?: Provider) {
@@ -272,7 +268,7 @@ export function AppointmentsPage() {
 
   useEffect(() => {
     let active = true
-    void loadPatientsFromSupabase()
+    void loadPatientsFromSupabase({ strict: true })
       .then((rows) => {
         if (active) setPatients(rows)
       })
@@ -1004,17 +1000,7 @@ export function AppointmentsPage() {
                         >
                           <div className="journey-card-main">
                             <div className="journey-patient-block">
-                              <span
-                                className="journey-avatar"
-                                style={patient?.profileImage ? {
-                                  backgroundImage: `url(${patient.profileImage})`,
-                                  backgroundPosition: 'center',
-                                  backgroundSize: 'cover',
-                                  backgroundRepeat: 'no-repeat',
-                                } : undefined}
-                              >
-                                {!patient?.profileImage && patientInitials(patient)}
-                              </span>
+                              {patient ? <PatientAvatar patient={patient} size={42} className="journey-avatar" /> : <span className="journey-avatar" aria-hidden="true">?</span>}
                               <span className="journey-patient-copy">
                                 <strong>{patient ? `${patient.firstName} ${patient.lastName}` : 'Patient'}</strong>
                                 <small>{patient?.patientId ?? appointment.patientId}</small>
@@ -1208,7 +1194,7 @@ export function AppointmentsPage() {
                   >
                     <div className="request-header">
                       <div className="request-main">
-                        <div className="request-patient"><strong>{patient?.firstName} {patient?.lastName}</strong><small>{patient?.patientId}</small></div>
+                        <div className="request-patient patient-identity-inline">{patient && <PatientAvatar patient={patient} size="small" />}<span className="patient-identity-copy"><strong>{patient ? `${patient.firstName} ${patient.lastName}` : 'Patient record unavailable'}</strong><small>{patient?.patientId ?? request.patientId}</small></span></div>
                         <div className="request-service"><p>{service?.name}</p></div>
                       </div>
                       <StatusBadge status="pending" />
@@ -1406,7 +1392,7 @@ export function AppointmentsPage() {
                 <div className="operation-dialog-v55-body">
                   <section className="operation-dialog-v55-context" aria-label="Appointment context">
                     <div className="operation-dialog-v55-patient">
-                      <span><UserRound size={18} /></span>
+                      {patient ? <PatientAvatar patient={patient} size={44} /> : <span><UserRound size={18} /></span>}
                       <div>
                         <strong>{patientName}</strong>
                         <small>{patient?.patientId ?? appointment.patientId} - {appointmentNumber}</small>

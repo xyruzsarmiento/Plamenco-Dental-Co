@@ -1,0 +1,749 @@
+.care223-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1700;
+  display: grid;
+  place-items: center;
+  padding: 18px;
+  background: rgba(15, 23, 42, 0.58);
+  backdrop-filter: blur(10px) saturate(115%);
+  animation: care223-fade-in 160ms ease-out;
+}
+
+.care223-modal {
+  --care223-accent: #2563eb;
+  --care223-accent-soft: #eef5ff;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  width: min(780px, calc(100vw - 36px));
+  max-height: min(860px, calc(100dvh - 36px));
+  overflow: hidden;
+  border: 1px solid #cfdaea;
+  border-radius: 16px;
+  background: #ffffff;
+  box-shadow: 0 30px 90px rgba(15, 23, 42, 0.24);
+  animation: care223-enter 190ms ease-out;
+}
+
+.care223-backdrop.is-recall .care223-modal {
+  --care223-accent: #0f766e;
+  --care223-accent-soft: #ecfdf8;
+}
+
+.care223-header {
+  display: grid;
+  grid-template-columns: 46px minmax(0, 1fr) 40px;
+  align-items: center;
+  gap: 13px;
+  min-width: 0;
+  padding: 18px 20px;
+  border-bottom: 1px solid #dce5f1;
+  background: linear-gradient(100deg, #ffffff 0%, #ffffff 67%, #edf5ff 100%);
+}
+
+.care223-header-icon,
+.care223-prescription-mark {
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  width: 46px;
+  height: 46px;
+  border: 1px solid #bfd5fb;
+  border-radius: 8px;
+  background: #f7faff;
+  color: var(--care223-accent);
+}
+
+.care223-backdrop.is-recall .care223-header-icon {
+  border-color: #b8e2d7;
+  background: #f2fcf8;
+}
+
+.care223-heading {
+  min-width: 0;
+}
+
+.care223-heading > span,
+.care223-overline,
+.care223-section > header span,
+.care223-note > span {
+  display: block;
+  color: var(--care223-accent);
+  font-size: 0.66rem;
+  font-weight: 850;
+  letter-spacing: 0;
+  line-height: 1.2;
+  text-transform: uppercase;
+}
+
+.care223-heading h2 {
+  margin: 4px 0 3px;
+  overflow-wrap: anywhere;
+  color: #111827;
+  font-size: 1.42rem;
+  line-height: 1.15;
+  letter-spacing: 0;
+}
+
+.care223-heading p {
+  margin: 0;
+  overflow: hidden;
+  color: #607089;
+  font-size: 0.78rem;
+  line-height: 1.4;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.care223-icon-button {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: 1px solid #d5e0ed;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.92);
+  color: #334155;
+  box-shadow: 0 6px 16px rgba(15, 23, 42, 0.06);
+  cursor: pointer;
+  transition: border-color 150ms ease, color 150ms ease, transform 150ms ease;
+}
+
+.care223-icon-button:hover {
+  border-color: #9dbcf1;
+  color: #1d4ed8;
+  transform: translateY(-1px);
+}
+
+.care223-icon-button:focus-visible,
+.care223-action:focus-visible,
+.care223-scroll:focus-visible {
+  outline: 3px solid rgba(37, 99, 235, 0.24);
+  outline-offset: 2px;
+}
+
+.care223-scroll {
+  display: grid;
+  grid-auto-rows: max-content;
+  align-content: start;
+  gap: 16px;
+  min-height: 0;
+  padding: 20px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+}
+
+.care223-appointment-overview,
+.care223-recall-overview,
+.care223-prescription-overview {
+  display: grid;
+  align-items: center;
+  gap: 16px;
+  min-width: 0;
+  padding: 15px;
+  border: 1px solid #d6e3f4;
+  border-radius: 8px;
+  background: #f8fbff;
+}
+
+.care223-appointment-overview,
+.care223-recall-overview {
+  grid-template-columns: 84px minmax(0, 1fr) auto;
+}
+
+.care223-recall-overview {
+  grid-template-columns: 84px minmax(0, 1fr);
+  border-color: #cfe7df;
+  background: #f7fcfa;
+}
+
+.care223-recall-overview.is-overdue {
+  border-color: #fecaca;
+  background: #fffafa;
+}
+
+.care223-prescription-overview {
+  grid-template-columns: 50px minmax(0, 1fr);
+}
+
+.care223-date-tile {
+  display: grid;
+  place-items: center;
+  align-content: center;
+  width: 84px;
+  height: 96px;
+  padding: 8px;
+  border-radius: 8px;
+  background: #2463df;
+  color: #ffffff;
+  box-shadow: 0 10px 22px rgba(37, 99, 235, 0.18);
+}
+
+.care223-backdrop.is-recall .care223-date-tile {
+  background: #0f766e;
+  box-shadow: 0 10px 22px rgba(15, 118, 110, 0.16);
+}
+
+.care223-recall-overview.is-overdue .care223-date-tile {
+  background: #b42318;
+  box-shadow: 0 10px 22px rgba(180, 35, 24, 0.16);
+}
+
+.care223-date-tile span,
+.care223-date-tile small {
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 0;
+}
+
+.care223-date-tile strong {
+  margin: 2px 0;
+  color: #ffffff;
+  font-size: 2rem;
+  line-height: 1;
+  letter-spacing: 0;
+}
+
+.care223-overview-copy {
+  min-width: 0;
+}
+
+.care223-statuses {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 7px;
+  margin-bottom: 8px;
+}
+
+.care223-overview-copy h3 {
+  margin: 4px 0;
+  overflow-wrap: anywhere;
+  color: #172033;
+  font-size: 1.05rem;
+  line-height: 1.3;
+  letter-spacing: 0;
+}
+
+.care223-prescription-overview .care223-overview-copy h3 {
+  font-size: 1.18rem;
+}
+
+.care223-overview-copy p {
+  margin: 0;
+  overflow-wrap: anywhere;
+  color: #607089;
+  font-size: 0.78rem;
+  line-height: 1.5;
+}
+
+.care223-appointment-overview .care223-overview-copy p {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.care223-appointment-overview .care223-overview-copy p i {
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: #94a3b8;
+}
+
+.care223-fee {
+  display: grid;
+  justify-items: end;
+  min-width: 118px;
+  padding-left: 15px;
+  border-left: 1px solid #d9e4f1;
+}
+
+.care223-fee span,
+.care223-fee small {
+  color: #728096;
+  font-size: 0.64rem;
+  font-weight: 750;
+}
+
+.care223-fee strong {
+  margin: 4px 0;
+  color: #172033;
+  font-size: 1rem;
+  letter-spacing: 0;
+  text-align: right;
+}
+
+.care223-alert,
+.care223-trust {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px 13px;
+  border: 1px solid #dbe5f0;
+  border-radius: 8px;
+  background: #f8fafc;
+  color: #52627a;
+  font-size: 0.75rem;
+  line-height: 1.5;
+}
+
+.care223-alert svg,
+.care223-trust svg {
+  flex: 0 0 auto;
+  margin-top: 1px;
+}
+
+.care223-alert > div {
+  display: grid;
+  gap: 2px;
+}
+
+.care223-alert strong {
+  color: #172033;
+}
+
+.care223-alert.is-warning {
+  border-color: #f7d99a;
+  background: #fffaf0;
+  color: #7c5512;
+}
+
+.care223-alert.is-warning svg {
+  color: #b7791f;
+}
+
+.care223-trust svg {
+  color: var(--care223-accent);
+}
+
+.care223-section {
+  overflow: hidden;
+  border: 1px solid #dbe4ef;
+  border-radius: 8px;
+  background: #ffffff;
+}
+
+.care223-section > header {
+  padding: 12px 14px 10px;
+  border-bottom: 1px solid #e4ebf3;
+  background: #f8fafc;
+}
+
+.care223-section > header h3 {
+  margin: 3px 0 0;
+  color: #172033;
+  font-size: 0.92rem;
+  line-height: 1.3;
+  letter-spacing: 0;
+}
+
+.care223-facts {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin: 0;
+}
+
+.care223-facts > div {
+  min-width: 0;
+  padding: 12px 14px;
+  border-top: 1px solid #edf1f6;
+}
+
+.care223-facts > div:nth-child(-n + 2) {
+  border-top: 0;
+}
+
+.care223-facts > div:nth-child(even) {
+  border-left: 1px solid #edf1f6;
+}
+
+.care223-facts dt {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  color: #748197;
+  font-size: 0.64rem;
+  font-weight: 800;
+  letter-spacing: 0;
+  text-transform: uppercase;
+}
+
+.care223-facts dt svg {
+  color: var(--care223-accent);
+}
+
+.care223-facts dd {
+  margin: 5px 0 0;
+  overflow-wrap: anywhere;
+  color: #172033;
+  font-size: 0.82rem;
+  font-weight: 750;
+  line-height: 1.4;
+}
+
+.care223-note {
+  padding: 13px 14px;
+  border-left: 3px solid var(--care223-accent);
+  border-radius: 0 8px 8px 0;
+  background: #f8fafc;
+}
+
+.care223-note p {
+  margin: 5px 0 0;
+  overflow-wrap: anywhere;
+  color: #334155;
+  font-size: 0.82rem;
+  line-height: 1.55;
+}
+
+.care223-note small {
+  display: block;
+  margin-top: 5px;
+  color: #7b8798;
+  font-size: 0.68rem;
+}
+
+.care223-medication-list {
+  display: grid;
+  gap: 12px;
+  padding: 12px;
+}
+
+.care223-medication {
+  overflow: hidden;
+  border: 1px solid #d8e3f1;
+  border-radius: 8px;
+  background: #ffffff;
+}
+
+.care223-medication > header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 13px 14px;
+  border-bottom: 1px solid #e5ebf3;
+  background: #f8fbff;
+}
+
+.care223-medication > header .care223-medication-index {
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  width: 30px;
+  height: 30px;
+  border: 1px solid #bfd5fb;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #2563eb;
+  font-size: 0.72rem;
+  font-weight: 850;
+}
+
+.care223-medication > header div {
+  min-width: 0;
+}
+
+.care223-medication > header span {
+  display: block;
+  color: #718096;
+  font-size: 0.62rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.care223-medication > header h3 {
+  margin: 3px 0 0;
+  overflow-wrap: anywhere;
+  color: #172033;
+  font-size: 1rem;
+  line-height: 1.25;
+  letter-spacing: 0;
+}
+
+.care223-medication > header p {
+  margin: 2px 0 0;
+  color: #607089;
+  font-size: 0.75rem;
+}
+
+.care223-medication dl {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  margin: 0;
+}
+
+.care223-medication dl > div {
+  min-width: 0;
+  padding: 12px 14px;
+}
+
+.care223-medication dl > div + div {
+  border-left: 1px solid #e7edf4;
+}
+
+.care223-medication dt {
+  color: #7a879a;
+  font-size: 0.62rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.care223-medication dd {
+  margin: 5px 0 0;
+  overflow-wrap: anywhere;
+  color: #172033;
+  font-size: 0.82rem;
+  font-weight: 750;
+  line-height: 1.4;
+}
+
+.care223-medication-instructions {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  margin: 0 14px 14px;
+  padding: 11px 12px;
+  border: 1px solid #d8e6fb;
+  border-radius: 8px;
+  background: #f7faff;
+  color: #41536b;
+  font-size: 0.76rem;
+  line-height: 1.5;
+}
+
+.care223-medication-instructions svg {
+  flex: 0 0 auto;
+  margin-top: 1px;
+  color: #2563eb;
+}
+
+.care223-medication-instructions span {
+  display: block;
+  color: #2563eb;
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 0;
+  text-transform: uppercase;
+}
+
+.care223-medication-instructions p {
+  margin: 3px 0 0;
+  overflow-wrap: anywhere;
+}
+
+.care223-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 9px;
+  padding: 13px 20px;
+  border-top: 1px solid #dce5f1;
+  background: #ffffff;
+  box-shadow: 0 -8px 24px rgba(15, 23, 42, 0.035);
+}
+
+.care223-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 40px;
+  padding: 0 16px;
+  border-radius: 8px;
+  font: inherit;
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0;
+  cursor: pointer;
+  transition: border-color 150ms ease, background 150ms ease, color 150ms ease, transform 150ms ease, box-shadow 150ms ease;
+}
+
+.care223-action.is-secondary {
+  border: 1px solid #cdd9e8;
+  background: #ffffff;
+  color: #334155;
+}
+
+.care223-action.is-secondary:hover {
+  border-color: #9dbcf1;
+  color: #1d4ed8;
+  background: #f8fbff;
+}
+
+.care223-action.is-primary {
+  border: 1px solid #1f5dde;
+  background: #2563eb;
+  color: #ffffff;
+  box-shadow: 0 8px 18px rgba(37, 99, 235, 0.2);
+}
+
+.care223-action.is-primary:hover {
+  background: #1d4ed8;
+  transform: translateY(-1px);
+  box-shadow: 0 10px 22px rgba(37, 99, 235, 0.24);
+}
+
+@keyframes care223-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes care223-enter {
+  from { opacity: 0; transform: translateY(10px) scale(0.985); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@media (max-width: 720px) {
+  .care223-backdrop {
+    place-items: end center;
+    padding: 0;
+  }
+
+  .care223-modal {
+    width: 100%;
+    max-height: 96dvh;
+    border-right: 0;
+    border-bottom: 0;
+    border-left: 0;
+    border-radius: 16px 16px 0 0;
+  }
+
+  .care223-header {
+    grid-template-columns: 40px minmax(0, 1fr) 38px;
+    gap: 11px;
+    padding: 14px 15px;
+  }
+
+  .care223-header-icon {
+    width: 40px;
+    height: 40px;
+  }
+
+  .care223-heading h2 {
+    font-size: 1.15rem;
+  }
+
+  .care223-heading p {
+    font-size: 0.72rem;
+  }
+
+  .care223-icon-button {
+    width: 38px;
+    height: 38px;
+  }
+
+  .care223-scroll {
+    gap: 13px;
+    padding: 14px;
+    scrollbar-gutter: auto;
+  }
+
+  .care223-appointment-overview,
+  .care223-recall-overview {
+    grid-template-columns: 70px minmax(0, 1fr);
+    gap: 13px;
+    padding: 12px;
+  }
+
+  .care223-date-tile {
+    width: 70px;
+    height: 84px;
+  }
+
+  .care223-date-tile strong {
+    font-size: 1.65rem;
+  }
+
+  .care223-fee {
+    grid-column: 1 / -1;
+    grid-template-columns: 1fr auto;
+    align-items: center;
+    justify-items: start;
+    width: 100%;
+    padding: 10px 0 0;
+    border-top: 1px solid #d9e4f1;
+    border-left: 0;
+  }
+
+  .care223-fee strong {
+    margin: 0;
+  }
+
+  .care223-fee small {
+    grid-column: 1 / -1;
+    margin-top: 2px;
+  }
+
+  .care223-facts {
+    grid-template-columns: 1fr;
+  }
+
+  .care223-facts > div:nth-child(-n + 2) {
+    border-top: 1px solid #edf1f6;
+  }
+
+  .care223-facts > div:first-child {
+    border-top: 0;
+  }
+
+  .care223-facts > div:nth-child(even) {
+    border-left: 0;
+  }
+
+  .care223-medication dl {
+    grid-template-columns: 1fr;
+  }
+
+  .care223-medication dl > div + div {
+    border-top: 1px solid #e7edf4;
+    border-left: 0;
+  }
+
+  .care223-footer {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    padding: 11px 14px calc(11px + env(safe-area-inset-bottom));
+  }
+
+  .care223-footer > :only-child {
+    grid-column: 1 / -1;
+  }
+
+  .care223-action {
+    width: 100%;
+    min-width: 0;
+    padding-inline: 11px;
+  }
+}
+
+@media (max-width: 420px) {
+  .care223-prescription-overview {
+    grid-template-columns: 42px minmax(0, 1fr);
+    gap: 11px;
+    padding: 12px;
+  }
+
+  .care223-prescription-mark {
+    width: 42px;
+    height: 42px;
+  }
+
+  .care223-overview-copy h3,
+  .care223-prescription-overview .care223-overview-copy h3 {
+    font-size: 0.96rem;
+  }
+
+  .care223-footer {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .care223-backdrop,
+  .care223-modal {
+    animation: none;
+  }
+}

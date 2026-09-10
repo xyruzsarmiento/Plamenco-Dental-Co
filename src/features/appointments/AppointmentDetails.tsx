@@ -13,6 +13,7 @@ import type { Patient } from '../patients/patientTypes'
 import type { Service } from '../services/serviceTypes'
 import type { Branch } from '../branches/branchTypes'
 import type { Provider } from '../dentists/dentistTypes'
+import { PatientAvatar } from '../patients/PatientAvatar'
 
 type AppointmentDetailsProps = {
   appointment: Appointment
@@ -184,6 +185,7 @@ export function AppointmentDetails({
           <div className="appointment-details-v40-identity">
             <span className="appointment-details-v40-kicker">Appointment workspace · {appointment.appointmentNumber ?? appointment.id}</span>
             <div className="appointment-details-v40-title-row">
+              {patient && <PatientAvatar patient={patient} size="identity" loading="eager" />}
               <div>
                 <h2 id="appointment-details-title">{patient ? `${patient.firstName} ${patient.lastName}` : 'Patient appointment'}</h2>
                 <p>{service?.name ?? 'Service not identified'} · {formatDate(appointment.date)}</p>

@@ -1,0 +1,206 @@
+.prescriptions-workspace .prescription-order-section {
+  padding: 18px 0 0;
+  border: 0;
+  border-top: 1px solid #dbe5f2;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.prescriptions-workspace .prescription-section-heading {
+  align-items: flex-start;
+  margin-bottom: 14px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid #e8edf4;
+}
+
+.prescriptions-workspace .prescription-section-heading > svg {
+  display: grid;
+  flex: 0 0 auto;
+  color: #2563eb;
+}
+
+.prescriptions-workspace .prescription-order-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr));
+  gap: 10px;
+}
+
+.prescriptions-workspace .prescription-order-card {
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  gap: 9px;
+  min-width: 0;
+  min-height: 132px;
+  padding: 13px;
+  overflow: hidden;
+  border: 1px solid #dce5f0;
+  border-radius: 8px;
+  background: linear-gradient(115deg, #ffffff 0%, #ffffff 76%, #f2f7ff 100%);
+  box-shadow: none;
+  color: #172033;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 160ms ease, box-shadow 160ms ease, transform 160ms ease;
+}
+
+.prescriptions-workspace .prescription-order-card:hover,
+.prescriptions-workspace .prescription-order-card:focus-visible {
+  border-color: #93c5fd;
+  box-shadow: 0 8px 20px rgba(37, 99, 235, 0.09);
+  outline: none;
+  transform: translateY(-1px);
+}
+
+.prescriptions-workspace .prescription-order-card-top {
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr) auto;
+  align-items: start;
+  gap: 10px;
+  min-width: 0;
+}
+
+.prescriptions-workspace .prescription-order-icon {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border: 1px solid #cfe0fb;
+  border-radius: 8px;
+  background: #eff6ff;
+  color: #2563eb;
+}
+
+.prescriptions-workspace .prescription-order-title {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+.prescriptions-workspace .prescription-order-title > strong {
+  overflow: hidden;
+  color: #111827;
+  font-size: 0.78rem;
+  line-height: 1.35;
+  text-overflow: ellipsis;
+  white-space: nowrap !important;
+}
+
+.prescriptions-workspace .prescription-order-title > small {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  min-width: 0;
+  overflow: hidden;
+  color: #77869a;
+  font-size: 0.63rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.prescriptions-workspace .prescription-order-card-top .status-badge {
+  flex: 0 0 auto;
+}
+
+.prescriptions-workspace .prescription-order-regimen {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+  padding: 8px 10px;
+  border-left: 2px solid #60a5fa;
+  background: #f8fbff;
+}
+
+.prescriptions-workspace .prescription-order-regimen > span {
+  color: #718096;
+  font-size: 0.58rem;
+  font-weight: 850;
+  letter-spacing: 0;
+  text-transform: uppercase;
+}
+
+.prescriptions-workspace .prescription-order-regimen > p {
+  display: -webkit-box;
+  margin: 0;
+  overflow: hidden;
+  color: #40516a;
+  font-size: 0.68rem;
+  line-height: 1.4;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.prescriptions-workspace .prescription-order-card footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-width: 0;
+  margin: 0;
+  padding-top: 9px;
+  border-top: 1px solid #e8edf4;
+  color: #6b7b90;
+  font-size: 0.62rem;
+}
+
+.prescriptions-workspace .prescription-order-card footer span {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.prescriptions-workspace .prescription-order-card footer svg {
+  flex: 0 0 auto;
+  color: #7693b6;
+}
+
+@media (max-width: 960px) {
+  .prescriptions-workspace .prescription-order-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .prescriptions-workspace .prescription-order-card {
+    min-height: 0;
+  }
+}
+
+@media (max-width: 760px) {
+  .prescriptions-workspace .prescription-order-section {
+    padding-top: 14px;
+  }
+}
+
+@media (max-width: 430px) {
+  .prescriptions-workspace .prescription-order-card {
+    padding: 12px;
+  }
+
+  .prescriptions-workspace .prescription-order-card-top {
+    grid-template-columns: 32px minmax(0, 1fr) auto;
+    gap: 8px;
+  }
+
+  .prescriptions-workspace .prescription-order-icon {
+    width: 32px;
+    height: 32px;
+  }
+
+  .prescriptions-workspace .prescription-order-title > strong {
+    font-size: 0.75rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .prescriptions-workspace .prescription-order-card {
+    transition: none;
+  }
+
+  .prescriptions-workspace .prescription-order-card:hover,
+  .prescriptions-workspace .prescription-order-card:focus-visible {
+    transform: none;
+  }
+}

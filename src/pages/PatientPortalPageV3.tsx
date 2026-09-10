@@ -36,7 +36,7 @@ import {
 import { useEffect, useMemo, useState } from 'react'
 import { Navigate, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { DashboardGreeting } from '../components/dashboard/DashboardGreeting'
-import { Badge, StatusBadge } from '../components/ui/Badge'
+import { StatusBadge } from '../components/ui/Badge'
 import { Button } from '../components/ui/Button'
 import { Pagination, PortalSkeleton } from '../components/ui/DesignSystem'
 import { AccountSecurityPanel } from '../features/auth/AccountSecurityPanel'
@@ -51,7 +51,7 @@ import {
   getPaymentMethodLabel,
   getReceiptsByPatient,
 } from '../features/billing/billingStore'
-import { canPrintOfficialReceipt, downloadOfficialReceiptHtml, openOfficialReceiptWindow } from '../features/billing/receiptDocument'
+import { canPrintOfficialReceipt, downloadOfficialReceiptPdf, openOfficialReceiptWindow } from '../features/billing/receiptDocument'
 import { getStoredBranches } from '../features/branches/branchStore'
 import { CommunicationPreferencesPanel } from '../features/communications/CommunicationPreferencesPanel'
 import { getDentalRecordsByPatientId } from '../features/dentalRecords/dentalRecordStore'
@@ -64,6 +64,7 @@ import {
 } from '../features/documents/documentStore'
 import { DocumentCard } from '../features/documents/DocumentCard'
 import { getCurrentPatientForAuthenticatedUser } from '../features/patients/patientStore'
+import { PatientAvatar } from '../features/patients/PatientAvatar'
 import { TopbarNotificationBell } from '../features/notifications/TopbarNotificationBell'
 import { updateMyPatientProfilePersisted } from '../features/patients/patientPersistence'
 import type { Patient } from '../features/patients/patientTypes'
@@ -94,11 +95,23 @@ type Appointment = ReturnType<typeof getAppointmentsByPatient>[number]
 type DentalRecord = ReturnType<typeof getDentalRecordsByPatientId>[number]
 type PatientPrescription = ReturnType<typeof getPrescriptionsByPatient>[number]
 type PatientPayment = ReturnType<typeof getPaymentsByPatient>[number]
+type PatientInvoice = ReturnType<typeof getInvoicesByPatient>[number]
+type PatientReceipt = ReturnType<typeof getReceiptsByPatient>[number]
+type PatientBranch = ReturnType<typeof getStoredBranches>[number]
+
+function patientPaymentMethodLabel(payment: PatientPayment) {
+  const gatewayProvider = payment.gatewayProvider?.trim().toLowerCase()
+  if (gatewayProvider === 'paymongo' || String(payment.paymentMethod).toLowerCase() === 'qrph') {
+    return 'QR Ph'
+  }
+  return getPaymentMethodLabel(payment.paymentMethod)
+}
 type DocumentFilter = 'all' | DocumentCategory
 type DocumentSort = 'newest' | 'oldest' | 'name'
 
 const navItemByKey = new Map(navItems.map((item) => [item.key, item]))
 const TREATMENT_PAGE_SIZE = 5
+const APPOINTMENT_PAGE_SIZE = 6
 const RECORD_PAGE_SIZE = 5
 const PLAN_PAGE_SIZE = 5
 const RECALL_PAGE_SIZE = 5
@@ -149,6 +162,11 @@ function manilaToday() {
   }).format(new Date())
 }
 
+function appointmentNeedsClinicUpdate(appointment: Appointment) {
+  return appointment.date < manilaToday()
+    && !['completed', 'cancelled', 'no_show', 'rejected', 'rescheduled'].includes(appointment.status)
+}
+
 function greeting() {
   const hour = Number(new Intl.DateTimeFormat('en-US', {
     timeZone: 'Asia/Manila', hour: '2-digit', hour12: false,
@@ -173,6 +191,113 @@ function statusLabel(value?: string) {
 
 function PatientStatusBadge({ status, variant = 'standard' }: { status?: string; variant?: 'standard' | 'compact' }) {
   return <StatusBadge status={status} label={statusLabel(status)} variant={variant} />
+}
+
+export function PatientPaymentDetailsModal({
+  payment,
+  receipt,
+  invoice,
+  branch,
+  patientName,
+  patientId,
+  official,
+  onClose,
+  onDownload,
+  onPrint,
+}: {
+  payment: PatientPayment
+  receipt?: PatientReceipt
+  invoice?: PatientInvoice
+  branch?: PatientBranch
+  patientName: string
+  patientId: string
+  official: boolean
+  onClose: () => void
+  onDownload: () => void
+  onPrint: () => void
+}) {
+  const items = invoice?.items ?? []
+  const externalReference = payment.referenceNumber || payment.gatewayTransactionId || 'No external reference'
+  const title = receipt?.receiptNumber ?? payment.paymentNumber
+  const amount = receipt?.amountCents ?? payment.amountCents
+  const remainingBalance = receipt?.remainingBalanceCents ?? invoice?.balanceCents ?? 0
+  const processor = receipt?.issuedBy || payment.verifiedBy || payment.recordedBy || 'Clinic staff'
+  const titleId = `patient-payment-${payment.id}-title`
+
+  return <div className="pv3-modal-backdrop pay222-backdrop" onMouseDown={(event) => event.target === event.currentTarget && onClose()}>
+    <section className={`pay222-modal is-${payment.status} ${official ? 'is-official' : 'is-payment'}`} role="dialog" aria-modal="true" aria-labelledby={titleId}>
+      <header className="pay222-header">
+        <span className="pay222-header-icon" aria-hidden="true"><ReceiptText size={22}/></span>
+        <div className="pay222-heading">
+          <span>{official ? 'Official receipt' : 'Payment details'}</span>
+          <h2 id={titleId}>{title}</h2>
+          <p>Plamenco Dental Co. <i aria-hidden="true"/> {branch?.name ?? 'Clinic branch'}</p>
+        </div>
+        <button type="button" className="pay222-close" aria-label="Close payment details" onClick={onClose}><X size={19}/></button>
+      </header>
+
+      <div className="pay222-scroll" role="region" aria-label={`${official ? 'Official receipt' : 'Payment'} information`} tabIndex={0}>
+        <section className="pay222-summary" aria-label="Payment summary">
+          <div className="pay222-amount">
+            <small>{official ? 'Amount received' : 'Payment amount'}</small>
+            <strong>{money(amount)}</strong>
+            <PatientStatusBadge status={payment.status}/>
+          </div>
+          <dl className="pay222-summary-facts">
+            <div><dt>Payment date</dt><dd>{clinicDateTime(receipt?.issuedAt ?? payment.verifiedAt ?? payment.date)}</dd></div>
+            <div><dt>Method</dt><dd>{patientPaymentMethodLabel(payment)}</dd></div>
+            <div><dt>Invoice</dt><dd>{invoice?.invoiceNumber ?? payment.invoiceId}</dd></div>
+          </dl>
+        </section>
+
+        <div className="pay222-reference">
+          <div><span>External reference</span><strong>{externalReference}</strong></div>
+          <span className="pay222-reference-state">{official ? 'Posted to clinic ledger' : statusLabel(payment.status)}</span>
+        </div>
+
+        <div className="pay222-information">
+          <section className="pay222-info-group">
+            <header><UserRound size={17}/><div><span>Account</span><h3>Patient and clinic</h3></div></header>
+            <dl>
+              <div><dt>Patient</dt><dd>{patientName}</dd></div>
+              <div><dt>Patient ID</dt><dd>{patientId}</dd></div>
+              <div><dt>Clinic</dt><dd>Plamenco Dental Co.</dd></div>
+              <div><dt>Branch</dt><dd>{branch?.name ?? 'Clinic branch'}</dd></div>
+            </dl>
+          </section>
+
+          <section className="pay222-info-group">
+            <header><WalletCards size={17}/><div><span>Ledger</span><h3>Transaction record</h3></div></header>
+            <dl>
+              <div><dt>Payment number</dt><dd>{payment.paymentNumber}</dd></div>
+              <div><dt>Receipt number</dt><dd>{receipt?.receiptNumber ?? 'Not issued'}</dd></div>
+              <div><dt>Processed by</dt><dd>{processor}</dd></div>
+              <div><dt>Remaining balance</dt><dd>{money(remainingBalance)}</dd></div>
+            </dl>
+          </section>
+        </div>
+
+        <section className="pay222-services">
+          <header><div><span>Billing breakdown</span><h3>Services and amounts</h3></div><strong>{items.length || 1} item{items.length === 1 ? '' : 's'}</strong></header>
+          <div className="pay222-table-wrap" role="region" aria-label="Services and amounts" tabIndex={0}>
+            <table>
+              <thead><tr><th>Description</th><th>Qty</th><th>Amount</th></tr></thead>
+              <tbody>{items.length ? items.map((item) => <tr key={item.id}><td>{item.description}</td><td>{item.quantity}</td><td>{money(item.amountCents ?? Math.max(item.quantity * item.unitPriceCents - (item.discountCents ?? 0), 0))}</td></tr>) : <tr><td>Dental services</td><td>1</td><td>{money(payment.amountCents)}</td></tr>}</tbody>
+              <tfoot><tr><td colSpan={2}>{official ? 'Amount received' : 'Payment amount'}</td><td>{money(amount)}</td></tr></tfoot>
+            </table>
+          </div>
+        </section>
+
+        <div className={`pay222-notice ${official ? 'is-secure' : 'is-pending'}`}><ShieldCheck size={17}/><span>{official ? 'This receipt was generated from the clinic ledger and is available only through your authenticated patient account.' : 'An official receipt is issued only after the payment is completed and posted to the clinic ledger.'}</span></div>
+      </div>
+
+      <footer className="pay222-actions">
+        <Button variant="secondary" onClick={onClose}>Close</Button>
+        {official && <Button variant="secondary" icon={<Download size={15}/>} onClick={onDownload}>Download PDF</Button>}
+        {official && <Button icon={<Printer size={15}/>} onClick={onPrint}>Print receipt</Button>}
+      </footer>
+    </section>
+  </div>
 }
 
 function appointmentDentistLabel(appointment: { providerId?: string; status?: string }, providerMap: Map<string, { displayName?: string }>) {
@@ -214,6 +339,27 @@ function PageHead({ eyebrow, title, copy, action }: {
   return <div className="pv3-page-head"><div><span>{pageIcons[eyebrow]}{eyebrow}</span><h2>{title}</h2><p>{copy}</p></div>{action}</div>
 }
 
+function CareWorkspaceHero({ icon: Icon, eyebrow, title, copy, facts, action, className = '' }: {
+  icon: typeof FileText
+  eyebrow: string
+  title: string
+  copy: string
+  facts: Array<{ label: string; value: React.ReactNode; note?: string; tone?: 'default' | 'success' | 'warning' | 'danger' }>
+  action?: React.ReactNode
+  className?: string
+}) {
+  return <header className={`care218-hero ${className}`.trim()}>
+    <div className="care218-hero-heading">
+      <span className="care218-hero-icon" aria-hidden="true"><Icon size={22}/></span>
+      <div><span className="care218-eyebrow">{eyebrow}</span><h2>{title}</h2><p>{copy}</p></div>
+    </div>
+    {action&&<div className="care218-hero-action">{action}</div>}
+    <dl className="care218-hero-facts">
+      {facts.map((fact)=><div key={fact.label} className={fact.tone&&fact.tone!=='default'?`is-${fact.tone}`:undefined}><dt>{fact.label}</dt><dd>{fact.value}</dd>{fact.note&&<small>{fact.note}</small>}</div>)}
+    </dl>
+  </header>
+}
+
 function prescriptionItems(rx: PatientPrescription) {
   return rx.items?.length ? rx.items : [{
     id: `primary-${rx.id}`,
@@ -239,21 +385,236 @@ function prescriptionInstructionLine(rx: PatientPrescription) {
   return [item?.dosage, item?.frequency].filter(Boolean).join(' ') || 'Follow your dentist instructions'
 }
 
+function careModalDateParts(value?: string) {
+  if (!value) return { month: 'DATE', day: '--', weekday: 'Not set' }
+  const parsed = new Date(value.includes('T') ? value : `${value}T00:00:00+08:00`)
+  if (Number.isNaN(parsed.getTime())) return { month: 'DATE', day: value, weekday: '' }
+  return {
+    month: parsed.toLocaleDateString('en-PH', { month: 'short', timeZone: 'Asia/Manila' }).toUpperCase(),
+    day: parsed.toLocaleDateString('en-PH', { day: 'numeric', timeZone: 'Asia/Manila' }),
+    weekday: parsed.toLocaleDateString('en-PH', { weekday: 'long', timeZone: 'Asia/Manila' }),
+  }
+}
+
+function PatientCareModalShell({
+  id,
+  eyebrow,
+  title,
+  subtitle,
+  icon: Icon,
+  tone,
+  onClose,
+  children,
+  footer,
+}: {
+  id: string
+  eyebrow: string
+  title: string
+  subtitle: string
+  icon: typeof Pill
+  tone: 'prescription' | 'recall' | 'appointment'
+  onClose: () => void
+  children: React.ReactNode
+  footer: React.ReactNode
+}) {
+  const titleId = `${id}-title`
+  return <div className={`care223-backdrop is-${tone}`} onMouseDown={(event) => event.target === event.currentTarget && onClose()}>
+    <section className="care223-modal" role="dialog" aria-modal="true" aria-labelledby={titleId} onKeyDown={(event) => event.key === 'Escape' && onClose()}>
+      <header className="care223-header">
+        <span className="care223-header-icon" aria-hidden="true"><Icon size={21}/></span>
+        <div className="care223-heading">
+          <span>{eyebrow}</span>
+          <h2 id={titleId}>{title}</h2>
+          <p>{subtitle}</p>
+        </div>
+        <button type="button" className="care223-icon-button" aria-label={`Close ${eyebrow.toLowerCase()}`} onClick={onClose}><X size={19}/></button>
+      </header>
+      <div className="care223-scroll" role="region" aria-label={`${eyebrow} information`} tabIndex={0}>{children}</div>
+      <footer className="care223-footer">{footer}</footer>
+    </section>
+  </div>
+}
+
+export function PatientAppointmentDetailsModal({
+  appointment,
+  serviceName,
+  branchName,
+  dentistName,
+  estimatedFee,
+  onClose,
+}: {
+  appointment: Appointment
+  serviceName: string
+  branchName: string
+  dentistName: string
+  estimatedFee: string
+  onClose: () => void
+}) {
+  const date = careModalDateParts(appointment.date)
+  const requiresUpdate = appointmentNeedsClinicUpdate(appointment)
+  return <PatientCareModalShell
+    id="patient-appointment-detail"
+    eyebrow="Appointment details"
+    title={serviceName}
+    subtitle={appointment.appointmentNumber ?? appointment.id}
+    icon={CalendarCheck2}
+    tone="appointment"
+    onClose={onClose}
+    footer={<button type="button" className="care223-action is-secondary" onClick={onClose}><X size={15}/>Close details</button>}
+  >
+    <section className="care223-appointment-overview">
+      <div className="care223-date-tile" aria-hidden="true"><span>{date.month}</span><strong>{date.day}</strong><small>{date.weekday}</small></div>
+      <div className="care223-overview-copy">
+        <div className="care223-statuses"><PatientStatusBadge status={appointment.status}/><PatientStatusBadge status={appointment.paymentStatus ?? 'not_billed'} variant="compact"/></div>
+        <h3>{clinicDate(appointment.date)} at {timeLabel(appointment.startTime)}</h3>
+        <p>{dentistName} <i aria-hidden="true"/> {branchName}</p>
+      </div>
+      <div className="care223-fee"><span>Estimated fee</span><strong>{estimatedFee}</strong><small>{statusLabel(appointment.paymentStatus ?? 'not_billed')}</small></div>
+    </section>
+
+    {requiresUpdate&&<div className="care223-alert is-warning"><Clock3 size={17}/><div><strong>Clinic update pending</strong><span>This visit date has passed, but its clinical status has not been finalized. Please contact the clinic if you need an update.</span></div></div>}
+
+    <section className="care223-section">
+      <header><span>Visit information</span><h3>Your schedule</h3></header>
+      <dl className="care223-facts">
+        <div><dt><Clock3 size={15}/>Time</dt><dd>{timeLabel(appointment.startTime)}{appointment.endTime ? ` - ${timeLabel(appointment.endTime)}` : ''}</dd></div>
+        <div><dt><MapPin size={15}/>Branch</dt><dd>{branchName}</dd></div>
+        <div><dt><Stethoscope size={15}/>Dentist</dt><dd>{dentistName}</dd></div>
+        <div><dt><HeartPulse size={15}/>Service</dt><dd>{serviceName}</dd></div>
+      </dl>
+    </section>
+
+    {appointment.reasonForVisit&&<section className="care223-note"><span>Reason for visit</span><p>{appointment.reasonForVisit}</p></section>}
+    <div className="care223-trust"><ShieldCheck size={16}/><span>Appointment details are shown from your clinic record in your authenticated patient account.</span></div>
+  </PatientCareModalShell>
+}
+
+export function PatientRecallDetailsModal({
+  recall,
+  branchName,
+  linkedAppointment,
+  onClose,
+  onAction,
+  actionLabel,
+}: {
+  recall: RecallQueueItem
+  branchName: string
+  linkedAppointment?: string
+  onClose: () => void
+  onAction?: () => void
+  actionLabel?: string
+}) {
+  const due = careModalDateParts(recall.dueDate)
+  const dueBucket = getRecallDueBucket(recall)
+  const title = recall.reason || (recall.kind === 'follow_up' ? 'Follow-up recommended' : 'Recall reminder')
+  return <PatientCareModalShell
+    id="patient-recall-detail"
+    eyebrow="Recall / follow-up"
+    title={title}
+    subtitle={recall.dueDate ? `Recommended for ${clinicDate(recall.dueDate)}` : 'Recommended return visit'}
+    icon={HeartPulse}
+    tone="recall"
+    onClose={onClose}
+    footer={<><button type="button" className="care223-action is-secondary" onClick={onClose}><X size={15}/>Close</button>{onAction&&actionLabel&&<button type="button" className="care223-action is-primary" onClick={onAction}><CalendarDays size={16}/>{actionLabel}<ArrowRight size={15}/></button>}</>}
+  >
+    <section className={`care223-recall-overview is-${dueBucket}`}>
+      <div className="care223-date-tile" aria-hidden="true"><span>{due.month}</span><strong>{due.day}</strong><small>{due.weekday}</small></div>
+      <div className="care223-overview-copy">
+        <div className="care223-statuses"><PatientStatusBadge status={recall.status}/>{dueBucket==='overdue'&&<PatientStatusBadge status="overdue"/>}</div>
+        <span className="care223-overline">{recall.kind.replaceAll('_', ' ')}</span>
+        <h3>{recall.patientMessage || 'Your clinic recommends a future visit.'}</h3>
+        <p>{recall.reason || 'A return visit was recommended by your clinic.'}</p>
+      </div>
+    </section>
+
+    <section className="care223-section">
+      <header><span>Care coordination</span><h3>Follow-up information</h3></header>
+      <dl className="care223-facts">
+        <div><dt><CalendarDays size={15}/>Recommended date</dt><dd>{recall.dueDate ? clinicDate(recall.dueDate) : 'No date set'}</dd></div>
+        <div><dt><Stethoscope size={15}/>Dentist</dt><dd>{recall.providerName || 'Care team'}</dd></div>
+        <div><dt><MapPin size={15}/>Branch</dt><dd>{branchName}</dd></div>
+        <div><dt><CalendarCheck2 size={15}/>Appointment</dt><dd>{linkedAppointment || 'Not booked yet'}</dd></div>
+      </dl>
+    </section>
+
+    <section className="care223-note"><span>Related care</span><p>{recall.sourceId ? `${recall.sourceType.replaceAll('_', ' ')} ${recall.sourceId}` : recall.sourceType.replaceAll('_', ' ')}</p><small>Added {recall.createdAt ? clinicDate(recall.createdAt) : 'date not recorded'}</small></section>
+    <div className="care223-trust"><ShieldCheck size={16}/><span>This recommendation comes from the clinic record shared with your authenticated patient account.</span></div>
+  </PatientCareModalShell>
+}
+
+export function PatientPrescriptionDetailsModal({
+  prescription,
+  branchName,
+  dentistName,
+  linkedAppointment,
+  onClose,
+}: {
+  prescription: PatientPrescription
+  branchName: string
+  dentistName: string
+  linkedAppointment: string
+  onClose: () => void
+}) {
+  const items = prescriptionItems(prescription)
+  return <PatientCareModalShell
+    id="patient-prescription-detail"
+    eyebrow="Prescription"
+    title={prescriptionName(prescription)}
+    subtitle={`Issued ${clinicDate(prescription.prescriptionDate)} at ${branchName}`}
+    icon={Pill}
+    tone="prescription"
+    onClose={onClose}
+    footer={<button type="button" className="care223-action is-secondary" onClick={onClose}><X size={15}/>Close prescription</button>}
+  >
+    <section className="care223-prescription-overview">
+      <span className="care223-prescription-mark" aria-hidden="true"><Pill size={25}/></span>
+      <div className="care223-overview-copy">
+        <div className="care223-statuses"><PatientStatusBadge status={prescription.status}/></div>
+        <span className="care223-overline">How to take it</span>
+        <h3>{prescriptionInstructionLine(prescription)}</h3>
+        <p>Follow the directions provided by your prescribing dentist.</p>
+      </div>
+    </section>
+
+    <section className="care223-section">
+      <header><span>Prescription context</span><h3>Issued by your care team</h3></header>
+      <dl className="care223-facts">
+        <div><dt><Stethoscope size={15}/>Dentist</dt><dd>{dentistName}</dd></div>
+        <div><dt><MapPin size={15}/>Branch</dt><dd>{branchName}</dd></div>
+        <div><dt><CalendarDays size={15}/>Issued date</dt><dd>{clinicDate(prescription.prescriptionDate)}</dd></div>
+        <div><dt><CalendarCheck2 size={15}/>Appointment</dt><dd>{linkedAppointment}</dd></div>
+      </dl>
+    </section>
+
+    <section className="care223-section care223-medications">
+      <header><span>Medication plan</span><h3>{items.length} medication{items.length === 1 ? '' : 's'}</h3></header>
+      <div className="care223-medication-list">
+        {items.map((item, index)=><article className="care223-medication" key={item.id}>
+          <header><span className="care223-medication-index" aria-hidden="true">{String(index + 1).padStart(2, '0')}</span><div><span>Medication</span><h3>{item.medication || 'Medication'}</h3>{item.strength&&<p>{item.strength}</p>}</div></header>
+          <dl><div><dt>Dosage</dt><dd>{item.dosage || 'As directed'}</dd></div><div><dt>Frequency</dt><dd>{item.frequency || 'As directed'}</dd></div><div><dt>Duration</dt><dd>{item.duration || 'As directed'}</dd></div></dl>
+          {item.instructions&&<div className="care223-medication-instructions"><ClipboardList size={16}/><div><span>Special instructions</span><p>{item.instructions}</p></div></div>}
+        </article>)}
+      </div>
+    </section>
+
+    {prescription.notes&&<section className="care223-note"><span>Additional note</span><p>{prescription.notes}</p></section>}
+    <div className="care223-trust"><ShieldCheck size={16}/><span>This prescription is read-only. Contact the clinic if any direction is unclear.</span></div>
+  </PatientCareModalShell>
+}
+
 function PatientPrescriptionHero({ total, activeCount, latestDate }: { total: number; activeCount: number; latestDate?: string }) {
-  return <section className="pv3-rx-hero-redesign">
-    <span className="pv3-rx-hero-icon" aria-hidden="true"><Pill size={22}/></span>
-    <div>
-      <span><Pill size={14}/> Your medications</span>
-      <h2>Prescriptions</h2>
-      <p>Medication instructions and treatment guidance issued by your dental care team.</p>
-      <small>Always follow the dosage and duration provided by your dentist.</small>
-    </div>
-    <aside>
-      <div><strong>{activeCount}</strong><span>Active</span></div>
-      <div><strong>{latestDate ? clinicDate(latestDate).replace(/, \d{4}$/, '') : 'None'}</strong><span>Last issued</span></div>
-      <div><strong>{total}</strong><span>Total records</span></div>
-    </aside>
-  </section>
+  return <CareWorkspaceHero
+    icon={Pill}
+    eyebrow="Medication center"
+    title="Prescriptions"
+    copy="Clear medication directions from your dental care team, organized for quick reference."
+    className="care218-hero-rx"
+    facts={[
+      { label: 'Active medication', value: activeCount, note: activeCount === 1 ? 'Current prescription' : 'Current prescriptions', tone: activeCount ? 'success' : 'default' },
+      { label: 'Last issued', value: latestDate ? clinicDate(latestDate).replace(/, \d{4}$/, '') : 'None', note: 'Most recent order' },
+      { label: 'Medication record', value: total, note: 'All prescriptions' },
+    ]}
+  />
 }
 
 function PatientPrescriptionSummary({ activePrescriptions, onBookVisit }: { activePrescriptions: PatientPrescription[]; onBookVisit: () => void }) {
@@ -270,9 +631,8 @@ function PatientPrescriptionCard({ rx, branchName, onOpen }: { rx: PatientPrescr
   return <button type="button" className={`pv3-rx-record-redesign is-${rx.status}`} onClick={onOpen}>
     <span className="pv3-rx-record-icon" aria-hidden="true"><Pill size={18}/></span>
     <section className="pv3-rx-record-main">
-      <header><PatientStatusBadge status={rx.status} /><small>Issued {clinicDate(rx.prescriptionDate)}</small></header>
-      <h3>{prescriptionName(rx)}</h3>
-      {item?.strength && <p className="pv3-rx-strength">{item.strength}</p>}
+      <header><PatientStatusBadge status={rx.status} /><small><CalendarDays size={13}/>Issued {clinicDate(rx.prescriptionDate)}</small></header>
+      <div className="pv3-rx-name"><h3>{prescriptionName(rx)}</h3>{item?.strength && <p className="pv3-rx-strength">{item.strength}</p>}</div>
       <div className="pv3-rx-dose-grid">
         <div className="pv3-rx-instruction">
           <span>Take</span>
@@ -286,18 +646,17 @@ function PatientPrescriptionCard({ rx, branchName, onOpen }: { rx: PatientPrescr
       {(item?.instructions || rx.instructions) && <p className="pv3-rx-directions">{item?.instructions || rx.instructions}</p>}
       {hasMore && <small className="pv3-rx-more">{prescriptionItems(rx).length - 1} additional medication{prescriptionItems(rx).length - 1 === 1 ? '' : 's'} in this prescription</small>}
       <footer>
-        <span><Stethoscope size={14}/>{rx.providerNameSnapshot || 'Prescribing dentist'}</span>
-        <span>{branchName}</span>
+        <span><Stethoscope size={14}/>Prescribed by {rx.providerNameSnapshot || 'your dentist'}</span>
+        <span><MapPin size={14}/>{branchName}</span>
       </footer>
     </section>
-    <aside><b>View details</b><ChevronRight size={17}/></aside>
+    <aside><span>Review prescription</span><ChevronRight size={17}/></aside>
   </button>
 }
 
-function CareTrendChart({ appointments, treatments, payments }: {
+function CareTrendChart({ appointments, treatments }: {
   appointments: ReturnType<typeof getAppointmentsByPatient>
   treatments: ReturnType<typeof getTreatmentsByPatient>
-  payments: ReturnType<typeof getPaymentsByPatient>
 }) {
   const [range, setRange] = useState<6 | 12>(6)
   const [hovered, setHovered] = useState<number | null>(null)
@@ -312,44 +671,44 @@ function CareTrendChart({ appointments, treatments, payments }: {
         return d.getFullYear() === year && d.getMonth() === month && item.status !== 'cancelled'
       }).length
       const care = treatments.filter((item) => {
-        if (!item.treatmentDate) return false
+        if (!item.treatmentDate || item.status !== 'completed') return false
         const d = new Date(`${item.treatmentDate}T00:00:00`)
         return d.getFullYear() === year && d.getMonth() === month
       }).length
-      const paid = payments.filter((item) => {
-        const d = new Date(`${item.date}T00:00:00`)
-        return d.getFullYear() === year && d.getMonth() === month && item.status === 'completed'
-      }).length
-      return { label: date.toLocaleDateString('en-PH', { month: 'short' }), score: visits * 3 + care * 2 + paid, visits, care }
+      return { label: date.toLocaleDateString('en-PH', { month: 'short' }), score: visits + care, visits, care }
     })
-  }, [appointments, payments, range, treatments])
+  }, [appointments, range, treatments])
 
   const max = Math.max(...data.map((item) => item.score), 1)
   const points = data.map((item, index) => ({
-    x: 24 + (index * 312) / Math.max(data.length - 1, 1),
-    y: 92 - (item.score / max) * 58,
+    x: 30 + (index * 360) / Math.max(data.length - 1, 1),
+    y: 116 - (item.score / max) * 70,
   }))
   const path = points.map((point, index) => `${index === 0 ? 'M' : 'L'} ${point.x} ${point.y}`).join(' ')
+  const visitTotal = data.reduce((sum, item) => sum + item.visits, 0)
+  const careTotal = data.reduce((sum, item) => sum + item.care, 0)
 
-  return <section className="pv3-panel pv3-chart-panel">
-    <div className="pv3-panel-head">
-      <div><span>CARE ACTIVITY</span><h3>Your care trend</h3><p>A compact view of visits and completed care.</p></div>
-      <div className="pv3-segmented"><button className={range === 6 ? 'is-active' : ''} onClick={() => setRange(6)}>6M</button><button className={range === 12 ? 'is-active' : ''} onClick={() => setRange(12)}>12M</button></div>
-    </div>
-    <div className="pv3-chart-wrap">
-      <svg viewBox="0 0 360 120" role="img" aria-label="Care trend chart">
-        <defs><linearGradient id="pv3Area" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="#2563eb" stopOpacity=".18"/><stop offset="100%" stopColor="#2563eb" stopOpacity="0"/></linearGradient></defs>
-        {[34, 63, 92].map((y) => <line key={y} x1="24" x2="336" y1={y} y2={y} stroke="#edf1f7" strokeWidth="1" />)}
-        <path d={`${path} L ${points.at(-1)?.x ?? 336} 100 L ${points[0]?.x ?? 24} 100 Z`} fill="url(#pv3Area)" />
+  return <section className="pv3-dashboard-v216-chart">
+    <header>
+      <div><span><Activity size={15}/> Care activity</span><h3>Your care over time</h3><p>Visits and treatments recorded by your clinic.</p></div>
+      <div className="pv3-dashboard-v216-segmented" aria-label="Care activity range"><button type="button" aria-pressed={range === 6} className={range === 6 ? 'is-active' : ''} onClick={() => setRange(6)}>6 months</button><button type="button" aria-pressed={range === 12} className={range === 12 ? 'is-active' : ''} onClick={() => setRange(12)}>12 months</button></div>
+    </header>
+    <div className="pv3-dashboard-v216-chart-wrap">
+      <svg viewBox="0 0 420 150" role="img" aria-label={`${visitTotal} visits and ${careTotal} treatments recorded in the selected period`}>
+        <title>Monthly visits and treatments</title>
+        <defs><linearGradient id="pv3DashboardArea" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="#2563eb" stopOpacity=".2"/><stop offset="100%" stopColor="#2563eb" stopOpacity="0"/></linearGradient></defs>
+        {[46, 81, 116].map((y) => <line key={y} x1="30" x2="390" y1={y} y2={y} stroke="#e8eef7" strokeWidth="1" />)}
+        <path d={`${path} L ${points.at(-1)?.x ?? 390} 122 L ${points[0]?.x ?? 30} 122 Z`} fill="url(#pv3DashboardArea)" />
         <path d={path} fill="none" stroke="#2563eb" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
         {points.map((point, index) => <g key={`${data[index].label}-${index}`} onMouseEnter={() => setHovered(index)} onMouseLeave={() => setHovered(null)}>
-          <circle cx={point.x} cy={point.y} r={hovered === index ? 5 : 3.5} fill="#fff" stroke="#2563eb" strokeWidth="2.4" />
-          <circle cx={point.x} cy={point.y} r="11" fill="transparent" style={{ cursor: 'pointer' }} />
-          <text x={point.x} y="116" textAnchor="middle" fontSize="8" fill="#7f8b9d">{data[index].label}</text>
-          {hovered === index && <g><rect x={Math.max(3, Math.min(point.x - 39, 278))} y={Math.max(3, point.y - 31)} width="78" height="23" rx="6" fill="#172033"/><text x={Math.max(42, Math.min(point.x, 317))} y={Math.max(18, point.y - 16)} textAnchor="middle" fontSize="7.5" fill="#fff">{data[index].visits} visits · {data[index].care} care</text></g>}
+          <circle cx={point.x} cy={point.y} r={hovered === index ? 5.5 : 4} fill="#fff" stroke="#2563eb" strokeWidth="2.5" />
+          <circle cx={point.x} cy={point.y} r="13" fill="transparent" style={{ cursor: 'pointer' }} />
+          <text x={point.x} y="144" textAnchor="middle" fontSize="9" fill="#718096">{data[index].label}</text>
+          {hovered === index && <g><rect x={Math.max(4, Math.min(point.x - 43, 330))} y={Math.max(5, point.y - 34)} width="86" height="25" rx="6" fill="#172033"/><text x={Math.max(47, Math.min(point.x, 373))} y={Math.max(21, point.y - 18)} textAnchor="middle" fontSize="8" fill="#fff">{data[index].visits} visits - {data[index].care} care</text></g>}
         </g>)}
       </svg>
     </div>
+    <footer><span><i className="is-visits"/> {visitTotal} visits</span><span><i className="is-care"/> {careTotal} treatments</span><small>Updated from your clinic record</small></footer>
   </section>
 }
 
@@ -369,6 +728,7 @@ export function PatientPortalPage() {
   const [revision, setRevision] = useState(0)
   const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null)
   const [appointmentView, setAppointmentView] = useState<'upcoming' | 'past' | 'cancelled'>('upcoming')
+  const [appointmentPage, setAppointmentPage] = useState(1)
   const [selectedRecord, setSelectedRecord] = useState<DentalRecord | null>(null)
   const [selectedPrescription, setSelectedPrescription] = useState<PatientPrescription | null>(null)
   const [selectedRecall, setSelectedRecall] = useState<RecallQueueItem | null>(null)
@@ -475,6 +835,10 @@ export function PatientPortalPage() {
   const selectedService = services.find((item) => item.id === booking.serviceId)
   const selectedBranch = branches.find((item) => item.id === booking.branchId)
   const openInvoices = invoices.filter((invoice) => invoice.balanceCents > 0 && invoice.status !== 'void')
+  const billingInvoices = [...invoices].sort((a, b) => {
+    const balancePriority = Number(b.balanceCents > 0 && b.status !== 'void') - Number(a.balanceCents > 0 && a.status !== 'void')
+    return balancePriority || String(b.dueDate ?? b.invoiceDate).localeCompare(String(a.dueDate ?? a.invoiceDate))
+  })
   const selectedPayInvoice = invoices.find((invoice) => invoice.id === payInvoiceId) ?? null
   const availability = useMemo(() => {
     if (!booking.date || !booking.serviceId || !booking.branchId) return { status: 'missing_context' as const, slots: [], eligibleProviderCount: 0, scheduledProviderCount: 0 }
@@ -493,33 +857,39 @@ export function PatientPortalPage() {
   }, [booking.branchId, booking.date, booking.serviceId, bookingStep, tab])
 
   const nextAppointment = useMemo(() => [...appointments]
-    .filter((item) => !['cancelled', 'no_show', 'completed'].includes(item.status))
+    .filter((item) => item.date >= manilaToday() && !['cancelled', 'no_show', 'completed', 'rejected', 'rescheduled'].includes(item.status))
     .sort((a, b) => `${a.date}T${a.startTime}`.localeCompare(`${b.date}T${b.startTime}`))[0], [appointments])
   const appointmentGroups = useMemo(() => {
     const cancelledStatuses = ['cancelled', 'no_show', 'rejected']
     const upcoming = appointments
-      .filter((item) => !cancelledStatuses.includes(item.status) && item.status !== 'completed')
+      .filter((item) => !cancelledStatuses.includes(item.status) && item.status !== 'completed' && !appointmentNeedsClinicUpdate(item))
       .sort((a, b) => `${a.date}T${a.startTime}`.localeCompare(`${b.date}T${b.startTime}`))
     const past = appointments
-      .filter((item) => item.status === 'completed')
+      .filter((item) => item.status === 'completed' || appointmentNeedsClinicUpdate(item))
       .sort((a, b) => `${b.date}T${b.startTime}`.localeCompare(`${a.date}T${a.startTime}`))
     const cancelled = appointments
       .filter((item) => cancelledStatuses.includes(item.status))
       .sort((a, b) => `${b.date}T${b.startTime}`.localeCompare(`${a.date}T${a.startTime}`))
     return { upcoming, past, cancelled }
   }, [appointments])
-  const visibleAppointments = appointmentGroups[appointmentView]
+  const filteredAppointments = appointmentGroups[appointmentView]
+  const appointmentPageCount = Math.max(1, Math.ceil(filteredAppointments.length / APPOINTMENT_PAGE_SIZE))
+  const safeAppointmentPage = Math.min(Math.max(appointmentPage, 1), appointmentPageCount)
+  const appointmentStartIndex = filteredAppointments.length ? (safeAppointmentPage - 1) * APPOINTMENT_PAGE_SIZE : 0
+  const appointmentEndIndex = Math.min(appointmentStartIndex + APPOINTMENT_PAGE_SIZE, filteredAppointments.length)
+  const visibleAppointments = filteredAppointments.slice(appointmentStartIndex, appointmentEndIndex)
   const nextRecall = useMemo(() => recalls.find((item) => !['completed', 'dismissed', 'cancelled'].includes(item.status)), [recalls])
   const completedTreatments = treatments.filter((item) => item.status === 'completed').length
   const treatmentProgress = treatments.length ? Math.round((completedTreatments / treatments.length) * 100) : 0
   const fullName = patient ? `${patient.firstName} ${patient.middleName ? `${patient.middleName} ` : ''}${patient.lastName}`.trim() : ''
   const activePlan = plans.find((item) => ['planned', 'scheduled', 'in_progress'].includes(item.status)) ?? plans[0]
-  const planProgress = activePlan ? Math.round((activePlan.treatments.filter((id) => treatments.some((item) => item.id === id && item.status === 'completed')).length / Math.max(activePlan.treatments.length, 1)) * 100) : 0
-  const recentDocuments = [...documents].sort((a, b) => String(b.uploadDate).localeCompare(String(a.uploadDate))).slice(0, 2)
+  const completedPlanTreatments = activePlan ? activePlan.treatments.filter((id) => treatments.some((item) => item.id === id && item.status === 'completed')).length : 0
+  const planProgress = activePlan ? Math.round((completedPlanTreatments / Math.max(activePlan.treatments.length, 1)) * 100) : 0
+  const recentDocuments = [...documents].sort((a, b) => String(b.uploadDate).localeCompare(String(a.uploadDate))).slice(0, 6)
   const recentPrescriptions = [...prescriptions]
     .filter((item) => item.status !== 'voided')
     .sort((a, b) => String(b.prescriptionDate).localeCompare(String(a.prescriptionDate)))
-    .slice(0, 2)
+    .slice(0, 6)
   const sortedRecords = [...records].sort((a, b) => String(b.recordDate).localeCompare(String(a.recordDate)))
   const recordPageCount = Math.max(1, Math.ceil(sortedRecords.length / RECORD_PAGE_SIZE))
   const safeRecordPage = Math.min(Math.max(recordPage, 1), recordPageCount)
@@ -580,7 +950,6 @@ export function PatientPortalPage() {
   const recallAppointments = useMemo(() => new Map(appointments.map((item) => [item.id, item])), [appointments])
   const receiptMap = useMemo(() => new Map(receipts.map((item) => [item.paymentId, item])), [receipts])
   const paidAmount = payments.filter((item) => ['completed', 'partially_refunded', 'refunded'].includes(item.status)).reduce((sum, item) => sum + item.allocatedCents, 0)
-  const invoiceTotal = invoices.filter((item) => item.status !== 'void').reduce((sum, item) => sum + item.totalCents, 0)
   const recentPayments = payments.slice(0, 8)
   const paymentsWithReceipts = payments.filter((payment) => payment.status === 'completed' && receiptMap.has(payment.id))
   const visiblePaymentHistory = paymentHistoryView === 'receipts' ? paymentsWithReceipts : recentPayments
@@ -638,6 +1007,14 @@ export function PatientPortalPage() {
   useEffect(() => {
     setPrescriptionPage(1)
   }, [prescriptionFilter, prescriptionQuery, prescriptions.length])
+
+  useEffect(() => {
+    setAppointmentPage(1)
+  }, [appointmentView])
+
+  useEffect(() => {
+    if (appointmentPage > appointmentPageCount) setAppointmentPage(appointmentPageCount)
+  }, [appointmentPage, appointmentPageCount])
 
   useEffect(() => {
     if (treatmentPage > treatmentPageCount) setTreatmentPage(treatmentPageCount)
@@ -830,10 +1207,10 @@ export function PatientPortalPage() {
     openOfficialReceiptWindow(payload)
   }
 
-  function downloadPatientReceipt(payment: PatientPayment) {
+  async function downloadPatientReceipt(payment: PatientPayment) {
     const payload = getPatientReceiptPayload(payment)
     if (!payload || !canPrintOfficialReceipt(payload)) return
-    downloadOfficialReceiptHtml(payload)
+    await downloadOfficialReceiptPdf(payload)
   }
 
   async function downloadPatientDocument(document: PatientDocument) {
@@ -935,7 +1312,69 @@ export function PatientPortalPage() {
       </header>
 
       <div className="pv3-content">
-        {tab === 'dashboard' && <section className="pv3-dashboard-v2">
+        {tab === 'dashboard' && <section className="pv3-dashboard-v216">
+          <header className="pv3-dashboard-v216-hero">
+            <div className="pv3-dashboard-v216-identity">
+              <PatientAvatar patient={patient} size={64} loading="eager" />
+              <div><span><ShieldCheck size={14}/> Secure care overview</span><h2>{greeting()}, <strong>{patient.firstName}</strong></h2><p>Your next visit, care progress, clinic updates, and account status in one place.</p></div>
+            </div>
+            <div className="pv3-dashboard-v216-hero-context">
+              <div><small>Today</small><time>{new Date().toLocaleDateString('en-PH', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric', timeZone: 'Asia/Manila' })}</time></div>
+              <div className="pv3-dashboard-v216-hero-actions"><Button icon={<CalendarDays size={15}/>} onClick={() => openTab('booking')}>Book visit</Button>{nextAppointment && <Button variant="secondary" icon={<CalendarCheck2 size={15}/>} onClick={() => setSelectedAppointment(nextAppointment)}>View next visit</Button>}</div>
+            </div>
+          </header>
+
+          <section className="pv3-dashboard-v216-metrics" aria-label="Your care snapshot">
+            <button type="button" onClick={() => openTab('appointments')}><span className="is-blue"><CalendarCheck2 size={18}/></span><div><small>Next visit</small><strong>{nextAppointment ? clinicDate(nextAppointment.date) : 'Not scheduled'}</strong><p>{nextAppointment ? timeLabel(nextAppointment.startTime) : 'Book when you are ready'}</p></div><ChevronRight size={16}/></button>
+            <button type="button" onClick={() => openTab('treatment-plans')}><span className="is-green"><ClipboardList size={18}/></span><div><small>Care progress</small><strong>{activePlan ? `${planProgress}% complete` : 'No active plan'}</strong><p>{activePlan?.name || 'Plans from your dentist appear here'}</p></div><ChevronRight size={16}/></button>
+            <button type="button" onClick={() => openTab('recalls')}><span className="is-amber"><HeartPulse size={18}/></span><div><small>Follow-up</small><strong>{nextRecall?.dueDate ? clinicDate(nextRecall.dueDate) : 'Nothing due'}</strong><p>{nextRecall?.reason || 'No active reminder'}</p></div><ChevronRight size={16}/></button>
+            <button type="button" onClick={() => openTab('payments')}><span className={balance > 0 ? 'is-red' : 'is-green'}><CircleDollarSign size={18}/></span><div><small>Account balance</small><strong>{money(balance)}</strong><p>{openInvoices.length ? `${openInvoices.length} open invoice${openInvoices.length === 1 ? '' : 's'}` : 'Your account is settled'}</p></div><ChevronRight size={16}/></button>
+          </section>
+
+          <div className="pv3-dashboard-v216-priority">
+            <section className="pv3-dashboard-v216-visit">
+              <header><div><span><CalendarCheck2 size={15}/> Next appointment</span><h3>{nextAppointment ? serviceMap.get(nextAppointment.serviceId)?.name ?? 'Dental appointment' : 'Plan your next visit'}</h3></div>{nextAppointment && <PatientStatusBadge status={nextAppointment.status}/>}</header>
+              {nextAppointment ? <div className="pv3-dashboard-v216-visit-body">
+                <div className="pv3-dashboard-v216-date"><strong>{new Date(`${nextAppointment.date}T00:00:00`).getDate()}</strong><span>{new Date(`${nextAppointment.date}T00:00:00`).toLocaleDateString('en-PH', { month: 'short' }).toUpperCase()}</span><small>{new Date(`${nextAppointment.date}T00:00:00`).toLocaleDateString('en-PH', { weekday: 'short' })}</small></div>
+                <div className="pv3-dashboard-v216-visit-detail"><p>{nextAppointment.reasonForVisit || 'Your clinic is preparing for this visit.'}</p><dl>
+                  <div><dt>Schedule</dt><dd><Clock3 size={14}/>{timeLabel(nextAppointment.startTime)}</dd></div>
+                  <div><dt>Dentist</dt><dd><Stethoscope size={14}/>{appointmentDentistLabel(nextAppointment, providerMap)}</dd></div>
+                  <div><dt>Branch</dt><dd><MapPin size={14}/>{branchMap.get(nextAppointment.branchId ?? '')?.name ?? 'Clinic branch'}</dd></div>
+                </dl></div>
+              </div> : <div className="pv3-dashboard-v216-visit-empty"><CalendarDays size={24}/><div><strong>No upcoming appointment</strong><p>Choose a clinic, service, and convenient time whenever you are ready.</p></div></div>}
+              <footer>{nextAppointment ? <><Button icon={<CalendarCheck2 size={15}/>} onClick={() => setSelectedAppointment(nextAppointment)}>View details</Button><Button variant="secondary" icon={<CalendarDays size={15}/>} onClick={() => openTab('appointments')}>All appointments</Button></> : <Button icon={<CalendarDays size={15}/>} onClick={() => openTab('booking')}>Book a visit</Button>}</footer>
+            </section>
+
+            <aside className="pv3-dashboard-v216-actions">
+              <header><span><Activity size={15}/> Action center</span><h3>Your next steps</h3><p>Everything that may need your attention.</p></header>
+              {nextRecall && <button type="button" onClick={() => openTab('recalls')}><span className="is-amber"><HeartPulse size={17}/></span><div><strong>Review your follow-up</strong><small>{nextRecall.dueDate ? `Recommended ${clinicDate(nextRecall.dueDate)}` : 'Your care team left a reminder'}</small></div><ChevronRight size={16}/></button>}
+              {balance > 0 && <button type="button" onClick={() => openTab('payments')}><span className="is-red"><WalletCards size={17}/></span><div><strong>Review outstanding balance</strong><small>{money(balance)} across {openInvoices.length} invoice{openInvoices.length === 1 ? '' : 's'}</small></div><ChevronRight size={16}/></button>}
+              <button type="button" onClick={() => openTab('documents')}><span className="is-blue"><FileUser size={17}/></span><div><strong>Clinic-shared files</strong><small>{documents.length} document{documents.length === 1 ? '' : 's'} available securely</small></div><ChevronRight size={16}/></button>
+              {!nextRecall && balance <= 0 && <div className="pv3-dashboard-v216-clear"><CheckCircle2 size={18}/><div><strong>You are all caught up</strong><small>No follow-up or payment action is waiting.</small></div></div>}
+            </aside>
+          </div>
+
+          <div className="pv3-dashboard-v216-insights">
+            <CareTrendChart appointments={appointments} treatments={treatments}/>
+            <section className="pv3-dashboard-v216-plan">
+              <header><div><span><ClipboardList size={15}/> Care roadmap</span><h3>Current treatment plan</h3></div><button type="button" onClick={() => openTab('treatment-plans')} aria-label="Open treatment plans"><ArrowRight size={17}/></button></header>
+              {activePlan ? <article><div className="pv3-dashboard-v216-plan-title"><div><PatientStatusBadge status={activePlan.status}/><h4>{activePlan.name}</h4></div><strong>{planProgress}%</strong></div><p>{activePlan.description || 'Your dentist is coordinating the next stages of your care.'}</p><div className="pv3-dashboard-v216-progress" role="progressbar" aria-label="Treatment plan completion" aria-valuenow={planProgress} aria-valuemin={0} aria-valuemax={100}><i style={{ width: `${planProgress}%` }}/></div><dl><div><dt>Completed care</dt><dd>{completedPlanTreatments} of {activePlan.treatments.length}</dd></div><div><dt>Plan value</dt><dd>{Number(activePlan.quotedTotalCents ?? 0) > 0 ? money(Number(activePlan.quotedTotalCents)) : 'To be confirmed'}</dd></div></dl></article> : <div className="pv3-dashboard-v216-plan-empty"><ClipboardList size={22}/><strong>No active treatment plan</strong><p>A plan will appear here when your dentist shares one.</p></div>}
+            </section>
+          </div>
+
+          <div className="pv3-dashboard-v216-updates">
+            <section>
+              <header><div><span><FileUser size={15}/> Recent files</span><h3>Shared by your clinic</h3></div><button type="button" onClick={() => openTab('documents')}>View all <ChevronRight size={14}/></button></header>
+              <div>{recentDocuments.map((document) => <article key={document.id}><span className="pv3-dashboard-v216-update-icon"><FileText size={16}/></span><div><strong>{document.fileName}</strong><p>{document.category.replaceAll('_', ' ')} - {clinicDate(document.uploadDate)}</p></div><button type="button" aria-label={`Download ${document.fileName}`} title="Download" onClick={() => void downloadPatientDocument(document)}><Download size={15}/></button></article>)}{!recentDocuments.length && <div className="pv3-dashboard-v216-mini-empty">No shared documents yet.</div>}</div>
+            </section>
+            <section>
+              <header><div><span><Pill size={15}/> Medication</span><h3>Recent prescriptions</h3></div><button type="button" onClick={() => openTab('prescriptions')}>View all <ChevronRight size={14}/></button></header>
+              <div>{recentPrescriptions.map((rx) => <button type="button" className="pv3-dashboard-v216-rx" key={rx.id} onClick={() => setSelectedPrescription(rx)}><span className="pv3-dashboard-v216-update-icon"><Pill size={16}/></span><div><strong>{prescriptionName(rx)}</strong><p>Issued {clinicDate(rx.prescriptionDate)}</p></div><PatientStatusBadge status={rx.status}/></button>)}{!recentPrescriptions.length && <div className="pv3-dashboard-v216-mini-empty">No active prescriptions right now.</div>}</div>
+            </section>
+          </div>
+        </section>}
+
+        {tab === ('dashboard-v134' as TabKey) && <section className="pv3-dashboard-v2">
           <DashboardGreeting
             variant="patient"
             eyebrow="Patient dashboard"
@@ -1075,7 +1514,7 @@ export function PatientPortalPage() {
           </section>
 
           <div className="pv3-dashboard-grid">
-            <CareTrendChart appointments={appointments} treatments={treatments} payments={payments}/>
+            <CareTrendChart appointments={appointments} treatments={treatments}/>
             <section className="pv3-panel pv3-next-panel"><div className="pv3-panel-head"><div><span>NEXT APPOINTMENT</span><h3>Your upcoming visit</h3></div><button onClick={() => openTab('appointments')}>View all <ChevronRight size={14}/></button></div>{nextAppointment ? <div className="pv3-next-card"><div className="pv3-date-tile"><strong>{new Date(`${nextAppointment.date}T00:00:00`).getDate()}</strong><span>{new Date(`${nextAppointment.date}T00:00:00`).toLocaleDateString('en-PH',{month:'short'}).toUpperCase()}</span></div><div><PatientStatusBadge status={nextAppointment.status} /><h4>{serviceMap.get(nextAppointment.serviceId)?.name ?? 'Dental appointment'}</h4><p><Clock3 size={14}/>{timeLabel(nextAppointment.startTime)}</p><p><MapPin size={14}/>{branchMap.get(nextAppointment.branchId ?? '')?.name ?? 'Clinic branch'}</p></div></div> : <EmptyState icon={CalendarDays} title="No upcoming visit" copy="Choose a clinic time whenever you are ready." action={<Button size="sm" onClick={() => openTab('booking')}>Book a visit</Button>}/>}</section>
           </div>
 
@@ -1126,7 +1565,7 @@ export function PatientPortalPage() {
           </div>}
         </section>}
 
-        {tab === 'appointments' && <section className="pv3-page pv3-appointments-v3">
+        {tab === 'appointments' && <section className="pv3-page pv3-appointments-v3 pv3-care-page-v217 pv3-care-appointments-v217">
           <PageHead eyebrow="YOUR VISITS" title="Appointments" copy="Upcoming, past and cancelled requests, with patient-safe appointment details." action={<Button size="sm" onClick={()=>openTab('booking')}>Book a visit</Button>}/>
           <section className="pv3-appointments-v135-summary" aria-label="Appointment summary">
             <button type="button" className={appointmentView==='upcoming'?'is-active':''} onClick={()=>setAppointmentView('upcoming')}>
@@ -1135,7 +1574,7 @@ export function PatientPortalPage() {
             </button>
             <button type="button" className={appointmentView==='past'?'is-active':''} onClick={()=>setAppointmentView('past')}>
               <span><CheckCircle2 size={17}/></span>
-              <div><small>Completed</small><strong>{appointmentGroups.past.length}</strong><p>{appointmentGroups.past[0] ? `Last visit ${clinicDate(appointmentGroups.past[0].date)}` : 'No completed visits yet'}</p></div>
+              <div><small>Past visits</small><strong>{appointmentGroups.past.length}</strong><p>{appointmentGroups.past[0] ? `Latest ${clinicDate(appointmentGroups.past[0].date)}` : 'No past visits yet'}</p></div>
             </button>
             <button type="button" className={appointmentView==='cancelled'?'is-active is-muted':''} onClick={()=>setAppointmentView('cancelled')}>
               <span><X size={17}/></span>
@@ -1146,8 +1585,8 @@ export function PatientPortalPage() {
             <header>
               <div>
                 <span>VISIT TIMELINE</span>
-                <h3>{appointmentView === 'upcoming' ? 'Upcoming appointments' : appointmentView === 'past' ? 'Completed visits' : 'Cancelled and missed visits'}</h3>
-                <p>{visibleAppointments.length ? `${visibleAppointments.length} appointment${visibleAppointments.length === 1 ? '' : 's'} in this view.` : 'Nothing to show in this view right now.'}</p>
+                <h3>{appointmentView === 'upcoming' ? 'Upcoming appointments' : appointmentView === 'past' ? 'Past appointments' : 'Cancelled and missed visits'}</h3>
+                <p>{filteredAppointments.length ? `${filteredAppointments.length} appointment${filteredAppointments.length === 1 ? '' : 's'} in this view.` : 'Nothing to show in this view right now.'}</p>
               </div>
               <div className="pv3-appointment-tabs pv3-appointments-v135-tabs" role="tablist" aria-label="Appointment sections">
                 {([
@@ -1158,10 +1597,10 @@ export function PatientPortalPage() {
               </div>
             </header>
             <div className="pv3-appointment-list pv3-appointment-list-v3 pv3-appointments-v135-list">
-              {visibleAppointments.map((item)=><button type="button" key={item.id} className={`pv3-appointment-card pv3-appointment-card-v3 pv3-appointments-v135-card is-${item.status}`} onClick={()=>setSelectedAppointment(item)}>
+              {visibleAppointments.map((item)=><button type="button" key={item.id} className={`pv3-appointment-card pv3-appointment-card-v3 pv3-appointments-v135-card is-${item.status}${appointmentNeedsClinicUpdate(item) ? ' is-awaiting-clinic-update' : ''}`} onClick={()=>setSelectedAppointment(item)}>
                 <div className="pv3-appointments-v135-date"><strong>{new Date(`${item.date}T00:00:00`).getDate()}</strong><span>{new Date(`${item.date}T00:00:00`).toLocaleDateString('en-PH',{month:'short'}).toUpperCase()}</span><small>{new Date(`${item.date}T00:00:00`).toLocaleDateString('en-PH',{weekday:'short'})}</small></div>
                 <section>
-                  <div className="pv3-appointments-v135-card-top"><PatientStatusBadge status={item.status} /><small>{item.appointmentNumber ?? item.id}</small></div>
+                  <div className="pv3-appointments-v135-card-top"><PatientStatusBadge status={item.status} /><small>{item.appointmentNumber ?? item.id}</small>{appointmentNeedsClinicUpdate(item)&&<span className="pv3-appointment-update-pending"><Clock3 size={12}/>Clinic update pending</span>}</div>
                   <h3>{serviceMap.get(item.serviceId)?.name ?? 'Dental appointment'}</h3>
                   <dl>
                     <div><dt>Time</dt><dd><Clock3 size={14}/>{timeLabel(item.startTime)}</dd></div>
@@ -1174,8 +1613,9 @@ export function PatientPortalPage() {
                   <span>View details <ChevronRight size={16}/></span>
                 </aside>
               </button>)}
-              {!visibleAppointments.length&&<EmptyState icon={CalendarDays} title={appointmentView==='upcoming'?'No upcoming appointments':appointmentView==='past'?'No completed visits yet':'No cancelled appointments'} copy={appointmentView==='upcoming'?'When you book or receive confirmation for a future visit, it will appear here.':appointmentView==='past'?'Completed appointments will appear here after your clinic closes the visit.':'Cancelled, rejected or missed appointments will appear here for reference.'} action={appointmentView==='upcoming'?<Button onClick={()=>openTab('booking')}>Book appointment</Button>:undefined}/>}
+              {!visibleAppointments.length&&<EmptyState icon={CalendarDays} title={appointmentView==='upcoming'?'No upcoming appointments':appointmentView==='past'?'No past appointments yet':'No cancelled appointments'} copy={appointmentView==='upcoming'?'When you book or receive confirmation for a future visit, it will appear here.':appointmentView==='past'?'Completed visits and older appointments awaiting a clinic update will appear here.':'Cancelled, rejected or missed appointments will appear here for reference.'} action={appointmentView==='upcoming'?<Button onClick={()=>openTab('booking')}>Book appointment</Button>:undefined}/>}
             </div>
+            {filteredAppointments.length > APPOINTMENT_PAGE_SIZE && <div className="pv3-contained-pagination"><span>Showing {appointmentStartIndex + 1}-{appointmentEndIndex} of {filteredAppointments.length}</span><Pagination page={safeAppointmentPage} pageCount={appointmentPageCount} onPageChange={setAppointmentPage} label="Appointment timeline pagination" /></div>}
           </section>
         </section>}
 
@@ -1185,15 +1625,14 @@ export function PatientPortalPage() {
           <div className="pv3-appointment-list">{[...appointments].sort((a,b)=>`${b.date}T${b.startTime}`.localeCompare(`${a.date}T${a.startTime}`)).map((item)=><button key={item.id} className="pv3-appointment-card" onClick={()=>setSelectedAppointment(item)}><div className="pv3-date-tile"><strong>{new Date(`${item.date}T00:00:00`).getDate()}</strong><span>{new Date(`${item.date}T00:00:00`).toLocaleDateString('en-PH',{month:'short'}).toUpperCase()}</span></div><section><div><PatientStatusBadge status={item.status} /><small>{item.appointmentNumber ?? item.id}</small></div><h3>{serviceMap.get(item.serviceId)?.name ?? 'Dental appointment'}</h3><p><Clock3 size={14}/>{timeLabel(item.startTime)}<span>•</span><MapPin size={14}/>{branchMap.get(item.branchId ?? '')?.name ?? 'Clinic branch'}</p></section><aside><span>{appointmentDentistLabel(item, providerMap)}</span><PatientStatusBadge status={item.paymentStatus ?? 'not_billed'} variant="compact" /><ChevronRight size={17}/></aside></button>)}{!appointments.length&&<EmptyState icon={CalendarDays} title="No appointments yet" copy="When you book your first visit, it will appear here." action={<Button onClick={()=>openTab('booking')}>Book appointment</Button>}/>}</div>
         </section>}
 
-        {tab === 'dental-records' && <section className="pv3-page pv3-clinical-history-v4">
-          <PageHead eyebrow="CLINICAL HISTORY" title="Dental Records" copy="Your clinical visit summaries and documented care."/>
-          <section className="pv3-history-summary">
-            <article><FileText size={20}/><span><strong>{records.length}</strong><small>Shared records</small></span></article>
-            <article><CheckCircle2 size={20}/><span><strong>{records.filter((item)=>['finalized','amended'].includes(item.status)).length}</strong><small>Finalized summaries</small></span></article>
-            <article><CalendarCheck2 size={20}/><span><strong>{sortedRecords[0]?clinicDate(sortedRecords[0].recordDate):'None yet'}</strong><small>Most recent visit</small></span></article>
-          </section>
+        {tab === 'dental-records' && <section className="pv3-page pv3-clinical-history-v4 pv3-care-page-v217 pv3-care-records-v217 pv3-care-page-v218 care218-records">
+          <CareWorkspaceHero icon={FileText} eyebrow="Clinical archive" title="Dental Records" copy="A private timeline of the clinical summaries your care team has released to you." className="care218-hero-records" facts={[
+            { label: 'Shared records', value: records.length, note: 'Visible in your portal' },
+            { label: 'Finalized', value: records.filter((item)=>['finalized','amended'].includes(item.status)).length, note: 'Clinic-reviewed summaries', tone: 'success' },
+            { label: 'Latest visit', value: sortedRecords[0]?clinicDate(sortedRecords[0].recordDate):'None yet', note: 'Most recent entry' },
+          ]}/>
           <section className="pv3-history-panel">
-            <header><div><span>VISIT DOCUMENTATION</span><h3>Your clinical summaries</h3><p>These records describe what happened clinically during a visit. Future plans and procedure tracking are shown separately.</p></div></header>
+            <header><div><span>VISIT DOCUMENTATION</span><h3>Your clinical timeline</h3><p>Open an entry to review the diagnosis, findings, treatment and follow-up shared by your clinic.</p></div><div className="care218-privacy-note"><ShieldCheck size={16}/><span>Only finalized patient-visible records appear here.</span></div></header>
             <div className="pv3-history-timeline">
               {visibleRecords.map((record)=><button type="button" key={record.id} onClick={()=>setSelectedRecord(record)}><span className="pv3-history-dot"><FileText size={17}/></span><section><div><PatientStatusBadge status={record.status} /><small>{clinicDate(record.recordDate)}</small></div><h3>{record.chiefComplaint || 'Dental visit summary'}</h3><p>{record.visitType.replaceAll('_',' ')}{record.followUpDate?` - Follow-up ${clinicDate(record.followUpDate)}`:''}</p></section><ChevronRight size={18}/></button>)}
               {!records.length&&<EmptyState icon={FileText} title="No shared dental records" copy="Your dentist can publish patient-visible visit summaries here after care is finalized."/>}
@@ -1208,16 +1647,12 @@ export function PatientPortalPage() {
           <div className="pv3-record-list">{records.map((record)=><button key={record.id} onClick={()=>setSelectedRecord(record)}><span className="pv3-record-icon"><FileText size={19}/></span><section><div><PatientStatusBadge status={record.status} /><small>{clinicDate(record.recordDate)}</small></div><h3>{record.chiefComplaint || 'Dental visit summary'}</h3><p>{record.visitType.replaceAll('_',' ')}{record.followUpDate?` · Follow-up ${clinicDate(record.followUpDate)}`:''}</p></section><ChevronRight size={18}/></button>)}{!records.length&&<EmptyState icon={FileText} title="No shared dental records" copy="Your dentist can publish patient-visible visit summaries here after care is finalized."/>}</div>
         </section>}
 
-        {tab === 'recalls' && <section className="pv3-page pv3-recalls-v5">
-          <header className="pv3-recalls-hero-v5">
-            <div><span><HeartPulse size={14}/> Recommended return visits</span><h2>Recalls & Follow-Ups</h2><p>Future care recommendations shared by your clinic, with booking status and related appointment details.</p></div>
-            <Button size="sm" onClick={()=>openTab('booking')}><CalendarDays size={15}/>Book a visit</Button>
-          </header>
-          <div className="pv3-recall-summary-v5">
-            <article><span><HeartPulse size={18}/></span><div><strong>{recalls.filter((item)=>!['completed','dismissed','cancelled'].includes(item.status)).length}</strong><small>Active recommendations</small></div></article>
-            <article><span><CalendarDays size={18}/></span><div><strong>{nextRecall?.dueDate ? clinicDate(nextRecall.dueDate) : 'None'}</strong><small>Next recommended date</small></div></article>
-            <article><span><CheckCircle2 size={18}/></span><div><strong>{recalls.filter((item)=>item.status==='booked'||Boolean(item.linkedAppointmentId)).length}</strong><small>Already booked</small></div></article>
-          </div>
+        {tab === 'recalls' && <section className="pv3-page pv3-recalls-v5 pv3-care-page-v217 pv3-care-recalls-v217 pv3-care-page-v218 care218-recalls">
+          <CareWorkspaceHero icon={HeartPulse} eyebrow="Return-care agenda" title="Recalls & Follow-Ups" copy="Keep recommended checkups and post-treatment reviews moving without losing the clinical context." className="care218-hero-recalls" action={<Button size="sm" onClick={()=>openTab('booking')}><CalendarDays size={15}/>Book a visit</Button>} facts={[
+            { label: 'Active recommendations', value: recalls.filter((item)=>!['completed','dismissed','cancelled'].includes(item.status)).length, note: 'Need your attention', tone: 'warning' },
+            { label: 'Next recommended', value: nextRecall?.dueDate ? clinicDate(nextRecall.dueDate) : 'None', note: 'Suggested return date' },
+            { label: 'Already booked', value: recalls.filter((item)=>item.status==='booked'||Boolean(item.linkedAppointmentId)).length, note: 'Connected appointments', tone: 'success' },
+          ]}/>
           <div className="pv3-care-toolbar">
             {([
               ['upcoming','Upcoming'],
@@ -1272,12 +1707,13 @@ export function PatientPortalPage() {
           {filteredRecalls.length > RECALL_PAGE_SIZE && <div className="pv3-contained-pagination"><span>Showing {recallStartIndex + 1}-{recallEndIndex} of {filteredRecalls.length}</span><Pagination page={safeRecallPage} pageCount={recallPageCount} onPageChange={setRecallPage} label="Recall recommendations pagination" /></div>}
         </section>}
 
-        {tab === 'treatment-plans' && <section className="pv3-page pv3-treatments-v4">
-          <PageHead eyebrow="RECOMMENDED CARE" title="Treatment Plans" copy="Recommended care and planned procedures."/>
-          <section className="pv3-treatment-overview-v4">
-            <div><span>PLAN PROGRESS</span><strong>{planProgress}%</strong><p>{activePlan ? `${activePlan.treatments.length} proposed care item${activePlan.treatments.length===1?'':'s'}` : 'No active plan yet'}</p><div className="pv3-progress"><i style={{width:`${planProgress}%`}}/></div></div>
-            <aside><small>CURRENT PLAN</small><h3>{activePlan?.name ?? 'No active plan'}</h3><p>{activePlan?.description || 'Your dentist will share proposed care when appropriate.'}</p>{activePlan&&<PatientStatusBadge status={activePlan.status} />}</aside>
-          </section>
+        {tab === 'treatment-plans' && <section className="pv3-page pv3-treatments-v4 pv3-care-page-v217 pv3-care-plans-v217 pv3-care-page-v218 care218-plans">
+          <CareWorkspaceHero icon={ClipboardList} eyebrow="Care roadmap" title="Treatment Plans" copy="Understand what your dentist recommends, what has been decided, and what comes next." className="care218-hero-plans" facts={[
+            { label: 'Current progress', value: `${planProgress}%`, note: activePlan ? `${completedPlanTreatments} completed care item${completedPlanTreatments===1?'':'s'}` : 'No active plan' },
+            { label: 'Current plan', value: activePlan?.name ?? 'Not started', note: activePlan?.description || 'No plan shared yet' },
+            { label: 'Proposed items', value: activePlan?.treatments.length ?? 0, note: activePlan ? statusLabel(activePlan.status) : 'Awaiting recommendation', tone: activePlan ? 'warning' : 'default' },
+          ]}/>
+          <div className="care218-progress-track" aria-label={`Treatment plan ${planProgress}% complete`}><span style={{width:`${planProgress}%`}}/></div>
           <section className="pv3-treatment-panel-v4">
             <header><div><span>TREATMENT PLAN REGISTRY</span><h3>Recommended care roadmap</h3><p>Plans are proposals and estimates. Accepted recommendations do not become completed treatment automatically.</p></div></header>
             <div className="pv3-treatment-cards-v4">
@@ -1288,12 +1724,13 @@ export function PatientPortalPage() {
           </section>
         </section>}
 
-        {tab === 'treatments' && <section className="pv3-page pv3-treatments-v4">
-          <PageHead eyebrow="CARE ITEMS" title="Treatments" copy="Procedures completed or currently in progress."/>
-          <section className="pv3-treatment-overview-v4">
-            <div><span>PROCEDURE PROGRESS</span><strong>{treatmentProgress}%</strong><p>{completedTreatments} of {treatments.length} care item{treatments.length===1?'':'s'} completed</p><div className="pv3-progress"><i style={{width:`${treatmentProgress}%`}}/></div></div>
-            <aside><small>MODULE PURPOSE</small><h3>Procedures and care items</h3><p>Treatments show care being performed or already completed, separate from proposed treatment plans.</p></aside>
-          </section>
+        {tab === 'treatments' && <section className="pv3-page pv3-treatments-v4 pv3-care-page-v217 pv3-care-treatments-v217 pv3-care-page-v218 care218-treatments">
+          <CareWorkspaceHero icon={HeartPulse} eyebrow="Procedure history" title="Treatments" copy="Track the procedures your clinic has scheduled, started, or completed as part of your care." className="care218-hero-treatments" facts={[
+            { label: 'Care progress', value: `${treatmentProgress}%`, note: `${completedTreatments} of ${treatments.length} completed`, tone: completedTreatments ? 'success' : 'default' },
+            { label: 'In progress', value: treatments.filter((item)=>item.status==='in_progress').length, note: 'Active procedures', tone: 'warning' },
+            { label: 'Remaining', value: Math.max(treatments.length-completedTreatments,0), note: 'Planned or active items' },
+          ]}/>
+          <div className="care218-progress-track" aria-label={`Treatment progress ${treatmentProgress}%`}><span style={{width:`${treatmentProgress}%`}}/></div>
           <section className="pv3-treatment-panel-v4">
             <header><div><span>TREATMENT HISTORY</span><h3>Procedure records</h3><p>Costs shown here reflect patient-facing treatment records when available; payment remains in Billing.</p></div></header>
             <div className="pv3-treatment-cards-v4">
@@ -1310,7 +1747,7 @@ export function PatientPortalPage() {
           <div className="pv3-treatment-layout"><section className="pv3-panel"><div className="pv3-panel-head"><div><span>TREATMENT TIMELINE</span><h3>Your care items</h3></div></div><div className="pv3-treatment-list">{treatments.map((item,index)=><article key={item.id}><div className={`pv3-treatment-marker ${item.status==='completed'?'is-done':''}`}>{item.status==='completed'?<Check size={14}/>:index+1}</div><section><div><PatientStatusBadge status={item.status} />{item.toothNumber&&<small>Tooth {item.toothNumber}</small>}</div><h4>{item.serviceNameSnapshot || item.description || 'Dental treatment'}</h4><p>{item.description || 'Care item added by your dentist.'}</p><footer><span><CalendarDays size={13}/>{item.treatmentDate?clinicDate(item.treatmentDate):'To be scheduled'}</span>{Number(item.priceSnapshotCents??0)>0&&<strong>{money(Number(item.priceSnapshotCents))}</strong>}</footer></section></article>)}{!treatments.length&&<EmptyState icon={HeartPulse} title="No treatments yet" copy="Treatment items created by your dentist will appear here."/>}</div></section><aside className="pv3-panel pv3-plan-detail"><span>PLAN DETAILS</span><h3>{plans[0]?.name ?? 'Treatment plan'}</h3><p>{plans[0]?.description || 'No detailed treatment plan has been shared yet.'}</p><dl><div><dt>Status</dt><dd>{statusLabel(plans[0]?.status)}</dd></div><div><dt>Items</dt><dd>{treatments.length}</dd></div><div><dt>Completed</dt><dd>{completedTreatments}</dd></div><div><dt>Remaining</dt><dd>{Math.max(treatments.length-completedTreatments,0)}</dd></div></dl></aside></div>
         </section>}
 
-        {tab === 'prescriptions' && <section className="pv3-page pv3-prescriptions-v4">
+        {tab === 'prescriptions' && <section className="pv3-page pv3-prescriptions-v4 pv3-care-page-v217 pv3-care-prescriptions-v217 pv3-care-page-v218 care218-prescriptions">
           <PatientPrescriptionHero total={prescriptions.length} activeCount={activePrescriptions.length} latestDate={latestPrescriptionDate} />
           <PatientPrescriptionSummary activePrescriptions={activePrescriptions} onBookVisit={() => openTab('booking')} />
           {prescriptions.length > 2 && <section className="pv3-rx-toolbar-redesign" aria-label="Prescription filters">
@@ -1332,38 +1769,102 @@ export function PatientPortalPage() {
           <div className="pv3-rx-grid">{prescriptions.map((rx)=><article key={rx.id}><header><span><Pill size={19}/></span><PatientStatusBadge status={rx.status} /></header><small>Issued {clinicDate(rx.prescriptionDate)}</small><h3>{rx.medication || rx.items?.map((item)=>item.medication).filter(Boolean).join(', ') || 'Prescription'}</h3><div>{rx.items?.map((item)=><section key={item.id}><strong>{item.medication}</strong>{item.strength&&<span>{item.strength}</span>}<dl><div><dt>Dosage</dt><dd>{item.dosage||'As directed'}</dd></div><div><dt>Frequency</dt><dd>{item.frequency||'As directed'}</dd></div><div><dt>Duration</dt><dd>{item.duration||'As directed'}</dd></div></dl>{item.instructions&&<p>{item.instructions}</p>}</section>)}</div>{rx.providerNameSnapshot&&<footer><Stethoscope size={14}/><span>Prescribed by {rx.providerNameSnapshot}</span></footer>}</article>)}{!prescriptions.length&&<EmptyState icon={Pill} title="No prescriptions" copy="Medication orders created by your dentist during a clinical visit will appear here."/>}</div>
         </section>}
 
-        {tab === 'payments' && <section className="pv3-page pv3-payments-v6">
-          <PageHead eyebrow="FINANCIAL CENTER" title="Payments & Receipts" copy="Review your invoices, payments, remaining balances and official clinic receipts."/>
-          <section className="pv3-payments-summary-v6">
-            <article className={balance > 0 ? 'is-due' : 'is-clear'}><span><CircleDollarSign size={20}/></span><div><small>Outstanding balance</small><strong>{money(balance)}</strong><p>{openInvoices.length?`${openInvoices.length} open invoice${openInvoices.length===1?'':'s'}`:'Your account is settled'}</p></div></article>
-            <article><span><CheckCircle2 size={20}/></span><div><small>Paid amount</small><strong>{money(paidAmount)}</strong><p>Completed posted payments</p></div></article>
-            <article className={receipts.length ? 'is-receipt-action' : ''}><span><ReceiptText size={20}/></span><div><small>Official receipts</small><strong>{receipts.length}</strong><p>{receipts.length ? 'Open completed payments with receipts' : 'Generated from completed payments'}</p>{receipts.length>0&&<button type="button" onClick={()=>setPaymentHistoryView('receipts')}>View receipts</button>}</div></article>
-            <article><span><FileText size={20}/></span><div><small>Total invoiced</small><strong>{money(invoiceTotal)}</strong><p>{invoices.length} invoice{invoices.length===1?'':'s'} on file</p></div></article>
-          </section>
-          <div className="pv3-payments-layout-v6">
-            <section className="pv3-payments-panel-v6">
-              <div className="pv3-payments-panel-head-v6"><div><span>INVOICES</span><h3>Balances to review</h3></div><Badge tone={balance > 0 ? 'danger' : 'success'}>{balance > 0 ? 'Payment due' : 'Settled'}</Badge></div>
-              <div className="pv3-invoice-list-v6">
-                {invoices.map((invoice)=><article key={invoice.id} className={invoice.balanceCents > 0 ? 'is-open' : ''}><header><div><span><ReceiptText size={18}/></span><section><strong>{invoice.invoiceNumber}</strong><p>Issued {clinicDate(invoice.invoiceDate)}{invoice.dueDate?` · Due ${clinicDate(invoice.dueDate)}`:''}</p></section></div><PatientStatusBadge status={invoice.status} /></header><div className="pv3-invoice-services-v6">{invoice.items.slice(0,3).map((item)=><span key={item.id}>{item.description}</span>)}{invoice.items.length>3&&<span>{invoice.items.length-3} more item{invoice.items.length-3===1?'':'s'}</span>}{!invoice.items.length&&<span>Dental services</span>}</div><div className="pv3-invoice-money"><div><span>Total</span><strong>{money(invoice.totalCents)}</strong></div><div><span>Paid</span><strong>{money(invoice.amountPaidCents)}</strong></div><div className="is-due"><span>Remaining</span><strong>{money(invoice.balanceCents)}</strong></div></div>{invoice.balanceCents>0&&invoice.status!=='void'&&<footer><button type="button" onClick={()=>choosePayment(invoice.id,'cash')}><Banknote size={15}/>Pay in clinic</button><button type="button" className="is-online" onClick={()=>choosePayment(invoice.id,'online')}><QrCode size={15}/>Pay with QR Ph</button></footer>}</article>)}
-                {!invoices.length&&<EmptyState icon={CheckCircle2} title="No invoices yet" copy="Clinic invoices and balances will appear here after care is billed."/>}
+        {tab === 'payments' && <section className="pv3-page pv3-payments-v6 pv3-care-page-v217 pv3-care-payments-v217 pv3-care-page-v218 care218-payments pay221-page">
+          <CareWorkspaceHero icon={WalletCards} eyebrow="Financial ledger" title="Payments & Receipts" copy="A clear account of clinic charges, posted payments, outstanding balances, and official receipts." className="care218-hero-payments" facts={[
+            { label: 'Outstanding', value: money(balance), note: openInvoices.length?`${openInvoices.length} open invoice${openInvoices.length===1?'':'s'}`:'Account settled', tone: balance>0?'danger':'success' },
+            { label: 'Paid amount', value: money(paidAmount), note: 'Completed payments', tone: 'success' },
+            { label: 'Official receipts', value: receipts.length, note: `${invoices.length} invoice${invoices.length===1?'':'s'} on file` },
+          ]}/>
+          <div className="pay221-workspace">
+            <section className="pay221-ledger" aria-labelledby="pay221-ledger-title">
+              <header className="pay221-section-head">
+                <div>
+                  <span>OUTSTANDING INVOICES</span>
+                  <h3 id="pay221-ledger-title">Your billing ledger</h3>
+                  <p>Review each clinic charge and choose how you would like to settle an open balance.</p>
+                </div>
+                <div className={balance > 0 ? 'pay221-balance is-due' : 'pay221-balance is-clear'}>
+                  <small>Balance due</small>
+                  <strong>{money(balance)}</strong>
+                  <span>{openInvoices.length ? `${openInvoices.length} awaiting payment` : 'All invoices settled'}</span>
+                </div>
+              </header>
+
+              <div className="pay221-invoice-list">
+                {billingInvoices.map((invoice) => {
+                  const paidPercent = invoice.totalCents > 0 ? Math.min(100, Math.max(0, Math.round((invoice.amountPaidCents / invoice.totalCents) * 100))) : 0
+                  const isPayable = invoice.balanceCents > 0 && invoice.status !== 'void'
+                  return <article key={invoice.id} className={`pay221-invoice ${isPayable ? 'is-open' : 'is-settled'}`}>
+                    <div className="pay221-invoice-topline">
+                      <div className="pay221-invoice-identity">
+                        <span aria-hidden="true"><ReceiptText size={18}/></span>
+                        <div>
+                          <small>INVOICE</small>
+                          <strong>{invoice.invoiceNumber}</strong>
+                          <p>Issued {clinicDate(invoice.invoiceDate)}{invoice.dueDate ? ` · Due ${clinicDate(invoice.dueDate)}` : ''}</p>
+                        </div>
+                      </div>
+                      <div className="pay221-invoice-due">
+                        <PatientStatusBadge status={invoice.status} />
+                        <small>{isPayable ? 'AMOUNT DUE' : 'BALANCE'}</small>
+                        <strong>{money(invoice.balanceCents)}</strong>
+                      </div>
+                    </div>
+
+                    <div className="pay221-invoice-body">
+                      <section className="pay221-services">
+                        <small>SERVICES</small>
+                        <div>{invoice.items.slice(0, 3).map((item) => <span key={item.id}>{item.description}</span>)}{invoice.items.length > 3 && <span>+{invoice.items.length - 3} more</span>}{!invoice.items.length && <span>Dental services</span>}</div>
+                      </section>
+                      <section className="pay221-progress" aria-label={`${paidPercent}% of invoice paid`}>
+                        <div><span>Payment progress</span><strong>{paidPercent}%</strong></div>
+                        <i><span style={{ width: `${paidPercent}%` }}/></i>
+                        <footer><span>{money(invoice.amountPaidCents)} paid</span><span>{money(invoice.totalCents)} total</span></footer>
+                      </section>
+                    </div>
+
+                    <footer className="pay221-invoice-actions">
+                      {isPayable ? <>
+                        <button type="button" className="pay221-secondary-action" onClick={() => choosePayment(invoice.id, 'cash')}><Banknote size={16}/><span>Pay in clinic</span></button>
+                        <button type="button" className="pay221-primary-action" onClick={() => choosePayment(invoice.id, 'online')}><QrCode size={16}/><span>Pay securely with QR Ph</span><ArrowRight size={15}/></button>
+                      </> : <span className="pay221-settled-note"><CheckCircle2 size={16}/>No outstanding balance</span>}
+                    </footer>
+                  </article>
+                })}
+                {!invoices.length && <EmptyState icon={CheckCircle2} title="No invoices yet" copy="Clinic invoices and balances will appear here after care is billed."/>}
               </div>
             </section>
-            <aside className="pv3-payments-panel-v6">
-              <div className="pv3-payments-panel-head-v6"><div><span>PAYMENT HISTORY</span><h3>{paymentHistoryView==='receipts'?'Receipts available':'Recent payments'}</h3></div><span>{visiblePaymentHistory.length}</span></div>
-              {receipts.length>0&&<div className="pv3-payment-filter-v7"><button type="button" className={paymentHistoryView==='all'?'is-active':''} onClick={()=>setPaymentHistoryView('all')}>All</button><button type="button" className={paymentHistoryView==='receipts'?'is-active':''} onClick={()=>setPaymentHistoryView('receipts')}>Receipts</button></div>}
-              <div className="pv3-payment-history-v6">{visiblePaymentHistory.map((payment)=>{const receipt=receiptMap.get(payment.id);const hasReceipt=payment.status==='completed'&&Boolean(receipt);return <article key={payment.id} className={hasReceipt?'has-receipt':''} tabIndex={0} role="button" aria-label={hasReceipt?`View official receipt ${receipt?.receiptNumber}`:`View payment ${payment.paymentNumber || payment.id}`} onClick={()=>setSelectedPayment(payment)} onKeyDown={(event)=>{if(event.key==='Enter'||event.key===' '){event.preventDefault();setSelectedPayment(payment)}}}><span className="pv3-pay-icon">{hasReceipt?<ReceiptText size={15}/>:<CreditCard size={15}/>}</span><section><strong>{payment.paymentNumber || money(payment.amountCents)}</strong><p>{clinicDate(payment.date)} · {getPaymentMethodLabel(payment.paymentMethod)}</p><small>{hasReceipt ? `Receipt ${receipt?.receiptNumber}` : payment.status === 'completed' ? 'Receipt posting pending' : 'Receipt unavailable until completed'}</small></section><div><PatientStatusBadge status={payment.status} /><strong>{money(payment.amountCents)}</strong>{hasReceipt&&<button type="button" onClick={(event)=>{event.stopPropagation();setSelectedPayment(payment)}}>View receipt</button>}</div></article>})}{!payments.length&&<EmptyState icon={CreditCard} title="No payments yet" copy="Completed clinic payments and receipt links will appear here."/>}{payments.length>0&&!visiblePaymentHistory.length&&<EmptyState icon={ReceiptText} title="No receipts in this view" copy="Completed payments with official receipts will appear here."/>}</div>
-              {receipts.length>0&&<button type="button" className="pv3-receipts-v6" onClick={()=>setPaymentHistoryView('receipts')}><ReceiptText size={16}/><span>{receipts.length} official receipt{receipts.length===1?'':'s'} available</span><strong>View receipts</strong></button>}
+
+            <aside className="pay221-activity" aria-labelledby="pay221-activity-title">
+              <header className="pay221-activity-head">
+                <div>
+                  <span>PAYMENT HISTORY</span>
+                  <h3 id="pay221-activity-title">{paymentHistoryView === 'receipts' ? 'Official receipts' : 'Recent activity'}</h3>
+                  <p>Your posted clinic and online payments.</p>
+                </div>
+                <strong>{visiblePaymentHistory.length}</strong>
+              </header>
+              {receipts.length > 0 && <div className="pay221-history-filter" role="group" aria-label="Payment history view"><button type="button" className={paymentHistoryView === 'all' ? 'is-active' : ''} onClick={() => setPaymentHistoryView('all')}>All activity</button><button type="button" className={paymentHistoryView === 'receipts' ? 'is-active' : ''} onClick={() => setPaymentHistoryView('receipts')}>Receipts</button></div>}
+              <div className="pay221-history-list">{visiblePaymentHistory.map((payment) => {
+                const receipt = receiptMap.get(payment.id)
+                const hasReceipt = payment.status === 'completed' && Boolean(receipt)
+                return <article key={payment.id} className={hasReceipt ? 'has-receipt' : ''} tabIndex={0} role="button" aria-label={hasReceipt ? `View official receipt ${receipt?.receiptNumber}` : `View payment ${payment.paymentNumber || payment.id}`} onClick={() => setSelectedPayment(payment)} onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); setSelectedPayment(payment) } }}>
+                  <span className="pay221-history-icon" aria-hidden="true">{hasReceipt ? <ReceiptText size={16}/> : <CreditCard size={16}/>}</span>
+                  <section><strong>{payment.paymentNumber || 'Payment'}</strong><p>{clinicDate(payment.date)} · {patientPaymentMethodLabel(payment)}</p><small>{hasReceipt ? `Receipt ${receipt?.receiptNumber}` : payment.status === 'completed' ? 'Receipt posting pending' : 'Receipt available after completion'}</small></section>
+                  <div><strong>{money(payment.amountCents)}</strong><PatientStatusBadge status={payment.status} />{hasReceipt && <span>Open receipt <ArrowRight size={13}/></span>}</div>
+                </article>
+              })}{!payments.length && <EmptyState icon={CreditCard} title="No payments yet" copy="Completed clinic payments and receipt links will appear here."/>}{payments.length > 0 && !visiblePaymentHistory.length && <EmptyState icon={ReceiptText} title="No receipts in this view" copy="Completed payments with official receipts will appear here."/>}</div>
+              {receipts.length > 0 && paymentHistoryView !== 'receipts' && <button type="button" className="pay221-receipt-shortcut" onClick={() => setPaymentHistoryView('receipts')}><ReceiptText size={16}/><span><strong>{receipts.length} official receipt{receipts.length === 1 ? '' : 's'}</strong><small>Ready to view or download</small></span><ArrowRight size={16}/></button>}
             </aside>
           </div>
         </section>}
 
-        {tab === 'documents' && <section className="pv3-page pv3-documents-v7 pv3-documents-premium">
-          <header className="pv3-documents-hero pv3-documents-hero-redesign">
-            <span className="pv3-documents-hero-icon" aria-hidden="true"><FileUser size={20}/></span>
-            <div><span>Secure file center</span><h2>Documents</h2><p>Access files securely shared by your clinic, including care documents, consent copies, referrals, and clinical attachments.</p></div>
-            <strong>{documents.length} file{documents.length===1?'':'s'}</strong>
-          </header>
-          <section className="pv3-document-summary-v7 pv3-document-summary-redesign"><article><FileUser size={20}/><div><strong>{documents.length}</strong><span>Total shared</span></div></article><article><CalendarDays size={20}/><div><strong>{recentDocumentCount}</strong><span>Recent uploads</span></div></article><article><FileText size={20}/><div><strong>{documentCategories.length}</strong><span>Categories</span></div></article><article><MapPin size={20}/><div><strong>{representedDocumentBranches.size || 'Clinic'}</strong><span>Care locations</span></div></article></section>
+        {tab === 'documents' && <section className="pv3-page pv3-documents-v7 pv3-documents-premium pv3-care-page-v217 pv3-care-documents-v217 pv3-care-page-v218 care218-documents">
+          <CareWorkspaceHero icon={FileUser} eyebrow="Secure file library" title="Documents" copy="Find, review, and download the records your clinic has intentionally shared with you." className="care218-hero-documents" facts={[
+            { label: 'Files available', value: documents.length, note: `${recentDocumentCount} recent upload${recentDocumentCount===1?'':'s'}` },
+            { label: 'Categories', value: documentCategories.length, note: 'Organized by record type' },
+            { label: 'Care locations', value: representedDocumentBranches.size || 'Clinic', note: 'Source branches' },
+          ]}/>
           {documentError&&<div className="pv3-alert is-error">{documentError}</div>}
           <div className="pv3-file-toolbar pv3-file-toolbar-redesign">
             <label><Search size={15}/><input value={documentQuery} onChange={(event)=>setDocumentQuery(event.target.value)} placeholder="Search documents by name, type, date, or description" /></label>
@@ -1406,26 +1907,93 @@ export function PatientPortalPage() {
       </div>
     </main>
 
-    {selectedAppointment && <div className="pv3-modal-backdrop" onMouseDown={(event)=>event.target===event.currentTarget&&setSelectedAppointment(null)}><section className="pv3-detail-modal"><header><div><span>APPOINTMENT DETAILS</span><h2>{serviceMap.get(selectedAppointment.serviceId)?.name ?? 'Dental appointment'}</h2><p>{selectedAppointment.appointmentNumber ?? selectedAppointment.id}</p></div><button type="button" aria-label="Close appointment details" onClick={()=>setSelectedAppointment(null)}><X size={19}/></button></header><div className="pv3-detail-status"><PatientStatusBadge status={selectedAppointment.status} /><PatientStatusBadge status={selectedAppointment.paymentStatus ?? 'not_billed'} variant="compact" /></div><div className="pv3-detail-grid"><div><span>Date</span><strong>{clinicDate(selectedAppointment.date)}</strong></div><div><span>Time</span><strong>{timeLabel(selectedAppointment.startTime)}</strong></div><div><span>Branch</span><strong>{branchMap.get(selectedAppointment.branchId ?? '')?.name ?? 'Clinic branch'}</strong></div><div><span>Dentist</span><strong>{appointmentDentistLabel(selectedAppointment, providerMap)}</strong></div><div><span>Service</span><strong>{serviceMap.get(selectedAppointment.serviceId)?.name ?? 'Dental service'}</strong></div><div><span>Estimated fee</span><strong>{serviceMap.get(selectedAppointment.serviceId)?serviceMoney(serviceMap.get(selectedAppointment.serviceId)!.price):'—'}</strong></div></div>{selectedAppointment.reasonForVisit&&<section className="pv3-detail-note"><span>Reason for visit</span><p>{selectedAppointment.reasonForVisit}</p></section>}<footer><Button variant="secondary" onClick={()=>setSelectedAppointment(null)}>Close</Button></footer></section></div>}
+    {selectedAppointment && <PatientAppointmentDetailsModal
+      appointment={selectedAppointment}
+      serviceName={serviceMap.get(selectedAppointment.serviceId)?.name ?? 'Dental appointment'}
+      branchName={branchMap.get(selectedAppointment.branchId ?? '')?.name ?? 'Clinic branch'}
+      dentistName={appointmentDentistLabel(selectedAppointment, providerMap)}
+      estimatedFee={serviceMap.get(selectedAppointment.serviceId) ? serviceMoney(serviceMap.get(selectedAppointment.serviceId)!.price) : 'Price to be confirmed'}
+      onClose={() => setSelectedAppointment(null)}
+    />}
 
     {selectedRecord && <div className="pv3-modal-backdrop" onMouseDown={(event)=>event.target===event.currentTarget&&setSelectedRecord(null)}><section className="pv3-detail-modal pv3-record-modal"><header><div><span>DENTAL RECORD</span><h2>{selectedRecord.chiefComplaint || 'Dental visit summary'}</h2><p>{clinicDate(selectedRecord.recordDate)}</p></div><button type="button" aria-label="Close dental record details" onClick={()=>setSelectedRecord(null)}><X size={19}/></button></header><div className="pv3-record-hero"><span><FileText size={21}/></span><div><PatientStatusBadge status={selectedRecord.status} /><h3>{selectedRecord.visitType.replaceAll('_',' ')}</h3><p>This is the patient-visible summary finalized by your clinical team.</p></div></div><div className="pv3-detail-grid"><div><span>Visit date</span><strong>{clinicDate(selectedRecord.recordDate)}</strong></div><div><span>Record status</span><strong>{statusLabel(selectedRecord.status)}</strong></div><div><span>Visit type</span><strong>{selectedRecord.visitType.replaceAll('_',' ')}</strong></div><div><span>Follow-up</span><strong>{selectedRecord.followUpDate?clinicDate(selectedRecord.followUpDate):'Not scheduled'}</strong></div></div><section className="pv3-detail-note"><span>Visit summary</span><p>{selectedRecord.chiefComplaint || 'Your dentist has shared a finalized dental visit summary.'}</p></section><div className="pv3-record-privacy"><ShieldCheck size={16}/><span>Internal clinical notes, assessments and private dentist-only fields are intentionally not exposed in the patient portal.</span></div><footer><Button variant="secondary" onClick={()=>setSelectedRecord(null)}>Close record</Button></footer></section></div>}
 
-    {selectedPayment && (()=>{const receipt=receiptMap.get(selectedPayment.id);const invoice=invoices.find((item)=>item.id===selectedPayment.invoiceId);const branch=branchMap.get(receipt?.branchId ?? selectedPayment.branchId ?? invoice?.branchId ?? '');const payload=getPatientReceiptPayload(selectedPayment);const hasOfficialReceipt=Boolean(payload&&canPrintOfficialReceipt(payload));const items=invoice?.items ?? [];return <div className="pv3-modal-backdrop" onMouseDown={(event)=>event.target===event.currentTarget&&setSelectedPayment(null)}><section className={`pv3-detail-modal pv3-payment-modal-v6 ${hasOfficialReceipt?'is-official-receipt':''}`}><header><div><span>{hasOfficialReceipt?'OFFICIAL RECEIPT':'PAYMENT DETAILS'}</span><h2>{receipt?.receiptNumber ?? selectedPayment.paymentNumber}</h2><p>Plamenco Dental Co. - {branch?.name ?? 'Clinic branch'}</p></div><button type="button" aria-label="Close payment details" onClick={()=>setSelectedPayment(null)}><X size={19}/></button></header><div className="pv3-detail-status"><PatientStatusBadge status={selectedPayment.status} /><span>{selectedPayment.referenceNumber || selectedPayment.gatewayTransactionId || 'No external reference'}</span></div><div className="pv3-payment-receipt-hero-v6"><span><ReceiptText size={24}/></span><div><small>{hasOfficialReceipt?'Amount received':'Payment amount'}</small><h3>{money(receipt?.amountCents ?? selectedPayment.amountCents)}</h3><p>{hasOfficialReceipt?'This official receipt is generated from persisted clinic payment records.':'A receipt is available only after the payment is completed and posted.'}</p></div></div><div className="pv3-detail-grid"><div><span>Clinic</span><strong>Plamenco Dental Co.</strong></div><div><span>Branch</span><strong>{branch?.name ?? 'Clinic branch'}</strong></div><div><span>Receipt number</span><strong>{receipt?.receiptNumber ?? 'Not issued'}</strong></div><div><span>Payment number</span><strong>{selectedPayment.paymentNumber}</strong></div><div><span>Patient</span><strong>{fullName}</strong></div><div><span>Patient ID</span><strong>{patient.patientId}</strong></div><div><span>Payment date / time</span><strong>{clinicDateTime(receipt?.issuedAt ?? selectedPayment.verifiedAt ?? selectedPayment.date)}</strong></div><div><span>Payment method</span><strong>{getPaymentMethodLabel(selectedPayment.paymentMethod)}</strong></div><div><span>Related invoice</span><strong>{invoice?.invoiceNumber ?? selectedPayment.invoiceId}</strong></div><div><span>Processor / staff</span><strong>{receipt?.issuedBy || selectedPayment.verifiedBy || selectedPayment.recordedBy || 'Clinic staff'}</strong></div><div><span>Payment status</span><strong>{statusLabel(selectedPayment.status)}</strong></div><div><span>Remaining balance</span><strong>{money(receipt?.remainingBalanceCents ?? invoice?.balanceCents ?? 0)}</strong></div></div>{items.length ? <section className="pv3-receipt-items-v7"><span>Services / Items</span><table><thead><tr><th>Description</th><th>Qty</th><th>Amount</th></tr></thead><tbody>{items.map((item)=><tr key={item.id}><td>{item.description}</td><td>{item.quantity}</td><td>{money(item.amountCents ?? Math.max(item.quantity * item.unitPriceCents - (item.discountCents ?? 0), 0))}</td></tr>)}</tbody><tfoot><tr><td colSpan={2}>Invoice total</td><td>{money(invoice?.totalCents ?? selectedPayment.amountCents)}</td></tr><tr><td colSpan={2}>Amount paid</td><td>{money(receipt?.amountCents ?? selectedPayment.amountCents)}</td></tr></tfoot></table></section> : <section className="pv3-detail-note"><span>Services / Description</span><p>Dental services</p></section>}<div className="pv3-record-privacy"><ShieldCheck size={16}/><span>{hasOfficialReceipt?'This receipt is available only from your authenticated patient account.':'Processing and failed payments do not have official receipts.'}</span></div><footer><Button variant="secondary" onClick={()=>setSelectedPayment(null)}>Close</Button>{hasOfficialReceipt&&<Button variant="secondary" icon={<Download size={15}/>} onClick={()=>downloadPatientReceipt(selectedPayment)}>Download Receipt</Button>}{hasOfficialReceipt&&<Button icon={<Printer size={15}/>} onClick={()=>printPatientReceipt(selectedPayment)}>Print Receipt</Button>}</footer></section></div>})()}
-    {payMode!=='none'&&selectedPayInvoice&&<div className="pv3-modal-backdrop" onMouseDown={(event)=>event.target===event.currentTarget&&!payBusy&&setPayMode('none')}>
-      <section className={`pv3-pay-modal ${payConfirmation?'is-confirmed':''}`}>
-        <header><div><span>{payMode==='cash'?'PAY AT CLINIC':payConfirmation?'PAYMENT RECEIVED':'QR PH PAYMENT'}</span><h2>{payMode==='cash'?'Pay in person':payConfirmation?'Payment confirmed':'Secure online payment'}</h2><p>{selectedPayInvoice.invoiceNumber}</p></div><button type="button" aria-label="Close payment dialog" onClick={()=>setPayMode('none')} disabled={payBusy}><X size={19}/></button></header>
-        {payMode==='cash'?<div className="pv3-cash"><span><Banknote size={28}/></span><h3>{money(selectedPayInvoice.balanceCents)}</h3><p>Pay this amount at the clinic cashier. No payment record is created until clinic staff actually receives and records your payment.</p></div>:<div className="pv3-online">
-          {payConfirmation?<div className="pv3-payment-confirmed"><span><CheckCircle2 size={38}/></span><h3>Your payment was received</h3><p>Your invoice balance and receipt have been updated from the clinic ledger.</p><div><small>Payment reference</small><strong>{payConfirmation.paymentNumber ?? paySession?.paymentNumber ?? paySession?.paymentId}</strong></div><Button onClick={()=>setPayMode('none')}>Done</Button></div>:<>
-            {payError&&<div className="pv3-alert is-error">{payError}</div>}
-            <div className="pv3-pay-amount"><span>AMOUNT TO PAY</span><strong>{money(selectedPayInvoice.balanceCents)}</strong><small>Exact outstanding invoice balance</small></div>
-            {!paySession?<><div className="pv3-qr-empty"><QrCode size={42}/></div><h3>Generate your QR Ph code</h3><p>The code is generated securely by PayMongo and can be scanned using a QR Ph-supported bank or wallet.</p><Button disabled={payBusy} onClick={()=>void startQrPayment()}>{payBusy?'Generating...':'Generate QR Ph code'}</Button></>:<><div className="pv3-qr-frame"><img src={paySession.qrImage} alt={`QR Ph payment for ${selectedPayInvoice.invoiceNumber}`}/></div><h3>{money(paySession.amountCents)}</h3><p>Scan the QR, complete payment, and keep this window open. The portal checks status automatically every 5 seconds.</p>{payStatus&&<div className="pv3-alert is-success">{payStatus}</div>}<Button disabled={payBusy} onClick={()=>void checkQrStatus()}>{payBusy?'Checking...':'Check payment now'}</Button><small>Payment reference: {paySession.paymentNumber ?? paySession.paymentId}</small></>}
+    {selectedPayment && (()=>{const receipt=receiptMap.get(selectedPayment.id);const invoice=invoices.find((item)=>item.id===selectedPayment.invoiceId);const branch=branchMap.get(receipt?.branchId ?? selectedPayment.branchId ?? invoice?.branchId ?? '');const payload=getPatientReceiptPayload(selectedPayment);const hasOfficialReceipt=Boolean(payload&&canPrintOfficialReceipt(payload));return <PatientPaymentDetailsModal payment={selectedPayment} receipt={receipt} invoice={invoice} branch={branch} patientName={fullName} patientId={patient.patientId} official={hasOfficialReceipt} onClose={()=>setSelectedPayment(null)} onDownload={()=>{void downloadPatientReceipt(selectedPayment)}} onPrint={()=>printPatientReceipt(selectedPayment)}/>})()}
+    {payMode !== 'none' && selectedPayInvoice && <div className="pv3-modal-backdrop pay221-backdrop" onMouseDown={(event) => event.target === event.currentTarget && !payBusy && setPayMode('none')}>
+      <section className={`pv3-pay-modal pay221-pay-modal ${payMode === 'online' ? 'is-online' : 'is-cash'} ${payConfirmation ? 'is-confirmed' : ''}`} role="dialog" aria-modal="true" aria-labelledby="pay221-dialog-title">
+        <header className="pay221-modal-head">
+          <div className="pay221-modal-title">
+            <span aria-hidden="true">{payMode === 'cash' ? <Banknote size={20}/> : payConfirmation ? <CheckCircle2 size={20}/> : <QrCode size={20}/>}</span>
+            <div><small>{payMode === 'cash' ? 'PAY AT CLINIC' : payConfirmation ? 'PAYMENT RECEIVED' : 'QR PH CHECKOUT'}</small><h2 id="pay221-dialog-title">{payMode === 'cash' ? 'Settle this invoice in person' : payConfirmation ? 'Payment confirmed' : 'Secure QR Ph payment'}</h2><p>{selectedPayInvoice.invoiceNumber} · Plamenco Dental Co.</p></div>
+          </div>
+          <button type="button" aria-label="Close payment dialog" onClick={() => setPayMode('none')} disabled={payBusy}><X size={19}/></button>
+        </header>
+
+        {payMode === 'cash' ? <div className="pay221-cash-body">
+          <section><small>AMOUNT TO PRESENT AT CASHIER</small><strong>{money(selectedPayInvoice.balanceCents)}</strong><p>Show invoice <b>{selectedPayInvoice.invoiceNumber}</b> at the clinic cashier. Your account updates only after clinic staff receives and records the payment.</p></section>
+          <div><ShieldCheck size={17}/><span>No browser payment record will be created for this option.</span></div>
+        </div> : <div className="pay221-checkout">
+          {payConfirmation ? <div className="pay221-confirmed">
+            <span><CheckCircle2 size={34}/></span><small>PAYMENT COMPLETE</small><h3>{money(paySession?.amountCents ?? selectedPayInvoice.balanceCents)}</h3><p>Your payment was received and the clinic ledger has been refreshed.</p><div><small>PAYMENT REFERENCE</small><strong>{payConfirmation.paymentNumber ?? paySession?.paymentNumber ?? paySession?.paymentId}</strong></div><Button onClick={() => setPayMode('none')}>Return to payments</Button>
+          </div> : <>
+            <aside className="pay221-checkout-summary">
+              <span>PAYMENT SUMMARY</span>
+              <strong>{money(selectedPayInvoice.balanceCents)}</strong>
+              <p>Exact outstanding balance</p>
+              <dl><div><dt>Invoice</dt><dd>{selectedPayInvoice.invoiceNumber}</dd></div><div><dt>Issued</dt><dd>{clinicDate(selectedPayInvoice.invoiceDate)}</dd></div><div><dt>Payment method</dt><dd>QR Ph</dd></div></dl>
+              <div className="pay221-secure-note"><LockKeyhole size={17}/><span><strong>Secure checkout</strong><small>QR processing is handled by PayMongo. Plamenco never stores your wallet credentials.</small></span></div>
+            </aside>
+            <section className={`pay221-checkout-stage ${paySession ? 'has-qr' : ''}`}>
+              {payError && <div className="pv3-alert is-error">{payError}</div>}
+              {!paySession ? <>
+                <div className="pay221-qr-mark"><QrCode size={38}/></div>
+                <small>STEP 1 OF 2</small>
+                <h3>Generate a one-time QR code</h3>
+                <p>Use any QR Ph-supported banking or wallet app. The code is created for this invoice and exact amount only.</p>
+                <Button icon={<QrCode size={16}/>} disabled={payBusy} onClick={() => void startQrPayment()}>{payBusy ? 'Generating secure code...' : 'Generate QR Ph code'}</Button>
+                <span className="pay221-stage-footnote"><ShieldCheck size={14}/>Encrypted payment session</span>
+              </> : <>
+                <small>STEP 2 OF 2</small>
+                <h3>Scan to pay {money(paySession.amountCents)}</h3>
+                <div className="pay221-qr-frame"><img src={paySession.qrImage} alt={`QR Ph payment for ${selectedPayInvoice.invoiceNumber}`}/></div>
+                <p>Open your bank or wallet app, scan the code, and complete payment. This page checks your status automatically.</p>
+                {payStatus && <div className="pv3-alert is-success">{payStatus}</div>}
+                <Button variant="secondary" disabled={payBusy} onClick={() => void checkQrStatus()}>{payBusy ? 'Checking payment...' : 'Check payment status'}</Button>
+                <small className="pay221-reference">Reference: {paySession.paymentNumber ?? paySession.paymentId}</small>
+              </>}
+            </section>
           </>}
         </div>}
-        {!payConfirmation&&<footer><Button variant="secondary" onClick={()=>setPayMode('none')} disabled={payBusy}>Close</Button></footer>}
+        {!payConfirmation && <footer className="pay221-modal-foot"><button type="button" onClick={() => setPayMode('none')} disabled={payBusy}>Cancel and return</button><span><ShieldCheck size={14}/>Authenticated patient session</span></footer>}
       </section>
     </div>}
-    {selectedRecall && <div className="pv3-modal-backdrop" onMouseDown={(event)=>event.target===event.currentTarget&&setSelectedRecall(null)}><section className="pv3-detail-modal pv3-recall-modal-v5"><header><div><span>RECALL / FOLLOW-UP DETAILS</span><h2>{selectedRecall.reason || (selectedRecall.kind === 'follow_up' ? 'Follow-up recommended' : 'Recall reminder')}</h2><p>{selectedRecall.dueDate ? `Recommended for ${clinicDate(selectedRecall.dueDate)}` : 'Recommended return visit'}</p></div><button type="button" aria-label="Close recall details" onClick={()=>setSelectedRecall(null)}><X size={19}/></button></header><div className="pv3-recall-detail-status-v5"><PatientStatusBadge status={selectedRecall.status} />{getRecallDueBucket(selectedRecall)==='overdue'&&<PatientStatusBadge status="overdue" />}<span><Stethoscope size={14}/>{selectedRecall.providerName || 'Care team'}</span></div><div className="pv3-recall-detail-hero-v5"><span><HeartPulse size={22}/></span><div><small>{selectedRecall.kind.replaceAll('_',' ')}</small><h3>{selectedRecall.patientMessage || 'Your clinic recommends a future visit.'}</h3><p>{selectedRecall.reason || 'A follow-up visit was recommended by your clinic.'}</p></div></div><div className="pv3-recall-detail-grid-v5"><div><span>Recommended date</span><strong>{selectedRecall.dueDate ? clinicDate(selectedRecall.dueDate) : 'No date set'}</strong></div><div><span>Dentist</span><strong>{selectedRecall.providerName || 'Care team'}</strong></div><div><span>Related treatment / source</span><strong>{selectedRecall.sourceId ? `${selectedRecall.sourceType.replaceAll('_',' ')} ${selectedRecall.sourceId}` : selectedRecall.sourceType.replaceAll('_',' ')}</strong></div><div><span>Created</span><strong>{selectedRecall.createdAt ? clinicDate(selectedRecall.createdAt) : 'Not recorded'}</strong></div><div><span>Branch</span><strong>{selectedRecall.branchId ? branchMap.get(selectedRecall.branchId)?.name ?? 'Clinic branch' : 'Clinic branch'}</strong></div><div><span>Associated appointment</span><strong>{selectedRecall.linkedAppointmentId ? (recallAppointments.get(selectedRecall.linkedAppointmentId)?.appointmentNumber ?? selectedRecall.linkedAppointmentId) : 'Not booked yet'}</strong></div></div><div className="pv3-record-privacy"><ShieldCheck size={16}/><span>Follow-up recommendations use the clinic record shared with your authenticated patient account.</span></div><footer><Button variant="secondary" onClick={()=>setSelectedRecall(null)}>Close</Button>{selectedRecall.linkedAppointmentId && recallAppointments.get(selectedRecall.linkedAppointmentId) ? <Button onClick={()=>{const linkedAppointment=recallAppointments.get(selectedRecall.linkedAppointmentId!);if(linkedAppointment)setSelectedAppointment(linkedAppointment);setSelectedRecall(null)}}>View appointment</Button> : selectedRecall.linkedAppointmentId ? <Button onClick={()=>{setSelectedRecall(null);openTab('appointments')}}>View appointments</Button> : canBookRecall(selectedRecall) ? <Button onClick={()=>bookRecallFollowUp(selectedRecall)}>Book follow-up</Button> : null}</footer></section></div>}
-    {selectedPrescription && <div className="pv3-modal-backdrop" onMouseDown={(event)=>event.target===event.currentTarget&&setSelectedPrescription(null)}><section className="pv3-detail-modal pv3-rx-modal-v4 pv3-rx-detail-redesign"><header><div><span>PRESCRIPTION</span><h2>{prescriptionName(selectedPrescription)}</h2><p>Issued {clinicDate(selectedPrescription.prescriptionDate)} · {branchMap.get(selectedPrescription.branchId ?? '')?.name ?? 'Clinic branch'}</p></div><button type="button" aria-label="Close prescription details" onClick={()=>setSelectedPrescription(null)}><X size={19}/></button></header><div className="pv3-rx-detail-hero-redesign"><span><Pill size={24}/></span><div><PatientStatusBadge status={selectedPrescription.status} /><h3>{prescriptionInstructionLine(selectedPrescription)}</h3><p>Follow the prescription exactly as provided by your dentist.</p></div></div><div className="pv3-rx-detail-meta-redesign"><div><span>Dentist</span><strong>{selectedPrescription.providerNameSnapshot || providerMap.get(selectedPrescription.providerId ?? '')?.displayName || 'Prescribing dentist'}</strong></div><div><span>Branch</span><strong>{branchMap.get(selectedPrescription.branchId ?? '')?.name ?? 'Clinic branch'}</strong></div><div><span>Issued date</span><strong>{clinicDate(selectedPrescription.prescriptionDate)}</strong></div><div><span>Linked appointment</span><strong>{selectedPrescription.appointmentId ? appointments.find((item)=>item.id===selectedPrescription.appointmentId)?.appointmentNumber ?? selectedPrescription.appointmentId : 'Not linked'}</strong></div></div><div className="pv3-rx-detail-list">{prescriptionItems(selectedPrescription).map((item)=><section key={item.id}><header><div><span>Medication</span><h3>{item.medication || 'Medication'}</h3>{item.strength&&<p>{item.strength}</p>}</div></header><dl><div><dt>Dosage</dt><dd>{item.dosage||'As directed'}</dd></div><div><dt>Frequency</dt><dd>{item.frequency||'As directed'}</dd></div><div><dt>Duration</dt><dd>{item.duration||'As directed'}</dd></div></dl>{item.instructions&&<div><span>Instructions</span><p>{item.instructions}</p></div>}</section>)}</div>{selectedPrescription.notes&&<section className="pv3-detail-note"><span>Additional note</span><p>{selectedPrescription.notes}</p></section>}<div className="pv3-record-privacy"><ShieldCheck size={16}/><span>This prescription view is read-only. If you have questions about this medication, contact the clinic.</span></div><footer><Button variant="secondary" onClick={()=>setSelectedPrescription(null)}>Close prescription</Button></footer></section></div>}
+    {selectedRecall && (() => {
+      const linkedAppointment = selectedRecall.linkedAppointmentId ? recallAppointments.get(selectedRecall.linkedAppointmentId) : undefined
+      const linkedAppointmentLabel = selectedRecall.linkedAppointmentId ? linkedAppointment?.appointmentNumber ?? selectedRecall.linkedAppointmentId : undefined
+      const actionLabel = linkedAppointment ? 'View appointment' : selectedRecall.linkedAppointmentId ? 'View appointments' : canBookRecall(selectedRecall) ? 'Book follow-up' : undefined
+      const onAction = linkedAppointment
+        ? () => { setSelectedAppointment(linkedAppointment); setSelectedRecall(null) }
+        : selectedRecall.linkedAppointmentId
+          ? () => { setSelectedRecall(null); openTab('appointments') }
+          : canBookRecall(selectedRecall)
+            ? () => bookRecallFollowUp(selectedRecall)
+            : undefined
+      return <PatientRecallDetailsModal
+        recall={selectedRecall}
+        branchName={selectedRecall.branchId ? branchMap.get(selectedRecall.branchId)?.name ?? 'Clinic branch' : 'Clinic branch'}
+        linkedAppointment={linkedAppointmentLabel}
+        onClose={() => setSelectedRecall(null)}
+        onAction={onAction}
+        actionLabel={actionLabel}
+      />
+    })()}
+    {selectedPrescription && <PatientPrescriptionDetailsModal
+      prescription={selectedPrescription}
+      branchName={branchMap.get(selectedPrescription.branchId ?? '')?.name ?? 'Clinic branch'}
+      dentistName={selectedPrescription.providerNameSnapshot || providerMap.get(selectedPrescription.providerId ?? '')?.displayName || 'Prescribing dentist'}
+      linkedAppointment={selectedPrescription.appointmentId ? appointments.find((item) => item.id === selectedPrescription.appointmentId)?.appointmentNumber ?? selectedPrescription.appointmentId : 'Not linked'}
+      onClose={() => setSelectedPrescription(null)}
+    />}
   </div>
 }
 

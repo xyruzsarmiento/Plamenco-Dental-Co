@@ -8,8 +8,10 @@ import { findStaffByEmail } from './staffStore'
 
 const STORAGE_KEY = 'plamenco.auth.user'
 const SOCIAL_INTENT_KEY = 'plamenco.auth.social-intent'
+const AUTH_CALLBACK_ERROR_KEY = 'plamenco.auth.callback-error'
 const AUTH_OPERATION_TIMEOUT_MS = 12000
 const allowLegacyLocalAuth = import.meta.env.DEV && import.meta.env.VITE_ENABLE_LEGACY_LOCAL_AUTH === 'true'
+let callbackSessionPromise: ReturnType<NonNullable<typeof supabase>['auth']['setSession']> | null = null
 
 type SessionUser = {
   id: string
@@ -59,11 +61,56 @@ function readSupabaseHashCallback() {
   if (typeof window === 'undefined' || !window.location.hash) return null
   const params = new URLSearchParams(window.location.hash.replace(/^#/, ''))
   const error = params.get('error_description') || params.get('error')
-  if (error) return { error, accessToken: '', refreshToken: '' }
+  if (error) return { error, accessToken: '', refreshToken: '', expiresAt: null }
   const accessToken = params.get('access_token') ?? ''
   const refreshToken = params.get('refresh_token') ?? ''
   if (!accessToken || !refreshToken) return null
-  return { error: '', accessToken, refreshToken }
+  const expiresAtValue = Number(params.get('expires_at'))
+  return {
+    error: '',
+    accessToken,
+    refreshToken,
+    expiresAt: Number.isFinite(expiresAtValue) && expiresAtValue > 0 ? expiresAtValue : readJwtExpiry(accessToken),
+  }
+}
+
+function readJwtExpiry(accessToken: string) {
+  try {
+    const payload = accessToken.split('.')[1]
+    if (!payload) return null
+    const normalized = payload.replace(/-/g, '+').replace(/_/g, '/')
+    const decoded = JSON.parse(window.atob(normalized.padEnd(Math.ceil(normalized.length / 4) * 4, '='))) as { exp?: unknown }
+    return typeof decoded.exp === 'number' && Number.isFinite(decoded.exp) ? decoded.exp : null
+  } catch {
+    return null
+  }
+}
+
+function isExpiredCallback(expiresAt: number | null) {
+  return expiresAt !== null && expiresAt <= Math.floor(Date.now() / 1000)
+}
+
+function rememberAuthCallbackError(message: string) {
+  window.sessionStorage.setItem(AUTH_CALLBACK_ERROR_KEY, message)
+  window.setTimeout(() => {
+    if (window.sessionStorage.getItem(AUTH_CALLBACK_ERROR_KEY) === message) {
+      window.sessionStorage.removeItem(AUTH_CALLBACK_ERROR_KEY)
+    }
+  }, 1500)
+}
+
+function takeRememberedAuthCallbackError() {
+  const message = window.sessionStorage.getItem(AUTH_CALLBACK_ERROR_KEY)
+  if (message) window.sessionStorage.removeItem(AUTH_CALLBACK_ERROR_KEY)
+  return message
+}
+
+async function clearInvalidSupabaseSession(client: NonNullable<typeof supabase>) {
+  try {
+    await client.auth.signOut({ scope: 'local' })
+  } catch {
+    // The local token can already be absent after a failed refresh.
+  }
 }
 
 function clearSupabaseHashCallback() {
@@ -291,21 +338,53 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const applySupabaseSession = async () => {
       try {
         const callback = readSupabaseHashCallback()
+        const rememberedCallbackError = callback ? null : takeRememberedAuthCallbackError()
+        if (rememberedCallbackError) {
+          void clearInvalidSupabaseSession(client)
+          clearCachedUser(); clearAllQueryCache(); setUser(null)
+          setAuthError(rememberedCallbackError)
+          setIsLoading(false)
+          return
+        }
         if (callback?.error) {
+          rememberAuthCallbackError(callback.error)
           clearSupabaseHashCallback()
+          void clearInvalidSupabaseSession(client)
           clearCachedUser(); clearAllQueryCache(); setUser(null)
           setAuthError(callback.error)
           setIsLoading(false)
           return
         }
         if (callback?.accessToken && callback.refreshToken) {
-          const { data, error } = await withAuthTimeout(
-            client.auth.setSession({ access_token: callback.accessToken, refresh_token: callback.refreshToken }),
-            'Secure sign-in callback took too long. Please refresh or sign in again.',
-          )
+          if (isExpiredCallback(callback.expiresAt)) {
+            const message = 'This secure sign-in link has expired. Please sign in again.'
+            rememberAuthCallbackError(message)
+            clearSupabaseHashCallback()
+            void clearInvalidSupabaseSession(client)
+            clearCachedUser(); clearAllQueryCache(); setUser(null)
+            setAuthError(message)
+            setIsLoading(false)
+            return
+          }
+          callbackSessionPromise ??= client.auth.setSession({
+            access_token: callback.accessToken,
+            refresh_token: callback.refreshToken,
+          })
+          const pendingCallbackSession = callbackSessionPromise
+          let callbackResponse: Awaited<typeof pendingCallbackSession>
+          try {
+            callbackResponse = await withAuthTimeout(
+              pendingCallbackSession,
+              'Secure sign-in callback took too long. Please refresh or sign in again.',
+            )
+          } finally {
+            if (callbackSessionPromise === pendingCallbackSession) callbackSessionPromise = null
+          }
+          const { data, error } = callbackResponse
           clearSupabaseHashCallback()
           if (!isMounted) return
           if (error) {
+            await clearInvalidSupabaseSession(client)
             clearCachedUser(); clearAllQueryCache(); setUser(null)
             setAuthError('Unable to complete secure sign-in. Please sign in again.')
             setIsLoading(false)
@@ -320,6 +399,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         )
         if (!isMounted) return
         if (error) {
+          await clearInvalidSupabaseSession(client)
           clearCachedUser(); clearAllQueryCache(); setUser(null)
           setAuthError('Unable to restore your secure session. Please sign in again.')
           setIsLoading(false)
@@ -329,6 +409,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       } catch (cause) {
         if (!isMounted) return
         console.error('[auth session load failed]', cause)
+        await clearInvalidSupabaseSession(client)
         clearCachedUser(); clearAllQueryCache(); setUser(null)
         setAuthError(cause instanceof Error ? cause.message : 'Unable to restore your secure session. Please sign in again.')
         setIsLoading(false)

@@ -4,6 +4,7 @@ import { Button } from '../../components/ui/Button'
 import type { Branch } from '../branches/branchTypes'
 import type { Provider } from '../dentists/dentistTypes'
 import type { Patient } from '../patients/patientTypes'
+import { PatientAvatar } from '../patients/PatientAvatar'
 import { servicePriceToCents } from '../services/serviceStore'
 import type { Service } from '../services/serviceTypes'
 import type { TreatmentFormValues, TreatmentStatus } from './treatmentTypes'
@@ -70,7 +71,7 @@ export function TreatmentFormDrawerV12({ mode, patient, services, branches, prov
       <section className="tx12-modal" role="dialog" aria-modal="true" aria-labelledby="tx12-modal-title">
         <header className="tx12-modal-head">
           <div className="tx12-modal-identity">
-            <span>{patient.firstName.charAt(0)}{patient.lastName.charAt(0)}</span>
+            <PatientAvatar patient={patient} size={42} />
             <div><small>{mode === 'add' ? 'New treatment' : 'Edit treatment'}</small><h2 id="tx12-modal-title">{patient.firstName} {patient.lastName}</h2><p>{patient.patientId}</p></div>
           </div>
           <button type="button" aria-label="Close treatment editor" onClick={onClose} disabled={isSubmitting}><X size={20}/></button>

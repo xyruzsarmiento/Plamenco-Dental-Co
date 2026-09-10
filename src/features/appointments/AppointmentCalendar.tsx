@@ -9,6 +9,7 @@ import type { Appointment } from './appointmentTypes'
 import { formatAppointmentTime, getCalendarOperatingHours } from './availabilityEngine'
 import { getProviderBranchAssignments } from '../dentists/dentistStore'
 import { getPatientDisplayName } from '../patients/patientStore'
+import { PatientAvatar } from '../patients/PatientAvatar'
 
 type CalendarViewType = 'day' | 'week' | 'month' | 'agenda'
 
@@ -199,7 +200,7 @@ function AppointmentCard({
   return (
     <button type="button" className={`appointment-rich-block status-${appointment.status} ${compact ? 'is-compact' : ''}`} onClick={() => onSelectAppointment(appointment)}>
       <span>{formatAppointmentTime(appointment.startTime)}</span>
-      <strong>{getPatientName(patient)}</strong>
+      <span className="appointment-rich-patient">{patient && <PatientAvatar patient={patient} size={compact ? 'compact' : 'small'} decorative />}<strong>{getPatientName(patient)}</strong></span>
       {!compact && <small>{service?.name ?? 'Service'} - {provider?.displayName ?? 'Any dentist'}</small>}
       {!compact && <small>{branch?.name ?? 'No branch'} - {appointment.status.replaceAll('_', ' ')}</small>}
     </button>

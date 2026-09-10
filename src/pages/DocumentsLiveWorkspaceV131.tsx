@@ -2,8 +2,7 @@ import { useEffect, useState } from 'react'
 import { Skeleton, SkeletonCard, SkeletonList } from '../components/ui/DesignSystem'
 import { useAuth } from '../features/auth/AuthContext'
 import { useBranchContext } from '../features/branches/BranchContext'
-import { mapSupabasePatientRow, saveStoredPatients } from '../features/patients/patientStore'
-import { supabase } from '../lib/supabase'
+import { loadPatientsFromSupabase } from '../features/patients/patientPersistence'
 import { DocumentsBranchWorkspaceV127 } from './DocumentsBranchWorkspaceV127'
 
 function DocumentsWorkspaceSkeleton() {
@@ -35,23 +34,35 @@ function DocumentsWorkspaceSkeleton() {
         ))}
       </section>
 
-      <section className="doc177-skeleton-toolbar" aria-hidden="true">
-        <Skeleton className="doc177-skeleton-search" width="100%" height={42} radius={11} />
-        <Skeleton width="100%" height={42} radius={11} />
-        <Skeleton width="100%" height={42} radius={11} />
-        <Skeleton width="100%" height={42} radius={11} />
-        <Skeleton width="100%" height={42} radius={11} />
-      </section>
-
-      <section className="doc177-skeleton-library">
-        <header>
-          <div>
-            <Skeleton width={96} height={10} radius={999} />
-            <Skeleton width={110} height={24} radius={9} />
+      <div className="doc177-skeleton-workspace" aria-hidden="true">
+        <aside className="doc177-skeleton-directory">
+          <div className="doc177-skeleton-directory-heading">
+            <div><Skeleton width={94} height={10} radius={999} /><Skeleton width={78} height={15} radius={6} /></div>
+            <Skeleton width={18} height={18} radius={6} />
           </div>
-        </header>
-        <SkeletonList items={6} withAvatar className="doc177-skeleton-list" />
-      </section>
+          <Skeleton width="100%" height={42} radius={8} />
+          <SkeletonList items={6} withAvatar className="doc177-skeleton-directory-list" />
+        </aside>
+
+        <main className="doc177-skeleton-main">
+          <section className="doc177-skeleton-patient">
+            <div><Skeleton width={48} height={48} radius={999} /><span><Skeleton width={88} height={9} radius={999} /><Skeleton width={180} height={22} radius={7} /><Skeleton width={230} height={10} radius={999} /></span></div>
+            <span><Skeleton width={38} height={25} radius={7} /><Skeleton width={112} height={10} radius={999} /></span>
+          </section>
+          <section className="doc177-skeleton-patient-toolbar">
+            <Skeleton width="100%" height={40} radius={8} />
+            <Skeleton width="100%" height={40} radius={8} />
+            <Skeleton width="100%" height={40} radius={8} />
+            <Skeleton width="100%" height={40} radius={8} />
+          </section>
+          <section className="doc177-skeleton-patient-library">
+            <div><Skeleton width={104} height={10} radius={999} /><Skeleton width={86} height={22} radius={7} /></div>
+            <div className="doc177-skeleton-document-grid">
+              {Array.from({ length: 4 }, (_, index) => <SkeletonCard key={index} className="doc177-skeleton-document-card"><SkeletonList items={2} withAvatar /></SkeletonCard>)}
+            </div>
+          </section>
+        </main>
+      </div>
     </section>
   )
 }
@@ -67,31 +78,18 @@ export function DocumentsLiveWorkspaceV131() {
     let alive = true
 
     async function hydratePatients() {
-      if (!supabase) {
-        if (alive) {
-          setError('Clinic database is not configured. Documents cannot be loaded safely.')
-          setState('error')
-        }
-        return
-      }
-
       setState('loading')
       setError(null)
-      const { data, error: queryError } = await supabase
-        .from('patients')
-        .select('*')
-        .eq('status', 'active')
-        .order('last_name', { ascending: true })
-        .order('first_name', { ascending: true })
-
-      if (!alive) return
-      if (queryError) {
-        setError(`Unable to prepare the patient document workspace: ${queryError.message}`)
+      try {
+        await loadPatientsFromSupabase({ strict: true })
+      } catch (cause) {
+        if (!alive) return
+        setError(`Unable to prepare the patient document workspace: ${cause instanceof Error ? cause.message : 'Patient records could not be loaded.'}`)
         setState('error')
         return
       }
 
-      saveStoredPatients((data ?? []).map((row) => mapSupabasePatientRow(row as Record<string, any>)))
+      if (!alive) return
       setRevision((value) => value + 1)
       setState('ready')
     }

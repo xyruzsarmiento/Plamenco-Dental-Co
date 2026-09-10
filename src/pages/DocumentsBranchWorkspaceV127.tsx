@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import {
   Archive,
   Building2,
+  ChevronRight,
   Download,
   FileBadge,
   FileImage,
@@ -33,11 +34,12 @@ import { downloadPatientDocumentFile, type DocumentCategory } from '../features/
 import { usePermissions } from '../features/auth/permissions'
 import { useBranchContext } from '../features/branches/BranchContext'
 import { PatientSearchCombobox } from '../features/patients/PatientSearchCombobox'
+import { PatientAvatar } from '../features/patients/PatientAvatar'
 import { getStoredPatients } from '../features/patients/patientStore'
 import { acquireModalScrollLock } from '../lib/modalScrollLock'
 import { getCurrentSessionUserName } from '../features/security/security'
 
-const DOCUMENT_PAGE_SIZE = 10
+const DOCUMENT_PAGE_SIZE = 8
 
 type VisibilityFilter = 'all' | 'shared' | 'private'
 type SortOption = 'newest' | 'oldest'
@@ -69,9 +71,10 @@ export function DocumentsBranchWorkspaceV127() {
   const { can } = usePermissions()
   const { activeBranch, activeBranchId, availableBranches, isAllBranchesMode } = useBranchContext()
   const [documents, setDocuments] = useState<BranchPatientDocument[]>([])
+  const [directoryQuery, setDirectoryQuery] = useState('')
+  const [selectedPatientId, setSelectedPatientId] = useState('')
   const [query, setQuery] = useState('')
   const [categoryFilter, setCategoryFilter] = useState<DocumentCategory | 'all'>('all')
-  const [patientFilter, setPatientFilter] = useState('all')
   const [branchFilter, setBranchFilter] = useState('all')
   const [visibilityFilter, setVisibilityFilter] = useState<VisibilityFilter>('all')
   const [sort, setSort] = useState<SortOption>('newest')
@@ -106,7 +109,11 @@ export function DocumentsBranchWorkspaceV127() {
 
   useEffect(() => { void refresh() }, [refresh])
   useEffect(() => { setUploadOpen(false); setUploadPatientId(''); setSelectedId(null); setMenuId(null) }, [activeBranchId, isAllBranchesMode])
-  useEffect(() => { setPage(1) }, [branchFilter, categoryFilter, patientFilter, query, sort, visibilityFilter])
+  useEffect(() => {
+    if (!patients.length) return
+    setSelectedPatientId((current) => patients.some((patient) => patient.id === current || patient.patientId === current) ? current : patients[0].patientId)
+  }, [patients])
+  useEffect(() => { setPage(1) }, [branchFilter, categoryFilter, query, selectedPatientId, sort, visibilityFilter])
   useEffect(() => {
     if (!selectedId && !uploadOpen) return undefined
     return acquireModalScrollLock()
@@ -125,6 +132,27 @@ export function DocumentsBranchWorkspaceV127() {
   }, [menuId, selectedId, uploadOpen])
 
   const categories = useMemo(() => Array.from(new Set(documents.map((document) => document.category))).sort(), [documents])
+  const patientDocumentStats = useMemo(() => {
+    const stats = new Map<string, { total: number; shared: number }>()
+    documents.forEach((document) => {
+      const patient = patientMap.get(document.patientId)
+      const key = patient?.patientId ?? document.patientId
+      const current = stats.get(key) ?? { total: 0, shared: 0 }
+      current.total += 1
+      if (document.patientVisible) current.shared += 1
+      stats.set(key, current)
+    })
+    return stats
+  }, [documents, patientMap])
+  const filteredPatients = useMemo(() => {
+    const needle = directoryQuery.trim().toLowerCase()
+    if (!needle) return patients
+    return patients.filter((patient) => `${patientName(patient)} ${patient.patientId} ${patient.email} ${patient.phone}`.toLowerCase().includes(needle))
+  }, [directoryQuery, patients])
+  const selectedPatient = useMemo(
+    () => patients.find((patient) => patient.id === selectedPatientId || patient.patientId === selectedPatientId) ?? patients[0] ?? null,
+    [patients, selectedPatientId],
+  )
   const filtered = useMemo(() => {
     const needle = query.trim().toLowerCase()
     return documents
@@ -133,7 +161,7 @@ export function DocumentsBranchWorkspaceV127() {
         const branchName = document.branchId ? branchMap.get(document.branchId) ?? '' : 'legacy unresolved branch'
         const matchesSearch = !needle || `${document.fileName} ${document.category} ${document.uploadedBy} ${document.description ?? ''} ${patientName(patient)} ${document.patientId} ${branchName}`.toLowerCase().includes(needle)
         const matchesCategory = categoryFilter === 'all' || document.category === categoryFilter
-        const matchesPatient = patientFilter === 'all' || document.patientId === patientFilter || patient?.patientId === patientFilter || patient?.id === patientFilter
+        const matchesPatient = Boolean(selectedPatient) && (document.patientId === selectedPatient.patientId || document.patientId === selectedPatient.id || patient?.patientId === selectedPatient.patientId)
         const matchesBranch = branchFilter === 'all' || document.branchId === branchFilter
         const matchesVisibility = visibilityFilter === 'all' || (visibilityFilter === 'shared' ? document.patientVisible : !document.patientVisible)
         return matchesSearch && matchesCategory && matchesPatient && matchesBranch && matchesVisibility
@@ -141,7 +169,7 @@ export function DocumentsBranchWorkspaceV127() {
       .sort((a, b) => sort === 'newest'
         ? new Date(b.createdAt || b.uploadDate).getTime() - new Date(a.createdAt || a.uploadDate).getTime()
         : new Date(a.createdAt || a.uploadDate).getTime() - new Date(b.createdAt || b.uploadDate).getTime())
-  }, [branchFilter, branchMap, categoryFilter, documents, patientFilter, patientMap, query, sort, visibilityFilter])
+  }, [branchFilter, branchMap, categoryFilter, documents, patientMap, query, selectedPatient, sort, visibilityFilter])
   const pageCount = Math.max(1, Math.ceil(filtered.length / DOCUMENT_PAGE_SIZE))
   const effectivePage = Math.min(page, pageCount)
   const visiblePage = filtered.slice((effectivePage - 1) * DOCUMENT_PAGE_SIZE, effectivePage * DOCUMENT_PAGE_SIZE)
@@ -205,8 +233,15 @@ export function DocumentsBranchWorkspaceV127() {
 
   function openUpload() {
     if (uploadDisabled) return
-    if (!uploadPatientId && patients[0]?.patientId) setUploadPatientId(patients[0].patientId)
+    if (!uploadPatientId && selectedPatient?.patientId) setUploadPatientId(selectedPatient.patientId)
     setUploadOpen(true)
+  }
+
+  function selectPatient(patientId: string) {
+    setSelectedPatientId(patientId)
+    setQuery('')
+    setSelectedId(null)
+    setMenuId(null)
   }
 
   return (
@@ -228,54 +263,84 @@ export function DocumentsBranchWorkspaceV127() {
       {success && <div className="doc149-alert is-success" role="status">{success}</div>}
       {error && <div className="doc149-alert is-error" role="alert"><span>{error}</span><Button size="sm" variant="secondary" onClick={() => void refresh()}>Retry</Button></div>}
 
-      <section className="doc149-summary" aria-label="Document summary">
+      <section className="doc149-summary doc215-summary" aria-label="Document summary">
         <article><Files size={18} /><span>Total files</span><strong>{stats.total}</strong></article>
         <article><Share2 size={18} /><span>Shared with patients</span><strong>{stats.shared}</strong></article>
         <article><LockKeyhole size={18} /><span>Private</span><strong>{stats.private}</strong></article>
         <article><UserRound size={18} /><span>Patients represented</span><strong>{stats.patients}</strong></article>
       </section>
 
-      <section className="doc149-toolbar" aria-label="Document filters">
-        <label className="doc149-search"><Search size={16} /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search files..." /></label>
-        <select value={categoryFilter} onChange={(event) => setCategoryFilter(event.target.value as DocumentCategory | 'all')} aria-label="Category filter"><option value="all">All categories</option>{categories.map((category) => <option key={category} value={category}>{documentCategoryLabel(category)}</option>)}</select>
-        <select value={patientFilter} onChange={(event) => setPatientFilter(event.target.value)} aria-label="Patient filter"><option value="all">All patients</option>{patients.map((patient) => <option key={patient.id} value={patient.patientId}>{patientName(patient)}</option>)}</select>
-        {isAllBranchesMode && <select value={branchFilter} onChange={(event) => setBranchFilter(event.target.value)} aria-label="Branch filter"><option value="all">All branches</option>{availableBranches.map((branch) => <option key={branch.id} value={branch.id}>{shortBranchName(branch.name)}</option>)}</select>}
-        <select value={visibilityFilter} onChange={(event) => setVisibilityFilter(event.target.value as VisibilityFilter)} aria-label="Visibility filter"><option value="all">All visibility</option><option value="shared">Shared with patient</option><option value="private">Clinic only</option></select>
-        <select value={sort} onChange={(event) => setSort(event.target.value as SortOption)} aria-label="Sort documents"><option value="newest">Newest</option><option value="oldest">Oldest</option></select>
-      </section>
-
-      <section className="doc149-library">
-        <header><div><span>Document list</span><h2>{filtered.length} files</h2></div></header>
-        {loading ? <div className="doc149-loading"><SkeletonList items={6} withAvatar /></div> : filtered.length === 0 ? <div className="doc149-empty"><FolderOpen size={28} /><strong>{documents.length ? 'No documents match these filters.' : 'No documents found.'}</strong><span>{documents.length ? 'Clear filters to widen the document list.' : 'Documents will appear here after an authorized upload.'}</span>{documents.length ? <Button size="sm" variant="secondary" onClick={() => { setQuery(''); setCategoryFilter('all'); setPatientFilter('all'); setBranchFilter('all'); setVisibilityFilter('all') }}>Clear filters</Button> : null}</div> : <div className="doc149-list">
-          {visiblePage.map((document) => {
-            const patient = patientMap.get(document.patientId)
-            const branchName = document.branchId ? branchMap.get(document.branchId) ?? 'Unknown branch' : 'Branch not recorded'
-            return <article key={document.id} className="doc149-row">
-              <button type="button" className="doc149-row-main" onClick={() => setSelectedId(document.id)}>
-                <span className="doc149-file-icon">{iconFor(document)}</span>
-                <span className="doc149-file-copy"><strong>{document.fileName}</strong><small>{document.description || 'No description recorded.'}</small></span>
-                <span className="doc149-category">{documentCategoryLabel(document.category)}</span>
-                <span className="doc149-meta"><UserRound size={14} /> {patientName(patient) || document.patientId}</span>
-                <span className="doc149-meta"><Building2 size={14} /> {shortBranchName(branchName)}</span>
-                <span className="doc149-meta">{formatDate(document.uploadDate || document.createdAt)}</span>
-                <span className="doc149-visibility">{document.patientVisible ? <Share2 size={14} /> : <LockKeyhole size={14} />}{document.patientVisible ? 'Shared' : 'Clinic only'}</span>
+      <div className="doc215-workspace">
+        <aside className="doc215-directory">
+          <header>
+            <div><span>Patient directory</span><strong>{patients.length} patients</strong></div>
+            <UserRound size={18} />
+          </header>
+          <label className="doc215-directory-search"><Search size={16} /><input value={directoryQuery} onChange={(event) => setDirectoryQuery(event.target.value)} placeholder="Search name, ID, phone..." /></label>
+          <div className="doc215-patient-list">
+            {filteredPatients.map((patient) => {
+              const patientStats = patientDocumentStats.get(patient.patientId) ?? { total: 0, shared: 0 }
+              const active = selectedPatient?.patientId === patient.patientId
+              return <button key={patient.id} type="button" className={active ? 'is-active' : ''} onClick={() => selectPatient(patient.patientId)}>
+                <PatientAvatar patient={patient} size={38} decorative />
+                <span className="doc215-patient-copy"><strong>{patientName(patient)}</strong><small>{patient.patientId} - {patientStats.shared} shared</small></span>
+                <span className="doc215-patient-count">{patientStats.total}</span>
+                <ChevronRight size={15} />
               </button>
-              <div className="doc149-actions">
-                <button type="button" disabled={busyId === document.id} onClick={() => void downloadDocument(document)}><Download size={15} /> Download</button>
-                <div className="doc149-menu-wrap">
-                  <button type="button" className="doc149-icon-button" aria-haspopup="menu" aria-expanded={menuId === document.id} onClick={() => setMenuId(menuId === document.id ? null : document.id)}><MoreHorizontal size={16} /></button>
-                  {menuId === document.id && <div className="doc149-menu" role="menu">
-                    {canUpload && <button type="button" role="menuitem" disabled={busyId === document.id} onClick={() => void toggleVisibility(document)}>{document.patientVisible ? <LockKeyhole size={14} /> : <Share2 size={14} />}{document.patientVisible ? 'Make private' : 'Share with patient'}</button>}
-                    {canUpload && <button type="button" role="menuitem" disabled={busyId === document.id} onClick={() => void archive(document)}><Archive size={14} /> Archive</button>}
-                    <button type="button" role="menuitem" onClick={() => { setSelectedId(document.id); setMenuId(null) }}><FileText size={14} /> Details</button>
-                  </div>}
-                </div>
+            })}
+            {filteredPatients.length === 0 && <div className="doc215-no-patients">No patient matches your search.</div>}
+          </div>
+        </aside>
+
+        <main className="doc215-main">
+          {selectedPatient ? <>
+            <section className="doc215-patient-hero">
+              <div className="doc215-patient-identity">
+                <PatientAvatar patient={selectedPatient} size={48} loading="eager" />
+                <div><span>Selected patient</span><h2>{patientName(selectedPatient)}</h2><p>{selectedPatient.patientId} - {selectedPatient.email || selectedPatient.phone || 'No contact information'}</p></div>
               </div>
-            </article>
-          })}
-        </div>}
-        {filtered.length > DOCUMENT_PAGE_SIZE && <div className="doc149-pagination"><span>Showing {(effectivePage - 1) * DOCUMENT_PAGE_SIZE + 1}-{Math.min(effectivePage * DOCUMENT_PAGE_SIZE, filtered.length)} of {filtered.length}</span><Pagination page={effectivePage} pageCount={pageCount} onPageChange={setPage} label="Document library pagination" /></div>}
-      </section>
+              <div className="doc215-patient-stats"><strong>{patientDocumentStats.get(selectedPatient.patientId)?.total ?? 0}</strong><span>files in this chart</span><small>{patientDocumentStats.get(selectedPatient.patientId)?.shared ?? 0} shared with patient</small></div>
+            </section>
+
+            <section className="doc149-toolbar doc215-toolbar" aria-label="Selected patient document filters">
+              <label className="doc149-search"><Search size={16} /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search this patient's files..." /></label>
+              <select value={categoryFilter} onChange={(event) => setCategoryFilter(event.target.value as DocumentCategory | 'all')} aria-label="Category filter"><option value="all">All categories</option>{categories.map((category) => <option key={category} value={category}>{documentCategoryLabel(category)}</option>)}</select>
+              {isAllBranchesMode && <select value={branchFilter} onChange={(event) => setBranchFilter(event.target.value)} aria-label="Branch filter"><option value="all">All branches</option>{availableBranches.map((branch) => <option key={branch.id} value={branch.id}>{shortBranchName(branch.name)}</option>)}</select>}
+              <select value={visibilityFilter} onChange={(event) => setVisibilityFilter(event.target.value as VisibilityFilter)} aria-label="Visibility filter"><option value="all">All visibility</option><option value="shared">Shared with patient</option><option value="private">Clinic only</option></select>
+              <select value={sort} onChange={(event) => setSort(event.target.value as SortOption)} aria-label="Sort documents"><option value="newest">Newest first</option><option value="oldest">Oldest first</option></select>
+            </section>
+
+            <section className="doc149-library doc215-library">
+              <header><div><span>Patient documents</span><h2>{filtered.length} file{filtered.length === 1 ? '' : 's'}</h2><p>Files linked to {selectedPatient.firstName}'s patient chart.</p></div></header>
+              {loading ? <div className="doc149-loading"><SkeletonList items={6} withAvatar /></div> : filtered.length === 0 ? <div className="doc149-empty"><FolderOpen size={28} /><strong>{(patientDocumentStats.get(selectedPatient.patientId)?.total ?? 0) > 0 ? 'No files match these filters.' : 'No documents in this patient chart.'}</strong><span>{(patientDocumentStats.get(selectedPatient.patientId)?.total ?? 0) > 0 ? 'Clear the filters to see more files.' : 'Upload the first document when a patient file is ready.'}</span>{(patientDocumentStats.get(selectedPatient.patientId)?.total ?? 0) > 0 ? <Button size="sm" variant="secondary" onClick={() => { setQuery(''); setCategoryFilter('all'); setBranchFilter('all'); setVisibilityFilter('all') }}>Clear filters</Button> : null}</div> : <div className="doc215-file-grid">
+                {visiblePage.map((document) => {
+                  const branchName = document.branchId ? branchMap.get(document.branchId) ?? 'Unknown branch' : 'Branch not recorded'
+                  return <article key={document.id} className="doc215-file-card">
+                    <button type="button" className="doc215-file-main" onClick={() => setSelectedId(document.id)}>
+                      <span className="doc149-file-icon">{iconFor(document)}</span>
+                      <span className="doc149-file-copy"><strong>{document.fileName}</strong><small>{document.description || 'No description recorded.'}</small></span>
+                      <span className="doc149-visibility">{document.patientVisible ? <Share2 size={13} /> : <LockKeyhole size={13} />}{document.patientVisible ? 'Shared' : 'Clinic only'}</span>
+                      <span className="doc215-file-meta"><span>{documentCategoryLabel(document.category)}</span><span><Building2 size={13} /> {shortBranchName(branchName)}</span><span>{formatDate(document.uploadDate || document.createdAt)}</span></span>
+                    </button>
+                    <div className="doc149-actions doc215-file-actions">
+                      <button type="button" disabled={busyId === document.id} onClick={() => void downloadDocument(document)}><Download size={15} /> Download</button>
+                      <div className="doc149-menu-wrap">
+                        <button type="button" className="doc149-icon-button" aria-label={`More actions for ${document.fileName}`} aria-haspopup="menu" aria-expanded={menuId === document.id} onClick={() => setMenuId(menuId === document.id ? null : document.id)}><MoreHorizontal size={16} /></button>
+                        {menuId === document.id && <div className="doc149-menu" role="menu">
+                          {canUpload && <button type="button" role="menuitem" disabled={busyId === document.id} onClick={() => void toggleVisibility(document)}>{document.patientVisible ? <LockKeyhole size={14} /> : <Share2 size={14} />}{document.patientVisible ? 'Make private' : 'Share with patient'}</button>}
+                          {canUpload && <button type="button" role="menuitem" disabled={busyId === document.id} onClick={() => void archive(document)}><Archive size={14} /> Archive</button>}
+                          <button type="button" role="menuitem" onClick={() => { setSelectedId(document.id); setMenuId(null) }}><FileText size={14} /> Details</button>
+                        </div>}
+                      </div>
+                    </div>
+                  </article>
+                })}
+              </div>}
+              {filtered.length > DOCUMENT_PAGE_SIZE && <div className="doc149-pagination"><span>Showing {(effectivePage - 1) * DOCUMENT_PAGE_SIZE + 1}-{Math.min(effectivePage * DOCUMENT_PAGE_SIZE, filtered.length)} of {filtered.length}</span><Pagination page={effectivePage} pageCount={pageCount} onPageChange={setPage} label={`${selectedPatient.firstName} document pagination`} /></div>}
+            </section>
+          </> : <div className="doc149-empty"><UserRound size={28} /><strong>No patients available.</strong><span>Add a patient before uploading clinical documents.</span></div>}
+        </main>
+      </div>
 
       {uploadOpen && activeBranchId && <div className="doc149-modal-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setUploadOpen(false) }}>
         <section className="doc149-upload-modal" role="dialog" aria-modal="true" aria-labelledby="doc149-upload-title">
@@ -310,7 +375,7 @@ export function DocumentsBranchWorkspaceV127() {
           <header><div><span className="doc149-file-icon">{iconFor(selectedDocument)}</span><div><span>Document details</span><h2 id="doc149-detail-title">{selectedDocument.fileName}</h2><p>{documentCategoryLabel(selectedDocument.category)}</p></div></div><button type="button" className="doc149-icon-button" onClick={() => setSelectedId(null)} aria-label="Close document details"><X size={18} /></button></header>
           <div className="doc149-detail-body">
             <section className="doc149-detail-grid">
-              <div><span>Patient</span><strong>{patientName(patientMap.get(selectedDocument.patientId)) || selectedDocument.patientId}</strong></div>
+              <div><span>Patient</span>{patientMap.get(selectedDocument.patientId) ? <span className="patient-identity-inline"><PatientAvatar patient={patientMap.get(selectedDocument.patientId)!} size="small" /><strong>{patientName(patientMap.get(selectedDocument.patientId))}</strong></span> : <strong>{selectedDocument.patientId}</strong>}</div>
               <div><span>Branch</span><strong>{selectedDocument.branchId ? branchMap.get(selectedDocument.branchId) ?? 'Unknown branch' : 'Branch not recorded'}</strong></div>
               <div><span>Upload date</span><strong>{formatDate(selectedDocument.uploadDate || selectedDocument.createdAt)}</strong></div>
               <div><span>File type</span><strong>{selectedDocument.fileType || 'File'}</strong></div>

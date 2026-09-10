@@ -4,6 +4,7 @@ import { Check, ChevronDown, LoaderCircle, Search, X } from 'lucide-react'
 import { getPatientDisplayName } from './patientStore'
 import { searchPatientsFromSupabase } from './patientPersistence'
 import type { Patient } from './patientTypes'
+import { PatientAvatar } from './PatientAvatar'
 import '../../styles/patient-search-combobox.css'
 
 type PatientSearchComboboxProps = {
@@ -34,10 +35,6 @@ function patientSearchText(patient: Patient) {
     patient.phone,
     patient.email,
   ].filter(Boolean).join(' ')
-}
-
-function initials(patient: Patient) {
-  return `${patient.firstName?.[0] ?? ''}${patient.lastName?.[0] ?? ''}`.toUpperCase() || '?'
 }
 
 export function PatientSearchCombobox({
@@ -223,7 +220,7 @@ export function PatientSearchCombobox({
           onMouseDown={(event) => event.preventDefault()}
           onClick={() => selectPatient(patient)}
         >
-          <span className="patient-search-avatar">{initials(patient)}</span>
+          <PatientAvatar patient={patient} size="small" className="patient-search-avatar" />
           <span className="patient-search-copy">
             <strong>{getPatientDisplayName(patient)}</strong>
             <small>{patient.patientId}{patient.phone ? ` · ${patient.phone}` : ''}</small>
@@ -245,7 +242,7 @@ export function PatientSearchCombobox({
       {label && <label className="patient-search-label" htmlFor={`${listId}-input`}>{label}{required && <sup>*</sup>}</label>}
       {selectedPatient ? (
         <div className="patient-search-selected">
-          <span className="patient-search-avatar">{initials(selectedPatient)}</span>
+          <PatientAvatar patient={selectedPatient} size="small" className="patient-search-avatar" />
           <span className="patient-search-copy"><strong>{getPatientDisplayName(selectedPatient)}</strong><small>{selectedPatient.patientId}{selectedPatient.phone ? ` · ${selectedPatient.phone}` : ''}</small>{selectedPatient.email && <small>{selectedPatient.email}</small>}</span>
           <button type="button" className="patient-search-clear" onClick={() => { setRemoteSelectedPatient(null); onSelect(null); inputRef.current?.focus() }} disabled={disabled} aria-label="Clear selected patient"><X size={16} /></button>
         </div>

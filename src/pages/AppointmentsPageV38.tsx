@@ -11,6 +11,7 @@ import { useBranchContext } from '../features/branches/BranchContext'
 import { getStoredBranches } from '../features/branches/branchStore'
 import { getStoredProviders } from '../features/dentists/dentistStore'
 import { getStoredPatients } from '../features/patients/patientStore'
+import { PatientAvatar } from '../features/patients/PatientAvatar'
 import { getStoredServices } from '../features/services/serviceStore'
 import '../styles/appointments-confirmation-v41.css'
 import '../styles/internal-appointments-final-v104.css'
@@ -134,7 +135,7 @@ function AppointmentSuccessModal({ notice, onClose, onContinue }: { notice: Appo
             <span className={`appointment-success-state ${approved ? 'is-confirmed' : 'is-pending'}`}><CheckCircle2 size={13} />{approved ? 'Confirmed' : 'Pending review'}</span>
           </section>
           <section className="appointment-success-primary-grid" aria-label="Appointment details">
-            <article className="appointment-success-person-card"><span className="appointment-success-detail-icon"><UserRound size={17} /></span><div><small>Patient</small><strong>{patient ? `${patient.firstName} ${patient.lastName}` : appointment.patientId}</strong><span>{patient?.patientId ?? appointment.patientId}</span></div></article>
+            <article className="appointment-success-person-card">{patient ? <PatientAvatar patient={patient} size="card" /> : <span className="appointment-success-detail-icon"><UserRound size={17} /></span>}<div><small>Patient</small><strong>{patient ? `${patient.firstName} ${patient.lastName}` : appointment.patientId}</strong><span>{patient?.patientId ?? appointment.patientId}</span></div></article>
             <article className="appointment-success-person-card"><span className="appointment-success-detail-icon"><Stethoscope size={17} /></span><div><small>Service</small><strong>{service?.name ?? 'Dental service'}</strong><span>{service?.duration ? `${service.duration} minute visit` : 'Scheduled service'}</span></div></article>
           </section>
           <section className="appointment-success-meta-grid" aria-label="Clinic details">

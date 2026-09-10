@@ -26,6 +26,7 @@ import { getStoredProviders } from '../features/dentists/dentistStore'
 import { getPatient360Summary } from '../features/patients/patient360Store'
 import { loadPatientsFromSupabase } from '../features/patients/patientPersistence'
 import { getPatientDisplayName, getStoredPatients } from '../features/patients/patientStore'
+import { PatientAvatar } from '../features/patients/PatientAvatar'
 import { getRecallDueBucket, getStoredPatientRecalls, listPatientRecalls, type RecallQueueItem } from '../features/recalls/recallStore'
 import { getStoredServices } from '../features/services/serviceStore'
 import { loadTreatmentsFromSupabase } from '../features/treatments/treatmentStore'
@@ -54,15 +55,6 @@ function formatTime(value?: string) {
   const [hours, minutes] = value.split(':').map(Number)
   if (!Number.isFinite(hours)) return value
   return `${hours % 12 || 12}:${String(minutes || 0).padStart(2, '0')} ${hours >= 12 ? 'PM' : 'AM'}`
-}
-
-function initials(name: string) {
-  return name
-    .split(' ')
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((part) => part[0]?.toUpperCase())
-    .join('')
 }
 
 function sentence(value?: string) {
@@ -197,7 +189,7 @@ export function PatientBranchAwareDetailV125() {
 
       <header className="patient125-hero">
         <div className="patient125-identity">
-          <div className="patient125-avatar">{patient.profileImage ? <img src={patient.profileImage} alt="" /> : initials(name)}</div>
+          <PatientAvatar patient={patient} size={64} className="patient125-avatar" loading="eager" />
           <div className="patient125-identity-copy">
             <div className="patient125-eyebrow-row"><span>Patient 360</span><Badge tone="info">{summary.patientType}</Badge></div>
             <h1>{name}</h1>

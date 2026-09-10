@@ -2,17 +2,21 @@ import { useEffect, useState } from 'react'
 import { PortalSkeleton } from '../../components/ui/DesignSystem'
 import { PatientPortalPage } from '../../pages/PatientPortalPage'
 import { hydratePatientBookingFoundation } from './bookingFoundationHydration'
+import { hydratePatientPortalFromDatabase } from './patientPortalHydration'
 
 type BootstrapState = 'loading' | 'ready' | 'error'
 
-let bookingFoundationPromise: Promise<void> | null = null
+let patientPortalBootstrapPromise: Promise<void> | null = null
 
-function refreshBookingFoundation() {
-  if (bookingFoundationPromise) return bookingFoundationPromise
-  bookingFoundationPromise = hydratePatientBookingFoundation().finally(() => {
-    bookingFoundationPromise = null
+function refreshPatientPortal() {
+  if (patientPortalBootstrapPromise) return patientPortalBootstrapPromise
+  patientPortalBootstrapPromise = Promise.all([
+    hydratePatientBookingFoundation(),
+    hydratePatientPortalFromDatabase(),
+  ]).then(() => undefined).finally(() => {
+    patientPortalBootstrapPromise = null
   })
-  return bookingFoundationPromise
+  return patientPortalBootstrapPromise
 }
 
 export function PatientPortalRoute() {
@@ -24,7 +28,7 @@ export function PatientPortalRoute() {
     setState('loading')
     setError(null)
 
-    void refreshBookingFoundation()
+    void refreshPatientPortal()
       .then(() => { if (isMounted) setState('ready') })
       .catch((cause) => {
         if (!isMounted) return
@@ -35,7 +39,7 @@ export function PatientPortalRoute() {
     return () => { isMounted = false }
   }, [])
 
-  if (state === 'loading') return <PortalSkeleton variant="patient" message="Refreshing clinic schedules" />
-  if (state === 'error') return <main className="auth-page"><section className="auth-card"><h2>Booking availability unavailable</h2><p>{error}</p><button type="button" onClick={() => window.location.reload()}>Try again</button></section></main>
+  if (state === 'loading') return <PortalSkeleton variant="patient" message="Loading your latest care information" />
+  if (state === 'error') return <main className="auth-page"><section className="auth-card"><h2>Patient portal unavailable</h2><p>{error}</p><button type="button" onClick={() => window.location.reload()}>Try again</button></section></main>
   return <PatientPortalPage />
 }

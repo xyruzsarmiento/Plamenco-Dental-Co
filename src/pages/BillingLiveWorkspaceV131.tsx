@@ -3,6 +3,7 @@ import { Skeleton, SkeletonCard, SkeletonList, SkeletonText } from '../component
 import { useAuth } from '../features/auth/AuthContext'
 import { hydrateBranchBillingFromDatabase } from '../features/billing/billingHydration'
 import { useBranchContext } from '../features/branches/BranchContext'
+import { loadPatientsFromSupabase } from '../features/patients/patientPersistence'
 import { BillingBranchWorkspaceV123 } from './BillingBranchWorkspaceV123'
 
 function BillingWorkspaceSkeleton() {
@@ -37,7 +38,10 @@ export function BillingLiveWorkspaceV131() {
       setState('loading')
       setError(null)
       try {
-        await hydrateBranchBillingFromDatabase(isAllBranchesMode ? undefined : activeBranchId ?? undefined)
+        await Promise.all([
+          hydrateBranchBillingFromDatabase(isAllBranchesMode ? undefined : activeBranchId ?? undefined),
+          loadPatientsFromSupabase({ strict: true }),
+        ])
         if (!alive) return
         setRevision((value) => value + 1)
         setState('ready')

@@ -1,0 +1,764 @@
+.app-shell .doc215-summary article {
+  min-height: 74px;
+  padding: 12px 14px;
+  border-radius: 8px;
+  box-shadow: none;
+}
+
+.app-shell .doc215-summary svg {
+  width: 34px;
+  height: 34px;
+  padding: 8px;
+  border-radius: 8px;
+}
+
+.app-shell .doc215-summary strong {
+  font-size: 1.15rem;
+}
+
+.app-shell .doc215-workspace {
+  display: grid;
+  grid-template-columns: 290px minmax(0, 1fr);
+  gap: 14px;
+  align-items: start;
+  min-width: 0;
+}
+
+.app-shell .doc215-directory {
+  position: sticky;
+  top: 88px;
+  display: grid;
+  grid-template-rows: auto auto minmax(0, 1fr);
+  gap: 12px;
+  min-width: 0;
+  max-height: calc(100dvh - 112px);
+  padding: 16px;
+  overflow: hidden;
+  border: 1px solid #d9e6f7;
+  border-radius: 8px;
+  background: #ffffff;
+  box-shadow: 0 10px 26px rgba(15, 23, 42, 0.04);
+}
+
+.app-shell .doc215-directory > header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  color: #2563eb;
+}
+
+.app-shell .doc215-directory > header > div {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+
+.app-shell .doc215-directory > header span,
+.app-shell .doc215-patient-hero span,
+.app-shell .doc215-library > header span:first-child {
+  color: #2563eb;
+  font-size: 0.64rem;
+  font-weight: 850;
+  letter-spacing: 0;
+  text-transform: uppercase;
+}
+
+.app-shell .doc215-directory > header strong {
+  color: #172033;
+  font-size: 0.9rem;
+}
+
+.app-shell .doc215-directory-search {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  min-width: 0;
+  min-height: 42px;
+  box-sizing: border-box;
+  padding: 0 11px;
+  border: 1px solid #d5e2f2;
+  border-radius: 8px;
+  background: #f8fbff;
+  color: #7b8ca3;
+  transition: border-color 150ms ease, box-shadow 150ms ease, background 150ms ease;
+}
+
+.app-shell .doc215-directory-search:focus-within {
+  border-color: #93c5fd;
+  background: #ffffff;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.app-shell .doc215-directory-search input,
+.app-shell .doc215-directory-search input:focus {
+  width: 100%;
+  min-width: 0;
+  height: 40px;
+  margin: 0;
+  padding: 0;
+  border: 0 !important;
+  border-radius: 0;
+  outline: 0 !important;
+  background: transparent;
+  box-shadow: none !important;
+  color: #172033;
+  font: inherit;
+  font-size: 0.75rem;
+}
+
+.app-shell .doc215-patient-list {
+  display: grid;
+  gap: 6px;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+}
+
+.app-shell .doc215-patient-list::-webkit-scrollbar {
+  width: 7px;
+}
+
+.app-shell .doc215-patient-list::-webkit-scrollbar-thumb {
+  border: 2px solid #ffffff;
+  border-radius: 999px;
+  background: #c8d8ee;
+}
+
+.app-shell .doc215-patient-list > button {
+  display: grid;
+  grid-template-columns: 38px minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 9px;
+  width: 100%;
+  min-width: 0;
+  min-height: 58px;
+  padding: 9px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background: transparent;
+  color: #6b7b90;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 150ms ease, background 150ms ease;
+}
+
+.app-shell .doc215-patient-list > button:hover,
+.app-shell .doc215-patient-list > button:focus-visible {
+  border-color: #d5e4f8;
+  background: #f7faff;
+  outline: none;
+}
+
+.app-shell .doc215-patient-list > button.is-active {
+  border-color: #a8c8f7;
+  background: #edf5ff;
+  color: #1d4ed8;
+}
+
+.app-shell .doc215-patient-copy {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+
+.app-shell .doc215-patient-copy strong,
+.app-shell .doc215-patient-copy small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.app-shell .doc215-patient-copy strong {
+  color: #172033;
+  font-size: 0.75rem;
+}
+
+.app-shell .doc215-patient-copy small {
+  color: #7b8798;
+  font-size: 0.61rem;
+}
+
+.app-shell .doc215-patient-count {
+  display: grid;
+  place-items: center;
+  min-width: 24px;
+  height: 24px;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: #eef2f7;
+  color: #52637a;
+  font-size: 0.65rem;
+  font-weight: 800;
+}
+
+.app-shell .doc215-patient-list > button.is-active .doc215-patient-count {
+  background: #ffffff;
+  color: #1d4ed8;
+}
+
+.app-shell .doc215-no-patients {
+  padding: 28px 10px;
+  color: #7b8798;
+  font-size: 0.75rem;
+  text-align: center;
+}
+
+.app-shell .doc215-main {
+  display: grid;
+  gap: 12px;
+  min-width: 0;
+}
+
+.app-shell .doc215-patient-hero {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  min-width: 0;
+  padding: 15px 17px;
+  border: 1px solid #d9e6f7;
+  border-radius: 8px;
+  background: linear-gradient(110deg, #ffffff 0%, #ffffff 72%, #edf5ff 100%);
+  box-shadow: 0 8px 22px rgba(15, 23, 42, 0.035);
+}
+
+.app-shell .doc215-patient-identity {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.app-shell .doc215-patient-identity > div {
+  min-width: 0;
+}
+
+.app-shell .doc215-patient-identity h2 {
+  margin: 4px 0 3px;
+  overflow: hidden;
+  color: #172033;
+  font-size: 1.15rem;
+  letter-spacing: 0;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.app-shell .doc215-patient-identity p {
+  margin: 0;
+  overflow: hidden;
+  color: #6b7b90;
+  font-size: 0.7rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.app-shell .doc215-patient-stats {
+  display: grid;
+  flex: 0 0 auto;
+  justify-items: end;
+  gap: 1px;
+  min-width: 116px;
+}
+
+.app-shell .doc215-patient-stats strong {
+  color: #1d4ed8;
+  font-size: 1.35rem;
+}
+
+.app-shell .doc215-patient-stats span,
+.app-shell .doc215-patient-stats small {
+  color: #6b7b90;
+  font-size: 0.63rem;
+}
+
+.app-shell .doc149-toolbar.doc215-toolbar {
+  display: grid;
+  grid-template-columns: minmax(220px, 1fr) repeat(3, minmax(130px, 170px));
+  gap: 8px;
+  padding: 10px;
+  border-radius: 8px;
+  box-shadow: none;
+}
+
+.app-shell .doc149-toolbar.doc215-toolbar select {
+  min-width: 0;
+  min-height: 40px;
+  border-radius: 8px;
+  font-size: 0.7rem;
+}
+
+.app-shell .doc149-toolbar.doc215-toolbar .doc149-search {
+  min-height: 40px;
+  border-radius: 8px;
+}
+
+.app-shell .doc215-library {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  min-height: 0;
+  max-height: min(650px, calc(100dvh - 300px)) !important;
+  overflow: hidden;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.app-shell .doc215-library > header {
+  align-items: flex-end;
+  padding: 12px 2px;
+  border-bottom: 1px solid #dce6f2;
+}
+
+.app-shell .doc215-library > header > div {
+  min-width: 0;
+}
+
+.app-shell .doc215-library > header h2 {
+  margin: 3px 0 2px;
+  font-size: 1rem;
+}
+
+.app-shell .doc215-library > header p {
+  margin: 0;
+  color: #7b8798;
+  font-size: 0.68rem;
+}
+
+.app-shell .doc215-file-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 9px;
+  min-height: 0;
+  padding: 10px 2px;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+}
+
+.app-shell .doc215-file-card {
+  position: relative;
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) auto;
+  min-width: 0;
+  min-height: 154px;
+  overflow: visible;
+  border: 1px solid #dce6f2;
+  border-radius: 8px;
+  background: linear-gradient(115deg, #ffffff 0%, #ffffff 78%, #f2f7ff 100%);
+  transition: border-color 150ms ease, box-shadow 150ms ease, transform 150ms ease;
+}
+
+.app-shell .doc215-file-card:hover {
+  border-color: #9fc2f3;
+  box-shadow: 0 8px 20px rgba(37, 99, 235, 0.08);
+  transform: translateY(-1px);
+}
+
+.app-shell .doc215-file-main {
+  display: grid;
+  grid-template-columns: 40px minmax(0, 1fr) auto;
+  align-content: start;
+  align-items: center;
+  gap: 9px 11px;
+  min-width: 0;
+  padding: 12px 12px 9px;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.app-shell .doc215-file-main:focus-visible {
+  outline: 2px solid #60a5fa;
+  outline-offset: -2px;
+}
+
+.app-shell .doc215-file-main .doc149-file-icon {
+  width: 40px;
+  height: 40px;
+  padding: 10px;
+  border-radius: 8px;
+}
+
+.app-shell .doc215-file-main .doc149-file-copy strong {
+  font-size: 0.78rem;
+}
+
+.app-shell .doc215-file-main .doc149-file-copy small {
+  font-size: 0.66rem;
+}
+
+.app-shell .doc215-file-main .doc149-visibility {
+  padding: 5px 7px;
+  border-radius: 999px;
+  font-size: 0.6rem;
+}
+
+.app-shell .doc215-file-meta {
+  grid-column: 2 / -1;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 5px 12px;
+  min-width: 0;
+  padding-top: 8px;
+  border-top: 1px solid #e8edf4;
+}
+
+.app-shell .doc215-file-meta > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: #6b7b90;
+  font-size: 0.61rem;
+  white-space: nowrap;
+}
+
+.app-shell .doc215-file-meta > span:first-child {
+  color: #1d4ed8;
+  font-weight: 750;
+}
+
+.app-shell .doc215-file-actions {
+  justify-content: flex-end;
+  padding: 8px 10px;
+  border-top: 1px solid #e8edf4;
+  background: rgba(248, 251, 255, 0.76);
+}
+
+.app-shell .doc215-file-actions > button {
+  min-height: 32px;
+  padding-inline: 10px;
+  border-radius: 7px;
+  font-size: 0.68rem;
+}
+
+.app-shell .doc215-file-actions .doc149-icon-button {
+  width: 34px;
+  min-height: 32px;
+  border-radius: 7px;
+}
+
+.app-shell .doc215-library .doc149-pagination {
+  padding-inline: 2px;
+  background: transparent;
+}
+
+.app-shell .doc177-skeleton-workspace {
+  display: grid;
+  grid-template-columns: 290px minmax(0, 1fr);
+  gap: 14px;
+  min-width: 0;
+}
+
+.app-shell .doc177-skeleton-directory,
+.app-shell .doc177-skeleton-patient,
+.app-shell .doc177-skeleton-patient-toolbar {
+  border: 1px solid #d9e6f7;
+  border-radius: 8px;
+  background: #ffffff;
+}
+
+.app-shell .doc177-skeleton-directory {
+  display: grid;
+  gap: 12px;
+  align-content: start;
+  padding: 16px;
+}
+
+.app-shell .doc177-skeleton-directory-heading,
+.app-shell .doc177-skeleton-patient,
+.app-shell .doc177-skeleton-patient > div,
+.app-shell .doc177-skeleton-patient > span {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.app-shell .doc177-skeleton-directory-heading > div,
+.app-shell .doc177-skeleton-patient > div > span,
+.app-shell .doc177-skeleton-patient > span {
+  display: grid;
+  gap: 6px;
+}
+
+.app-shell .doc177-skeleton-directory-list {
+  gap: 6px;
+}
+
+.app-shell .doc177-skeleton-directory-list .ui-skeleton-list-row {
+  min-height: 58px;
+  padding: 9px;
+  border-radius: 8px;
+}
+
+.app-shell .doc177-skeleton-main {
+  display: grid;
+  gap: 12px;
+  min-width: 0;
+}
+
+.app-shell .doc177-skeleton-patient {
+  min-height: 80px;
+  padding: 15px 17px;
+  background: linear-gradient(110deg, #ffffff 0%, #ffffff 72%, #edf5ff 100%);
+}
+
+.app-shell .doc177-skeleton-patient-toolbar {
+  display: grid;
+  grid-template-columns: minmax(220px, 1fr) repeat(3, minmax(130px, 170px));
+  gap: 8px;
+  padding: 10px;
+}
+
+.app-shell .doc177-skeleton-patient-library {
+  display: grid;
+  gap: 10px;
+  min-width: 0;
+  padding: 12px 2px;
+}
+
+.app-shell .doc177-skeleton-patient-library > div:first-child {
+  display: grid;
+  gap: 6px;
+}
+
+.app-shell .doc177-skeleton-document-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 9px;
+}
+
+.app-shell .doc177-skeleton-document-card.ui-skeleton-card {
+  min-width: 0;
+  min-height: 154px;
+  padding: 11px;
+  border-radius: 8px;
+  box-shadow: none;
+}
+
+@media (max-width: 1200px) {
+  .app-shell .doc215-workspace {
+    grid-template-columns: 250px minmax(0, 1fr);
+  }
+
+  .app-shell .doc177-skeleton-workspace {
+    grid-template-columns: 250px minmax(0, 1fr);
+  }
+
+  .app-shell .doc215-file-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .app-shell .doc177-skeleton-document-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .app-shell .doc149-toolbar.doc215-toolbar {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .app-shell .doc177-skeleton-patient-toolbar {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .app-shell .doc177-skeleton-patient-toolbar > :first-child {
+    grid-column: 1 / -1;
+  }
+
+  .app-shell .doc149-toolbar.doc215-toolbar .doc149-search {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 900px) {
+  .app-shell .doc215-workspace {
+    grid-template-columns: 1fr;
+  }
+
+  .app-shell .doc177-skeleton-workspace {
+    grid-template-columns: 1fr;
+  }
+
+  .app-shell .doc215-directory {
+    position: static;
+    max-height: 370px;
+  }
+
+  .app-shell .doc215-patient-list {
+    max-height: 250px;
+  }
+
+  .app-shell .doc215-library {
+    max-height: 620px !important;
+  }
+}
+
+@media (max-width: 680px) {
+  .app-shell .doc215-summary {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .app-shell .doc215-patient-hero {
+    align-items: flex-start;
+  }
+
+  .app-shell .doc215-patient-stats {
+    min-width: 90px;
+  }
+
+  .app-shell .doc149-toolbar.doc215-toolbar {
+    grid-template-columns: 1fr;
+  }
+
+  .app-shell .doc177-skeleton-patient-toolbar {
+    grid-template-columns: 1fr;
+  }
+
+  .app-shell .doc177-skeleton-patient-toolbar > :first-child {
+    grid-column: auto;
+  }
+
+  .app-shell .doc149-toolbar.doc215-toolbar .doc149-search {
+    grid-column: auto;
+  }
+
+  .app-shell .doc215-library > header {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .app-shell .doc215-library > header .btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .app-shell .doc215-library .doc149-pagination {
+    display: grid;
+    grid-template-columns: 1fr;
+    justify-items: stretch;
+    gap: 7px;
+  }
+
+  .app-shell .doc215-library .doc149-pagination > span {
+    text-align: center;
+  }
+
+  .app-shell .doc215-library .ui-pagination {
+    width: 100%;
+    margin: 0;
+    padding: 8px;
+    flex-wrap: nowrap;
+    border-radius: 8px;
+  }
+
+  .app-shell .doc215-library .ui-pagination > .btn {
+    flex: 0 0 auto;
+    width: auto;
+    min-height: 36px;
+  }
+
+  .app-shell .doc215-library .ui-pagination-pages {
+    flex: 1 1 auto;
+    justify-content: center;
+  }
+}
+
+@media (max-width: 430px) {
+  .app-shell .doc215-summary {
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+
+  .app-shell .doc215-summary article {
+    grid-template-columns: 30px minmax(0, 1fr);
+    gap: 4px 8px;
+    min-height: 68px;
+    padding: 10px;
+  }
+
+  .app-shell .doc215-summary svg {
+    width: 30px;
+    height: 30px;
+    padding: 7px;
+  }
+
+  .app-shell .doc215-directory {
+    padding: 13px;
+  }
+
+  .app-shell .doc215-patient-hero {
+    display: grid;
+    padding: 13px;
+  }
+
+  .app-shell .doc177-skeleton-patient {
+    display: grid;
+    padding: 13px;
+  }
+
+  .app-shell .doc215-patient-stats {
+    justify-items: start;
+    padding-top: 10px;
+    border-top: 1px solid #e3eaf3;
+  }
+
+  .app-shell .doc215-patient-identity h2,
+  .app-shell .doc215-patient-identity p {
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+
+  .app-shell .doc215-file-main {
+    grid-template-columns: 36px minmax(0, 1fr);
+    padding: 11px;
+  }
+
+  .app-shell .doc215-file-main .doc149-file-icon {
+    width: 36px;
+    height: 36px;
+    padding: 9px;
+  }
+
+  .app-shell .doc215-file-main .doc149-visibility,
+  .app-shell .doc215-file-meta {
+    grid-column: 2;
+    justify-self: start;
+  }
+
+  .app-shell .doc215-file-actions {
+    display: grid;
+    grid-template-columns: 1fr auto;
+  }
+
+  .app-shell .doc215-file-actions > button {
+    width: 100%;
+  }
+
+  .app-shell .doc215-library .ui-pagination > .btn {
+    width: 38px;
+    min-width: 38px;
+    padding: 0;
+    gap: 0;
+    overflow: hidden;
+    font-size: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .app-shell .doc215-file-card,
+  .app-shell .doc215-patient-list > button {
+    transition: none;
+  }
+
+  .app-shell .doc215-file-card:hover {
+    transform: none;
+  }
+}

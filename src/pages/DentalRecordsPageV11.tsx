@@ -2,6 +2,7 @@ import {
   Activity,
   CalendarDays,
   ChevronRight,
+  ClipboardCheck,
   ClipboardPlus,
   Clock3,
   FileText,
@@ -12,6 +13,7 @@ import {
   Search,
   ShieldAlert,
   Sparkles,
+  Stethoscope,
   UserRound,
   X,
 } from 'lucide-react'
@@ -33,6 +35,7 @@ import { loadAppointmentsFromSupabase } from '../features/appointments/appointme
 import type { Appointment } from '../features/appointments/appointmentTypes'
 import { useBranchContext } from '../features/branches/BranchContext'
 import { getStoredProviders, loadProviderFoundationFromSupabase } from '../features/dentists/dentistStore'
+import { PatientAvatar } from '../features/patients/PatientAvatar'
 import { getStoredPatients } from '../features/patients/patientStore'
 import { loadPatientsFromSupabase } from '../features/patients/patientPersistence'
 import { loadTreatmentsFromSupabase } from '../features/treatments/treatmentStore'
@@ -82,10 +85,6 @@ function formatTime(value?: string) {
   return `${hours % 12 || 12}:${String(minutes).padStart(2, '0')} ${suffix}`
 }
 
-function initials(firstName: string, lastName: string) {
-  return `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase()
-}
-
 export function DentalRecordsPageV11() {
   const { activeBranchId, availableBranches, isAllBranchesMode } = useBranchContext()
   const [patients, setPatients] = useState(() => [...getStoredPatients()].sort((a, b) => a.lastName.localeCompare(b.lastName)))
@@ -133,6 +132,15 @@ export function DentalRecordsPageV11() {
     })
     return () => { active = false }
   }, [])
+
+  useEffect(() => {
+    if (!selectedRecord || showRecordForm) return undefined
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setSelectedRecord(null)
+    }
+    window.addEventListener('keydown', closeOnEscape)
+    return () => window.removeEventListener('keydown', closeOnEscape)
+  }, [selectedRecord, showRecordForm])
 
   const filteredPatients = useMemo(() => {
     const query = patientSearch.trim().toLowerCase()
@@ -357,7 +365,7 @@ export function DentalRecordsPageV11() {
                 const patientRecordCount = records.filter((record) => record.patientId === patient.patientId || record.patientId === patient.id).length
                 return (
                   <button key={patient.id} type="button" className={selectedPatient.patientId === patient.patientId ? 'is-active' : ''} onClick={() => selectPatient(patient.patientId)}>
-                    <span className="dr11-avatar">{initials(patient.firstName, patient.lastName)}</span>
+                    <PatientAvatar patient={patient} size={38} className="dr11-avatar" />
                     <span className="dr11-patient-copy">
                       <strong>{patient.firstName} {patient.lastName}</strong>
                       <small>{patient.patientId}</small>
@@ -374,7 +382,7 @@ export function DentalRecordsPageV11() {
           <main className="dr11-main">
             <section className="dr11-patient-hero">
               <div className="dr11-patient-identity">
-                <span className="dr11-avatar dr11-avatar-lg">{initials(selectedPatient.firstName, selectedPatient.lastName)}</span>
+                <PatientAvatar patient={selectedPatient} size={48} className="dr11-avatar dr11-avatar-lg" loading="eager" />
                 <div>
                   <span className="dr11-kicker">Patient chart</span>
                   <h2>{selectedPatient.firstName} {selectedPatient.middleName ? `${selectedPatient.middleName} ` : ''}{selectedPatient.lastName}</h2>
@@ -489,25 +497,59 @@ export function DentalRecordsPageV11() {
 
         {selectedRecord && !showRecordForm && (
           <div className="dr11-detail-backdrop" onClick={() => setSelectedRecord(null)}>
-            <aside className="dr11-detail-panel" role="dialog" aria-modal="true" aria-labelledby="dr11-record-title" onClick={(event) => event.stopPropagation()}>
-              <div className="dr11-detail-head">
-                <div><span className="dr11-kicker">Clinical record detail</span><h2 id="dr11-record-title">{selectedRecord.chiefComplaint}</h2><p>{formatDate(selectedRecord.recordDate)} · {selectedRecord.createdBy || 'Clinical team'}</p></div>
+            <aside className="dr11-detail-panel" role="dialog" aria-modal="true" aria-labelledby="dr11-record-title" aria-describedby="dr11-record-context" onClick={(event) => event.stopPropagation()}>
+              <header className="dr11-detail-head">
+                <div className="dr11-detail-title">
+                  <span className="dr11-detail-title-icon" aria-hidden="true"><FileText size={20} /></span>
+                  <div>
+                    <span className="dr11-kicker">Clinical record</span>
+                    <h2 id="dr11-record-title">{selectedRecord.chiefComplaint || 'Clinical visit'}</h2>
+                    <p id="dr11-record-context">A complete summary of findings, care delivered, and next steps.</p>
+                  </div>
+                </div>
                 <button type="button" aria-label="Close record details" onClick={() => setSelectedRecord(null)}><X size={19} /></button>
+              </header>
+
+              <div className="dr11-detail-meta">
+                <div className="dr11-detail-patient">
+                  <PatientAvatar patient={selectedPatient} size={40} loading="eager" />
+                  <span><small>Patient</small><strong>{selectedPatient.firstName} {selectedPatient.lastName}</strong><em>{selectedPatient.patientId}</em></span>
+                </div>
+                <div><CalendarDays size={17} /><span><small>Visit date</small><strong>{formatDate(selectedRecord.recordDate)}</strong></span></div>
+                <div><Stethoscope size={17} /><span><small>Provider</small><strong>{selectedRecord.providerNameSnapshot || (selectedRecord.providerId ? providerMap.get(selectedRecord.providerId) : '') || selectedRecord.createdBy || 'Clinical team'}</strong></span></div>
+                <div className="dr11-detail-state"><span><small>Visit type</small><strong>{selectedRecord.visitType.replaceAll('_', ' ')}</strong></span><StatusBadge status={selectedRecord.status} variant="compact" /></div>
               </div>
-              <div className="dr11-detail-status"><span>{selectedRecord.visitType.replaceAll('_', ' ')}</span><StatusBadge status={selectedRecord.status} variant="compact" /></div>
-              <div className="dr11-detail-sections">
-                <section><span>Diagnosis</span><p>{selectedRecord.diagnosis || 'Not provided'}</p></section>
-                <section><span>Clinical findings</span><p>{selectedRecord.clinicalFindings || selectedRecord.findings || 'Not provided'}</p></section>
-                <section><span>Assessment</span><p>{selectedRecord.assessment || 'Not provided'}</p></section>
-                <section><span>Treatment performed</span><p>{selectedRecord.treatmentPerformed || 'Not provided'}</p></section>
-                <section><span>Treatment plan</span><p>{selectedRecord.treatmentPlan || 'Not provided'}</p></section>
-                <section><span>Recommendations</span><p>{selectedRecord.recommendations || 'Not provided'}</p></section>
-                <section><span>Follow-up</span><p>{selectedRecord.followUpDate ? `${formatDate(selectedRecord.followUpDate)}${selectedRecord.followUpNotes ? ` · ${selectedRecord.followUpNotes}` : ''}` : 'No follow-up scheduled'}</p></section>
+
+              <div className="dr11-detail-body">
+                <section className="dr11-detail-group">
+                  <header><span aria-hidden="true"><Activity size={17} /></span><div><small>Clinical assessment</small><h3>Diagnosis and findings</h3></div></header>
+                  <div className="dr11-detail-field-grid">
+                    <article className="is-primary"><span>Diagnosis</span><p>{selectedRecord.diagnosis || 'Not documented'}</p></article>
+                    <article><span>Clinical findings</span><p>{selectedRecord.clinicalFindings || selectedRecord.findings || 'Not documented'}</p></article>
+                    <article><span>Assessment</span><p>{selectedRecord.assessment || 'Not documented'}</p></article>
+                  </div>
+                </section>
+
+                <section className="dr11-detail-group">
+                  <header><span aria-hidden="true"><ClipboardCheck size={17} /></span><div><small>Care delivered</small><h3>Treatment and recommendations</h3></div></header>
+                  <div className="dr11-detail-field-grid">
+                    <article className="is-primary"><span>Treatment performed</span><p>{selectedRecord.treatmentPerformed || 'Not documented'}</p></article>
+                    <article><span>Treatment plan</span><p>{selectedRecord.treatmentPlan || 'Not documented'}</p></article>
+                    <article><span>Recommendations</span><p>{selectedRecord.recommendations || 'Not documented'}</p></article>
+                  </div>
+                </section>
+
+                <section className="dr11-detail-follow-up">
+                  <span className="dr11-detail-follow-icon" aria-hidden="true"><CalendarDays size={18} /></span>
+                  <div><small>Follow-up</small><strong>{selectedRecord.followUpDate ? formatDate(selectedRecord.followUpDate) : 'No follow-up scheduled'}</strong></div>
+                  <p>{selectedRecord.followUpNotes || (selectedRecord.followUpDate ? 'No additional follow-up instructions.' : 'No next visit or follow-up instruction has been recorded.')}</p>
+                </section>
               </div>
-              <div className="dr11-detail-actions">
+
+              {selectedRecord.status === 'draft' && <footer className="dr11-detail-actions">
                 {selectedRecord.status === 'draft' && <Button variant="secondary" onClick={() => openEditRecord(selectedRecord)}>Edit record</Button>}
                 {selectedRecord.status === 'draft' && <Button variant="ghost" onClick={() => void handleDeleteRecord(selectedRecord)}>Delete draft</Button>}
-              </div>
+              </footer>}
             </aside>
           </div>
         )}

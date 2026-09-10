@@ -150,5 +150,5 @@ begin
 end;
 $$;
 
-revoke all on function public.apply_verified_gateway_payment(text,text,text,text,integer,text) from public, anon;
-grant execute on function public.apply_verified_gateway_payment(text,text,text,text,integer,text) to authenticated;
+revoke all on function public.apply_verified_gateway_payment(text,text,text,text,integer,text) from public, anon, authenticated;
+grant execute on function public.apply_verified_gateway_payment(text,text,text,text,integer,text) to service_role;
