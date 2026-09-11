@@ -155,7 +155,7 @@ export function AcceptInvitePage() {
     }
   }
 
-  async function useDifferentAccount() {
+  async function handleUseDifferentAccount() {
     if (!supabase || switchingAccount) return
     setSwitchingAccount(true)
     setError(null)
@@ -256,7 +256,7 @@ export function AcceptInvitePage() {
 
                 <div className="invite181-actions">
                   <Button type="submit" disabled={saving || !context}>{saving ? 'Activating account…' : 'Set password & activate access'}</Button>
-                  <button type="button" className="invite181-secondary" onClick={() => void useDifferentAccount()} disabled={saving || switchingAccount}><ArrowLeft size={15} />{switchingAccount ? 'Switching…' : 'Use a different account'}</button>
+                  <button type="button" className="invite181-secondary" onClick={() => void handleUseDifferentAccount()} disabled={saving || switchingAccount}><ArrowLeft size={15} />{switchingAccount ? 'Switching…' : 'Use a different account'}</button>
                 </div>
               </form>
 
