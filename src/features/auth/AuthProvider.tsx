@@ -461,6 +461,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (!nextUser) {
         await supabase.auth.signOut(); clearCachedUser(); setUser(null); setAuthError('Unable to load an authorized clinic account for this session.'); setIsLoading(false); return false
       }
+      if (nextUser.role !== 'patient' && nextUser.status !== 'active') {
+        await supabase.auth.signOut({ scope: 'local' })
+        clearCachedUser()
+        setUser(null)
+        setAuthError('Your clinic account is inactive. If this is a new invitation, open the invitation email and finish account setup.')
+        setIsLoading(false)
+        return false
+      }
       cacheUser(nextUser); setUser(nextUser); setIsLoading(false); return true
     },
     signInWithSocial: async (provider: SocialAuthProvider) => {

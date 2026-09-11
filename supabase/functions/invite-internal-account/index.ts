@@ -21,6 +21,28 @@ function json(body: Record<string, unknown>, status = 200) {
   return Response.json(body, { status, headers: corsHeaders })
 }
 
+function resolveInviteRedirectUrl() {
+  const configuredUrl = [
+    Deno.env.get('SITE_URL'),
+    Deno.env.get('PUBLIC_SITE_URL'),
+    Deno.env.get('APP_URL'),
+  ].find((value) => Boolean(value?.trim()))?.trim()
+
+  if (!configuredUrl) {
+    return { error: 'Invitation service is not configured with an application URL. Set SITE_URL to the current app origin before inviting accounts.' }
+  }
+
+  try {
+    const parsed = new URL(configuredUrl)
+    if (!['http:', 'https:'].includes(parsed.protocol) || parsed.username || parsed.password || parsed.search || parsed.hash) {
+      return { error: 'Invitation service has an invalid application URL. Configure SITE_URL as an http(s) app origin without credentials, query parameters, or fragments.' }
+    }
+    return { redirectTo: `${configuredUrl.replace(/\/+$/, '')}/accept-invite` }
+  } catch {
+    return { error: 'Invitation service has an invalid application URL. Configure SITE_URL as an http(s) app origin.' }
+  }
+}
+
 Deno.serve(async (request) => {
   if (request.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders })
   if (request.method !== 'POST') return json({ error: 'Method not allowed.' }, 405)
@@ -28,11 +50,12 @@ Deno.serve(async (request) => {
   const supabaseUrl = Deno.env.get('SUPABASE_URL')
   const anonKey = Deno.env.get('SUPABASE_ANON_KEY')
   const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
-  const siteUrl = Deno.env.get('SITE_URL') ?? Deno.env.get('PUBLIC_SITE_URL') ?? ''
+  const inviteRedirect = resolveInviteRedirectUrl()
 
   if (!supabaseUrl || !anonKey || !serviceRoleKey) {
     return json({ error: 'Invitation service is not configured. Configure the Edge Function secrets before inviting accounts.' }, 500)
   }
+  if (inviteRedirect.error) return json({ error: inviteRedirect.error }, 500)
 
   const authHeader = request.headers.get('Authorization') ?? ''
   const userClient = createClient(supabaseUrl, anonKey, { global: { headers: { Authorization: authHeader } } })
@@ -66,7 +89,7 @@ Deno.serve(async (request) => {
   }
 
   const { data: inviteData, error: inviteError } = await adminClient.auth.admin.inviteUserByEmail(email, {
-    redirectTo: siteUrl ? `${siteUrl.replace(/\/$/, '')}/accept-invite` : undefined,
+    redirectTo: inviteRedirect.redirectTo,
     data: { full_name: name, first_name: name, last_name: '', role, account_type: 'internal' },
   })
 

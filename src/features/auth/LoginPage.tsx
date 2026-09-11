@@ -5,13 +5,23 @@ import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom'
 import { Button } from '../../components/ui/Button'
 import { useAuth } from './AuthContext'
 import { AuthShell } from './AuthShell'
+import type { AuthUser } from './authTypes'
 
 type LocationState = {
   from?: { pathname?: string }
 }
 
+function destinationForUser(user: AuthUser | null) {
+  if (!user) return '/login'
+  if (user.role === 'patient') return user.patientId ? `/portal/${user.patientId}` : '/login'
+  if (user.role === 'dentist' || user.role === 'associate_dentist') return '/dentist'
+  if (user.role === 'staff') return '/staff'
+  if (user.role === 'super_admin') return '/super-admin'
+  return '/app'
+}
+
 export function LoginPage() {
-  const { authError, clearAuthError, isAuthenticated, isLoading, signIn } = useAuth()
+  const { authError, clearAuthError, isAuthenticated, isLoading, signIn, user } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
   const state = location.state as LocationState | null
@@ -21,37 +31,15 @@ export function LoginPage() {
   const [rememberMe, setRememberMe] = useState(true)
 
   if (isAuthenticated) {
-    const storedUser = JSON.parse(window.localStorage.getItem('plamenco.auth.user') ?? 'null') as { role?: string; patientId?: string } | null
-    const userRole = storedUser?.role ?? (location.state && typeof location.state === 'object' && 'role' in location.state ? (location.state as { role?: string }).role : undefined)
-    const destination = userRole === 'patient'
-      ? storedUser?.patientId ? `/portal/${storedUser.patientId}` : '/login'
-      : userRole === 'dentist' || userRole === 'associate_dentist'
-        ? '/dentist'
-        : userRole === 'staff'
-          ? '/staff'
-          : userRole === 'super_admin'
-            ? '/super-admin'
-            : '/app'
-    return <Navigate to={destination} replace />
+    return <Navigate to={destinationForUser(user)} replace />
   }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     const didSignIn = await signIn(email, password)
     if (didSignIn) {
-      const storedUser = JSON.parse(window.localStorage.getItem('plamenco.auth.user') ?? 'null') as { role?: string; patientId?: string } | null
-      const targetPath = state?.from?.pathname && state.from.pathname !== '/login'
-        ? state.from.pathname
-        : storedUser?.role === 'patient' && storedUser.patientId
-          ? `/portal/${storedUser.patientId}`
-          : storedUser?.role === 'dentist' || storedUser?.role === 'associate_dentist'
-            ? '/dentist'
-            : storedUser?.role === 'staff'
-              ? '/staff'
-              : storedUser?.role === 'super_admin'
-                ? '/super-admin'
-                : '/app'
-      navigate(targetPath, { replace: true })
+      const targetPath = state?.from?.pathname && state.from.pathname !== '/login' ? state.from.pathname : null
+      if (targetPath) navigate(targetPath, { replace: true })
     }
   }
 

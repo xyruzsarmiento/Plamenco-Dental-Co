@@ -64,7 +64,15 @@ type InviteResponse = {
   error?: string
 }
 
+type ResendInvitationResponse = {
+  invitation?: { id?: string; status?: string; invited_at?: string }
+  account?: { userId?: string; email?: string; role?: InternalRole }
+  error?: string
+  state?: string
+}
+
 type InternalInvitationInfo = {
+  id: string
   email: string
   role: InternalRole
   status: string
@@ -268,12 +276,13 @@ export function TeamAccessPageV26() {
     void Promise.all([
       loadInternalAccountsFromProfiles({ strict: true }),
       loadStaffBranchAssignmentsAdmin(),
-      supabase.from('internal_account_invitations').select('email, role, status, invited_at').order('invited_at', { ascending: false }),
+      supabase.from('internal_account_invitations').select('id, email, role, status, invited_at').order('invited_at', { ascending: false }),
     ])
       .then(([accountRows, assignmentRows, invitationResult]) => {
         if (!active) return
         if (invitationResult.error) throw new Error(invitationResult.error.message)
         const invitationRows = (invitationResult.data ?? []).map((invitation) => ({
+          id: String(invitation.id ?? ''),
           email: String(invitation.email ?? '').toLowerCase(),
           role: invitation.role as InternalRole,
           status: String(invitation.status ?? ''),
@@ -360,6 +369,10 @@ export function TeamAccessPageV26() {
 
   async function toggleStatus(member: StaffMember) {
     if (profileBusyId) return
+    if (member.status !== 'active' && invitedEmails.has(member.email.toLowerCase())) {
+      setEditError('This invited account must complete the invitation before it can be activated.')
+      return
+    }
     try {
       const nextStatus: StaffStatus = member.status === 'active' ? 'inactive' : 'active'
       setProfileBusyId(member.id)
@@ -370,6 +383,27 @@ export function TeamAccessPageV26() {
       setRefreshKey((key) => key + 1)
     } catch (cause) {
       setEditError(cause instanceof Error ? cause.message : 'Account status could not be changed.')
+    } finally {
+      setProfileBusyId(null)
+    }
+  }
+
+  async function resendInvitation(member: StaffMember) {
+    if (profileBusyId) return
+    const invitation = invitations.find((entry) => entry.email === member.email.toLowerCase() && ['pending', 'sent', 'failed', 'cancelled'].includes(entry.status))
+    if (!invitation?.id) { setEditError('No recoverable invitation was found for this account.'); return }
+    if (!isSupabaseConfigured || !supabase) { setEditError('Supabase is required to resend an invitation.'); return }
+
+    setProfileBusyId(member.id)
+    setEditError(null)
+    try {
+      const { data, error: invokeError } = await supabase.functions.invoke<ResendInvitationResponse>('resend-internal-invitation', { body: { invitationId: invitation.id } })
+      if (invokeError) throw new Error(invokeError.message || 'The secure recovery service rejected the request.')
+      if (data?.error) throw new Error(data.error)
+      setMessage(`A fresh invitation was sent to ${member.email}. The existing clinic account and branch access were preserved.`)
+      setRefreshKey((key) => key + 1)
+    } catch (cause) {
+      setEditError(cause instanceof Error ? cause.message : 'The invitation could not be resent.')
     } finally {
       setProfileBusyId(null)
     }
@@ -529,7 +563,7 @@ export function TeamAccessPageV26() {
                 <span className="team-v26-row-copy"><strong>{member.name}</strong><span>{member.email}</span></span>
                 <span className="team-v26-role-chip">{roleLabel(member.role)}</span>
                 <span className={`team-v26-branch-summary ${memberBranches.length ? '' : 'is-empty'}`}><MapPin size={14} /> {branchSummary}</span>
-                <StatusBadge status={invitation && member.status !== 'active' ? 'pending' : member.status} variant="compact" />
+                <StatusBadge status={member.status === 'active' ? 'active' : invitation?.status === 'failed' ? 'failed' : invitation?.status === 'cancelled' ? 'cancelled' : invitation ? 'pending' : member.status} variant="compact" />
                 <span className="team-v26-manage-link">Manage <ChevronRight size={15} /></span>
               </button>
             </article>
@@ -595,7 +629,7 @@ export function TeamAccessPageV26() {
               </div>
               <div>
                 <span>Invitation</span>
-                <strong>{selectedInvitation?.status ? selectedInvitation.status.replaceAll('_', ' ') : 'Ready'}</strong>
+                <strong>{selected.status === 'active' ? 'Active' : selectedInvitation?.status === 'failed' ? 'Failed' : selectedInvitation?.status === 'cancelled' ? 'Invitation expired' : selectedInvitation ? 'Invited' : 'Inactive'}</strong>
                 <small>{selectedInvitation?.invitedAt ? `Sent ${formatDate(selectedInvitation.invitedAt)}` : 'No pending invitation'}</small>
               </div>
             </section>
@@ -650,7 +684,7 @@ export function TeamAccessPageV26() {
             {(accessMessage || accessError) && <span className={`team-v26-save-state-v154 ${accessError ? 'is-error' : 'is-success'}`}>{accessError || accessMessage}</span>}
             <div>
               <Button variant="secondary" onClick={() => openProfileEdit(selected)}><Edit3 size={15} /> Edit profile</Button>
-              <Button variant="secondary" disabled={profileBusyId === selected.id} onClick={() => void toggleStatus(selected)}>{profileBusyId === selected.id ? 'Updating...' : selected.status === 'active' ? 'Deactivate' : 'Activate'}</Button>
+              {selected.status !== 'active' && selectedInvitation && ['pending', 'sent', 'failed', 'cancelled'].includes(selectedInvitation.status) ? <Button variant="secondary" disabled={profileBusyId === selected.id} onClick={() => void resendInvitation(selected)}>{profileBusyId === selected.id ? 'Resending...' : 'Resend invitation'}</Button> : <Button variant="secondary" disabled={profileBusyId === selected.id} onClick={() => void toggleStatus(selected)}>{profileBusyId === selected.id ? 'Updating...' : selected.status === 'active' ? 'Deactivate' : 'Activate'}</Button>}
               {selected.role === 'staff' && <Button onClick={() => void saveBranchAccess()} disabled={accessBusy}>{accessBusy ? 'Saving...' : 'Save branch access'}</Button>}
             </div>
           </footer>

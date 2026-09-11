@@ -25,7 +25,7 @@ export function AcceptInvitePage() {
         const code = url.searchParams.get('code')
         if (code) {
           const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code)
-          if (exchangeError && !/code verifier/i.test(exchangeError.message)) throw exchangeError
+          if (exchangeError) throw exchangeError
           window.history.replaceState({}, document.title, '/accept-invite')
         }
         const { data: sessionData, error: sessionError } = await supabase.auth.getSession()
