@@ -13,6 +13,7 @@ type LocationState = {
 
 function destinationForUser(user: AuthUser | null) {
   if (!user) return '/login'
+  if (user.role !== 'patient' && user.status === 'inactive') return '/accept-invite'
   if (user.role === 'patient') return user.patientId ? `/portal/${user.patientId}` : '/login'
   if (user.role === 'dentist' || user.role === 'associate_dentist') return '/dentist'
   if (user.role === 'staff') return '/staff'
