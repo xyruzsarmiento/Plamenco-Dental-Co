@@ -79,6 +79,11 @@ async function waitForInvitationSession() {
 
   return await new Promise<NonNullable<typeof immediate.data.session> | null>((resolve) => {
     let finished = false
+    let timer = 0
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session) finish(session)
+    })
+
     const finish = (session: NonNullable<typeof immediate.data.session> | null) => {
       if (finished) return
       finished = true
@@ -87,11 +92,7 @@ async function waitForInvitationSession() {
       resolve(session)
     }
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (session) finish(session)
-    })
-
-    const timer = window.setTimeout(async () => {
+    timer = window.setTimeout(async () => {
       try {
         const latest = await supabase.auth.getSession()
         finish(latest.data.session ?? null)
@@ -247,7 +248,7 @@ export function AcceptInvitePage() {
     }
   }
 
-  const canSetPassword = Boolean(context) && !loading && !complete && !error
+  const canSetPassword = Boolean(context) && !loading && !complete
 
   return (
     <main className="invite182-page">
@@ -325,7 +326,7 @@ export function AcceptInvitePage() {
                       <span>New password</span>
                       <div className="invite182-input-wrap">
                         <LockKeyhole size={17} />
-                        <input type={showPassword ? 'text' : 'password'} autoComplete="new-password" value={password} onChange={(event) => setPassword(event.target.value)} minLength={8} required disabled={!canSetPassword || saving} />
+                        <input type={showPassword ? 'text' : 'password'} autoComplete="new-password" value={password} onChange={(event) => { setPassword(event.target.value); if (context) setError(null) }} minLength={8} required disabled={!canSetPassword || saving} />
                         <button type="button" onClick={() => setShowPassword((value) => !value)} disabled={!context || saving} aria-label={showPassword ? 'Hide password' : 'Show password'}>{showPassword ? <EyeOff size={17} /> : <Eye size={17} />}</button>
                       </div>
                     </label>
@@ -334,7 +335,7 @@ export function AcceptInvitePage() {
                       <span>Confirm password</span>
                       <div className="invite182-input-wrap">
                         <LockKeyhole size={17} />
-                        <input type={showConfirmPassword ? 'text' : 'password'} autoComplete="new-password" value={confirmPassword} onChange={(event) => setConfirmPassword(event.target.value)} minLength={8} required disabled={!canSetPassword || saving} />
+                        <input type={showConfirmPassword ? 'text' : 'password'} autoComplete="new-password" value={confirmPassword} onChange={(event) => { setConfirmPassword(event.target.value); if (context) setError(null) }} minLength={8} required disabled={!canSetPassword || saving} />
                         <button type="button" onClick={() => setShowConfirmPassword((value) => !value)} disabled={!context || saving} aria-label={showConfirmPassword ? 'Hide password' : 'Show password'}>{showConfirmPassword ? <EyeOff size={17} /> : <Eye size={17} />}</button>
                       </div>
                     </label>
