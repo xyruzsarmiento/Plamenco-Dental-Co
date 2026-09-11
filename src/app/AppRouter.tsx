@@ -9,6 +9,7 @@ import { useAuth } from '../features/auth/AuthContext'
 import { RequireAuth } from '../features/auth/RequireAuth'
 import { RequirePatientAuth } from '../features/auth/RequirePatientAuth'
 import { RequirePermission, RequireSuperAdmin } from '../features/auth/RequirePermission'
+import { recallWorkspaceViewPermissions } from '../features/auth/permissions'
 import { RequireRole } from '../features/auth/RequireRole'
 import { ResetPasswordPage } from '../features/auth/ResetPasswordPage'
 import type { AuthUser } from '../features/auth/authTypes'
@@ -33,6 +34,7 @@ import { PatientIntakePage } from '../pages/PatientIntakePage'
 import { PatientsBranchDirectoryV125 } from '../pages/PatientsBranchDirectoryV125'
 import { PrescriptionsPage } from '../pages/PrescriptionsPage'
 import { ProfilePage } from '../pages/ProfilePage'
+import { RecallFollowUpWorkspace } from '../pages/RecallFollowUpWorkspace'
 import { ReportsUnifiedWorkspaceV131 } from '../pages/ReportsUnifiedWorkspaceV131'
 import { RoleHomePage } from '../pages/RoleHomePage'
 import { ServicesPageV49 } from '../pages/ServicesPageV49'
@@ -109,6 +111,7 @@ export function AppRouter() {
       <Route path="treatments" element={<RequirePermission permission="treatments.view"><TreatmentsPageV43 /></RequirePermission>} />
       <Route path="treatment-plans" element={<RequirePermission permission="treatments.view"><TreatmentPlansPageV44 /></RequirePermission>} />
       <Route path="prescriptions" element={<RequirePermission permission="prescriptions.view"><PrescriptionsPage /></RequirePermission>} />
+      <Route path="recalls" element={<RequirePermission anyOf={recallWorkspaceViewPermissions}><RecallFollowUpWorkspace /></RequirePermission>} />
       <Route path="documents" element={<RequirePermission anyOf={['documents.view', 'documents.upload']}><DocumentsLiveWorkspaceV131 /></RequirePermission>} />
       <Route path="billing" element={<RequirePermission anyOf={['billing.view', 'payments.view']}><BillingLiveWorkspaceV131 /></RequirePermission>} />
       <Route path="services" element={<RequirePermission anyOf={['services.view', 'services.manage']}><ServicesPageV49 /></RequirePermission>} />

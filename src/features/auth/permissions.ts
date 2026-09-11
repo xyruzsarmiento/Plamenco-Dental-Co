@@ -160,6 +160,13 @@ type PatientPermissionKey =
 
 export type PermissionKey = (typeof permissionGroups)[number]['permissions'][number]['key'] | PatientPermissionKey
 
+export const recallWorkspaceViewPermissions: PermissionKey[] = [
+  'appointments.view',
+  'clinical_records.view',
+  'communications.manage',
+  'system_admin.view',
+]
+
 const clinicalPermissions: PermissionKey[] = [
   'appointments.view',
   'appointments.view_assigned',

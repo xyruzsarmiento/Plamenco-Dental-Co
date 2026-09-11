@@ -7,8 +7,19 @@ export type RecallSource = 'clinical_recommendation' | 'completed_treatment' | '
 export type RecallContactChannel = 'phone' | 'walk_in' | 'sms' | 'email' | 'messenger' | 'in_app' | 'manual_message'
 export type RecallContactOutcome = 'reached' | 'no_answer' | 'left_message' | 'patient_will_call' | 'patient_requested_booking' | 'patient_declined' | 'invalid_contact' | 'queued' | 'sent' | 'delivered' | 'failed' | 'cancelled'
 
+export type RecallPatientIdentity = {
+  patientId: string
+  firstName: string
+  lastName: string
+  fullName?: string
+  phone: string
+  email: string
+  profileImage?: string
+}
+
 export type RecallQueueItem = {
   id: string
+  patient?: RecallPatientIdentity
   patientId: string
   patientName: string
   phone: string
@@ -26,6 +37,9 @@ export type RecallQueueItem = {
   status: RecallStatus
   linkedAppointmentId?: string
   lastContactAt?: string
+  dismissalReason?: string
+  dismissedAt?: string
+  completedAt?: string
   createdAt: string
   updatedAt: string
 }
@@ -87,12 +101,23 @@ export function getRecallDueBucket(recall: Pick<RecallQueueItem, 'status' | 'due
 }
 
 function mapRecall(row: Record<string, any>, patient?: Record<string, any>): RecallQueueItem {
+  const patientIdentity = patient ? {
+    patientId: String(patient.patient_id ?? row.patient_id),
+    firstName: String(patient.first_name ?? ''),
+    lastName: String(patient.last_name ?? ''),
+    fullName: String(patient.full_name ?? '').trim() || undefined,
+    phone: String(patient.phone ?? ''),
+    email: String(patient.email ?? ''),
+    profileImage: String(patient.profile_image ?? '').trim() || undefined,
+  } : undefined
+
   return {
     id: row.id,
+    patient: patientIdentity,
     patientId: row.patient_id,
-    patientName: patient ? `${patient.first_name ?? ''} ${patient.last_name ?? ''}`.trim() || row.patient_id : row.patient_id,
-    phone: patient?.phone ?? '',
-    email: patient?.email ?? '',
+    patientName: patientIdentity?.fullName || `${patientIdentity?.firstName ?? ''} ${patientIdentity?.lastName ?? ''}`.trim() || row.patient_id,
+    phone: patientIdentity?.phone ?? '',
+    email: patientIdentity?.email ?? '',
     kind: row.kind,
     sourceType: row.source_type,
     sourceId: row.source_id ?? undefined,
@@ -106,6 +131,9 @@ function mapRecall(row: Record<string, any>, patient?: Record<string, any>): Rec
     status: row.status,
     linkedAppointmentId: row.linked_appointment_id ?? undefined,
     lastContactAt: row.last_contact_at ?? undefined,
+    dismissalReason: row.dismissal_reason ?? undefined,
+    dismissedAt: row.dismissed_at ?? undefined,
+    completedAt: row.completed_at ?? undefined,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   }
@@ -137,12 +165,25 @@ export async function listRecallQueue(input?: {
   const patientIds = [...new Set(recalls.map((row) => row.patient_id))]
   const { data: patients, error: patientError } = await db
     .from('patients')
-    .select('patient_id,first_name,last_name,phone,email')
+    .select('patient_id,first_name,last_name,full_name,phone,email,profile_image')
     .in('patient_id', patientIds)
   if (patientError) throw patientError
 
   const patientMap = new Map((patients ?? []).map((patient) => [patient.patient_id, patient]))
   return recalls.map((row) => mapRecall(row, patientMap.get(row.patient_id)))
+}
+
+export async function resolveRecallProviderIdForProfile(profileId: string) {
+  if (!profileId.trim()) return undefined
+  const db = client()
+  const { data, error } = await db
+    .from('providers')
+    .select('id')
+    .eq('profile_id', profileId)
+    .in('status', ['active', 'on_leave'])
+    .maybeSingle()
+  if (error) throw error
+  return data?.id ? String(data.id) : undefined
 }
 
 export async function listPatientRecalls(patientId: string) {
@@ -284,13 +325,21 @@ export async function completeRecall(recallId: string, appointmentId?: string) {
   if (error) throw error
 }
 
+export async function markRecallNeedsRescheduling(recallId: string) {
+  const { error } = await client().rpc('mark_recall_needs_rescheduling', {
+    p_recall_id: recallId,
+  })
+  if (error) throw error
+}
+
 export async function dismissRecall(recallId: string, reason: string) {
+  if (!reason.trim()) throw new Error('A dismissal reason is required.')
   const db = client()
   const { data: authData, error: authError } = await db.auth.getUser()
   if (authError) throw authError
   if (!authData.user) throw new Error('Your session has expired. Please sign in again.')
   const now = new Date().toISOString()
-  const { error } = await db
+  const { data, error } = await db
     .from('patient_recalls')
     .update({
       status: 'dismissed',
@@ -300,5 +349,8 @@ export async function dismissRecall(recallId: string, reason: string) {
       updated_at: now,
     })
     .eq('id', recallId)
+    .select('id')
+    .maybeSingle()
   if (error) throw error
+  if (!data) throw new Error('The recall was not found or you no longer have permission to dismiss it.')
 }

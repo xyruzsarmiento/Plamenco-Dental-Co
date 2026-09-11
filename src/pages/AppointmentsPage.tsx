@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState, type KeyboardEvent } from 'react'
 import { createPortal } from 'react-dom'
-import { useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import {
   Activity,
   AlertTriangle,
@@ -216,6 +216,7 @@ function AppointmentStatusDonut({ data }: { data: StatusDatum[] }) {
 }
 
 export function AppointmentsPage() {
+  const location = useLocation()
   const navigate = useNavigate()
   const { user } = useAuth()
   const permissions = usePermissions()
@@ -265,6 +266,40 @@ export function AppointmentsPage() {
   const [clinicalRecord, setClinicalRecord] = useState<DentalRecord | null>(null)
   const [pendingFollowUpRecall, setPendingFollowUpRecall] = useState<RecallQueueItem | null>(null)
   const [selectedFollowUpRecommendation, setSelectedFollowUpRecommendation] = useState<RecallQueueItem | null>(null)
+
+  useEffect(() => {
+    const routeState = location.state as { bookRecall?: RecallQueueItem } | null
+    const recall = routeState?.bookRecall
+    if (!recall) return
+
+    setSelectedAppointment(null)
+    setPendingFollowUpRecall(recall)
+    setFormValues({
+      patientId: recall.patientId,
+      branchId: recall.branchId || branches[0]?.id || '',
+      providerId: recall.providerId ?? '',
+      serviceId: recall.serviceId ?? '',
+      date: recall.dueDate || manilaDate(),
+      startTime: '09:00',
+      endTime: '09:30',
+      durationMinutes: undefined,
+      estimatedAmountCents: undefined,
+      paymentStatus: 'not_billed',
+      depositStatus: 'not_required',
+      depositRequiredCents: 0,
+      depositPaidCents: 0,
+      bookingSource: 'staff_entry',
+      reasonForVisit: recall.reason || 'Follow-up appointment',
+      patientNotes: '',
+      internalNotes: `Booked from recall or follow-up ${recall.id}.`,
+      notes: '',
+      status: 'pending',
+    })
+    setFormError(null)
+    setConflictError(null)
+    setShowForm(true)
+    navigate(location.pathname, { replace: true, state: null })
+  }, [branches, location.pathname, location.state, navigate])
 
   useEffect(() => {
     let active = true
@@ -557,10 +592,19 @@ export function AppointmentsPage() {
       }, user?.email ?? 'staff-entry')
 
       if (pendingFollowUpRecall) {
-        await linkRecallToAppointment(pendingFollowUpRecall.id, confirmed.id)
-        await listPatientRecalls(confirmed.patientId)
+        try {
+          await linkRecallToAppointment(pendingFollowUpRecall.id, confirmed.id)
+          await listPatientRecalls(confirmed.patientId)
+        } catch (linkError) {
+          setAppointments(await loadAppointmentsFromSupabase({ strict: true }))
+          setShowForm(false)
+          setConflictError(null)
+          setPendingFollowUpRecall(null)
+          setOperationError(`Appointment ${confirmed.appointmentNumber ?? confirmed.id} was saved, but the recall could not be linked. ${linkError instanceof Error ? linkError.message : 'Refresh the recall queue before trying to link it again.'}`)
+          return
+        }
       }
-      setAppointments(getStoredAppointments())
+      setAppointments(await loadAppointmentsFromSupabase({ strict: true }))
       setShowForm(false)
       setConflictError(null)
       setPendingFollowUpRecall(null)

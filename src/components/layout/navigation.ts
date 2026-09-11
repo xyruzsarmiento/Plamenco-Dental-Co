@@ -7,6 +7,7 @@ import {
   CreditCard,
   FileSignature,
   FileText,
+  HeartPulse,
   LayoutDashboard,
   PackageSearch,
   Pill,
@@ -19,7 +20,7 @@ import {
 } from 'lucide-react'
 import type { ComponentType } from 'react'
 import type { UserRole } from '../../features/auth/authTypes'
-import type { PermissionKey } from '../../features/auth/permissions'
+import { recallWorkspaceViewPermissions, type PermissionKey } from '../../features/auth/permissions'
 
 export type NavigationItem = {
   label: string
@@ -50,6 +51,7 @@ export const navigationGroups: NavigationGroup[] = [
       { label: 'Treatments', path: '/app/treatments', icon: FileText, anyOf: ['treatments.view'] },
       { label: 'Treatment Plans', path: '/app/treatment-plans', icon: ClipboardList, anyOf: ['treatments.view'] },
       { label: 'Prescriptions', path: '/app/prescriptions', icon: Pill, anyOf: ['prescriptions.view'] },
+      { label: 'Recalls & Follow-Ups', path: '/app/recalls', icon: HeartPulse, anyOf: recallWorkspaceViewPermissions },
       { label: 'Documents', path: '/app/documents', icon: FileSignature, anyOf: ['documents.view', 'documents.upload'] },
       { label: 'Billing / Payments', path: '/app/billing', icon: CreditCard, anyOf: ['billing.view', 'payments.view'] },
       { label: 'Services', path: '/app/services', icon: ClipboardList, anyOf: ['services.view', 'services.manage'] },
