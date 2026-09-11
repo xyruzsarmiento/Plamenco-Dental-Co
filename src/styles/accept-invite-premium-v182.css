@@ -1,0 +1,533 @@
+.invite182-page {
+  min-height: 100dvh;
+  display: grid;
+  place-items: center;
+  padding: 28px;
+  background:
+    radial-gradient(circle at top left, rgba(37, 99, 235, .08), transparent 34%),
+    linear-gradient(180deg, #f8fbff 0%, #f3f7fc 100%);
+  color: #102033;
+}
+
+.invite182-frame {
+  width: min(1120px, 100%);
+  border: 1px solid #d8e3f1;
+  border-radius: 26px;
+  overflow: hidden;
+  background: rgba(255,255,255,.97);
+  box-shadow: 0 28px 80px rgba(15, 23, 42, .13);
+}
+
+.invite182-topbar {
+  min-height: 70px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 0 28px;
+  border-bottom: 1px solid #e5ecf5;
+  background: rgba(255,255,255,.94);
+}
+
+.invite182-brand {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+}
+
+.invite182-brand-mark {
+  width: 38px;
+  height: 38px;
+  display: grid;
+  place-items: center;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #1d4ed8, #2563eb);
+  color: #fff;
+  font-weight: 900;
+  box-shadow: 0 8px 22px rgba(37,99,235,.24);
+}
+
+.invite182-brand strong,
+.invite182-brand span {
+  display: block;
+}
+
+.invite182-brand strong {
+  color: #142238;
+  font-size: 14px;
+}
+
+.invite182-brand span {
+  margin-top: 1px;
+  color: #748197;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: .11em;
+  text-transform: uppercase;
+}
+
+.invite182-security-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 34px;
+  padding: 0 12px;
+  border: 1px solid #d9e5f7;
+  border-radius: 999px;
+  background: #f8fbff;
+  color: #2d5eb7;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.invite182-grid {
+  display: grid;
+  grid-template-columns: minmax(0, .9fr) minmax(440px, 1.1fr);
+  min-height: 600px;
+}
+
+.invite182-overview {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 22px;
+  padding: clamp(34px, 5vw, 58px);
+  border-right: 1px solid #e3eaf4;
+  background:
+    linear-gradient(180deg, rgba(248,251,255,.92), rgba(243,247,252,.96));
+}
+
+.invite182-kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  width: fit-content;
+  color: #2563eb;
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: .13em;
+  text-transform: uppercase;
+}
+
+.invite182-overview h1,
+.invite182-workspace h2 {
+  margin: 0;
+  color: #0f1f34;
+  letter-spacing: -.045em;
+}
+
+.invite182-overview h1 {
+  max-width: 560px;
+  font-size: clamp(36px, 4.7vw, 54px);
+  line-height: 1.02;
+}
+
+.invite182-overview > p,
+.invite182-heading > p,
+.invite182-state > p {
+  margin: 0;
+  color: #64748b;
+  font-size: 14px;
+  line-height: 1.7;
+}
+
+.invite182-passport {
+  display: grid;
+  grid-template-columns: 46px minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: center;
+  padding: 15px;
+  border: 1px solid #d9e4f2;
+  border-radius: 16px;
+  background: #fff;
+  box-shadow: 0 10px 24px rgba(15,23,42,.045);
+}
+
+.invite182-passport.is-placeholder {
+  opacity: .75;
+}
+
+.invite182-passport-icon {
+  width: 46px;
+  height: 46px;
+  display: grid;
+  place-items: center;
+  border-radius: 13px;
+  background: #eaf2ff;
+  color: #2563eb;
+}
+
+.invite182-passport-copy {
+  min-width: 0;
+}
+
+.invite182-passport-copy span,
+.invite182-passport-copy strong,
+.invite182-passport-copy small {
+  display: block;
+}
+
+.invite182-passport-copy span {
+  color: #8a97aa;
+  font-size: 9px;
+  font-weight: 900;
+  letter-spacing: .11em;
+  text-transform: uppercase;
+}
+
+.invite182-passport-copy strong {
+  margin-top: 4px;
+  color: #16253a;
+  font-size: 14px;
+}
+
+.invite182-passport-copy small {
+  margin-top: 2px;
+  color: #64748b;
+  font-size: 11px;
+  overflow-wrap: anywhere;
+}
+
+.invite182-role {
+  display: inline-flex;
+  align-items: center;
+  min-height: 30px;
+  padding: 0 10px;
+  border: 1px solid #cfe0ff;
+  border-radius: 999px;
+  background: #eff5ff;
+  color: #225bd1;
+  font-size: 10px;
+  font-weight: 900;
+  text-transform: capitalize;
+}
+
+.invite182-trust-list {
+  display: grid;
+  gap: 10px;
+}
+
+.invite182-trust-list > span {
+  display: grid;
+  grid-template-columns: 28px minmax(0, 1fr);
+  gap: 10px;
+  align-items: start;
+  color: #33506f;
+}
+
+.invite182-trust-list > span > svg {
+  margin-top: 2px;
+  color: #2563eb;
+}
+
+.invite182-trust-list strong,
+.invite182-trust-list small {
+  display: block;
+}
+
+.invite182-trust-list strong {
+  font-size: 12px;
+}
+
+.invite182-trust-list small {
+  margin-top: 2px;
+  color: #7b8798;
+  font-size: 10px;
+  line-height: 1.5;
+}
+
+.invite182-workspace {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-width: 0;
+  padding: clamp(36px, 5vw, 62px);
+  background: #fff;
+}
+
+.invite182-heading {
+  display: grid;
+  gap: 10px;
+  margin-bottom: 24px;
+}
+
+.invite182-heading h2,
+.invite182-state h2 {
+  font-size: clamp(30px, 4vw, 42px);
+  line-height: 1.04;
+}
+
+.invite182-form {
+  display: grid;
+  gap: 16px;
+}
+
+.invite182-fields {
+  display: grid;
+  gap: 13px;
+}
+
+.invite182-field {
+  display: grid;
+  gap: 7px;
+}
+
+.invite182-field > span {
+  color: #334155;
+  font-size: 11px;
+  font-weight: 850;
+}
+
+.invite182-input-wrap {
+  position: relative;
+  display: grid;
+  grid-template-columns: 20px minmax(0,1fr) 38px;
+  align-items: center;
+  min-height: 50px;
+  border: 1px solid #ccd8e8;
+  border-radius: 13px;
+  background: #fff;
+  color: #728096;
+  transition: border-color .15s ease, box-shadow .15s ease;
+}
+
+.invite182-input-wrap:focus-within {
+  border-color: #5d88ef;
+  box-shadow: 0 0 0 4px rgba(37,99,235,.1);
+}
+
+.invite182-input-wrap > svg {
+  margin-left: 14px;
+}
+
+.invite182-input-wrap input {
+  width: 100%;
+  min-width: 0;
+  height: 48px;
+  padding: 0 10px 0 12px;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: #132238;
+  font: inherit;
+  font-size: 14px;
+}
+
+.invite182-input-wrap input:disabled {
+  cursor: not-allowed;
+  color: #9aa6b6;
+}
+
+.invite182-input-wrap button {
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  border: 0;
+  border-radius: 9px;
+  background: transparent;
+  color: #69778b;
+  cursor: pointer;
+}
+
+.invite182-input-wrap button:hover:not(:disabled) {
+  background: #f2f6fb;
+  color: #225fd8;
+}
+
+.invite182-input-wrap button:disabled {
+  opacity: .45;
+  cursor: not-allowed;
+}
+
+.invite182-requirements {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.invite182-requirements span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 29px;
+  padding: 0 9px;
+  border: 1px solid #e1e7ef;
+  border-radius: 999px;
+  background: #f8fafc;
+  color: #7a8799;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.invite182-requirements span.is-met {
+  border-color: #c5ecd2;
+  background: #f2fbf5;
+  color: #178044;
+}
+
+.invite182-error,
+.invite182-success,
+.invite182-loading {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px 13px;
+  border-radius: 12px;
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.invite182-error {
+  border: 1px solid #fecaca;
+  background: #fff7f7;
+  color: #b42318;
+}
+
+.invite182-success {
+  border: 1px solid #bbf7d0;
+  background: #f3fcf6;
+  color: #166534;
+}
+
+.invite182-loading {
+  align-items: center;
+  border: 1px solid #dbe5f3;
+  background: #f8fbff;
+  color: #52637a;
+}
+
+.invite182-loading > span {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #2563eb;
+  box-shadow: 0 0 0 5px rgba(37,99,235,.1);
+}
+
+.invite182-actions {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 10px;
+  margin-top: 2px;
+}
+
+.invite182-actions.single-primary {
+  grid-template-columns: minmax(0,1fr) auto;
+  margin-top: 18px;
+}
+
+.invite182-actions .btn {
+  min-height: 46px;
+  border-radius: 12px;
+}
+
+.invite182-secondary {
+  min-height: 46px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 0 15px;
+  border: 1px solid #d3deec;
+  border-radius: 12px;
+  background: #fff;
+  color: #3f5067;
+  font-size: 11px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.invite182-secondary:hover:not(:disabled) {
+  background: #f8fafc;
+  border-color: #bbcbe0;
+}
+
+.invite182-secondary:disabled {
+  opacity: .55;
+  cursor: not-allowed;
+}
+
+.invite182-footnote {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin-top: 17px;
+  padding-top: 15px;
+  border-top: 1px solid #edf1f6;
+  color: #8390a2;
+  font-size: 10px;
+  line-height: 1.5;
+}
+
+.invite182-footnote svg {
+  flex: 0 0 auto;
+  margin-top: 1px;
+  color: #607189;
+}
+
+.invite182-state {
+  display: grid;
+  gap: 12px;
+}
+
+.invite182-state-icon {
+  width: 50px;
+  height: 50px;
+  display: grid;
+  place-items: center;
+  border-radius: 14px;
+  background: #edf4ff;
+  color: #2563eb;
+}
+
+.invite182-state-icon.is-success {
+  background: #edf9f1;
+  color: #168348;
+}
+
+@media (max-width: 900px) {
+  .invite182-page { padding: 18px; }
+  .invite182-grid { grid-template-columns: 1fr; min-height: 0; }
+  .invite182-overview {
+    border-right: 0;
+    border-bottom: 1px solid #e3eaf4;
+    padding: 30px;
+  }
+  .invite182-overview h1 { font-size: 38px; }
+  .invite182-trust-list { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .invite182-workspace { padding: 34px 30px 38px; }
+}
+
+@media (max-width: 680px) {
+  .invite182-page { align-items: start; padding: 0; background: #fff; }
+  .invite182-frame { min-height: 100dvh; border: 0; border-radius: 0; box-shadow: none; }
+  .invite182-topbar { min-height: 64px; padding: 0 18px; }
+  .invite182-security-chip { display: none; }
+  .invite182-overview { padding: 26px 20px; }
+  .invite182-overview h1 { font-size: 32px; }
+  .invite182-overview > p { font-size: 12px; }
+  .invite182-trust-list { grid-template-columns: 1fr; }
+  .invite182-passport { grid-template-columns: 42px minmax(0,1fr); }
+  .invite182-role { grid-column: 2; justify-self: start; }
+  .invite182-workspace { padding: 28px 20px max(28px, env(safe-area-inset-bottom)); }
+  .invite182-heading h2,
+  .invite182-state h2 { font-size: 30px; }
+  .invite182-actions,
+  .invite182-actions.single-primary { grid-template-columns: 1fr; }
+  .invite182-actions > * { width: 100%; }
+  .invite182-input-wrap input { font-size: 16px; }
+}
+
+@media (max-width: 390px) {
+  .invite182-topbar { padding-inline: 15px; }
+  .invite182-overview,
+  .invite182-workspace { padding-inline: 16px; }
+  .invite182-overview h1 { font-size: 29px; }
+  .invite182-heading h2,
+  .invite182-state h2 { font-size: 28px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .invite182-input-wrap { transition: none; }
+}
