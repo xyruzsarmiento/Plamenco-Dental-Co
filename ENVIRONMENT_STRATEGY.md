@@ -53,7 +53,7 @@ Purpose: real clinic operations for Pulilan and Plaridel.
 | `CRON_SECRET` | Server only secret | Scheduled Edge Functions | Required by reminder/outbox jobs. |
 | `SITE_URL`, `PUBLIC_SITE_URL`, `APP_URL` | Environment specific | Auth/invites/docs | Must match the current environment host. |
 | `EMAIL_PROVIDER_ENDPOINT`, `EMAIL_API_KEY`, `EMAIL_FROM` | Server only, optional legacy HTTP provider | Communication worker | Use staging/test provider config before production. |
-| `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD`, `SMTP_FROM_EMAIL`, `SMTP_FROM_NAME` | Server only secret/config | Communication worker and Supabase Auth custom SMTP | Gmail uses an App Password; never place `SMTP_PASSWORD` in Vite, localStorage, or a client-visible table. |
+| `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD`, `SMTP_FROM_EMAIL`, `SMTP_FROM_NAME` | Server only secret/config | Communication worker and server-side internal invitation delivery; Supabase Auth custom SMTP remains required for Auth-owned mail | Gmail uses an App Password; never place `SMTP_PASSWORD` in Vite, localStorage, or a client-visible table. |
 | `SMS_PROVIDER_ENDPOINT`, `SMS_API_KEY`, `SMS_SENDER_NAME` | Server only, optional until SMS enabled | Communication worker | Staging must not message real patients casually. |
 | `META_PAGE_ACCESS_TOKEN`, `META_APP_SECRET`, `META_VERIFY_TOKEN` | Server only, optional until Messenger enabled | Messenger functions | Requires actual clinic Facebook Page authorization. |
 | `PAYMENT_WEBHOOK_SECRET` | Server only, optional until online payments enabled | Payment webhook | Separate sandbox/live secrets. |

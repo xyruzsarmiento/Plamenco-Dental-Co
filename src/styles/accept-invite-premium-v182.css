@@ -313,6 +313,14 @@
   font-size: 14px;
 }
 
+/* The wrapper is the single focus surface for this compound control. */
+.invite182-input-wrap input:focus,
+.invite182-input-wrap input:focus-visible {
+  border-color: transparent;
+  box-shadow: none;
+  outline: none;
+}
+
 .invite182-input-wrap input:disabled {
   cursor: not-allowed;
   color: #9aa6b6;
@@ -333,6 +341,12 @@
 .invite182-input-wrap button:hover:not(:disabled) {
   background: #f2f6fb;
   color: #225fd8;
+}
+
+.invite182-input-wrap button:focus,
+.invite182-input-wrap button:focus-visible {
+  box-shadow: none;
+  outline: none;
 }
 
 .invite182-input-wrap button:disabled {
@@ -466,6 +480,78 @@
   color: #607189;
 }
 
+.invite182-confirmation-backdrop {
+  position: fixed;
+  z-index: 20;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: rgba(15, 31, 52, .42);
+  backdrop-filter: blur(8px);
+}
+
+.invite182-confirmation {
+  width: min(440px, 100%);
+  display: grid;
+  gap: 12px;
+  padding: 30px;
+  border: 1px solid #d8e3f1;
+  border-radius: 22px;
+  background: #fff;
+  box-shadow: 0 24px 70px rgba(15, 23, 42, .22);
+}
+
+.invite182-confirmation-icon {
+  width: 52px;
+  height: 52px;
+  display: grid;
+  place-items: center;
+  border-radius: 16px;
+  background: #edf9f1;
+  color: #168348;
+}
+
+.invite182-confirmation h2 {
+  margin: 0;
+  color: #0f1f34;
+  font-size: 27px;
+  line-height: 1.1;
+  letter-spacing: -.035em;
+}
+
+.invite182-confirmation p {
+  margin: 0;
+  color: #64748b;
+  font-size: 13px;
+  line-height: 1.65;
+}
+
+.invite182-confirmation-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  margin-top: 4px;
+  padding: 10px 12px;
+  border: 1px solid #bbf7d0;
+  border-radius: 10px;
+  background: #f3fcf6;
+  color: #166534;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.invite182-confirmation-actions {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, .8fr);
+  gap: 10px;
+  margin-top: 7px;
+}
+
+.invite182-confirmation-actions > * {
+  width: 100%;
+}
+
 .invite182-state {
   display: grid;
   gap: 12px;
@@ -517,6 +603,9 @@
   .invite182-actions.single-primary { grid-template-columns: 1fr; }
   .invite182-actions > * { width: 100%; }
   .invite182-input-wrap input { font-size: 16px; }
+  .invite182-confirmation-backdrop { padding: 16px; }
+  .invite182-confirmation { padding: 24px; border-radius: 18px; }
+  .invite182-confirmation-actions { grid-template-columns: 1fr; }
 }
 
 @media (max-width: 390px) {

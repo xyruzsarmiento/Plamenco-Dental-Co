@@ -445,7 +445,7 @@ export function buildEnterpriseReportSnapshot(input: EnterpriseReportInput = {})
   const rawInvoices = input.invoices ?? getStoredInvoices()
   const invoiceMap = new Map(rawInvoices.map((invoice) => [invoice.id, invoice]))
   const patientMap = new Map(patients.map((patient) => [patient.id, patient]))
-  const appointments = (input.appointments ?? getStoredAppointments()).filter((appointment) => (
+  const appointments = (input.appointments ?? getStoredAppointments()).filter((appointment): appointment is Appointment => Boolean(appointment) && (
     inRange(appointment.date, filters)
     && isBranchAllowed(appointment.branchId, filters)
     && (!filters.providerId || filters.providerId === 'all' || appointment.providerId === filters.providerId)

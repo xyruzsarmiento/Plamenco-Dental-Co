@@ -41,7 +41,9 @@ Keep this `false` until the SMTP secrets and a safe test recipient have been ver
 
 ## Supabase Auth email
 
-Configure this in the Supabase Dashboard for each project under Authentication email/SMTP settings, or through the Supabase Management API. Use the same Gmail SMTP host, port, username, App Password, sender email, and sender name. This is separate from the patient communication worker because Supabase Auth must keep ownership of secure invitation and recovery tokens.
+Password-reset, verification, and other Auth-owned messages should still use the Supabase Dashboard SMTP configuration. Use the same Gmail SMTP host, port, username, App Password, sender email, and sender name. This is separate from the patient communication worker.
+
+Internal invitations keep Supabase Auth responsible for creating the user and generating the secure invite token, but the Edge Function now sends the generated action link through the server-side Gmail SMTP sender. This prevents `inviteUserByEmail()` from using Supabase's default mailer and avoids sending duplicate invitation messages.
 
 Set the Auth URL configuration separately:
 

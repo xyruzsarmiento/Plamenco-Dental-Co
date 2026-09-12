@@ -1,0 +1,164 @@
+/* Final stacking and footer alignment for the internal account workflow. */
+
+/* The confirmation dialog is a second modal and must sit above the account dialog. */
+body:has(.app-shell) .team-v26-confirmation-backdrop {
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: 18000 !important;
+}
+
+/* Let the action cluster use the full remaining footer width. */
+.app-shell.role-super_admin .team-v26-account-footer-v153 {
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+  width: 100% !important;
+}
+
+.app-shell.role-super_admin .team-v26-account-footer-v153 > .btn:first-child {
+  flex: 1 1 0 !important;
+  min-width: 0 !important;
+}
+
+.app-shell.role-super_admin .team-v26-account-footer-v153 > div {
+  flex: 2 1 0 !important;
+  width: auto !important;
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  gap: 8px !important;
+}
+
+.app-shell.role-super_admin .team-v26-account-footer-v153 > div:has(> .btn:nth-child(3)) {
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+}
+
+.app-shell.role-super_admin .team-v26-account-footer-v153 > div .btn {
+  width: 100% !important;
+  min-width: 0 !important;
+  justify-content: center !important;
+  white-space: nowrap !important;
+}
+
+/* The directory stays bounded while the page chrome and filters remain visible. */
+.app-shell.role-super_admin .team-v26-people-list {
+  max-height: min(62dvh, 620px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+  scrollbar-width: thin;
+  scrollbar-color: #bfd0e5 transparent;
+}
+
+.app-shell.role-super_admin .team-v26-people-list::-webkit-scrollbar { width: 8px; }
+.app-shell.role-super_admin .team-v26-people-list::-webkit-scrollbar-track { background: transparent; }
+.app-shell.role-super_admin .team-v26-people-list::-webkit-scrollbar-thumb {
+  border: 2px solid transparent;
+  border-radius: 999px;
+  background: #bfd0e5;
+  background-clip: padding-box;
+}
+
+.team-v26-revoke-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 18500;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: rgba(15, 23, 42, .58);
+  backdrop-filter: blur(10px);
+}
+
+.team-v26-revoke-modal {
+  position: relative;
+  width: min(470px, 100%);
+  display: grid;
+  gap: 12px;
+  padding: 28px;
+  border: 1px solid #dbe5f1;
+  border-radius: 24px;
+  background: #fff;
+  box-shadow: 0 32px 90px rgba(15, 23, 42, .3);
+  max-height: min(90dvh, 640px);
+  overflow-y: auto;
+}
+
+.team-v26-revoke-modal > .team-v26-icon-button {
+  position: absolute !important;
+  top: 18px !important;
+  right: 18px !important;
+  left: auto !important;
+  bottom: auto !important;
+  margin: 0 !important;
+  z-index: 2;
+}
+
+.team-v26-revoke-icon {
+  width: 52px;
+  height: 52px;
+  display: grid;
+  place-items: center;
+  border: 1px solid #fecaca;
+  border-radius: 16px;
+  background: #fff1f2;
+  color: #dc2626;
+}
+
+.team-v26-revoke-modal h2 { margin: 8px 54px 0 0; color: #172033; font-size: 26px; line-height: 1.1; }
+.team-v26-revoke-modal p { margin: 0; color: #64748b; font-size: 13px; line-height: 1.6; }
+.team-v26-revoke-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 12px;
+  border: 1px solid #bbf7d0;
+  border-radius: 14px;
+  background: #f0fdf4;
+  color: #166534;
+  font-size: 12px;
+  line-height: 1.5;
+}
+.team-v26-revoke-note svg { flex: 0 0 auto; margin-top: 1px; }
+.team-v26-revoke-modal footer { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; padding-top: 8px; }
+.team-v26-revoke-modal footer .btn { width: 100%; }
+
+@media (max-width: 720px) {
+  .app-shell.role-super_admin .team-v26-account-footer-v153 > .btn:first-child,
+  .app-shell.role-super_admin .team-v26-account-footer-v153 > div {
+    width: 100% !important;
+    flex: none !important;
+  }
+
+  .app-shell.role-super_admin .team-v26-account-footer-v153 > div {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+
+  .app-shell.role-super_admin .team-v26-account-footer-v153 > div:has(> .btn:nth-child(3)) {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+
+  .app-shell.role-super_admin .team-v26-account-footer-v153 > div:has(> .btn:nth-child(3)) > .btn:last-child {
+    grid-column: 1 / -1 !important;
+  }
+
+  .app-shell.role-super_admin .team-v26-people-list { max-height: min(58dvh, 560px); }
+  .team-v26-revoke-backdrop { padding: 14px; }
+  .team-v26-revoke-modal { width: 100%; padding: 22px; border-radius: 20px; gap: 10px; }
+  .team-v26-revoke-modal h2 { font-size: 23px; margin-right: 42px; }
+}
+
+@media (max-width: 420px) {
+  .team-v26-revoke-modal footer { grid-template-columns: 1fr; }
+  .team-v26-revoke-modal footer .btn { min-height: 44px; }
+}
+
+@media (max-width: 390px) {
+  .app-shell.role-super_admin .team-v26-account-footer-v153 > div,
+  .app-shell.role-super_admin .team-v26-account-footer-v153 > div:has(> .btn:nth-child(3)) {
+    grid-template-columns: 1fr !important;
+  }
+
+  .app-shell.role-super_admin .team-v26-account-footer-v153 > div:has(> .btn:nth-child(3)) > .btn:last-child {
+    grid-column: auto !important;
+  }
+}

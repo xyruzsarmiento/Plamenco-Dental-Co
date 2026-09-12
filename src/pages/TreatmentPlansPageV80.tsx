@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { CalendarDays, CheckCircle2, ChevronRight, ClipboardList, FileText, Plus, Search, Send, ShieldCheck, Sparkles, Stethoscope, Trash2, UserRound, X } from 'lucide-react'
 import { Button } from '../components/ui/Button'
-import { Pagination, SkeletonList } from '../components/ui/DesignSystem'
+import { SkeletonList } from '../components/ui/DesignSystem'
 import { ClinicalWorkspaceSkeleton } from '../components/ui/ClinicalWorkspaceSkeleton'
 import { PageScaffold } from '../components/ui/PageScaffold'
 import { usePermissions } from '../features/auth/permissions'
@@ -27,8 +27,6 @@ type DraftItem = {
   phase: string
   quotedPricePhp: string
 }
-
-const PLAN_PAGE_SIZE_OPTIONS = [10, 20, 50]
 
 function humanize(value: string) {
   return value.replaceAll('_', ' ').replace(/\b\w/g, (char) => char.toUpperCase())
@@ -77,8 +75,6 @@ export function TreatmentPlansPageV80() {
   const [patientNotes, setPatientNotes] = useState('')
   const [internalNotes, setInternalNotes] = useState('')
   const [items, setItems] = useState<DraftItem[]>([])
-  const [planPage, setPlanPage] = useState(1)
-  const [planPageSize, setPlanPageSize] = useState(10)
   const [planStatusFilter, setPlanStatusFilter] = useState<'all' | 'active' | 'accepted' | 'closed'>('all')
 
   useEffect(() => {
@@ -126,20 +122,7 @@ export function TreatmentPlansPageV80() {
     return true
   }), [planStatusFilter, plans])
 
-  const planPageCount = Math.max(1, Math.ceil(filteredPlans.length / planPageSize))
-  const effectivePlanPage = Math.min(planPage, planPageCount)
-  const visiblePlans = useMemo(() => {
-    const start = (effectivePlanPage - 1) * planPageSize
-    return filteredPlans.slice(start, start + planPageSize)
-  }, [effectivePlanPage, filteredPlans, planPageSize])
-
-  useEffect(() => {
-    setPlanPage(1)
-  }, [planPageSize, planStatusFilter, selectedPatientId])
-
-  useEffect(() => {
-    setPlanPage((current) => Math.min(current, planPageCount))
-  }, [planPageCount])
+  const visiblePlans = filteredPlans
 
   async function refresh(patientId = selectedPatientId) {
     if (!patientId) return setPlans([])
@@ -305,7 +288,6 @@ export function TreatmentPlansPageV80() {
                         </article>
                       ))}
                     </div>
-                    <Pagination page={effectivePlanPage} pageCount={planPageCount} totalItems={filteredPlans.length} pageSize={planPageSize} pageSizeOptions={PLAN_PAGE_SIZE_OPTIONS} onPageChange={setPlanPage} onPageSizeChange={setPlanPageSize} label="Treatment plan registry pages" />
                   </>
                 ) : <div className="tp80-empty"><FileText size={24} /><h3>{plans.length ? 'No plans in this view' : 'No treatment plans yet'}</h3><p>{plans.length ? 'Choose another status to see this patient’s plans.' : 'Create the first care recommendation for this patient.'}</p>{!plans.length && can('treatments.create') && <Button size="sm" icon={<Plus size={14} />} onClick={openCreate}>Create first plan</Button>}</div>}
               </section>

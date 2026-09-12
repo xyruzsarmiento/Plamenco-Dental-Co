@@ -1,0 +1,85 @@
+/* Final dialog layer: keep every operational modal usable without turning mobile into an edge-to-edge page. */
+:where(.dr11-detail-backdrop, .tp80-backdrop, .rx116-backdrop, .expense-record-v153-backdrop, .expense-modal-backdrop, .team-v26-modal-backdrop, .team-v26-drawer-backdrop) {
+  box-sizing: border-box;
+  padding: clamp(14px, 3vw, 28px) !important;
+}
+
+:where(.dr11-detail-panel, .tp80-create-modal, .tp80-detail-modal, .rx116-modal, .expense-record-v153, .expense-modal, .team-v26-modal, .team-v26-drawer.team-v26-account-modal-v153) {
+  box-sizing: border-box;
+  width: min(100%, 960px) !important;
+  max-width: calc(100vw - 28px) !important;
+  max-height: calc(100dvh - 28px) !important;
+  min-height: 0 !important;
+  border-radius: 20px !important;
+}
+
+:where(.dr11-detail-panel, .tp80-detail-modal, .rx116-modal, .expense-record-v153, .team-v26-drawer.team-v26-account-modal-v153) {
+  display: flex !important;
+  flex-direction: column !important;
+  overflow: hidden !important;
+}
+
+:where(.dr11-detail-body, .tp80-create-body, .tp80-detail-body, .rx116-form, .rx116-detail-grid, .expense-record-v153-body, .expense-modal-body, .team-v26-drawer-body) {
+  min-height: 0 !important;
+  overflow-y: auto !important;
+  overscroll-behavior: contain;
+}
+
+:where(.dr11-detail-actions, .tp80-create-footer, .tp80-detail-footer, .rx116-footer, .expense-record-v153-footer, .expense-modal-footer, .team-v26-account-footer-v153) {
+  flex: 0 0 auto !important;
+  box-sizing: border-box;
+  padding-bottom: max(12px, env(safe-area-inset-bottom)) !important;
+}
+
+@media (max-width: 680px) {
+  :where(.dr11-detail-backdrop, .tp80-backdrop, .rx116-backdrop, .expense-record-v153-backdrop, .expense-modal-backdrop, .team-v26-modal-backdrop, .team-v26-drawer-backdrop) {
+    align-items: center !important;
+    justify-items: center !important;
+    padding: 14px !important;
+  }
+
+  :where(.dr11-detail-panel, .tp80-create-modal, .tp80-detail-modal, .rx116-modal, .expense-record-v153, .expense-modal, .team-v26-modal, .team-v26-drawer.team-v26-account-modal-v153) {
+    width: min(100%, 620px) !important;
+    max-width: calc(100vw - 28px) !important;
+    max-height: calc(100dvh - 28px) !important;
+    border-radius: 18px !important;
+  }
+
+  :where(.dr11-detail-actions, .tp80-create-footer, .tp80-detail-footer, .rx116-footer, .expense-record-v153-footer, .expense-modal-footer, .team-v26-account-footer-v153) {
+    flex-wrap: wrap !important;
+    gap: 8px !important;
+  }
+
+  :where(.dr11-detail-actions .btn, .tp80-create-footer .btn, .tp80-detail-footer .btn, .rx116-footer .btn, .expense-record-v153-footer .btn, .expense-modal-footer .btn, .team-v26-account-footer-v153 .btn) {
+    min-width: 0 !important;
+  }
+}
+
+@media (max-width: 430px) {
+  :where(.dr11-detail-backdrop, .tp80-backdrop, .rx116-backdrop, .expense-record-v153-backdrop, .expense-modal-backdrop, .team-v26-modal-backdrop, .team-v26-drawer-backdrop) {
+    padding: 10px !important;
+  }
+
+  :where(.dr11-detail-panel, .tp80-create-modal, .tp80-detail-modal, .rx116-modal, .expense-record-v153, .expense-modal, .team-v26-modal, .team-v26-drawer.team-v26-account-modal-v153) {
+    width: 100% !important;
+    max-width: calc(100vw - 20px) !important;
+    max-height: calc(100dvh - 20px) !important;
+    border-radius: 16px !important;
+  }
+
+  :where(.dr11-detail-head, .tp80-create-modal > header, .tp80-detail-hero, .rx116-head, .expense-record-v153-header, .expense-modal-header, .team-v26-drawer > header) {
+    gap: 10px !important;
+    padding-inline: 14px !important;
+  }
+
+  :where(.dr11-detail-actions, .tp80-create-footer, .tp80-detail-footer, .rx116-footer, .expense-record-v153-footer, .expense-modal-footer, .team-v26-account-footer-v153) {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    padding-inline: 14px !important;
+  }
+
+  :where(.dr11-detail-actions .btn, .tp80-create-footer .btn, .tp80-detail-footer .btn, .rx116-footer .btn, .expense-record-v153-footer .btn, .expense-modal-footer .btn, .team-v26-account-footer-v153 .btn) {
+    width: 100% !important;
+    justify-content: center !important;
+  }
+}

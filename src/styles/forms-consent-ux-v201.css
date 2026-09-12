@@ -1,0 +1,80 @@
+/* Clear workflow hierarchy and direct actions for Forms & Consent. */
+.forms127-page .forms-v28-how-it-works {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 16px;
+  border: 1px solid #d8e5f5;
+  border-radius: 16px;
+  background: #f8fbff;
+}
+
+.forms127-page .forms-v28-how-icon {
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  border: 1px solid #c9dcfb;
+  border-radius: 11px;
+  background: #fff;
+  color: #2563eb;
+}
+
+.forms127-page .forms-v28-how-copy { min-width: 0; display: grid; gap: 2px; }
+.forms127-page .forms-v28-how-copy > span {
+  color: #3b67a4;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+.forms127-page .forms-v28-how-copy strong { color: #172033; font-size: 14px; }
+.forms127-page .forms-v28-how-copy p { margin: 0; color: #64748b; font-size: 12px; line-height: 1.45; }
+.forms127-page .forms-v28-how-steps { display: flex; align-items: center; gap: 8px; color: #4b6280; font-size: 11px; font-weight: 700; white-space: nowrap; }
+.forms127-page .forms-v28-how-steps span { display: inline-flex; align-items: center; gap: 5px; }
+.forms127-page .forms-v28-how-steps span + span::before { content: '→'; margin-right: 2px; color: #9bb0ca; }
+.forms127-page .forms-v28-how-steps b { display: grid; place-items: center; width: 20px; height: 20px; border-radius: 7px; background: #e5efff; color: #2563eb; font-size: 10px; }
+
+.forms127-page .forms-v28-version-quick-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  grid-column: 1 / -1;
+  padding: 9px 14px 11px;
+  border-top: 1px solid #edf1f7;
+  background: #fbfcfe;
+}
+.forms127-page .forms-v28-version-quick-actions button {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  min-height: 30px;
+  padding: 0 9px;
+  border: 1px solid #d8e3f1;
+  border-radius: 8px;
+  background: #fff;
+  color: #2857a0;
+  cursor: pointer;
+  font: inherit;
+  font-size: 11px;
+  font-weight: 750;
+}
+.forms127-page .forms-v28-version-quick-actions button:hover { border-color: #9fc2fa; background: #f4f8ff; }
+.forms127-page .forms-v28-version-quick-actions button:disabled { cursor: not-allowed; opacity: .48; }
+.forms127-page .forms-v28-version-quick-actions button.danger { color: #b4232f; border-color: #f2c8cc; }
+.forms127-page .forms-v28-version-quick-actions button.danger:hover { background: #fff5f5; border-color: #ee9ca5; }
+
+@media (max-width: 760px) {
+  .forms127-page .forms-v28-how-it-works { grid-template-columns: auto minmax(0, 1fr); }
+  .forms127-page .forms-v28-how-steps { grid-column: 1 / -1; padding-left: 52px; }
+}
+
+@media (max-width: 460px) {
+  .forms127-page .forms-v28-how-it-works { align-items: start; padding: 13px; }
+  .forms127-page .forms-v28-how-steps { flex-wrap: wrap; padding-left: 0; gap: 7px; white-space: normal; }
+  .forms127-page .forms-v28-how-steps span + span::before { content: none; }
+  .forms127-page .forms-v28-version-quick-actions { padding: 9px 11px 10px; }
+  .forms127-page .forms-v28-version-quick-actions button { flex: 1 1 auto; justify-content: center; }
+}

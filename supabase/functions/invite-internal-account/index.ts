@@ -1,4 +1,5 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { sendInvitationEmail } from '../_shared/invitationEmail.ts'
 
 type InternalRole = 'super_admin' | 'dentist' | 'associate_dentist' | 'staff'
 
@@ -88,10 +89,24 @@ Deno.serve(async (request) => {
     if (branchIds.some((id) => !validIds.has(id))) return json({ error: 'One or more selected branches are invalid or inactive.' }, 400)
   }
 
-  const { data: inviteData, error: inviteError } = await adminClient.auth.admin.inviteUserByEmail(email, {
-    redirectTo: inviteRedirect.redirectTo,
-    data: { full_name: name, first_name: name, last_name: '', role, account_type: 'internal' },
+  const { data: inviteData, error: inviteError } = await adminClient.auth.admin.generateLink({
+    type: 'invite',
+    email,
+    options: {
+      redirectTo: inviteRedirect.redirectTo,
+      data: { full_name: name, first_name: name, last_name: '', role, account_type: 'internal' },
+    },
   })
+  const actionLink = inviteData?.properties?.action_link
+  let deliveryError: Error | null = null
+  if (!inviteError && actionLink) {
+    try {
+      await sendInvitationEmail({ email, name, role, actionLink })
+    } catch (cause) {
+      deliveryError = cause instanceof Error ? cause : new Error('Gmail SMTP delivery failed.')
+    }
+  }
+  const invitationError = inviteError ?? deliveryError
 
   const invitationRow = {
     email,
@@ -99,13 +114,13 @@ Deno.serve(async (request) => {
     role,
     branch_ids: branchIds,
     provider_profile_required: Boolean(payload.providerProfileRequired || role === 'dentist' || role === 'associate_dentist'),
-    status: inviteError ? 'failed' : 'sent',
-    error_message: inviteError?.message ?? '',
+    status: invitationError ? 'failed' : 'sent',
+    error_message: invitationError?.message ?? '',
     invited_by: authUser.user.id,
   }
 
   const { data: invitation, error: rowError } = await adminClient.from('internal_account_invitations').insert([invitationRow]).select('id, status, error_message').single()
-  if (inviteError) return json({ error: inviteError.message, invitation }, 400)
+  if (invitationError) return json({ error: invitationError.message, invitation }, 400)
   if (rowError) return json({ error: `Invitation email was created but the audit record failed: ${rowError.message}` }, 500)
   if (!inviteData.user) return json({ error: 'Supabase did not return the invited user.' }, 500)
 

@@ -374,6 +374,17 @@
   line-height: 1.5;
 }
 
+.inline-alert.invite-status-note {
+  border-color: #c9dcff;
+  background: #f2f7ff;
+  color: #315a96;
+}
+
+.inline-alert.invite-status-note svg {
+  flex: 0 0 auto;
+  color: #2563eb;
+}
+
 .success-alert-stack {
   display: flex;
   gap: 10px;

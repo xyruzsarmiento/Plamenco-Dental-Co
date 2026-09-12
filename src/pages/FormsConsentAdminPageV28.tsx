@@ -8,7 +8,6 @@ import {
   FilePlus2,
   FileText,
   History,
-  MoreHorizontal,
   PencilLine,
   Plus,
   Search,
@@ -131,7 +130,6 @@ export function FormsConsentAdminPageV28() {
   const [publishTargetId, setPublishTargetId] = useState<string | null>(null)
   const [deleteTarget, setDeleteTarget] = useState<FormVersionAdminRow | null>(null)
   const [viewingVersion, setViewingVersion] = useState<FormVersionAdminRow | null>(null)
-  const [openVersionMenuId, setOpenVersionMenuId] = useState<string | null>(null)
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState('all')
   const [createForm, setCreateForm] = useState(blankCreate)
@@ -294,13 +292,11 @@ export function FormsConsentAdminPageV28() {
   }
 
   function openVersionDetails(version: FormVersionAdminRow) {
-    setOpenVersionMenuId(null)
     setSelectedVersionId(version.id)
     setViewingVersion(version)
   }
 
   function editDraft(version: FormVersionAdminRow) {
-    setOpenVersionMenuId(null)
     setSelectedVersionId(version.id)
   }
 
@@ -436,6 +432,12 @@ export function FormsConsentAdminPageV28() {
         {message && <div className="forms-v28-alert success"><CheckCircle2 size={16} /> {message}</div>}
         {error && <div className="forms-v28-alert error">{error}</div>}
 
+        <section className="forms-v28-how-it-works" aria-label="How Forms and Consent works">
+          <span className="forms-v28-how-icon"><ShieldCheck size={18} /></span>
+          <div className="forms-v28-how-copy"><span>How this works</span><strong>Draft, review, then publish</strong><p>Edit drafts freely. Published versions are locked so signed patient records always keep their original wording.</p></div>
+          <div className="forms-v28-how-steps"><span><b>1</b> Draft</span><span><b>2</b> Review</span><span><b>3</b> Publish</span></div>
+        </section>
+
         <div className="forms-v28-workspace">
           <section className="forms-v28-library">
             <header><div><span>Template library</span><h3>{filteredTemplates.length} form{filteredTemplates.length === 1 ? '' : 's'}</h3></div><Badge tone="info">Clinic-wide</Badge></header>
@@ -505,33 +507,16 @@ export function FormsConsentAdminPageV28() {
                           {(versionUsage[version.id]?.signedSubmissionCount ?? 0) > 0 && <Badge tone="success">{versionUsage[version.id].signedSubmissionCount} signed</Badge>}
                         </div>
                       </button>
-                      <div className="forms-v28-version-menu-wrap">
-                        <button
-                          type="button"
-                          className="forms-v28-version-menu-trigger"
-                          aria-label={`Open actions for version ${version.versionNumber}`}
-                          aria-expanded={openVersionMenuId === version.id}
-                          onClick={(event) => { event.stopPropagation(); setOpenVersionMenuId(openVersionMenuId === version.id ? null : version.id) }}
-                        >
-                          <MoreHorizontal size={18} />
-                        </button>
-                        {openVersionMenuId === version.id && (
-                          <div className="forms-v28-version-menu" role="menu" aria-label={`Version ${version.versionNumber} actions`}>
-                            <button type="button" role="menuitem" onClick={() => openVersionDetails(version)}><Eye size={14} /><span>View</span></button>
-                            {version.versionStatus === 'draft' ? (
-                              <>
-                                <button type="button" role="menuitem" onClick={() => editDraft(version)}><PencilLine size={14} /><span>Edit draft</span></button>
-                                <button type="button" role="menuitem" onClick={() => { setOpenVersionMenuId(null); requestPublish(version) }} disabled={busy}><Send size={14} /><span>Publish</span></button>
-                                <button type="button" role="menuitem" className="danger" onClick={() => { setOpenVersionMenuId(null); setDeleteTarget(version) }} disabled={busy || (versionUsage[version.id]?.finalSubmissionCount ?? 0) > 0 || (versionUsage[version.id]?.assignmentCount ?? 0) > 0} title={(versionUsage[version.id]?.assignmentCount ?? 0) > 0 ? 'This draft is referenced by patient consent records and cannot be deleted.' : undefined}><Trash2 size={14} /><span>Delete draft</span></button>
-                              </>
-                            ) : (
-                              <>
-                                <button type="button" role="menuitem" onClick={() => { setOpenVersionMenuId(null); void handleNewVersionFrom(version) }} disabled={busy || Boolean(selectedDraft)} title={selectedDraft ? 'Save, publish, or delete the existing draft before creating another draft.' : undefined}><CopyPlus size={14} /><span>Create new draft</span></button>
-                                {version.versionStatus !== 'archived' && <button type="button" role="menuitem" onClick={() => { setOpenVersionMenuId(null); void handleArchiveVersion(version) }} disabled={busy}><Archive size={14} /><span>Archive</span></button>}
-                              </>
-                            )}
-                          </div>
-                        )}
+                      <div className="forms-v28-version-quick-actions" aria-label={`Actions for version ${version.versionNumber}`}>
+                        <button type="button" onClick={() => openVersionDetails(version)}><Eye size={14} /> Review</button>
+                        {version.versionStatus === 'draft' ? <>
+                          <button type="button" onClick={() => editDraft(version)}><PencilLine size={14} /> Edit</button>
+                          <button type="button" onClick={() => requestPublish(version)} disabled={busy}><Send size={14} /> Publish</button>
+                          <button type="button" className="danger" onClick={() => setDeleteTarget(version)} disabled={busy || (versionUsage[version.id]?.finalSubmissionCount ?? 0) > 0 || (versionUsage[version.id]?.assignmentCount ?? 0) > 0} title={(versionUsage[version.id]?.assignmentCount ?? 0) > 0 ? 'This draft is referenced by patient consent records and cannot be deleted.' : undefined}><Trash2 size={14} /> Delete</button>
+                        </> : <>
+                          <button type="button" onClick={() => void handleNewVersionFrom(version)} disabled={busy || Boolean(selectedDraft)} title={selectedDraft ? 'Finish the existing draft before creating another one.' : undefined}><CopyPlus size={14} /> New draft</button>
+                          {version.versionStatus !== 'archived' && <button type="button" onClick={() => void handleArchiveVersion(version)} disabled={busy}><Archive size={14} /> Archive</button>}
+                        </>}
                       </div>
                       {version.versionStatus !== 'draft' && (versionUsage[version.id]?.finalSubmissionCount ?? 0) > 0 && (
                         <p className="forms-v28-version-integrity">Referenced by finalized patient consent records. Historical wording is protected; use archive instead of deletion.</p>

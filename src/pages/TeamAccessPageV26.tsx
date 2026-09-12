@@ -24,7 +24,7 @@ import { StatusBadge } from '../components/ui/Badge'
 import { Button } from '../components/ui/Button'
 import { Pagination } from '../components/ui/DesignSystem'
 import { PageScaffold } from '../components/ui/PageScaffold'
-import { getStoredStaff, loadInternalAccountsFromProfiles, updateInternalAccountProfilePersisted, updateInternalAccountStatusPersisted } from '../features/auth/staffStore'
+import { getStoredStaff, loadInternalAccountsFromProfiles, revokeDentistPortalAccessPersisted, updateInternalAccountProfilePersisted, updateInternalAccountStatusPersisted } from '../features/auth/staffStore'
 import { getStoredBranches } from '../features/branches/branchStore'
 import { loadStaffBranchAssignmentsAdmin, replaceStaffBranchAssignmentsPersisted, type StaffBranchAssignmentAdminRow } from '../features/branches/branchAssignmentAdmin'
 import { getProviderBranchAssignments, getStoredProviders } from '../features/dentists/dentistStore'
@@ -44,7 +44,6 @@ import { acquireModalScrollLock } from '../lib/modalScrollLock'
 
 type InternalRole = Exclude<UserRole, 'patient'>
 type TeamTab = 'directory' | 'attendance' | 'providers' | 'compensation'
-const TEAM_PAGE_SIZE = 10
 const TEAM_CARD_PAGE_SIZE = 12
 
 function pageItems<T>(items: T[], page: number, pageSize: number) {
@@ -77,6 +76,30 @@ type InternalInvitationInfo = {
   role: InternalRole
   status: string
   invitedAt?: string
+}
+
+type InvitationConfirmation = {
+  type: 'sent' | 'resent'
+  name: string
+  email: string
+  role: InternalRole
+  branchCount?: number
+}
+
+function RevokeDentistAccessModal({ member, busy, onClose, onConfirm }: { member: StaffMember; busy: boolean; onClose: () => void; onConfirm: () => void }) {
+  return (
+    <div className="team-v26-revoke-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget && !busy) onClose() }}>
+      <section className="team-v26-revoke-modal" role="dialog" aria-modal="true" aria-labelledby="team-v26-revoke-title">
+        <button type="button" className="team-v26-icon-button" onClick={onClose} disabled={busy} aria-label="Close revoke access dialog"><X size={18} /></button>
+        <span className="team-v26-revoke-icon"><ShieldCheck size={22} /></span>
+        <span className="team-v26-kicker">Provider access</span>
+        <h2 id="team-v26-revoke-title">Revoke portal access?</h2>
+        <p><strong>{member.name}</strong> will no longer be able to sign in to the clinic portal or appear as an active provider for scheduling.</p>
+        <div className="team-v26-revoke-note"><CheckCircle2 size={16} /><span>Clinical records, appointments, audit history, and provider attribution will remain preserved.</span></div>
+        <footer><Button variant="secondary" onClick={onClose} disabled={busy}>Keep access</Button><Button variant="danger" onClick={onConfirm} disabled={busy}>{busy ? 'Revoking...' : 'Revoke access'}</Button></footer>
+      </section>
+    </div>
+  )
 }
 
 const roleOptions: Array<{ value: InternalRole; label: string }> = [
@@ -116,6 +139,51 @@ function formatDate(value?: string) {
   const parsed = new Date(value.includes('T') ? value : `${value}T00:00:00+08:00`)
   if (Number.isNaN(parsed.getTime())) return value
   return parsed.toLocaleDateString('en-PH', { timeZone: 'Asia/Manila', month: 'short', day: 'numeric', year: 'numeric' })
+}
+
+function InvitationConfirmationModal({ confirmation, onClose }: { confirmation: InvitationConfirmation; onClose: () => void }) {
+  const dialogRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    const previous = document.activeElement as HTMLElement | null
+    const releaseScrollLock = acquireModalScrollLock()
+    dialogRef.current?.querySelector<HTMLElement>('button')?.focus()
+    const handleKey = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') { event.preventDefault(); onClose(); return }
+      if (event.key !== 'Tab' || !dialogRef.current) return
+      const focusable = [...dialogRef.current.querySelectorAll<HTMLElement>('button:not([disabled])')]
+      if (!focusable.length) return
+      const first = focusable[0]
+      const last = focusable[focusable.length - 1]
+      if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus() }
+      if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus() }
+    }
+    document.addEventListener('keydown', handleKey)
+    return () => { document.removeEventListener('keydown', handleKey); releaseScrollLock(); previous?.focus() }
+  }, [onClose])
+
+  const resent = confirmation.type === 'resent'
+  return (
+    <div className="team-v26-confirmation-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) onClose() }}>
+      <div ref={dialogRef} className="team-v26-confirmation" role="dialog" aria-modal="true" aria-labelledby="team-v26-confirmation-title">
+        <div className="team-v26-confirmation-topline"><span className="team-v26-confirmation-icon"><BadgeCheck size={24} /></span><button type="button" className="team-v26-icon-button" onClick={onClose} aria-label="Close invitation confirmation"><X size={18} /></button></div>
+        <span className="team-v26-kicker">Invitation {resent ? 'resent' : 'sent'}</span>
+        <h2 id="team-v26-confirmation-title">{resent ? 'A fresh invitation is on its way.' : 'Invitation sent securely.'}</h2>
+        <p>{resent ? 'The existing clinic account and assigned access were preserved.' : 'The account was provisioned and will remain inactive until the recipient completes setup.'}</p>
+        <div className="team-v26-confirmation-recipient">
+          <span className="team-v26-confirmation-recipient-icon"><Mail size={18} /></span>
+          <span><small>Recipient</small><strong>{confirmation.name}</strong><b>{confirmation.email}</b></span>
+          <span className="team-v26-confirmation-role">{roleLabel(confirmation.role)}</span>
+        </div>
+        <div className="team-v26-confirmation-checklist">
+          <span><CheckCircle2 size={16} /><span>Secure setup link generated by Supabase Auth</span></span>
+          <span><CheckCircle2 size={16} /><span>Delivered through the clinic email service</span></span>
+          {typeof confirmation.branchCount === 'number' && <span><CheckCircle2 size={16} /><span>{confirmation.branchCount ? `${confirmation.branchCount} branch assignment${confirmation.branchCount === 1 ? '' : 's'} preserved` : 'No branch assignment selected'}</span></span>}
+        </div>
+        <footer><Button onClick={onClose}>Done</Button></footer>
+      </div>
+    </div>
+  )
 }
 
 function InviteAccountModal({ branches, onClose, onSuccess }: {
@@ -253,7 +321,8 @@ export function TeamAccessPageV26() {
   const [pageLoading, setPageLoading] = useState(isSupabaseConfigured)
   const [pageError, setPageError] = useState<string | null>(null)
   const [profileBusyId, setProfileBusyId] = useState<string | null>(null)
-  const [directoryPage, setDirectoryPage] = useState(1)
+  const [confirmation, setConfirmation] = useState<InvitationConfirmation | null>(null)
+  const [revokeTarget, setRevokeTarget] = useState<StaffMember | null>(null)
   const [attendancePage, setAttendancePage] = useState(1)
   const [providerPage, setProviderPage] = useState(1)
   const [payoutPage, setPayoutPage] = useState(1)
@@ -326,25 +395,19 @@ export function TeamAccessPageV26() {
     const statusMatch = statusFilter === 'all' || (statusFilter === 'invited' ? invitedEmails.has(member.email.toLowerCase()) && member.status !== 'active' : member.status === statusFilter)
     return searchMatch && branchMatch && (roleFilter === 'all' || member.role === roleFilter) && statusMatch
   })
-  const directoryPageCount = Math.max(1, Math.ceil(filteredStaff.length / TEAM_PAGE_SIZE))
   const attendancePageCount = Math.max(1, Math.ceil(attendance.length / TEAM_CARD_PAGE_SIZE))
   const providerPageCount = Math.max(1, Math.ceil(providers.length / TEAM_CARD_PAGE_SIZE))
   const payoutPageCount = Math.max(1, Math.ceil(payouts.length / TEAM_CARD_PAGE_SIZE))
-  const visibleStaff = pageItems(filteredStaff, Math.min(directoryPage, directoryPageCount), TEAM_PAGE_SIZE)
+  const visibleStaff = filteredStaff
   const visibleAttendance = pageItems(attendance, Math.min(attendancePage, attendancePageCount), TEAM_CARD_PAGE_SIZE)
   const visibleProviders = pageItems(providers, Math.min(providerPage, providerPageCount), TEAM_CARD_PAGE_SIZE)
   const visiblePayouts = pageItems(payouts, Math.min(payoutPage, payoutPageCount), TEAM_CARD_PAGE_SIZE)
 
   useEffect(() => {
-    setDirectoryPage(1)
-  }, [query, roleFilter, statusFilter, branchFilter])
-
-  useEffect(() => {
-    setDirectoryPage((page) => Math.min(page, directoryPageCount))
     setAttendancePage((page) => Math.min(page, attendancePageCount))
     setProviderPage((page) => Math.min(page, providerPageCount))
     setPayoutPage((page) => Math.min(page, payoutPageCount))
-  }, [attendancePageCount, directoryPageCount, payoutPageCount, providerPageCount])
+  }, [attendancePageCount, payoutPageCount, providerPageCount])
 
   const selected = staff.find((member) => member.id === selectedId) ?? filteredStaff[0] ?? staff[0] ?? null
   const activeCount = staff.filter((member) => member.status === 'active').length
@@ -362,13 +425,18 @@ export function TeamAccessPageV26() {
     setStaff(next)
     setSelectedId(userId)
     setInviteOpen(false)
-    setMessage(`Invitation sent to ${state.email}. The account will remain inactive until the invite is accepted.`)
+    setMessage(null)
+    setConfirmation({ type: 'sent', name: state.name, email: state.email, role: state.role, branchCount: state.branchIds.length })
     setRefreshKey((key) => key + 1)
     recordAuditEntry({ user: getCurrentSessionUserName(), action: 'staff_account_changed', entity: 'staff', entityId: userId, metadata: { invite: true, role: state.role } })
   }
 
   async function toggleStatus(member: StaffMember) {
     if (profileBusyId) return
+    if (member.role === 'super_admin' && member.status === 'active') {
+      setEditError('Active Super Admin accounts are protected. Keep at least one owner account active.')
+      return
+    }
     if (member.status !== 'active' && invitedEmails.has(member.email.toLowerCase())) {
       setEditError('This invited account must complete the invitation before it can be activated.')
       return
@@ -388,9 +456,26 @@ export function TeamAccessPageV26() {
     }
   }
 
+  async function revokeDentistAccess(member: StaffMember) {
+    if (profileBusyId || member.status !== 'active' || !['dentist', 'associate_dentist'].includes(member.role)) return
+    try {
+      setProfileBusyId(member.id)
+      if (!isSupabaseConfigured) throw new Error('Supabase is required to revoke dentist access safely.')
+      const next = await revokeDentistPortalAccessPersisted(member.id)
+      setStaff(next)
+      setMessage(`${member.name}'s portal and provider access has been revoked.`)
+      setRevokeTarget(null)
+      setRefreshKey((key) => key + 1)
+    } catch (cause) {
+      setEditError(cause instanceof Error ? cause.message : 'Dentist access could not be revoked.')
+    } finally {
+      setProfileBusyId(null)
+    }
+  }
+
   async function resendInvitation(member: StaffMember) {
     if (profileBusyId) return
-    const invitation = invitations.find((entry) => entry.email === member.email.toLowerCase() && ['pending', 'sent', 'failed', 'cancelled'].includes(entry.status))
+    const invitation = invitations.find((entry) => entry.email === member.email.toLowerCase() && ['pending', 'sent', 'failed', 'accepted', 'cancelled'].includes(entry.status))
     if (!invitation?.id) { setEditError('No recoverable invitation was found for this account.'); return }
     if (!isSupabaseConfigured || !supabase) { setEditError('Supabase is required to resend an invitation.'); return }
 
@@ -400,7 +485,8 @@ export function TeamAccessPageV26() {
       const { data, error: invokeError } = await supabase.functions.invoke<ResendInvitationResponse>('resend-internal-invitation', { body: { invitationId: invitation.id } })
       if (invokeError) throw new Error(invokeError.message || 'The secure recovery service rejected the request.')
       if (data?.error) throw new Error(data.error)
-      setMessage(`A fresh invitation was sent to ${member.email}. The existing clinic account and branch access were preserved.`)
+      setMessage(null)
+      setConfirmation({ type: 'resent', name: member.name, email: member.email, role: member.role })
       setRefreshKey((key) => key + 1)
     } catch (cause) {
       setEditError(cause instanceof Error ? cause.message : 'The invitation could not be resent.')
@@ -568,7 +654,6 @@ export function TeamAccessPageV26() {
               </button>
             </article>
           })}</div>}
-          <Pagination page={directoryPage} pageCount={directoryPageCount} totalItems={filteredStaff.length} pageSize={TEAM_PAGE_SIZE} onPageChange={setDirectoryPage} label="Team directory pages" />
         </section>
 
         <nav className="team-v26-tabs" aria-label="Team workspace sections">
@@ -586,7 +671,6 @@ export function TeamAccessPageV26() {
             <section className="team-v26-directory">
               <header><div><span>Internal directory</span><h3>{filteredStaff.length} accounts</h3></div><small>Authenticated role foundation</small></header>
               {filteredStaff.length === 0 ? <div className="team-v26-empty"><UsersRound size={30} /><h3>No matching team members</h3><p>Adjust the filters or invite an internal account.</p></div> : <div className="team-v26-list">{visibleStaff.map((member) => <button key={member.id} type="button" className={`team-v26-row ${selected?.id === member.id ? 'is-selected' : ''}`} onClick={() => setSelectedId(member.id)}><span className="team-v26-avatar">{initials(member.name)}</span><span className="team-v26-row-copy"><strong>{member.name}</strong><span>{member.email}</span><small>{member.position || roleLabel(member.role)} · {member.phone || 'No phone on directory profile'}</small></span><span className="team-v26-row-meta"><StatusBadge status={member.status} variant="compact" /><strong>{roleLabel(member.role)}</strong><ChevronRight size={16} /></span></button>)}</div>}
-              <Pagination page={directoryPage} pageCount={directoryPageCount} totalItems={filteredStaff.length} pageSize={TEAM_PAGE_SIZE} onPageChange={setDirectoryPage} label="Internal directory pages" />
             </section>
 
             <aside className="team-v26-detail">
@@ -595,7 +679,7 @@ export function TeamAccessPageV26() {
                 <section className="team-v26-access-card"><div><ShieldCheck size={18} /><span><strong>{roleLabel(selected.role)}</strong><small>Role-based access</small></span></div><div><Mail size={18} /><span><strong>{selected.email}</strong><small>Login identity</small></span></div><div><MapPin size={18} /><span><strong>{selectedProviderBranches.length ? selectedProviderBranches.map((entry) => branchName(entry.branchId)).join(', ') : 'No visible branch assignment'}</strong><small>{selectedProvider ? 'Provider branch linkage' : 'Staff branch assignments are managed server-side'}</small></span></div></section>
                 <section className="team-v26-context-grid"><article><span>Today</span><strong>{selectedTodayAttendance ? selectedTodayAttendance.status.replaceAll('_', ' ') : 'No attendance record'}</strong><small>{selectedTodayAttendance?.timeIn ? `In ${selectedTodayAttendance.timeIn}${selectedTodayAttendance.timeOut ? ` · Out ${selectedTodayAttendance.timeOut}` : ''}` : 'No clock-in recorded'}</small></article><article><span>Provider linkage</span><strong>{selectedProvider?.displayName ?? 'Not linked'}</strong><small>{selectedProvider ? `${selectedProviderBranches.length} branch assignment(s)` : 'No matching provider profile in current client data'}</small></article></section>
                 <section className="team-v26-shifts"><header><div><span>Workforce context</span><h4>Upcoming shifts</h4></div><b>{selectedUpcomingShifts.length}</b></header>{selectedUpcomingShifts.length ? selectedUpcomingShifts.map((shift) => <div key={shift.id}><CalendarClock size={16} /><span><strong>{formatDate(shift.workDate)} · {shift.startTime}–{shift.endTime}</strong><small>{branchName(shift.branchId)}</small></span></div>) : <p>No planned shifts in the current workforce store.</p>}</section>
-                <footer className="team-v26-detail-actions"><Button variant="secondary" onClick={() => openProfileEdit(selected)}><Edit3 size={15} /> Edit directory profile</Button><Button variant="secondary" disabled={profileBusyId === selected.id} onClick={() => void toggleStatus(selected)}>{profileBusyId === selected.id ? 'Updating...' : selected.status === 'active' ? 'Deactivate account' : 'Activate account'}</Button></footer>
+                <footer className="team-v26-detail-actions"><Button variant="secondary" onClick={() => openProfileEdit(selected)}><Edit3 size={15} /> Edit directory profile</Button>{selected.role === 'super_admin' && selected.status === 'active' ? <Button variant="secondary" disabled>Protected account</Button> : selected.role === 'dentist' || selected.role === 'associate_dentist' ? selected.status === 'active' ? <Button variant="danger" onClick={() => setRevokeTarget(selected)}>Revoke portal access</Button> : <Button variant="secondary" disabled>Access revoked</Button> : <Button variant="secondary" disabled={profileBusyId === selected.id} onClick={() => void toggleStatus(selected)}>{profileBusyId === selected.id ? 'Updating...' : selected.status === 'active' ? 'Deactivate account' : 'Activate account'}</Button>}</footer>
               </div>}
             </aside>
           </div>
@@ -684,7 +768,7 @@ export function TeamAccessPageV26() {
             {(accessMessage || accessError) && <span className={`team-v26-save-state-v154 ${accessError ? 'is-error' : 'is-success'}`}>{accessError || accessMessage}</span>}
             <div>
               <Button variant="secondary" onClick={() => openProfileEdit(selected)}><Edit3 size={15} /> Edit profile</Button>
-              {selected.status !== 'active' && selectedInvitation && ['pending', 'sent', 'failed', 'cancelled'].includes(selectedInvitation.status) ? <Button variant="secondary" disabled={profileBusyId === selected.id} onClick={() => void resendInvitation(selected)}>{profileBusyId === selected.id ? 'Resending...' : 'Resend invitation'}</Button> : <Button variant="secondary" disabled={profileBusyId === selected.id} onClick={() => void toggleStatus(selected)}>{profileBusyId === selected.id ? 'Updating...' : selected.status === 'active' ? 'Deactivate' : 'Activate'}</Button>}
+              {selected.role === 'super_admin' && selected.status === 'active' ? <Button variant="secondary" disabled>Protected account</Button> : selected.role === 'dentist' || selected.role === 'associate_dentist' ? selected.status === 'active' ? <Button variant="danger" disabled={profileBusyId === selected.id} onClick={() => setRevokeTarget(selected)}>{profileBusyId === selected.id ? 'Revoking...' : 'Revoke portal access'}</Button> : selectedInvitation && ['pending', 'sent', 'failed', 'accepted', 'cancelled'].includes(selectedInvitation.status) ? <Button variant="secondary" disabled={profileBusyId === selected.id} onClick={() => void resendInvitation(selected)}>{profileBusyId === selected.id ? 'Resending...' : 'Re-invite provider'}</Button> : <Button variant="secondary" disabled>Access revoked</Button> : selected.status !== 'active' && selectedInvitation && ['pending', 'sent', 'failed', 'accepted', 'cancelled'].includes(selectedInvitation.status) ? <Button variant="secondary" disabled={profileBusyId === selected.id} onClick={() => void resendInvitation(selected)}>{profileBusyId === selected.id ? 'Resending...' : 'Resend invitation'}</Button> : <Button variant="secondary" disabled={profileBusyId === selected.id} onClick={() => void toggleStatus(selected)}>{profileBusyId === selected.id ? 'Updating...' : selected.status === 'active' ? 'Deactivate' : 'Activate'}</Button>}
               {selected.role === 'staff' && <Button onClick={() => void saveBranchAccess()} disabled={accessBusy}>{accessBusy ? 'Saving...' : 'Save branch access'}</Button>}
             </div>
           </footer>
@@ -692,6 +776,8 @@ export function TeamAccessPageV26() {
       </div>}
 
       {inviteOpen && <InviteAccountModal branches={branches} onClose={() => setInviteOpen(false)} onSuccess={handleInviteSuccess} />}
+      {confirmation && <InvitationConfirmationModal confirmation={confirmation} onClose={() => setConfirmation(null)} />}
+      {revokeTarget && <RevokeDentistAccessModal member={revokeTarget} busy={profileBusyId === revokeTarget.id} onClose={() => setRevokeTarget(null)} onConfirm={() => void revokeDentistAccess(revokeTarget)} />}
       {editMember && <StaffFormModal mode="edit" lockRoleStatus isSaving={profileBusyId === editMember.id} values={{ name: editMember.name, email: editMember.email, phone: editMember.phone, position: editMember.position, role: editMember.role, status: editMember.status, password: editMember.password }} error={editError} onChange={(values) => setEditMember((current) => current ? { ...current, ...values } : current)} onClose={() => { setEditMember(null); setEditError(null) }} onSubmit={() => editMember && void saveEdit({ name: editMember.name, email: editMember.email, phone: editMember.phone, position: editMember.position, role: editMember.role, status: editMember.status, password: editMember.password })} />}
     </PageScaffold>
   )

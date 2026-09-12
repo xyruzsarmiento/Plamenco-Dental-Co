@@ -182,7 +182,7 @@ async function getSupabaseProfileForSession(sessionUser: SessionUser): Promise<P
     .maybeSingle()
   if (error) {
     if (import.meta.env.DEV) console.debug('[profile lookup failed]', error.message)
-    return null
+    throw new Error('Unable to load your clinic profile. Please try signing in again.')
   }
   return data as ProfileRow | null
 }
@@ -449,6 +449,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
       if (!supabase) {
         clearCachedUser(); setUser(null); setAuthError('Supabase authentication is not configured.'); setIsLoading(false); return false
+      }
+      // A stale refresh token from an interrupted invite/OAuth callback can emit a
+      // late SIGNED_OUT event and erase a newly authenticated user. Clear only the
+      // local Supabase session before starting a fresh password sign-in.
+      try {
+        const { data: existingSession } = await supabase.auth.getSession()
+        if (existingSession.session) await supabase.auth.signOut({ scope: 'local' })
+      } catch {
+        // signInWithPassword below remains the source of truth for this attempt.
       }
       const { data, error } = await supabase.auth.signInWithPassword({ email: normalizedEmail, password })
       if (error || !data.user) {

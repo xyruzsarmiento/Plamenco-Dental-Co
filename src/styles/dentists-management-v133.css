@@ -638,6 +638,240 @@
   gap: 10px;
 }
 
+.dentists133-analytics {
+  display: grid;
+  gap: 16px;
+  padding: 20px;
+  border: 1px solid #dbeafe;
+  border-radius: 20px;
+  background: linear-gradient(135deg, #ffffff 0%, #f7fbff 100%);
+  box-shadow: 0 14px 36px rgba(15, 23, 42, .045);
+}
+
+.dentists133-analytics-header,
+.dentists133-chart-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.dentists133-analytics-title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.dentists133-analytics-icon {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  flex: 0 0 auto;
+  border: 1px solid #bfdbfe;
+  border-radius: 13px;
+  background: #eaf2ff;
+  color: #2563eb;
+}
+
+.dentists133-kicker {
+  color: #2563eb;
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: .09em;
+  text-transform: uppercase;
+}
+
+.dentists133-analytics h2,
+.dentists133-chart-panel h3 {
+  margin: 3px 0 2px;
+  color: #111827;
+  letter-spacing: 0;
+}
+
+.dentists133-analytics h2 { font-size: 1.12rem; }
+.dentists133-chart-panel h3 { font-size: .98rem; }
+
+.dentists133-analytics p {
+  margin: 0;
+  color: #64748b;
+  font-size: .78rem;
+}
+
+.dentists133-range-switcher {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  padding: 4px;
+  border: 1px solid #dbe3ee;
+  border-radius: 12px;
+  background: #f8fbff;
+}
+
+.dentists133-range-switcher button {
+  min-height: 32px;
+  padding: 0 10px;
+  border: 0;
+  border-radius: 9px;
+  background: transparent;
+  color: #64748b;
+  font-size: .72rem;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.dentists133-range-switcher button:hover,
+.dentists133-range-switcher button:focus-visible,
+.dentists133-range-switcher button.is-active {
+  background: #fff;
+  color: #1d4ed8;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, .1);
+  outline: none;
+}
+
+.dentists133-insight-grid {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr 1fr;
+  gap: 10px;
+}
+
+.dentists133-insight-card {
+  display: grid;
+  gap: 5px;
+  min-width: 0;
+  padding: 13px 14px;
+  border: 1px solid #e2eaf4;
+  border-radius: 14px;
+  background: #fff;
+}
+
+.dentists133-insight-card.is-accent { border-color: #cfe0fb; background: #f7fbff; }
+.dentists133-insight-card span { display: flex; align-items: center; gap: 6px; color: #64748b; font-size: .7rem; font-weight: 850; }
+.dentists133-insight-card span svg { color: #2563eb; }
+.dentists133-insight-card strong { overflow: hidden; color: #172033; font-size: .98rem; text-overflow: ellipsis; white-space: nowrap; }
+.dentists133-insight-card small { color: #64748b; font-size: .72rem; }
+
+.dentists133-chart-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.05fr) minmax(0, .95fr);
+  gap: 12px;
+}
+
+.dentists133-chart-panel {
+  min-width: 0;
+  padding: 15px;
+  border: 1px solid #e2eaf4;
+  border-radius: 16px;
+  background: #fff;
+}
+
+.dentists133-chart-heading > svg { color: #2563eb; }
+.dentists133-chart-total { color: #1d4ed8; font-size: .75rem; font-weight: 850; }
+.dentists133-leaderboard { display: grid; gap: 8px; margin-top: 14px; }
+
+.dentists133-leader-row {
+  position: relative;
+  display: grid;
+  grid-template-columns: 25px minmax(115px, .8fr) minmax(70px, 1fr) 28px;
+  gap: 9px;
+  align-items: center;
+  width: 100%;
+  min-height: 37px;
+  padding: 4px 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.dentists133-leader-row:focus-visible { outline: 2px solid #93c5fd; outline-offset: 4px; border-radius: 6px; }
+.dentists133-rank { color: #94a3b8; font-size: .7rem; font-weight: 850; }
+.dentists133-leader-name { display: grid; min-width: 0; gap: 2px; }
+.dentists133-leader-name strong { overflow: hidden; color: #172033; font-size: .77rem; text-overflow: ellipsis; white-space: nowrap; }
+.dentists133-leader-name small { color: #94a3b8; font-size: .68rem; }
+.dentists133-leader-track { height: 7px; overflow: hidden; border-radius: 999px; background: #edf3fb; }
+.dentists133-leader-track span { display: block; height: 100%; min-width: 4px; border-radius: inherit; background: #3b82f6; transition: width .2s ease; }
+.dentists133-leader-value { color: #172033; font-size: .8rem; text-align: right; }
+.dentists133-chart-empty { margin: 14px 0 2px; color: #64748b; font-size: .78rem; }
+
+.dentists133-chart-tooltip {
+  position: absolute;
+  z-index: 4;
+  right: 0;
+  bottom: calc(100% + 7px);
+  display: grid;
+  gap: 3px;
+  min-width: 170px;
+  padding: 9px 10px;
+  border: 1px solid #dbe3ee;
+  border-radius: 10px;
+  background: #172033;
+  box-shadow: 0 10px 22px rgba(15, 23, 42, .18);
+  color: #fff;
+  font-size: .68rem;
+  line-height: 1.35;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(4px);
+  transition: opacity .14s ease, transform .14s ease;
+}
+
+.dentists133-chart-tooltip strong { color: #fff; font-size: .72rem; }
+.dentists133-chart-tooltip span { color: #cbd5e1; }
+.dentists133-leader-row:hover .dentists133-chart-tooltip,
+.dentists133-leader-row:focus-visible .dentists133-chart-tooltip,
+.dentists133-trend-column:hover .dentists133-chart-tooltip,
+.dentists133-trend-column:focus-visible .dentists133-chart-tooltip { opacity: 1; transform: translateY(0); }
+
+.dentists133-trend-chart {
+  display: flex;
+  align-items: end;
+  gap: 7px;
+  min-height: 150px;
+  margin-top: 14px;
+  padding: 18px 4px 0;
+  border-bottom: 1px solid #e2eaf4;
+}
+
+.dentists133-trend-column {
+  position: relative;
+  display: grid;
+  grid-template-rows: 18px 1fr 20px;
+  align-items: end;
+  min-width: 0;
+  height: 126px;
+  flex: 1 1 0;
+  text-align: center;
+}
+
+.dentists133-trend-value { min-height: 15px; color: #64748b; font-size: .65rem; font-weight: 800; }
+.dentists133-trend-bar { display: block; width: min(24px, 70%); justify-self: center; min-height: 3px; border-radius: 7px 7px 2px 2px; background: linear-gradient(180deg, #60a5fa, #2563eb); transition: height .2s ease; }
+.dentists133-trend-label { overflow: hidden; color: #94a3b8; font-size: .63rem; text-overflow: ellipsis; white-space: nowrap; }
+.dentists133-trend-column:focus-visible { outline: 2px solid #93c5fd; outline-offset: 3px; border-radius: 6px; }
+.dentists133-chart-tooltip.is-trend { right: 50%; transform: translate(50%, 4px); min-width: 92px; text-align: center; }
+.dentists133-trend-column:hover .dentists133-chart-tooltip.is-trend,
+.dentists133-trend-column:focus-visible .dentists133-chart-tooltip.is-trend { transform: translate(50%, 0); }
+.dentists133-trend-chart.is-30d { gap: 2px; }
+.dentists133-trend-chart.is-30d .dentists133-trend-label { font-size: .52rem; }
+
+@media (max-width: 860px) {
+  .dentists133-analytics-header { align-items: stretch; flex-direction: column; }
+  .dentists133-range-switcher { width: 100%; }
+  .dentists133-range-switcher button { flex: 1 1 0; }
+  .dentists133-chart-grid { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 520px) {
+  .dentists133-analytics { padding: 14px; }
+  .dentists133-insight-grid { grid-template-columns: 1fr; }
+  .dentists133-insight-card strong { white-space: normal; }
+  .dentists133-range-switcher { overflow-x: auto; }
+  .dentists133-range-switcher button { flex: 0 0 auto; }
+  .dentists133-leader-row { grid-template-columns: 22px minmax(100px, 1fr) minmax(45px, .8fr) 24px; gap: 6px; }
+}
+
 @media (max-width: 1280px) {
   .dentists133-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));

@@ -1,0 +1,54 @@
+/* Dense registry presentation: Supabase remains the source of truth; this only controls viewport density. */
+.tx43-treatment-list,
+.tp80-plan-grid {
+  max-height: min(64vh, 680px);
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding-right: 5px;
+  scrollbar-width: thin;
+  scrollbar-color: #a7c8fb #eef5ff;
+}
+
+.tx43-treatment-list::-webkit-scrollbar,
+.tp80-plan-grid::-webkit-scrollbar { width: 8px; }
+.tx43-treatment-list::-webkit-scrollbar-track,
+.tp80-plan-grid::-webkit-scrollbar-track { background: #eef5ff; border-radius: 999px; }
+.tx43-treatment-list::-webkit-scrollbar-thumb,
+.tp80-plan-grid::-webkit-scrollbar-thumb { background: #a7c8fb; border: 2px solid #eef5ff; border-radius: 999px; }
+
+.tx43-treatment-card {
+  gap: 9px;
+  padding: 12px 13px;
+  border-radius: 12px;
+}
+
+.tx43-card-details { gap: 6px; }
+.tx43-card-details > div { padding: 7px 8px; border-radius: 8px; }
+.tx43-card-actions { gap: 6px; }
+
+.tp80-plan-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 9px;
+}
+
+.tp80-plan-card {
+  gap: 9px;
+  padding: 13px 14px;
+  border-radius: 12px;
+}
+
+.tp80-plan-stats { gap: 6px; }
+.tp80-plan-stats > div { padding: 7px 8px; }
+.tp80-preview { gap: 4px; }
+.tp80-preview > div { padding: 6px 8px; }
+
+@media (max-width: 700px) {
+  .tx43-treatment-list,
+  .tp80-plan-grid { max-height: 60vh; padding-right: 2px; }
+}
+
+@media (max-width: 430px) {
+  .tx43-treatment-list,
+  .tp80-plan-grid { max-height: 56vh; }
+}

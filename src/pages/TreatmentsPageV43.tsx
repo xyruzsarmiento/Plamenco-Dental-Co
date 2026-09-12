@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Activity, CalendarDays, ChevronRight, CircleDollarSign, Filter, Plus, Search, Sparkles, Stethoscope, UserRound } from 'lucide-react'
 import { Button } from '../components/ui/Button'
-import { Pagination } from '../components/ui/DesignSystem'
 import { ClinicalWorkspaceSkeleton } from '../components/ui/ClinicalWorkspaceSkeleton'
 import { MostPerformedTreatmentsV45, PlannedVsPerformedV45 } from '../components/ui/TreatmentAnalyticsV45'
 import { TreatmentFormDrawerV12 } from '../features/treatments/TreatmentFormDrawerV12'
@@ -16,8 +15,6 @@ import type { Treatment, TreatmentFormValues, TreatmentStatus } from '../feature
 import { buildEnterpriseReportSnapshot, formatReportCurrency } from '../features/reports/reportStore'
 
 const statusOrder: TreatmentStatus[] = ['planned', 'scheduled', 'in_progress', 'completed', 'cancelled', 'voided']
-const TREATMENT_PAGE_SIZE_OPTIONS = [10, 20, 50]
-
 const emptyTreatmentForm = (patientId: string, serviceId: string): TreatmentFormValues => ({
   patientId,
   dentalRecordId: '',
@@ -75,8 +72,6 @@ export function TreatmentsPageV43() {
   const [formValues, setFormValues] = useState<TreatmentFormValues>(() => emptyTreatmentForm(patients[0]?.patientId ?? '', services[0]?.id ?? ''))
   const [mutationError, setMutationError] = useState<string | null>(null)
   const [isMutating, setIsMutating] = useState(false)
-  const [treatmentPage, setTreatmentPage] = useState(1)
-  const [treatmentPageSize, setTreatmentPageSize] = useState(10)
 
   useEffect(() => {
     let active = true
@@ -132,20 +127,7 @@ export function TreatmentsPageV43() {
     })
   }, [branchFilter, patientTreatments, providerFilter, serviceFilter, serviceMap, statusFilter, workspaceSearch])
 
-  const treatmentPageCount = Math.max(1, Math.ceil(filteredTreatments.length / treatmentPageSize))
-  const effectiveTreatmentPage = Math.min(treatmentPage, treatmentPageCount)
-  const visibleTreatments = useMemo(() => {
-    const start = (effectiveTreatmentPage - 1) * treatmentPageSize
-    return filteredTreatments.slice(start, start + treatmentPageSize)
-  }, [effectiveTreatmentPage, filteredTreatments, treatmentPageSize])
-
-  useEffect(() => {
-    setTreatmentPage(1)
-  }, [branchFilter, providerFilter, selectedPatientId, serviceFilter, statusFilter, treatmentPageSize, workspaceSearch])
-
-  useEffect(() => {
-    setTreatmentPage((current) => Math.min(current, treatmentPageCount))
-  }, [treatmentPageCount])
+  const visibleTreatments = filteredTreatments
 
   const snapshot = useMemo(() => buildEnterpriseReportSnapshot({ filters: { preset: 'this_month' }, treatments, patients, services, branches, providers }), [branches, patients, providers, services, treatments])
   const treatmentRows = useMemo(() => [...snapshot.treatments].sort((a, b) => b.performedCount - a.performedCount).slice(0, 7), [snapshot])
@@ -346,16 +328,6 @@ export function TreatmentsPageV43() {
                       )
                     })}
                   </div>
-                  <Pagination
-                    page={effectiveTreatmentPage}
-                    pageCount={treatmentPageCount}
-                    totalItems={filteredTreatments.length}
-                    pageSize={treatmentPageSize}
-                    pageSizeOptions={TREATMENT_PAGE_SIZE_OPTIONS}
-                    onPageChange={setTreatmentPage}
-                    onPageSizeChange={setTreatmentPageSize}
-                    label="Patient treatment registry pages"
-                  />
                 </>
               ) : (
                 <div className="tx43-empty"><Filter size={24} /><h3>No treatments match</h3><p>Adjust the filters or add the patient's first treatment.</p><Button onClick={openCreate} icon={<Plus size={16} />}>Add treatment</Button></div>

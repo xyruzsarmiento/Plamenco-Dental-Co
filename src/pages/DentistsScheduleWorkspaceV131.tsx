@@ -2,7 +2,9 @@ import { useEffect, useMemo, useState, type KeyboardEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   AlertCircle,
+  BarChart3,
   Building2,
+  CalendarRange,
   CalendarCheck2,
   CheckCircle2,
   Mail,
@@ -12,6 +14,8 @@ import {
   Search,
   ShieldCheck,
   Stethoscope,
+  TrendingUp,
+  Trophy,
   UserRound,
   X,
 } from 'lucide-react'
@@ -54,6 +58,65 @@ function todayKey() {
   return new Date().toISOString().slice(0, 10)
 }
 
+type AnalyticsRange = 'today' | '7d' | '30d' | '12m'
+
+const analyticsRangeLabels: Record<AnalyticsRange, string> = {
+  today: 'Today',
+  '7d': 'Last 7 days',
+  '30d': 'Last 30 days',
+  '12m': 'Last 12 months',
+}
+
+function dateKeyFromDate(date: Date) {
+  return date.toISOString().slice(0, 10)
+}
+
+function startDateForRange(range: AnalyticsRange) {
+  const date = new Date(`${todayKey()}T00:00:00`)
+  if (range === 'today') return date
+  if (range === '7d') date.setDate(date.getDate() - 6)
+  if (range === '30d') date.setDate(date.getDate() - 29)
+  if (range === '12m') {
+    date.setDate(1)
+    date.setMonth(date.getMonth() - 11)
+  }
+  return date
+}
+
+function analyticsDateLabel(date: Date, range: AnalyticsRange) {
+  if (range === '12m') return new Intl.DateTimeFormat('en-PH', { month: 'short' }).format(date)
+  return new Intl.DateTimeFormat('en-PH', { month: 'short', day: 'numeric' }).format(date)
+}
+
+function buildTrendPoints(appointments: Appointment[], range: AnalyticsRange) {
+  const start = startDateForRange(range)
+  const points: { key: string; label: string; value: number }[] = []
+  if (range === 'today') {
+    for (let hour = 8; hour <= 19; hour += 1) {
+      const key = `${todayKey()}:${String(hour).padStart(2, '0')}`
+      points.push({ key, label: `${hour > 12 ? hour - 12 : hour}${hour >= 12 ? 'p' : 'a'}`, value: appointments.filter((appointment) => appointment.date === todayKey() && Number(appointment.startTime.slice(0, 2)) === hour && !['cancelled', 'rejected'].includes(appointment.status)).length })
+    }
+    return points
+  }
+  if (range === '12m') {
+    for (let index = 0; index < 12; index += 1) {
+      const date = new Date(start)
+      date.setMonth(start.getMonth() + index)
+      const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`
+      points.push({ key, label: analyticsDateLabel(date, range), value: appointments.filter((appointment) => appointment.date.startsWith(key) && !['cancelled', 'rejected'].includes(appointment.status)).length })
+    }
+    return points
+  }
+  const days = range === '7d' ? 7 : 30
+  for (let index = 0; index < days; index += 1) {
+    const date = new Date(start)
+    date.setDate(start.getDate() + index)
+    const key = dateKeyFromDate(date)
+    points.push({ key, label: analyticsDateLabel(date, range), value: appointments.filter((appointment) => appointment.date === key && !['cancelled', 'rejected'].includes(appointment.status)).length })
+  }
+  return points
+}
+
 function appointmentTimestamp(appointment: Appointment) {
   return `${appointment.date}T${appointment.startTime || '00:00'}`
 }
@@ -94,6 +157,7 @@ export function DentistsScheduleWorkspaceV131() {
   const [query, setQuery] = useState('')
   const [branchFilter, setBranchFilter] = useState('all')
   const [statusFilter, setStatusFilter] = useState('all')
+  const [analyticsRange, setAnalyticsRange] = useState<AnalyticsRange>('7d')
   const [loading, setLoading] = useState(true)
   const [feedback, setFeedback] = useState('')
   const [error, setError] = useState('')
@@ -105,9 +169,9 @@ export function DentistsScheduleWorkspaceV131() {
       setError('')
       try {
         const [branchRows, foundation, appointmentRows] = await Promise.all([
-          loadBranchesFromSupabase({ strict: false }),
-          loadProviderFoundationFromSupabase({ strict: false }),
-          loadAppointmentsFromSupabase({ strict: false }),
+          loadBranchesFromSupabase({ strict: true }),
+          loadProviderFoundationFromSupabase({ strict: true }),
+          loadAppointmentsFromSupabase({ strict: true }),
         ])
         if (!active) return
         setBranches(branchRows)
@@ -136,6 +200,28 @@ export function DentistsScheduleWorkspaceV131() {
   }, [activeAssignments, branchFilter, providers, query, statusFilter])
 
   const selectedProvider = providers.find((provider) => provider.id === selectedProviderId) ?? null
+  const analytics = useMemo(() => {
+    const start = dateKeyFromDate(startDateForRange(analyticsRange))
+    const end = todayKey()
+    const visibleProviderIds = new Set(visibleProviders.map((provider) => provider.id))
+    const scopedAppointments = appointments.filter((appointment) => appointment.date >= start && appointment.date <= end && visibleProviderIds.has(appointment.providerId ?? '') && (branchFilter === 'all' || appointment.branchId === branchFilter) && !['cancelled', 'rejected'].includes(appointment.status))
+    const providerRows = visibleProviders.map((provider) => {
+      const assigned = scopedAppointments.filter((appointment) => appointment.providerId === provider.id)
+      const completed = assigned.filter((appointment) => appointment.status === 'completed').length
+      return { provider, completed, total: assigned.length, completionRate: assigned.length ? Math.round((completed / assigned.length) * 100) : 0 }
+    }).sort((left, right) => right.completed - left.completed || right.total - left.total)
+    const trend = buildTrendPoints(scopedAppointments, analyticsRange)
+    const completed = scopedAppointments.filter((appointment) => appointment.status === 'completed').length
+    const booked = scopedAppointments.filter((appointment) => ['confirmed', 'checked_in', 'waiting', 'in_progress', 'completed'].includes(appointment.status)).length
+    return {
+      providerRows,
+      trend,
+      completed,
+      booked,
+      completionRate: scopedAppointments.length ? Math.round((completed / scopedAppointments.length) * 100) : 0,
+      topProvider: providerRows.find((row) => row.completed > 0) ?? providerRows[0],
+    }
+  }, [analyticsRange, appointments, branchFilter, visibleProviders])
 
   return (
     <main className="dentists133">
@@ -165,6 +251,43 @@ export function DentistsScheduleWorkspaceV131() {
 
       {error && <div className="dentists133-alert"><AlertCircle size={16} />{error}</div>}
       {feedback && <div className="dentists133-alert is-success"><CheckCircle2 size={16} />{feedback}</div>}
+
+      {!loading && !error ? (
+        <section className="dentists133-analytics" aria-label="Dentist performance analytics">
+          <header className="dentists133-analytics-header">
+            <div className="dentists133-analytics-title">
+              <span className="dentists133-analytics-icon"><BarChart3 size={18} /></span>
+              <div><span className="dentists133-kicker">Performance intelligence</span><h2>Clinical activity</h2><p>Appointment volume and completed visits from Supabase records.</p></div>
+            </div>
+            <div className="dentists133-range-switcher" role="group" aria-label="Analytics time range">
+              {(Object.keys(analyticsRangeLabels) as AnalyticsRange[]).map((range) => <button key={range} type="button" className={analyticsRange === range ? 'is-active' : ''} onClick={() => setAnalyticsRange(range)}>{analyticsRangeLabels[range]}</button>)}
+            </div>
+          </header>
+          <div className="dentists133-insight-grid">
+            <article className="dentists133-insight-card is-accent"><span><Trophy size={15} />Top performer</span><strong>{analytics.topProvider?.provider.displayName ?? 'No activity yet'}</strong><small>{analytics.topProvider ? `${analytics.topProvider.completed} completed visit${analytics.topProvider.completed === 1 ? '' : 's'}` : 'No assigned appointments in this period'}</small></article>
+            <article className="dentists133-insight-card"><span><CalendarRange size={15} />Booked visits</span><strong>{analytics.booked}</strong><small>{analyticsRangeLabels[analyticsRange]}</small></article>
+            <article className="dentists133-insight-card"><span><CheckCircle2 size={15} />Completed</span><strong>{analytics.completed}</strong><small>{analytics.completionRate}% completion rate</small></article>
+          </div>
+          <div className="dentists133-chart-grid">
+            <section className="dentists133-chart-panel">
+              <div className="dentists133-chart-heading"><div><span className="dentists133-kicker">Provider leaderboard</span><h3>Who is performing most</h3></div><TrendingUp size={18} /></div>
+              <div className="dentists133-leaderboard">
+                {analytics.providerRows.slice(0, 6).map((row, index) => {
+                  const max = Math.max(analytics.providerRows[0]?.completed ?? 0, 1)
+                  return <button type="button" className="dentists133-leader-row" key={row.provider.id} onClick={() => setSelectedProviderId(row.provider.id)} aria-label={`Open ${row.provider.displayName} details`}><span className="dentists133-rank">{String(index + 1).padStart(2, '0')}</span><span className="dentists133-leader-name"><strong>{row.provider.displayName}</strong><small>{roleLabel(row.provider.role)}</small></span><span className="dentists133-leader-track"><span style={{ width: `${(row.completed / max) * 100}%` }} /></span><strong className="dentists133-leader-value">{row.completed}</strong><span className="dentists133-chart-tooltip"><strong>{row.provider.displayName}</strong><span>{row.completed} completed / {row.total} total visits</span><span>{row.completionRate}% completion rate</span></span></button>
+                })}
+                {!analytics.providerRows.length ? <p className="dentists133-chart-empty">No dentists match the current filters.</p> : null}
+              </div>
+            </section>
+            <section className="dentists133-chart-panel">
+              <div className="dentists133-chart-heading"><div><span className="dentists133-kicker">Appointment pulse</span><h3>Activity trend</h3></div><span className="dentists133-chart-total">{analytics.trend.reduce((sum, point) => sum + point.value, 0)} visits</span></div>
+              <div className={`dentists133-trend-chart is-${analyticsRange}`} role="img" aria-label={`Appointment activity for ${analyticsRangeLabels[analyticsRange]}`}>
+                {analytics.trend.map((point) => { const max = Math.max(...analytics.trend.map((entry) => entry.value), 1); return <div className="dentists133-trend-column" key={point.key} tabIndex={0} title={`${point.label}: ${point.value} visits`}><span className="dentists133-trend-value">{point.value || ''}</span><span className="dentists133-trend-bar" style={{ height: `${Math.max(point.value ? (point.value / max) * 100 : 3, 3)}%` }} /><span className="dentists133-trend-label">{point.label}</span><span className="dentists133-chart-tooltip is-trend"><strong>{point.label}</strong><span>{point.value} appointment{point.value === 1 ? '' : 's'}</span></span></div> })}
+              </div>
+            </section>
+          </div>
+        </section>
+      ) : null}
 
       <section className="dentists133-grid">
         {loading ? Array.from({ length: 4 }).map((_, index) => <div className="dentists133-skeleton" key={index} />) : null}

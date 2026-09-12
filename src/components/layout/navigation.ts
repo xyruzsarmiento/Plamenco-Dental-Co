@@ -67,7 +67,6 @@ export const navigationGroups: NavigationGroup[] = [
       { label: 'Expenses', path: '/app/expenses', icon: ReceiptText, anyOf: ['expenses.view'] },
       { label: 'Team & Access', path: '/app/staff', icon: UserRoundCog, anyOf: ['staff.manage', 'dentists.manage'] },
       { label: 'Branches', path: '/app/branches', icon: Building2, anyOf: ['branches.view', 'branches.manage'] },
-      { label: 'Forms & Consent', path: '/app/forms-consent', icon: FileSignature, anyOf: ['settings.manage'] },
       { label: 'System Administration', path: '/app/system-admin', icon: ShieldCheck, anyOf: ['system_admin.view'], roles: ['super_admin'] },
     ],
   },

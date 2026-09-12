@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import type { FormEvent } from 'react'
-import { AlertCircle, Eye, EyeOff, LockKeyhole } from 'lucide-react'
+import { AlertCircle, CheckCircle2, Eye, EyeOff, LockKeyhole } from 'lucide-react'
 import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom'
 import { Button } from '../../components/ui/Button'
 import { useAuth } from './AuthContext'
@@ -9,11 +9,15 @@ import type { AuthUser } from './authTypes'
 
 type LocationState = {
   from?: { pathname?: string }
+  invitedEmail?: string
+  inviteExpired?: boolean
 }
 
 function destinationForUser(user: AuthUser | null) {
   if (!user) return '/login'
-  if (user.role !== 'patient' && user.status === 'inactive') return '/accept-invite'
+  // Activation is callback-session based. A normal password login must never
+  // redirect into /accept-invite without the secure invitation session.
+  if (user.role !== 'patient' && user.status !== 'active') return '/login'
   if (user.role === 'patient') return user.patientId ? `/portal/${user.patientId}` : '/login'
   if (user.role === 'dentist' || user.role === 'associate_dentist') return '/dentist'
   if (user.role === 'staff') return '/staff'
@@ -26,12 +30,13 @@ export function LoginPage() {
   const navigate = useNavigate()
   const location = useLocation()
   const state = location.state as LocationState | null
-  const [email, setEmail] = useState('')
+  const inviteExpired = Boolean(state?.inviteExpired)
+  const [email, setEmail] = useState(state?.invitedEmail ?? '')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [rememberMe, setRememberMe] = useState(true)
 
-  if (isAuthenticated) {
+  if (isAuthenticated && user?.status === 'active') {
     return <Navigate to={destinationForUser(user)} replace />
   }
 
@@ -40,7 +45,9 @@ export function LoginPage() {
     const didSignIn = await signIn(email, password)
     if (didSignIn) {
       const targetPath = state?.from?.pathname && state.from.pathname !== '/login' ? state.from.pathname : null
-      if (targetPath) navigate(targetPath, { replace: true })
+      // Clear the expired-invite fallback URL after a successful recovery login.
+      // The authenticated route will still resolve the user's role and access.
+      navigate(targetPath ?? '/app', { replace: true })
     }
   }
 
@@ -69,6 +76,7 @@ export function LoginPage() {
           <label className="checkbox-row"><input type="checkbox" checked={rememberMe} onChange={() => setRememberMe((current) => !current)} /><span>Remember me</span></label>
           <Link to="/forgot-password" className="text-link">Forgot password</Link>
         </div>
+        {inviteExpired && <div className="inline-alert invite-status-note" role="status"><CheckCircle2 size={16} /><span>Your clinic account is ready. Sign in below with the password you just created.</span></div>}
         {authError && <div className="inline-alert" role="alert"><AlertCircle size={16} /><span>{authError}</span></div>}
         <Button type="submit" icon={<LockKeyhole size={16} />} disabled={isLoading}>{isLoading ? 'Checking access' : 'Sign In'}</Button>
       </form>

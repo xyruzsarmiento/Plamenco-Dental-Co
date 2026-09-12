@@ -24,7 +24,6 @@ import { DentalRecordsPageV11 } from '../pages/DentalRecordsPageV11'
 import { DentistsScheduleWorkspaceV131 } from '../pages/DentistsScheduleWorkspaceV131'
 import { DocumentsLiveWorkspaceV131 } from '../pages/DocumentsLiveWorkspaceV131'
 import { ExpensesPremiumWorkspaceV161 } from '../pages/ExpensesPremiumWorkspaceV161'
-import { FormsConsentBranchWorkspaceV127 } from '../pages/FormsConsentBranchWorkspaceV127'
 import { InventoryPageV56 } from '../pages/InventoryPageV56'
 import { LandingPage } from '../pages/LandingPage'
 import { NotFoundPage } from '../pages/NotFoundPage'
@@ -123,7 +122,7 @@ export function AppRouter() {
       <Route path="reports" element={<RequirePermission anyOf={['reports.view', 'reports.view_limited']}><ReportsUnifiedWorkspaceV131 /></RequirePermission>} />
       <Route path="data-import" element={<RequirePermission permission="patients.import"><DataImportBranchWorkspaceV127 /></RequirePermission>} />
       <Route path="notifications" element={<RequirePermission permission="notifications.view"><NotificationsPageV25 /></RequirePermission>} />
-      <Route path="forms-consent" element={<RequirePermission permission="settings.manage"><FormsConsentBranchWorkspaceV127 /></RequirePermission>} />
+      <Route path="forms-consent" element={<Navigate to="/app" replace />} />
       <Route path="settings" element={<RequirePermission permission="settings.manage"><SettingsPageV30 /></RequirePermission>} />
       <Route path="system-admin" element={<RequireRole allowedRoles={['super_admin']}><SystemAdministrationPageV58 /></RequireRole>} />
       <Route path="unauthorized" element={<UnauthorizedPage />} />

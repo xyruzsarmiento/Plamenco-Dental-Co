@@ -1,4 +1,5 @@
 import { type FormEvent, useEffect, useMemo, useState } from 'react'
+import type { EmailOtpType } from '@supabase/supabase-js'
 import {
   ArrowLeft,
   BadgeCheck,
@@ -40,6 +41,15 @@ type InvitationContextRow = {
 
 const INTERNAL_ROLES = new Set(['staff', 'dentist', 'associate_dentist', 'super_admin'])
 
+function readableAuthError(cause: unknown, fallback: string) {
+  if (cause instanceof Error && cause.message) return cause.message
+  if (cause && typeof cause === 'object' && 'message' in cause) {
+    const message = (cause as { message?: unknown }).message
+    if (typeof message === 'string' && message.trim()) return message
+  }
+  return fallback
+}
+
 function normalizeRole(role: string) {
   return role.replaceAll('_', ' ')
 }
@@ -50,11 +60,24 @@ function clearAuthCallbackFromUrl() {
 
 async function waitForInvitationSession() {
   if (!supabase) return null
+  const client = supabase
 
   const url = new URL(window.location.href)
   const code = url.searchParams.get('code')
+  const tokenHash = url.searchParams.get('token_hash')
+  const tokenType = url.searchParams.get('type')
   if (code) {
-    const { error } = await supabase.auth.exchangeCodeForSession(code)
+    const { error } = await client.auth.exchangeCodeForSession(code)
+    if (error) throw error
+    clearAuthCallbackFromUrl()
+  } else if (tokenHash) {
+    // Custom invite templates can redirect with token_hash instead of a PKCE code.
+    // Consume it before removing the callback parameters from the address bar.
+    if (tokenType !== 'invite') throw new Error('This invitation link is invalid or has expired. Ask Super Admin to resend the invitation.')
+    const { error } = await client.auth.verifyOtp({
+      token_hash: tokenHash,
+      type: tokenType as EmailOtpType,
+    })
     if (error) throw error
     clearAuthCallbackFromUrl()
   } else if (window.location.hash) {
@@ -67,24 +90,25 @@ async function waitForInvitationSession() {
     const accessToken = hash.get('access_token')
     const refreshToken = hash.get('refresh_token')
     if (accessToken && refreshToken) {
-      const { error } = await supabase.auth.setSession({ access_token: accessToken, refresh_token: refreshToken })
+      const { error } = await client.auth.setSession({ access_token: accessToken, refresh_token: refreshToken })
       clearAuthCallbackFromUrl()
       if (error) throw error
     }
   }
 
-  const immediate = await supabase.auth.getSession()
+  const immediate = await client.auth.getSession()
   if (immediate.error) throw immediate.error
   if (immediate.data.session) return immediate.data.session
 
-  return await new Promise<NonNullable<typeof immediate.data.session> | null>((resolve) => {
+  type AuthSession = Awaited<ReturnType<typeof client.auth.getSession>>['data']['session']
+  return await new Promise<AuthSession>((resolve) => {
     let finished = false
     let timer = 0
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: { subscription } } = client.auth.onAuthStateChange((_event, session) => {
       if (session) finish(session)
     })
 
-    const finish = (session: NonNullable<typeof immediate.data.session> | null) => {
+    const finish = (session: AuthSession) => {
       if (finished) return
       finished = true
       window.clearTimeout(timer)
@@ -94,7 +118,7 @@ async function waitForInvitationSession() {
 
     timer = window.setTimeout(async () => {
       try {
-        const latest = await supabase.auth.getSession()
+        const latest = await client.auth.getSession()
         finish(latest.data.session ?? null)
       } catch {
         finish(null)
@@ -136,7 +160,10 @@ export function AcceptInvitePage() {
       try {
         const session = await waitForInvitationSession()
         const user = session?.user
-        if (!user) throw new Error('This invitation session is no longer available. Ask Super Admin to resend the invitation.')
+        if (!user) {
+          navigate('/login?invite=expired', { replace: true, state: { inviteExpired: true } })
+          return
+        }
 
         const { data, error: contextError } = await supabase.rpc('get_own_internal_invitation_context')
         if (contextError) throw contextError
@@ -175,7 +202,7 @@ export function AcceptInvitePage() {
 
         if (active) setContext(inviteContext)
       } catch (cause) {
-        if (active) setError(cause instanceof Error ? cause.message : 'Unable to verify this invitation.')
+        if (active) setError(readableAuthError(cause, 'Unable to verify this invitation.'))
       } finally {
         if (active) setLoading(false)
       }
@@ -203,12 +230,24 @@ export function AcceptInvitePage() {
     try {
       const { data: sessionCheck, error: sessionError } = await supabase.auth.getSession()
       if (sessionError) throw sessionError
-      if (!sessionCheck.session?.user || sessionCheck.session.user.id !== context.userId) {
-        throw new Error('This secure invitation session no longer matches the invited account. Ask Super Admin to resend it.')
-      }
+      const currentUser = sessionCheck.session?.user
+      const matchesInvitation = currentUser?.id === context.userId && currentUser.email?.trim().toLowerCase() === context.email
 
-      const { error: updateError } = await supabase.auth.updateUser({ password })
-      if (updateError) throw updateError
+      if (!matchesInvitation) {
+        // The callback session can expire while the recipient is entering a
+        // password. Re-authenticate only with the invited email and the new
+        // password, then let the protected RPC perform activation.
+        const { data: recoverySignIn, error: recoveryError } = await supabase.auth.signInWithPassword({
+          email: context.email,
+          password,
+        })
+        if (recoveryError || !recoverySignIn.user || recoverySignIn.user.id !== context.userId) {
+          throw new Error('Your invitation session expired before setup finished. Open the newest invitation email and try again.')
+        }
+      } else {
+        const { error: updateError } = await supabase.auth.updateUser({ password })
+        if (updateError) throw updateError
+      }
 
       const { data: accepted, error: activationError } = await supabase.rpc('accept_own_internal_invitation')
       if (activationError) throw activationError
@@ -229,7 +268,7 @@ export function AcceptInvitePage() {
       setPassword('')
       setConfirmPassword('')
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : 'Unable to set your password and activate the invitation.')
+      setError(readableAuthError(cause, 'Unable to set your password and activate the invitation.'))
     } finally {
       setSaving(false)
     }
@@ -249,6 +288,12 @@ export function AcceptInvitePage() {
   }
 
   const canSetPassword = Boolean(context) && !loading && !complete
+
+  useEffect(() => {
+    if (!complete) return
+    const timer = window.setTimeout(() => navigate('/login?activated=1', { replace: true, state: { invitedEmail: context?.email } }), 3500)
+    return () => window.clearTimeout(timer)
+  }, [complete, context?.email, navigate])
 
   return (
     <main className="invite182-page">
@@ -305,10 +350,10 @@ export function AcceptInvitePage() {
                 <span className="invite182-state-icon is-success"><BadgeCheck size={24} /></span>
                 <span className="invite182-kicker">Activation complete</span>
                 <h2 id="invite182-title">Your clinic account is ready.</h2>
-                <p>Your invitation and account status were confirmed by Supabase. Sign in normally with the password you just created.</p>
+                <p>Your invitation and account status were confirmed by Supabase. You will be redirected to sign in with the password you just created.</p>
                 <div className="invite182-success"><CheckCircle2 size={18} /><span>Role and clinic access activated successfully.</span></div>
                 <div className="invite182-actions single-primary">
-                  <Button onClick={() => navigate('/login', { replace: true })}>Continue to sign in</Button>
+                  <Button onClick={() => navigate('/login?activated=1', { replace: true, state: { invitedEmail: context?.email } })}>Continue to sign in</Button>
                   <button type="button" className="invite182-secondary" onClick={() => navigate('/', { replace: true })}><ArrowLeft size={15} /> Back to website</button>
                 </div>
               </div>
@@ -360,6 +405,22 @@ export function AcceptInvitePage() {
           </section>
         </div>
       </section>
+
+      {complete && (
+        <div className="invite182-confirmation-backdrop" role="presentation">
+          <section className="invite182-confirmation" role="dialog" aria-modal="true" aria-labelledby="invite182-confirmation-title">
+            <span className="invite182-confirmation-icon"><BadgeCheck size={25} /></span>
+            <span className="invite182-kicker">Access activated</span>
+            <h2 id="invite182-confirmation-title">Your clinic account is ready.</h2>
+            <p>Your password was saved and your assigned clinic access is now active. Sign in once more to open your clinic dashboard.</p>
+            <div className="invite182-confirmation-status"><Check size={15} /> Ready for secure sign in</div>
+            <div className="invite182-confirmation-actions">
+              <Button onClick={() => navigate('/login?activated=1', { replace: true, state: { invitedEmail: context?.email } })}>Continue to sign in</Button>
+              <button type="button" className="invite182-secondary" onClick={() => navigate('/', { replace: true })}>Back to website</button>
+            </div>
+          </section>
+        </div>
+      )}
     </main>
   )
 }

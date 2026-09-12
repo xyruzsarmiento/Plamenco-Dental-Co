@@ -300,14 +300,15 @@ export async function updatePrescriptionStatusPersisted(id: string, status: Pres
     .update({ status, updated_at: new Date().toISOString() })
     .eq('id', id)
     .select('*')
-    .single()
+    .returns<Record<string, any>[]>()
 
-  if (error || !data) {
+  const row = data?.[0]
+  if (error || !row) {
     if (import.meta.env.DEV && error?.message) console.error('[prescription persistence] status update', error)
-    throw new Error(error?.message || 'Prescription status could not be saved.')
+    throw new Error(error?.message || 'Prescription is no longer available or you do not have access to it.')
   }
 
-  const confirmed = mapPrescriptionRow(data as Record<string, any>)
+  const confirmed = mapPrescriptionRow(row)
   saveStoredPrescriptions([confirmed, ...getStoredPrescriptions().filter((entry) => entry.id !== confirmed.id)])
   return confirmed
 }
@@ -335,10 +336,11 @@ export async function updatePrescriptionPersisted(id: string, input: Prescriptio
     })
     .eq('id', id)
     .select('*')
-    .single()
+    .returns<Record<string, any>[]>()
 
-  if (error || !data) throw new Error(error?.message || 'Prescription could not be edited.')
-  const confirmed = mapPrescriptionRow(data as Record<string, any>)
+  const row = data?.[0]
+  if (error || !row) throw new Error(error?.message || 'Prescription is no longer available or you do not have access to it.')
+  const confirmed = mapPrescriptionRow(row)
   saveStoredPrescriptions([confirmed, ...getStoredPrescriptions().filter((entry) => entry.id !== confirmed.id)])
   return confirmed
 }

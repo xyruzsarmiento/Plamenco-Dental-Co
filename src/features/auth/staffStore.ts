@@ -93,6 +93,13 @@ export async function updateInternalAccountStatusPersisted(staffId: string, stat
   return loadInternalAccountsFromProfiles({ strict: true })
 }
 
+export async function revokeDentistPortalAccessPersisted(profileId: string) {
+  if (!supabase) throw new Error('Clinic database is not configured. Dentist access cannot be revoked safely.')
+  const { error } = await supabase.rpc('revoke_dentist_portal_access', { p_profile_id: profileId })
+  if (error) throw new Error(`Unable to revoke dentist portal access: ${error.message}`)
+  return loadInternalAccountsFromProfiles({ strict: true })
+}
+
 export function deleteStaffMember(staffId: string) {
   const nextStaff = getStoredStaff().filter((member) => member.id !== staffId)
   saveStoredStaff(nextStaff)

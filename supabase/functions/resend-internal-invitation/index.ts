@@ -228,7 +228,7 @@ Deno.serve(async (request) => {
     .maybeSingle()
   if (invitationError) return json({ error: 'Unable to load the invitation record.' }, 500)
   if (!invitation) return json({ error: 'Invitation record not found.' }, 404)
-  if (!['pending', 'sent', 'failed', 'cancelled'].includes(invitation.status)) return json({ error: 'This invitation is already accepted or cannot be recovered.' }, 409)
+  if (!['pending', 'sent', 'failed', 'accepted', 'cancelled'].includes(invitation.status)) return json({ error: 'This invitation cannot be recovered.' }, 409)
 
   const email = String(invitation.email ?? '').trim().toLowerCase()
   const role = invitation.role as InternalRole
@@ -288,7 +288,7 @@ Deno.serve(async (request) => {
   const now = new Date().toISOString()
   const { data: updatedInvitation, error: updateError } = await adminClient
     .from('internal_account_invitations')
-    .update({ status: 'sent', error_message: '', invited_at: now, updated_at: now })
+    .update({ status: 'sent', accepted_by: null, accepted_at: null, error_message: '', invited_at: now, updated_at: now })
     .eq('id', invitationId)
     .select('id, status, invited_at')
     .single()

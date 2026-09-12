@@ -153,7 +153,10 @@ export function PrescriptionsPage() {
           if (expired.length) {
             void Promise.all(expired.map((rx) => updatePrescriptionStatusPersisted(rx.id, 'inactive')))
               .then((updated) => setPrescriptions((current) => current.map((entry) => updated.find((item) => item.id === entry.id) ?? entry)))
-              .catch((cause) => { if (import.meta.env.DEV) console.warn('[prescription lifecycle] expiry sync', cause) })
+              .catch((cause) => {
+                const message = cause instanceof Error ? cause.message : String(cause)
+                if (import.meta.env.DEV && !message.includes('no longer available')) console.warn('[prescription lifecycle] expiry sync', cause)
+              })
           }
         }
       } catch (cause) {
