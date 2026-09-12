@@ -1,0 +1,353 @@
+/*
+ * Critical mobile responsiveness pass for the internal portal.
+ * Loaded after v218 so component-specific legacy rules cannot reintroduce
+ * full-screen drawers, narrow dialogs, or horizontal overflow.
+ */
+
+@media (max-width: 600px) {
+  /* Keep all problem dialogs centered and inset. Never edge-to-edge. */
+  body:has(.app-shell) :is(
+    .modal-backdrop,
+    .tp80-backdrop,
+    .rx116-backdrop,
+    .team-v26-drawer-backdrop,
+    .doc149-modal-backdrop,
+    .dr11-detail-backdrop
+  ) {
+    display: grid !important;
+    place-items: center !important;
+    align-items: center !important;
+    justify-items: center !important;
+    padding: 16px !important;
+    overflow: hidden !important;
+  }
+
+  body:has(.app-shell) :is(
+    .modal.patient-modal,
+    .tp80-create-modal,
+    .tp80-detail-modal,
+    .rx116-modal,
+    .team-v26-drawer.team-v26-account-modal-v153,
+    .doc149-upload-modal,
+    .dr11-detail-panel
+  ) {
+    position: relative !important;
+    inset: auto !important;
+    width: min(100%, 520px) !important;
+    max-width: calc(100vw - 32px) !important;
+    height: auto !important;
+    max-height: 86dvh !important;
+    margin: 0 !important;
+    border-radius: 18px !important;
+    overflow: hidden !important;
+    transform: none !important;
+  }
+
+  /* Dental record / clinical visit form: stop the legacy skinny-column layout. */
+  body:has(.app-shell) .modal.patient-modal {
+    display: grid !important;
+    grid-template-rows: auto minmax(0, 1fr) !important;
+    width: min(100%, 520px) !important;
+  }
+
+  body:has(.app-shell) .modal.patient-modal > .modal-header {
+    padding: 16px 18px !important;
+    gap: 12px !important;
+  }
+
+  body:has(.app-shell) .modal.patient-modal > .form-stack {
+    min-width: 0 !important;
+    min-height: 0 !important;
+    max-height: 100% !important;
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+    padding: 14px 16px 16px !important;
+  }
+
+  body:has(.app-shell) .modal.patient-modal .form-section {
+    min-width: 0 !important;
+    padding: 14px !important;
+  }
+
+  body:has(.app-shell) .modal.patient-modal .form-grid {
+    grid-template-columns: minmax(0, 1fr) !important;
+    gap: 10px !important;
+  }
+
+  body:has(.app-shell) .modal.patient-modal :is(input, select, textarea) {
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+    font-size: 16px !important;
+  }
+
+  body:has(.app-shell) .modal.patient-modal .modal-actions {
+    position: sticky !important;
+    bottom: 0 !important;
+    z-index: 5 !important;
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 8px !important;
+    margin-top: 12px !important;
+    padding: 12px 0 max(2px, env(safe-area-inset-bottom)) !important;
+    background: #fff !important;
+  }
+
+  body:has(.app-shell) .modal.patient-modal .modal-actions .btn {
+    width: 100% !important;
+    min-width: 0 !important;
+    justify-content: center !important;
+  }
+
+  /* Treatment-plan create/detail dialogs: reflow actions and procedure rows. */
+  body:has(.app-shell) .tp80-create-modal,
+  body:has(.app-shell) .tp80-detail-modal {
+    display: grid !important;
+    grid-template-rows: auto minmax(0, 1fr) auto !important;
+  }
+
+  body:has(.app-shell) .tp80-create-modal > header,
+  body:has(.app-shell) .tp80-detail-hero {
+    padding: 15px 16px !important;
+    gap: 12px !important;
+  }
+
+  body:has(.app-shell) .tp80-create-body,
+  body:has(.app-shell) .tp80-detail-body {
+    min-height: 0 !important;
+    max-height: none !important;
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+    padding: 14px 16px !important;
+  }
+
+  body:has(.app-shell) .tp80-form-title.is-action {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) !important;
+    align-items: stretch !important;
+    gap: 10px !important;
+  }
+
+  body:has(.app-shell) .tp80-form-title.is-action > div {
+    min-width: 0 !important;
+  }
+
+  body:has(.app-shell) .tp80-form-title.is-action > :is(button, .btn) {
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    justify-content: center !important;
+    white-space: normal !important;
+  }
+
+  body:has(.app-shell) .tp80-form-grid,
+  body:has(.app-shell) .tp80-item-fields {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+
+  body:has(.app-shell) .tp80-item {
+    grid-template-columns: minmax(0, 1fr) !important;
+    align-items: stretch !important;
+    gap: 10px !important;
+  }
+
+  body:has(.app-shell) .tp80-item-index {
+    justify-self: start !important;
+  }
+
+  body:has(.app-shell) .tp80-item-total {
+    grid-column: auto !important;
+    text-align: left !important;
+  }
+
+  body:has(.app-shell) .tp80-remove {
+    justify-self: end !important;
+    align-self: center !important;
+  }
+
+  body:has(.app-shell) .tp80-create-footer,
+  body:has(.app-shell) .tp80-detail-footer {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) !important;
+    gap: 10px !important;
+    padding: 12px 16px max(12px, env(safe-area-inset-bottom)) !important;
+  }
+
+  body:has(.app-shell) .tp80-create-footer > div:last-child,
+  body:has(.app-shell) .tp80-detail-footer > div:last-child {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    width: 100% !important;
+    gap: 8px !important;
+  }
+
+  body:has(.app-shell) .tp80-create-footer .btn,
+  body:has(.app-shell) .tp80-detail-footer .btn {
+    width: 100% !important;
+    min-width: 0 !important;
+    justify-content: center !important;
+  }
+
+  /* Prescriptions hero: keep New Rx label inside and centered in its button. */
+  body:has(.app-shell) .prescriptions-hero {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) !important;
+    align-items: stretch !important;
+    gap: 14px !important;
+    padding: 16px !important;
+  }
+
+  body:has(.app-shell) .prescription-hero-identity {
+    min-width: 0 !important;
+  }
+
+  body:has(.app-shell) .prescription-create-btn {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 8px !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    overflow: hidden !important;
+    text-align: center !important;
+    white-space: nowrap !important;
+  }
+
+  body:has(.app-shell) .prescription-create-btn > * {
+    flex: 0 0 auto !important;
+    min-width: 0 !important;
+  }
+
+  /* Internal Account: override the old 100vw/100dvh mobile drawer rule. */
+  body:has(.app-shell) .team-v26-drawer-backdrop {
+    padding: 16px !important;
+    align-items: center !important;
+    justify-content: center !important;
+  }
+
+  body:has(.app-shell) .team-v26-drawer.team-v26-account-modal-v153 {
+    display: grid !important;
+    grid-template-rows: auto minmax(0, 1fr) auto !important;
+    width: min(100%, 440px) !important;
+    max-width: calc(100vw - 32px) !important;
+    height: auto !important;
+    max-height: 82dvh !important;
+    border-radius: 18px !important;
+    overflow: hidden !important;
+  }
+
+  body:has(.app-shell) .team-v26-account-modal-v153 .team-v26-drawer-body {
+    min-height: 0 !important;
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+    padding: 12px !important;
+  }
+
+  body:has(.app-shell) .team-v26-account-modal-v153 .team-v26-account-overview-v154,
+  body:has(.app-shell) .team-v26-account-modal-v153 .team-v26-detail-grid,
+  body:has(.app-shell) .team-v26-account-modal-v153 .team-v26-context-grid {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+
+  body:has(.app-shell) .team-v26-account-footer-v153 {
+    position: relative !important;
+    bottom: auto !important;
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) !important;
+    gap: 8px !important;
+    padding: 10px 12px max(10px, env(safe-area-inset-bottom)) !important;
+  }
+
+  body:has(.app-shell) .team-v26-account-footer-v153 > .btn,
+  body:has(.app-shell) .team-v26-account-footer-v153 > div,
+  body:has(.app-shell) .team-v26-account-footer-v153 > div .btn {
+    width: 100% !important;
+    min-width: 0 !important;
+  }
+
+  /* Dental Records page hero/card: remove inherited viewport-height stretching. */
+  html body .page-dental-records .dr11-command-header,
+  html body .page-dental-records .clinical-standard-hero.dr11-command-header {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    justify-content: flex-start !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    min-height: 0 !important;
+    height: auto !important;
+    max-height: none !important;
+    gap: 12px !important;
+    padding: 16px !important;
+  }
+
+  html body .page-dental-records .dr11-command-title,
+  html body .page-dental-records .clinical-standard-hero-copy {
+    width: 100% !important;
+    min-width: 0 !important;
+    align-items: flex-start !important;
+  }
+
+  html body .page-dental-records .dr11-command-header > .btn {
+    width: 100% !important;
+    max-width: 100% !important;
+    justify-content: center !important;
+  }
+
+  html body .page-dental-records .dr11-layout,
+  html body .page-dental-records .dr11-main,
+  html body .page-dental-records .dr11-directory,
+  html body .page-dental-records .dr11-patient-hero,
+  html body .page-dental-records .dr11-timeline-card {
+    min-width: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+
+  /* Documents upload: keep inset and avoid full-screen height on phones. */
+  body:has(.app-shell) .doc149-modal-backdrop {
+    place-items: center !important;
+    padding: 16px !important;
+  }
+
+  body:has(.app-shell) .doc149-upload-modal {
+    width: min(100%, 520px) !important;
+    max-width: calc(100vw - 32px) !important;
+    height: auto !important;
+    max-height: 84dvh !important;
+    border-radius: 18px !important;
+  }
+
+  body:has(.app-shell) .document-upload-panel-v10 .form-grid {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+
+  body:has(.app-shell) .document-share-toggle-v10 {
+    grid-template-columns: auto minmax(0, 1fr) !important;
+    align-items: start !important;
+    gap: 10px !important;
+  }
+}
+
+@media (max-width: 380px) {
+  body:has(.app-shell) :is(
+    .modal.patient-modal,
+    .tp80-create-modal,
+    .tp80-detail-modal,
+    .rx116-modal,
+    .team-v26-drawer.team-v26-account-modal-v153,
+    .doc149-upload-modal,
+    .dr11-detail-panel
+  ) {
+    max-width: calc(100vw - 24px) !important;
+    max-height: 84dvh !important;
+  }
+
+  body:has(.app-shell) .tp80-create-footer > div:last-child,
+  body:has(.app-shell) .tp80-detail-footer > div:last-child,
+  body:has(.app-shell) .modal.patient-modal .modal-actions {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+}
