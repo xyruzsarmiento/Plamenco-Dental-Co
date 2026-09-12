@@ -1,4 +1,11 @@
-/* Keep operational dialogs inset on phones, matching the New treatment dialog. */
+/*
+ * Final modal responsiveness safety layer.
+ *
+ * This file is intentionally conservative: feature styles own each dialog's visual
+ * design and desktop dimensions. The rules below only prevent operational dialogs
+ * from being pinned to desktop geometry on tablet/phone viewports.
+ */
+
 @media (max-width: 760px) {
   body:has(.app-shell) :is(
     .modal-backdrop,
@@ -8,12 +15,14 @@
     .bp153-dialog-layer,
     .bp153-drawer-layer
   ) {
-    display: grid !important;
-    place-items: center !important;
-    padding: 14px !important;
+    box-sizing: border-box !important;
+    width: 100vw !important;
+    max-width: 100vw !important;
+    padding: 12px !important;
     overflow: hidden !important;
   }
 
+  /* Only target actual dialog shells. Do not target generic form/section/aside nodes. */
   body:has(.app-shell) :is(
     .modal-backdrop,
     [class*='modal-backdrop'],
@@ -39,33 +48,19 @@
     .doc149-upload-modal,
     .doc149-drawer,
     .dentists133-drawer,
-    .dv16-modal,
-    form,
-    section,
-    aside
+    .dv16-modal
   ) {
-    position: relative !important;
-    inset: auto !important;
+    box-sizing: border-box !important;
+    min-width: 0 !important;
     width: min(100%, 720px) !important;
-    max-width: calc(100vw - 28px) !important;
-    height: auto !important;
-    max-height: calc(100dvh - 28px) !important;
-    min-height: 0 !important;
-    margin: 0 !important;
-    border-radius: 20px !important;
-    overflow: hidden !important;
+    max-width: calc(100vw - 24px) !important;
+    max-height: calc(100dvh - 24px) !important;
+    margin-inline: auto !important;
     transform: none !important;
   }
 
+  /* Any scrollable region inside a dialog must be allowed to shrink in flex/grid. */
   body:has(.app-shell) :is(
-    .modal-backdrop,
-    [class*='modal-backdrop'],
-    [class*='drawer-backdrop'],
-    [class*='dialog-backdrop'],
-    .bp153-dialog-layer,
-    .bp153-drawer-layer
-  ) > :is(
-    [role='dialog'],
     .modal,
     .expense-modal,
     .expense-record-v153,
@@ -82,19 +77,17 @@
     .doc149-upload-modal,
     .doc149-drawer,
     .dentists133-drawer,
-    .dv16-modal,
-    form,
-    section,
-    aside
+    .dv16-modal
   ) :is(
     [class*='body'],
     [class*='content'],
     [class*='form'],
-    [class*='sections']
+    [class*='section'],
+    [class*='panel'],
+    [class*='workspace']
   ) {
-    min-height: 0 !important;
-    overflow-y: auto !important;
-    overscroll-behavior: contain !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
   }
 
   body:has(.app-shell) :is(
@@ -121,7 +114,11 @@
   }
 }
 
-@media (max-width: 430px) {
+/*
+ * Phone contract. 600px deliberately includes modern large phones such as the
+ * iPhone 16 Pro Max CSS viewport (440px), which the previous 430px rule missed.
+ */
+@media (max-width: 600px) {
   body:has(.app-shell) :is(
     .modal-backdrop,
     [class*='modal-backdrop'],
@@ -130,7 +127,7 @@
     .bp153-dialog-layer,
     .bp153-drawer-layer
   ) {
-    padding: 10px !important;
+    padding: 8px !important;
   }
 
   body:has(.app-shell) :is(
@@ -158,14 +155,113 @@
     .doc149-upload-modal,
     .doc149-drawer,
     .dentists133-drawer,
-    .dv16-modal,
-    form,
-    section,
-    aside
+    .dv16-modal
   ) {
-    max-width: calc(100vw - 20px) !important;
-    max-height: calc(100dvh - 20px) !important;
+    width: 100% !important;
+    max-width: calc(100vw - 16px) !important;
+    max-height: calc(100dvh - 16px) !important;
+    min-width: 0 !important;
     border-radius: 16px !important;
+    overflow-x: hidden !important;
+  }
+
+  /* Long operational workflows should use the available phone viewport. */
+  body:has(.app-shell) :is(
+    .expense-modal,
+    .team-v26-modal,
+    .team-v26-drawer,
+    .tp80-create-modal,
+    .rx116-modal,
+    .tx12-modal,
+    .staff-profile-modal-v155,
+    .ex57-modal,
+    .svc15-modal,
+    .doc149-upload-modal,
+    .doc149-drawer,
+    .dentists133-drawer,
+    .dv16-modal
+  ) {
+    max-height: calc(100dvh - 16px) !important;
+    overflow-y: auto !important;
+    overscroll-behavior: contain !important;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Desktop form grids collapse instead of squeezing columns side-by-side. */
+  body:has(.app-shell) :is(
+    .expense-modal,
+    .team-v26-modal,
+    .team-v26-drawer,
+    .tp80-create-modal,
+    .tp80-detail-modal,
+    .rx116-modal,
+    .tx12-modal,
+    .staff-profile-modal-v155,
+    .dr11-detail-panel,
+    .ex57-modal,
+    .svc15-modal,
+    .doc149-upload-modal,
+    .doc149-drawer,
+    .dentists133-drawer,
+    .dv16-modal
+  ) :is(
+    [class*='grid'],
+    [class*='fields'],
+    [class*='row'][class*='form'],
+    [class*='form'][class*='row'],
+    [class*='details-grid'],
+    [class*='summary-grid'],
+    [class*='stats-grid']
+  ) {
+    grid-template-columns: minmax(0, 1fr) !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+  }
+
+  /* Form controls must remain inside the phone viewport and avoid iOS zoom. */
+  body:has(.app-shell) :is(
+    .expense-modal,
+    .team-v26-modal,
+    .team-v26-drawer,
+    .tp80-create-modal,
+    .tp80-detail-modal,
+    .rx116-modal,
+    .tx12-modal,
+    .staff-profile-modal-v155,
+    .dr11-detail-panel,
+    .ex57-modal,
+    .svc15-modal,
+    .doc149-upload-modal,
+    .doc149-drawer,
+    .dentists133-drawer,
+    .dv16-modal
+  ) :is(input, select, textarea) {
+    box-sizing: border-box !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    font-size: 16px !important;
+  }
+
+  body:has(.app-shell) :is(
+    .expense-modal,
+    .team-v26-modal,
+    .team-v26-drawer,
+    .tp80-create-modal,
+    .tp80-detail-modal,
+    .rx116-modal,
+    .tx12-modal,
+    .staff-profile-modal-v155,
+    .dr11-detail-panel,
+    .ex57-modal,
+    .svc15-modal,
+    .doc149-upload-modal,
+    .doc149-drawer,
+    .dentists133-drawer,
+    .dv16-modal
+  ) :is(button, a, label, p, span, strong, small) {
+    min-width: 0;
+    overflow-wrap: anywhere;
   }
 }
 
