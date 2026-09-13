@@ -175,7 +175,7 @@ async function appendHistoryAfterPersistence(input: {
 
   if (error || !data) {
     if (import.meta.env.DEV) console.error('[appointment history persistence]', error)
-    return
+    throw new Error('The appointment change was saved, but its history event could not be recorded. Refresh before retrying.')
   }
 
   const localEntry = {
@@ -252,7 +252,6 @@ export async function createAppointmentPersisted(values: AppointmentFormValues, 
 
   const confirmed = mapAppointmentRow(data as Record<string, any>)
   replaceCachedAppointment(confirmed)
-  await appendHistoryAfterPersistence({ appointment: confirmed, eventType: 'created', actor: createdBy, toStatus: confirmed.status, notes: confirmed.notes })
   return confirmed
 }
 
@@ -294,17 +293,6 @@ export async function createPatientPortalAppointmentPersisted(input: {
   const confirmed = mapAppointmentRow(row as Record<string, any>)
   replaceCachedAppointment(confirmed)
   return confirmed
-}
-
-function statusEventType(nextStatus: AppointmentStatus) {
-  if (nextStatus === 'checked_in') return 'checked_in'
-  if (nextStatus === 'waiting') return 'moved_to_waiting'
-  if (nextStatus === 'in_progress') return 'started'
-  if (nextStatus === 'completed') return 'completed'
-  if (nextStatus === 'cancelled') return 'cancelled'
-  if (nextStatus === 'no_show') return 'no_show'
-  if (nextStatus === 'rescheduled') return 'rescheduled'
-  return 'status_changed'
 }
 
 export async function transitionAppointmentStatusPersisted(
@@ -367,24 +355,6 @@ export async function assignAppointmentProviderPersisted(input: {
 
   const confirmed = mapAppointmentRow(row as Record<string, any>)
   replaceCachedAppointment(confirmed)
-  if (current.proposedProviderId !== confirmed.proposedProviderId) {
-    await appendHistoryAfterPersistence({
-      appointment: confirmed,
-      eventType: 'provider_changed',
-      actor: input.actor,
-      notes: confirmed.notes,
-    })
-  }
-  if (current.status !== confirmed.status) {
-    await appendHistoryAfterPersistence({
-      appointment: confirmed,
-      eventType: statusEventType(confirmed.status),
-      actor: input.actor,
-      fromStatus: current.status,
-      toStatus: confirmed.status,
-      notes: confirmed.notes,
-    })
-  }
   recordAuditEntry({
     user: input.actor,
     action: 'appointment_status_changed',
@@ -415,24 +385,6 @@ export async function acceptNominatedAppointmentPersisted(input: {
 
   const confirmed = mapAppointmentRow(row as Record<string, any>)
   replaceCachedAppointment(confirmed)
-  if (current.providerId !== confirmed.providerId) {
-    await appendHistoryAfterPersistence({
-      appointment: confirmed,
-      eventType: 'provider_changed',
-      actor: input.actor,
-      notes: confirmed.notes,
-    })
-  }
-  if (current.status !== confirmed.status) {
-    await appendHistoryAfterPersistence({
-      appointment: confirmed,
-      eventType: statusEventType(confirmed.status),
-      actor: input.actor,
-      fromStatus: current.status,
-      toStatus: confirmed.status,
-      notes: confirmed.notes,
-    })
-  }
   recordAuditEntry({
     user: input.actor,
     action: 'appointment_status_changed',
