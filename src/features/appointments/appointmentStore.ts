@@ -156,10 +156,15 @@ export function getAppointmentHistory(appointmentId: string) {
     .sort((a, b) => new Date(a.changedAt).getTime() - new Date(b.changedAt).getTime())
 }
 
-function appendAppointmentHistory(entry: AppointmentStatusHistoryEntry) {
+function appendAppointmentHistory(
+  entry: AppointmentStatusHistoryEntry,
+  options: { persistRemotely?: boolean } = {},
+) {
   saveStoredAppointmentHistory([entry, ...getStoredAppointmentHistory()].slice(0, 1000))
+
+  if (options.persistRemotely === false) return entry
+
   void insertRemoteTableRow('appointment_status_history', {
-    id: entry.id,
     appointment_id: entry.appointmentId,
     event_type: entry.eventType,
     from_status: entry.fromStatus ?? null,
@@ -169,6 +174,18 @@ function appendAppointmentHistory(entry: AppointmentStatusHistoryEntry) {
     reason: entry.reason ?? '',
     notes: entry.notes ?? '',
     metadata: entry.metadata ?? {},
+  }).then((persisted) => {
+    if (persisted) return
+    console.error('[appointment history persistence] The appointment change was saved locally, but its history event could not be recorded.', {
+      appointmentId: entry.appointmentId,
+      eventType: entry.eventType,
+    })
+  }).catch((error) => {
+    console.error('[appointment history persistence] Unexpected error while recording appointment history.', {
+      appointmentId: entry.appointmentId,
+      eventType: entry.eventType,
+      error,
+    })
   })
   return entry
 }
@@ -469,7 +486,7 @@ export function createAppointment(
       serviceId: appointment.serviceId,
       bookingSource: appointment.bookingSource,
     },
-  })
+  }, { persistRemotely: false })
 
   void insertRemoteTableRow('appointments', mapAppointmentToRemoteRow(appointment))
 
