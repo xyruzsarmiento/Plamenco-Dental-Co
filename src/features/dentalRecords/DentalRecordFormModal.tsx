@@ -38,7 +38,7 @@ export function DentalRecordFormModal({
 
   return (
     <div className="modal-backdrop" role="presentation">
-      <section className="modal patient-modal" aria-labelledby="dental-record-modal-title" role="dialog" aria-modal="true">
+      <section className="modal patient-modal dental-record-modal" aria-labelledby="dental-record-modal-title" role="dialog" aria-modal="true">
         <div className="modal-header">
           <div>
             <p className="eyebrow">Clinical visit</p>
