@@ -278,15 +278,15 @@ export function AppointmentFormModal({
             )}
 
             {(error || conflictError) && <div className="appointment37-alert" role="alert"><X size={15} /><span>{conflictError || error}</span></div>}
-
-            <footer className="appointment37-footer">
-              <Button variant="secondary" type="button" onClick={onClose}>Cancel</Button>
-              <div>
-                {step > 0 && <Button variant="secondary" type="button" onClick={() => setStep((current) => Math.max(current - 1, 0))}><ArrowLeft size={15} />Back</Button>}
-                {step < steps.length - 1 ? <Button type="button" disabled={!canContinue()} onClick={() => setStep((current) => Math.min(current + 1, steps.length - 1))}>Continue<ArrowRight size={15} /></Button> : <Button type="submit" disabled={Boolean(conflictError)}>Confirm booking<CheckCircle2 size={15} /></Button>}
-              </div>
-            </footer>
           </div>
+
+          <footer className="appointment37-footer">
+            <Button variant="secondary" type="button" onClick={onClose}>Cancel</Button>
+            <div>
+              {step > 0 && <Button variant="secondary" type="button" onClick={() => setStep((current) => Math.max(current - 1, 0))}><ArrowLeft size={15} />Back</Button>}
+              {step < steps.length - 1 ? <Button type="button" disabled={!canContinue()} onClick={() => setStep((current) => Math.min(current + 1, steps.length - 1))}>Continue<ArrowRight size={15} /></Button> : <Button type="submit" disabled={Boolean(conflictError)}>Confirm booking<CheckCircle2 size={15} /></Button>}
+            </div>
+          </footer>
         </form>
       </section>
     </div>

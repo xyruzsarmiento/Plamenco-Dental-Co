@@ -644,6 +644,224 @@ body:has(.app-shell) :is(
   }
 }
 
+/* ========================================================================== */
+/* Clinical scheduling / New Appointment                                      */
+/* Keep the shared six-step dialog centered and structurally stable.           */
+/* ========================================================================== */
+
+body:has(.app-shell) .appointment37-modal {
+  display: grid !important;
+  grid-template-rows: auto minmax(0, 1fr) !important;
+  height: min(820px, calc(100dvh - 56px)) !important;
+  max-height: min(820px, calc(100dvh - 56px)) !important;
+  overflow: hidden !important;
+}
+
+body:has(.app-shell) .appointment37-form {
+  display: grid !important;
+  grid-template-columns: 250px minmax(0, 1fr) !important;
+  grid-template-rows: minmax(0, 1fr) auto !important;
+  min-width: 0 !important;
+  min-height: 0 !important;
+  overflow: hidden !important;
+}
+
+body:has(.app-shell) .appointment37-sidebar {
+  grid-column: 1 !important;
+  grid-row: 1 / -1 !important;
+  min-width: 0 !important;
+  min-height: 0 !important;
+}
+
+body:has(.app-shell) .appointment37-content {
+  grid-column: 2 !important;
+  grid-row: 1 !important;
+  min-width: 0 !important;
+  min-height: 0 !important;
+  max-height: none !important;
+  overflow-x: hidden !important;
+  overflow-y: auto !important;
+  overscroll-behavior: contain;
+}
+
+body:has(.app-shell) .appointment37-footer {
+  grid-column: 2 !important;
+  grid-row: 2 !important;
+  position: relative !important;
+  inset: auto !important;
+  margin: 0 !important;
+}
+
+@media (max-width: 1000px) and (min-width: 761px) {
+  body:has(.app-shell) .appointment37-form {
+    grid-template-columns: 210px minmax(0, 1fr) !important;
+  }
+}
+
+@media (max-width: 760px) {
+  html body .app-shell .appointment37-backdrop {
+    display: grid !important;
+    place-items: center !important;
+    align-items: center !important;
+    justify-content: center !important;
+    padding: 16px !important;
+    overflow: hidden !important;
+  }
+
+  html body .app-shell .appointment37-backdrop > .appointment37-modal {
+    align-self: center !important;
+    justify-self: center !important;
+    width: calc(100vw - 32px) !important;
+    max-width: 520px !important;
+    height: 86dvh !important;
+    max-height: 86dvh !important;
+    margin: 0 !important;
+    border: 1px solid rgba(255, 255, 255, 0.78) !important;
+    border-radius: 18px !important;
+    overflow: hidden !important;
+  }
+
+  body:has(.app-shell) .appointment37-header {
+    min-width: 0 !important;
+    padding: 14px 12px !important;
+  }
+
+  body:has(.app-shell) .appointment37-title-wrap {
+    min-width: 0 !important;
+  }
+
+  body:has(.app-shell) .appointment37-title-wrap h2,
+  body:has(.app-shell) .appointment37-title-wrap span {
+    overflow-wrap: anywhere;
+  }
+
+  body:has(.app-shell) .appointment37-form {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) !important;
+    grid-template-rows: minmax(0, 1fr) auto !important;
+    width: 100% !important;
+    height: 100% !important;
+    max-height: none !important;
+  }
+
+  body:has(.app-shell) .appointment37-sidebar {
+    display: none !important;
+  }
+
+  body:has(.app-shell) .appointment37-content {
+    grid-column: 1 !important;
+    grid-row: 1 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    max-height: none !important;
+  }
+
+  body:has(.app-shell) .appointment37-mobile-steps {
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 4 !important;
+    display: flex !important;
+    flex-wrap: nowrap !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    gap: 7px !important;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    padding: 9px 12px !important;
+    scrollbar-width: none;
+    overscroll-behavior-inline: contain;
+  }
+
+  body:has(.app-shell) .appointment37-mobile-steps::-webkit-scrollbar {
+    display: none;
+  }
+
+  body:has(.app-shell) .appointment37-mobile-steps button {
+    flex: 0 0 auto !important;
+    min-width: max-content !important;
+  }
+
+  body:has(.app-shell) .appointment37-section {
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    padding: 16px 12px !important;
+  }
+
+  body:has(.app-shell) .appointment37-section > *,
+  body:has(.app-shell) .appointment37-section-head > div,
+  body:has(.app-shell) .appointment37-choice-copy,
+  body:has(.app-shell) .appointment37-option-card > span:nth-child(2) {
+    min-width: 0 !important;
+    max-width: 100% !important;
+  }
+
+  body:has(.app-shell) :is(
+    .appointment37-card-grid,
+    .appointment37-date-controls,
+    .appointment37-note-grid
+  ) {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+
+  body:has(.app-shell) :is(
+    .appointment37-choice-list > button,
+    .appointment37-option-card,
+    .appointment37-date-controls input,
+    .appointment37-date-controls select,
+    .appointment37-note-grid input,
+    .appointment37-note-grid textarea,
+    .appointment37-note-grid select
+  ) {
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+  }
+
+  body:has(.app-shell) .appointment37-slot-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+
+  body:has(.app-shell) .appointment37-review-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+
+  body:has(.app-shell) .appointment37-footer {
+    grid-column: 1 !important;
+    grid-row: 2 !important;
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) !important;
+    gap: 8px !important;
+    width: 100% !important;
+    padding: 10px 12px max(10px, env(safe-area-inset-bottom)) !important;
+  }
+
+  body:has(.app-shell) .appointment37-footer > .btn,
+  body:has(.app-shell) .appointment37-footer > div,
+  body:has(.app-shell) .appointment37-footer > div .btn {
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+  }
+
+  body:has(.app-shell) .appointment37-footer > div {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 8px !important;
+  }
+
+  body:has(.app-shell) .appointment37-footer > div .btn:only-child {
+    grid-column: 1 / -1 !important;
+  }
+}
+
+@media (max-width: 390px) {
+  body:has(.app-shell) .appointment37-slot-grid,
+  body:has(.app-shell) .appointment37-review-grid {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   body:has(.app-shell) :is(
     .modal,
