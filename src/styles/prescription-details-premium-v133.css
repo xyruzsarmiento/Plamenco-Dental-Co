@@ -114,16 +114,16 @@
   height:17px!important;
 }
 
-.rx116-detail-modal>.rx116-detail-grid,
-.rx116-detail-modal>.rx116-detail-medications,
-.rx116-detail-modal>.rx116-context-note,
-.rx116-detail-modal>.rx116-error,
-.rx116-detail-modal>.rx116-delete-confirm{
+.rx116-detail-body>.rx116-detail-grid,
+.rx116-detail-body>.rx116-detail-medications,
+.rx116-detail-body>.rx116-context-note,
+.rx116-detail-body>.rx116-error,
+.rx116-detail-body>.rx116-delete-confirm{
   margin-left:24px!important;
   margin-right:24px!important;
 }
 
-.rx116-detail-modal>.rx116-detail-grid{
+.rx116-detail-body>.rx116-detail-grid{
   display:grid!important;
   grid-template-columns:repeat(2,minmax(0,1fr))!important;
   gap:10px!important;
@@ -132,7 +132,7 @@
   padding:0!important;
 }
 
-.rx116-detail-modal>.rx116-detail-grid>div{
+.rx116-detail-body>.rx116-detail-grid>div{
   min-width:0;
   min-height:72px!important;
   display:flex!important;
@@ -147,17 +147,17 @@
   box-shadow:none!important;
 }
 
-.rx116-detail-modal>.rx116-detail-grid>div:first-child{
+.rx116-detail-body>.rx116-detail-grid>div:first-child{
   border-color:#cfe0ff!important;
   background:linear-gradient(135deg,#f8fbff,#fff)!important;
 }
 
-.rx116-detail-modal>.rx116-detail-grid>div:nth-child(5){
+.rx116-detail-body>.rx116-detail-grid>div:nth-child(5){
   grid-column:1 / -1;
   min-height:64px!important;
 }
 
-.rx116-detail-modal>.rx116-detail-grid>div>span:first-child{
+.rx116-detail-body>.rx116-detail-grid>div>span:first-child{
   margin:0!important;
   color:#94a3b8!important;
   font-size:8px!important;
@@ -167,7 +167,7 @@
   text-transform:uppercase!important;
 }
 
-.rx116-detail-modal>.rx116-detail-grid strong{
+.rx116-detail-body>.rx116-detail-grid strong{
   max-width:100%;
   color:#172033!important;
   font-size:12px!important;
@@ -176,7 +176,7 @@
   overflow-wrap:anywhere;
 }
 
-.rx116-detail-modal>.rx116-detail-grid .status-badge-v4{
+.rx116-detail-body>.rx116-detail-grid .status-badge-v4{
   min-height:24px!important;
   margin:0!important;
   padding:4px 9px!important;
@@ -185,7 +185,7 @@
   font-weight:900!important;
 }
 
-.rx116-detail-modal>.rx116-detail-medications{
+.rx116-detail-body>.rx116-detail-medications{
   display:grid!important;
   gap:8px!important;
   margin-top:14px!important;
@@ -196,7 +196,7 @@
   background:linear-gradient(180deg,#f8fbff 0%,#fff 100%)!important;
 }
 
-.rx116-detail-modal>.rx116-detail-medications::before{
+.rx116-detail-body>.rx116-detail-medications::before{
   content:"Medication order";
   display:block;
   margin:0 0 1px;
@@ -207,7 +207,7 @@
   text-transform:uppercase;
 }
 
-.rx116-detail-modal>.rx116-detail-medications>section{
+.rx116-detail-body>.rx116-detail-medications>section{
   position:relative;
   display:grid!important;
   gap:4px!important;
@@ -219,7 +219,7 @@
   overflow:hidden;
 }
 
-.rx116-detail-modal>.rx116-detail-medications>section::before{
+.rx116-detail-body>.rx116-detail-medications>section::before{
   content:"";
   position:absolute;
   inset:0 auto 0 0;
@@ -227,7 +227,7 @@
   background:#2563eb;
 }
 
-.rx116-detail-modal>.rx116-detail-medications strong{
+.rx116-detail-body>.rx116-detail-medications strong{
   margin:0!important;
   color:#0f172a!important;
   font-size:13px!important;
@@ -236,7 +236,7 @@
   overflow-wrap:anywhere;
 }
 
-.rx116-detail-modal>.rx116-detail-medications span{
+.rx116-detail-body>.rx116-detail-medications span{
   margin:0!important;
   color:#475569!important;
   font-size:10px!important;
@@ -244,7 +244,7 @@
   line-height:1.45!important;
 }
 
-.rx116-detail-modal>.rx116-detail-medications small{
+.rx116-detail-body>.rx116-detail-medications small{
   margin:2px 0 0!important;
   padding-top:7px;
   border-top:1px solid #edf1f6;
@@ -253,7 +253,7 @@
   line-height:1.5!important;
 }
 
-.rx116-detail-modal>.rx116-context-note{
+.rx116-detail-body>.rx116-context-note{
   display:grid!important;
   grid-template-columns:auto minmax(0,1fr)!important;
   align-items:start!important;
@@ -269,17 +269,17 @@
   line-height:1.5!important;
 }
 
-.rx116-detail-modal>.rx116-context-note svg{
+.rx116-detail-body>.rx116-context-note svg{
   margin-top:1px;
   color:#2563eb!important;
 }
 
-.rx116-detail-modal>.rx116-detail-error{
+.rx116-detail-body>.rx116-detail-error{
   margin-top:10px!important;
   border-radius:11px!important;
 }
 
-.rx116-detail-modal>.rx116-delete-confirm{
+.rx116-detail-body>.rx116-delete-confirm{
   display:flex!important;
   align-items:center!important;
   justify-content:space-between!important;
@@ -291,24 +291,24 @@
   background:#fff7f7!important;
 }
 
-.rx116-detail-modal>.rx116-delete-confirm>div:first-child{
+.rx116-detail-body>.rx116-delete-confirm>div:first-child{
   display:grid;
   gap:3px;
   min-width:0;
 }
 
-.rx116-detail-modal>.rx116-delete-confirm strong{
+.rx116-detail-body>.rx116-delete-confirm strong{
   color:#991b1b!important;
   font-size:11px!important;
 }
 
-.rx116-detail-modal>.rx116-delete-confirm span{
+.rx116-detail-body>.rx116-delete-confirm span{
   color:#7f1d1d!important;
   font-size:9px!important;
   line-height:1.45!important;
 }
 
-.rx116-detail-modal>.rx116-delete-confirm>div:last-child{
+.rx116-detail-body>.rx116-delete-confirm>div:last-child{
   display:flex;
   flex:0 0 auto;
   gap:7px;
@@ -418,16 +418,16 @@
     border-radius:10px;
   }
 
-  .rx116-detail-modal>.rx116-detail-grid,
-  .rx116-detail-modal>.rx116-detail-medications,
-  .rx116-detail-modal>.rx116-context-note,
-  .rx116-detail-modal>.rx116-error,
-  .rx116-detail-modal>.rx116-delete-confirm{
+  .rx116-detail-body>.rx116-detail-grid,
+  .rx116-detail-body>.rx116-detail-medications,
+  .rx116-detail-body>.rx116-context-note,
+  .rx116-detail-body>.rx116-error,
+  .rx116-detail-body>.rx116-delete-confirm{
     margin-left:18px!important;
     margin-right:18px!important;
   }
 
-  .rx116-detail-modal>.rx116-detail-grid{
+  .rx116-detail-body>.rx116-detail-grid{
     margin-top:18px!important;
   }
 
@@ -445,11 +445,11 @@
 }
 
 @media(max-width:560px){
-  .rx116-detail-modal>.rx116-detail-grid{
+  .rx116-detail-body>.rx116-detail-grid{
     grid-template-columns:1fr!important;
   }
 
-  .rx116-detail-modal>.rx116-detail-grid>div:nth-child(5){
+  .rx116-detail-body>.rx116-detail-grid>div:nth-child(5){
     grid-column:auto;
   }
 }
@@ -474,25 +474,25 @@
 
   .rx116-detail-modal>.rx116-head h2{font-size:1.3rem!important}
 
-  .rx116-detail-modal>.rx116-detail-grid,
-  .rx116-detail-modal>.rx116-detail-medications,
-  .rx116-detail-modal>.rx116-context-note,
-  .rx116-detail-modal>.rx116-error,
-  .rx116-detail-modal>.rx116-delete-confirm{
+  .rx116-detail-body>.rx116-detail-grid,
+  .rx116-detail-body>.rx116-detail-medications,
+  .rx116-detail-body>.rx116-context-note,
+  .rx116-detail-body>.rx116-error,
+  .rx116-detail-body>.rx116-delete-confirm{
     margin-left:14px!important;
     margin-right:14px!important;
   }
 
-  .rx116-detail-modal>.rx116-detail-grid>div{
+  .rx116-detail-body>.rx116-detail-grid>div{
     min-height:64px!important;
   }
 
-  .rx116-detail-modal>.rx116-delete-confirm{
+  .rx116-detail-body>.rx116-delete-confirm{
     align-items:stretch!important;
     flex-direction:column!important;
   }
 
-  .rx116-detail-modal>.rx116-delete-confirm>div:last-child{
+  .rx116-detail-body>.rx116-delete-confirm>div:last-child{
     display:grid;
     grid-template-columns:1fr 1fr;
   }

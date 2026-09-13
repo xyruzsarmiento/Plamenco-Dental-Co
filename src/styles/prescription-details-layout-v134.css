@@ -4,17 +4,39 @@
 
 .rx116-detail-modal {
   box-sizing: border-box !important;
-  display: flex !important;
-  flex-direction: column !important;
+  display: grid !important;
+  grid-template-rows: auto minmax(0, 1fr) auto !important;
   width: min(720px, calc(100vw - 48px)) !important;
   max-width: 720px !important;
+  height: auto !important;
+  min-height: 0 !important;
+  max-height: 86dvh !important;
+  overflow: hidden !important;
 }
 
-.rx116-detail-modal > .rx116-detail-grid,
-.rx116-detail-modal > .rx116-detail-medications,
-.rx116-detail-modal > .rx116-context-note,
-.rx116-detail-modal > .rx116-error,
-.rx116-detail-modal > .rx116-delete-confirm {
+.rx116-detail-modal > .rx116-head {
+  position: relative !important;
+  inset: auto !important;
+}
+
+.rx116-detail-modal > .rx116-detail-body {
+  box-sizing: border-box !important;
+  display: flex !important;
+  flex-direction: column !important;
+  min-width: 0 !important;
+  min-height: 0 !important;
+  max-width: 100% !important;
+  padding-bottom: 16px !important;
+  overflow-x: hidden !important;
+  overflow-y: auto !important;
+  overscroll-behavior: contain;
+}
+
+.rx116-detail-body > .rx116-detail-grid,
+.rx116-detail-body > .rx116-detail-medications,
+.rx116-detail-body > .rx116-context-note,
+.rx116-detail-body > .rx116-error,
+.rx116-detail-body > .rx116-delete-confirm {
   box-sizing: border-box !important;
   width: calc(100% - 48px) !important;
   max-width: none !important;
@@ -23,26 +45,26 @@
   margin-right: 24px !important;
 }
 
-.rx116-detail-modal > .rx116-detail-grid {
+.rx116-detail-body > .rx116-detail-grid {
   grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
   gap: 10px !important;
 }
 
-.rx116-detail-modal > .rx116-detail-grid > div {
+.rx116-detail-body > .rx116-detail-grid > div {
   width: auto !important;
   max-width: none !important;
   min-width: 0 !important;
 }
 
-.rx116-detail-modal > .rx116-detail-grid > div:nth-child(5) {
+.rx116-detail-body > .rx116-detail-grid > div:nth-child(5) {
   grid-column: 1 / -1 !important;
 }
 
-.rx116-detail-modal > .rx116-detail-medications {
+.rx116-detail-body > .rx116-detail-medications {
   width: calc(100% - 48px) !important;
 }
 
-.rx116-detail-modal > .rx116-detail-medications > section {
+.rx116-detail-body > .rx116-detail-medications > section {
   width: 100% !important;
   max-width: none !important;
   box-sizing: border-box !important;
@@ -50,12 +72,15 @@
 
 .rx116-detail-modal > .rx-prescription-detail-footer {
   box-sizing: border-box !important;
+  position: relative !important;
+  inset: auto !important;
   width: 100% !important;
   display: grid !important;
   grid-template-columns: auto minmax(24px, 1fr) auto auto minmax(126px, auto) !important;
   align-items: center !important;
   column-gap: 8px !important;
   row-gap: 8px !important;
+  margin-top: 0 !important;
   padding: 13px 24px !important;
 }
 
@@ -120,11 +145,11 @@
     max-width: none !important;
   }
 
-  .rx116-detail-modal > .rx116-detail-grid,
-  .rx116-detail-modal > .rx116-detail-medications,
-  .rx116-detail-modal > .rx116-context-note,
-  .rx116-detail-modal > .rx116-error,
-  .rx116-detail-modal > .rx116-delete-confirm {
+  .rx116-detail-body > .rx116-detail-grid,
+  .rx116-detail-body > .rx116-detail-medications,
+  .rx116-detail-body > .rx116-context-note,
+  .rx116-detail-body > .rx116-error,
+  .rx116-detail-body > .rx116-delete-confirm {
     width: calc(100% - 36px) !important;
     margin-left: 18px !important;
     margin-right: 18px !important;
@@ -143,25 +168,30 @@
 }
 
 @media (max-width: 560px) {
-  .rx116-detail-modal > .rx116-detail-grid {
+  .rx116-detail-body > .rx116-detail-grid {
     grid-template-columns: 1fr !important;
   }
 
-  .rx116-detail-modal > .rx116-detail-grid > div:nth-child(5) {
+  .rx116-detail-body > .rx116-detail-grid > div {
+    min-height: 0 !important;
+    padding: 11px 12px !important;
+  }
+
+  .rx116-detail-body > .rx116-detail-grid > div:nth-child(5) {
     grid-column: auto !important;
   }
 
   .rx116-detail-modal > .rx-prescription-detail-footer {
-    grid-template-columns: 1fr !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
   }
 }
 
 @media (max-width: 480px) {
-  .rx116-detail-modal > .rx116-detail-grid,
-  .rx116-detail-modal > .rx116-detail-medications,
-  .rx116-detail-modal > .rx116-context-note,
-  .rx116-detail-modal > .rx116-error,
-  .rx116-detail-modal > .rx116-delete-confirm {
+  .rx116-detail-body > .rx116-detail-grid,
+  .rx116-detail-body > .rx116-detail-medications,
+  .rx116-detail-body > .rx116-context-note,
+  .rx116-detail-body > .rx116-error,
+  .rx116-detail-body > .rx116-delete-confirm {
     width: calc(100% - 28px) !important;
     margin-left: 14px !important;
     margin-right: 14px !important;
@@ -169,5 +199,11 @@
 
   .rx116-detail-modal > .rx-prescription-detail-footer {
     padding: 10px 14px calc(10px + env(safe-area-inset-bottom)) !important;
+  }
+}
+
+@media (max-width: 340px) {
+  .rx116-detail-modal > .rx-prescription-detail-footer {
+    grid-template-columns: minmax(0, 1fr) !important;
   }
 }

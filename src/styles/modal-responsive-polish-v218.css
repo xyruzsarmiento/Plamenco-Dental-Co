@@ -524,13 +524,17 @@ body:has(.app-shell) :is(
     width: 100% !important;
     min-width: 0 !important;
     max-width: 100% !important;
-    overflow: hidden !important;
     text-align: center !important;
     white-space: nowrap !important;
   }
 
-  body:has(.app-shell) .prescription-create-btn > * {
-    flex: 0 0 auto !important;
+  body:has(.app-shell) .rx116-detail-modal > .rx-prescription-detail-footer {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+
+  body:has(.app-shell) .rx116-detail-modal > .rx-prescription-detail-footer > * {
+    grid-column: auto !important;
+    width: 100% !important;
     min-width: 0 !important;
   }
 
@@ -607,6 +611,31 @@ body:has(.app-shell) :is(
     grid-template-columns: auto minmax(0, 1fr) !important;
     align-items: start !important;
     gap: 10px !important;
+  }
+}
+
+@media (max-width: 820px) {
+  html body .app-shell .clinical-standard-hero > .prescription-create-btn {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 8px !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    text-align: center !important;
+  }
+
+  html body .app-shell .clinical-standard-hero > .prescription-create-btn > * {
+    flex: 0 0 auto !important;
+    width: auto !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+  }
+
+  html body .app-shell .clinical-standard-hero > .prescription-create-btn > svg {
+    width: 15px !important;
+    height: 15px !important;
   }
 }
 
@@ -860,6 +889,21 @@ body:has(.app-shell) .appointment37-footer {
   body:has(.app-shell) .appointment37-review-grid {
     grid-template-columns: minmax(0, 1fr) !important;
   }
+}
+
+body:has(.app-shell) .rx116-detail-modal > .rx-prescription-detail-footer .btn-danger,
+body:has(.app-shell) .rx116-detail-modal > .rx-prescription-detail-footer .btn-danger span {
+  border-color: #fca5a5 !important;
+  background: #fff7f7 !important;
+  color: #dc2626 !important;
+  -webkit-text-fill-color: #dc2626 !important;
+  opacity: 1 !important;
+}
+
+body:has(.app-shell) .rx116-detail-modal > .rx-prescription-detail-footer .btn-danger svg {
+  color: #dc2626 !important;
+  stroke: #dc2626 !important;
+  opacity: 1 !important;
 }
 
 @media (prefers-reduced-motion: reduce) {
