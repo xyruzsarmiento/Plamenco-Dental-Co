@@ -34,16 +34,3 @@
   background: #ffffff;
   box-shadow: 0 32px 90px rgba(15, 23, 42, 0.34);
 }
-
-@media (max-width: 560px) {
-  .operation-action-backdrop {
-    align-items: end;
-    padding: 0;
-  }
-
-  .operation-action-modal {
-    width: 100%;
-    max-height: 92dvh;
-    border-radius: 20px 20px 0 0;
-  }
-}

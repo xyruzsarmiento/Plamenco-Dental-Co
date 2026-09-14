@@ -237,13 +237,7 @@
   background: #ffffff;
 }
 
-@media (max-width: 560px) {
-  .operation-dialog-v55 {
-    width: 100%;
-    max-height: 92dvh;
-    border-radius: 22px 22px 0 0;
-  }
-
+@media (max-width: 600px) {
   .operation-dialog-v55-header {
     grid-template-columns: auto minmax(0, 1fr) auto;
     padding: 18px 16px 14px;
@@ -260,12 +254,18 @@
 
   .operation-dialog-v55-actions {
     display: grid;
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     padding: 14px 16px 16px;
   }
 
   .operation-dialog-v55-actions .btn {
     width: 100%;
     justify-content: center;
+  }
+}
+
+@media (max-width: 379px) {
+  .operation-dialog-v55-actions {
+    grid-template-columns: minmax(0, 1fr);
   }
 }

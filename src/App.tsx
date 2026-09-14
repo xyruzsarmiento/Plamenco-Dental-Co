@@ -1,4 +1,4 @@
-import { Fragment, useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { AppRouter } from './app/AppRouter'
 import { AppErrorBoundary } from './components/system/AppErrorBoundary'
 import { AdaptivePaginationEnhancer } from './components/system/AdaptivePaginationEnhancer'
@@ -65,13 +65,6 @@ function clearPatientPortalCaches() {
   PATIENT_PORTAL_CACHE_KEYS.forEach((key) => window.localStorage.removeItem(key))
 }
 
-function patientPortalSnapshot() {
-  if (typeof window === 'undefined') return ''
-  return PATIENT_PORTAL_CACHE_KEYS
-    .map((key) => `${key}:${window.localStorage.getItem(key) ?? ''}`)
-    .join('|')
-}
-
 function settleWithin<T>(promise: Promise<T>, timeoutMs: number, label: string): Promise<T | undefined> {
   return new Promise((resolve) => {
     let settled = false
@@ -106,7 +99,6 @@ function safeLoad(loader: () => Promise<unknown>) {
 
 function DataBootstrap({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, isLoading, user } = useAuth()
-  const [dataRevision, setDataRevision] = useState(0)
   const [bootstrapPhase, setBootstrapPhase] = useState<BootstrapPhase>('idle')
   const [bootstrapIdentity, setBootstrapIdentity] = useState('')
 
@@ -126,7 +118,6 @@ function DataBootstrap({ children }: { children: React.ReactNode }) {
     let active = true
     let backgroundTimer: number | undefined
     let watchdogTimer: number | undefined
-    let patientDataChanged = false
 
     if (isLoading || !isAuthenticated || !user?.id) {
       setBootstrapIdentity('')
@@ -165,12 +156,7 @@ function DataBootstrap({ children }: { children: React.ReactNode }) {
 
         if (user.role === 'patient') {
           if (!hadWarmBootstrap) clearPatientPortalCaches()
-          const before = patientPortalSnapshot()
-          essentialLoads.push(
-            safeLoad(() => hydratePatientPortalFromDatabase()).finally(() => {
-              patientDataChanged = before !== patientPortalSnapshot()
-            }),
-          )
+          essentialLoads.push(safeLoad(() => hydratePatientPortalFromDatabase()))
         }
 
         await settleWithin(
@@ -200,7 +186,6 @@ function DataBootstrap({ children }: { children: React.ReactNode }) {
         setBootstrapPhase('ready')
 
         if (user.role === 'patient') {
-          if (patientDataChanged) setDataRevision((value) => value + 1)
           return
         }
 
@@ -213,7 +198,6 @@ function DataBootstrap({ children }: { children: React.ReactNode }) {
                 BACKGROUND_SYNC_TIMEOUT_MS,
                 'internal background sync',
               )
-              if (active) setDataRevision((value) => value + 1)
               return true
             },
             { ...queryCachePolicy.frequent, tags: ['internal-sync'], scope: currentScope, force: !hadWarmBootstrap },
@@ -239,7 +223,7 @@ function DataBootstrap({ children }: { children: React.ReactNode }) {
     )
   }
 
-  return <Fragment key={`${user?.id ?? 'public'}:${dataRevision}`}>{children}</Fragment>
+  return children
 }
 
 function App() {

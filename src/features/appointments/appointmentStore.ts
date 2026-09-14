@@ -35,7 +35,12 @@ export function getStoredAppointments(): Appointment[] {
   const stored = safeParseAppointments(window.localStorage.getItem(APPOINTMENT_STORAGE_KEY))
 
   if (stored?.length) {
-    return stored.map(normalizeAppointment)
+    const normalized = stored.map(normalizeAppointment)
+    const unique = uniqueRowsById(normalized)
+    if (unique.length !== normalized.length) {
+      window.localStorage.setItem(APPOINTMENT_STORAGE_KEY, JSON.stringify(unique))
+    }
+    return unique
   }
 
   window.localStorage.setItem(APPOINTMENT_STORAGE_KEY, JSON.stringify(seedAppointments))
@@ -115,6 +120,15 @@ function safeParseHistory(value: string | null): AppointmentStatusHistoryEntry[]
   }
 }
 
+function uniqueRowsById<T extends { id: string }>(rows: T[]): T[] {
+  const seen = new Set<string>()
+  return rows.filter((row) => {
+    if (seen.has(row.id)) return false
+    seen.add(row.id)
+    return true
+  })
+}
+
 function safeParseList<T>(value: string | null): T[] {
   if (!value) return []
   try {
@@ -143,11 +157,16 @@ export const allowedAppointmentTransitions: Record<AppointmentStatus, Appointmen
 }
 
 export function getStoredAppointmentHistory(): AppointmentStatusHistoryEntry[] {
-  return safeParseHistory(window.localStorage.getItem(APPOINTMENT_HISTORY_STORAGE_KEY))
+  const stored = safeParseHistory(window.localStorage.getItem(APPOINTMENT_HISTORY_STORAGE_KEY))
+  const unique = uniqueRowsById(stored)
+  if (unique.length !== stored.length) {
+    window.localStorage.setItem(APPOINTMENT_HISTORY_STORAGE_KEY, JSON.stringify(unique))
+  }
+  return unique
 }
 
 export function saveStoredAppointmentHistory(entries: AppointmentStatusHistoryEntry[]) {
-  window.localStorage.setItem(APPOINTMENT_HISTORY_STORAGE_KEY, JSON.stringify(entries))
+  window.localStorage.setItem(APPOINTMENT_HISTORY_STORAGE_KEY, JSON.stringify(uniqueRowsById(entries)))
 }
 
 export function getAppointmentHistory(appointmentId: string) {
@@ -349,7 +368,7 @@ export function isBlockingAppointmentStatus(status: Appointment['status']) {
 }
 
 export function saveStoredAppointments(appointments: Appointment[]) {
-  window.localStorage.setItem(APPOINTMENT_STORAGE_KEY, JSON.stringify(appointments))
+  window.localStorage.setItem(APPOINTMENT_STORAGE_KEY, JSON.stringify(uniqueRowsById(appointments)))
 }
 
 export function getAppointmentById(id: string): Appointment | undefined {

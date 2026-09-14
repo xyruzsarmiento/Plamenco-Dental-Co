@@ -674,6 +674,216 @@ body:has(.app-shell) :is(
 }
 
 /* ========================================================================== */
+/* Appointment workspace and workflow dialogs                                 */
+/* One centered, inset contract for every appointment operation variant.      */
+/* ========================================================================== */
+
+@media (min-width: 601px) and (max-width: 820px) {
+  body:has(.app-shell) :is(
+    .appointment-details-backdrop-v40,
+    .operation-action-backdrop
+  ) {
+    display: grid !important;
+    place-items: center !important;
+    align-items: center !important;
+    justify-items: center !important;
+    padding: 24px !important;
+    overflow: hidden !important;
+  }
+
+  html body:has(.app-shell) :is(
+    .modal-backdrop.appointment-details-backdrop-v40 > .modal.appointment-details-modal-v40,
+    .modal-backdrop.operation-action-backdrop > .modal.operation-dialog-v55
+  ) {
+    align-self: center !important;
+    justify-self: center !important;
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: 86dvh !important;
+    margin: 0 !important;
+    border-radius: 18px !important;
+    overflow: hidden !important;
+    transform: none !important;
+  }
+
+  html body:has(.app-shell) .modal-backdrop.appointment-details-backdrop-v40 > .modal.appointment-details-modal-v40 {
+    width: calc(100vw - 48px) !important;
+    max-width: 720px !important;
+  }
+
+  html body:has(.app-shell) .modal-backdrop.operation-action-backdrop > .modal.operation-dialog-v55 {
+    width: min(560px, calc(100vw - 48px)) !important;
+    max-width: 560px !important;
+  }
+}
+
+@media (max-width: 600px) {
+  body:has(.app-shell) :is(
+    .appointment-details-backdrop-v40,
+    .operation-action-backdrop
+  ) {
+    position: fixed !important;
+    inset: 0 !important;
+    display: grid !important;
+    place-items: center !important;
+    align-items: center !important;
+    justify-items: center !important;
+    padding: 16px !important;
+    overflow: hidden !important;
+  }
+
+  html body:has(.app-shell) :is(
+    .modal-backdrop.appointment-details-backdrop-v40 > .modal.appointment-details-modal-v40,
+    .modal-backdrop.operation-action-backdrop > .modal.operation-dialog-v55
+  ) {
+    position: relative !important;
+    inset: auto !important;
+    align-self: center !important;
+    justify-self: center !important;
+    display: grid !important;
+    grid-template-rows: auto minmax(0, 1fr) auto !important;
+    box-sizing: border-box !important;
+    width: calc(100vw - 32px) !important;
+    min-width: 0 !important;
+    max-width: 520px !important;
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: 86dvh !important;
+    margin: 0 !important;
+    border-radius: 18px !important;
+    overflow: hidden !important;
+    transform: none !important;
+  }
+
+  html body:has(.app-shell) :is(
+    .modal.appointment-details-modal-v40 > .appointment-details-v40-body,
+    .modal.operation-dialog-v55 > .operation-dialog-v55-body
+  ) {
+    min-width: 0 !important;
+    min-height: 0 !important;
+    max-width: 100% !important;
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+    overscroll-behavior: contain !important;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  body:has(.app-shell) .appointment-details-v40-header {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) auto !important;
+    align-items: start !important;
+    gap: 10px !important;
+    min-width: 0 !important;
+    padding: 14px 14px 12px !important;
+  }
+
+  body:has(.app-shell) .appointment-details-v40-identity,
+  body:has(.app-shell) .appointment-details-v40-title-row,
+  body:has(.app-shell) .appointment-details-v40-title-row > div {
+    min-width: 0 !important;
+  }
+
+  body:has(.app-shell) .appointment-details-v40-title-row {
+    display: grid !important;
+    grid-template-columns: auto minmax(0, 1fr) !important;
+    align-items: center !important;
+    gap: 8px 10px !important;
+  }
+
+  body:has(.app-shell) .appointment-details-v40-title-row > :first-child {
+    grid-row: 1 / span 2;
+  }
+
+  body:has(.app-shell) .appointment-details-v40-title-row > .status-badge {
+    grid-column: 2;
+    justify-self: start;
+  }
+
+  body:has(.app-shell) .appointment-details-v40-title-row :is(h2, p),
+  body:has(.app-shell) .appointment-details-v40-overview strong,
+  body:has(.app-shell) .appointment-details-v40-info-grid strong {
+    overflow-wrap: anywhere;
+  }
+
+  body:has(.app-shell) .appointment-details-v40-body {
+    padding: 12px !important;
+  }
+
+  body:has(.app-shell) :is(
+    .appointment-details-v40-overview,
+    .appointment-details-v40-grid,
+    .appointment-details-v40-info-grid,
+    .appointment-details-v40-info-grid.three-col,
+    .appointment-details-v40-notes
+  ) {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+
+  body:has(.app-shell) .operation-dialog-v55-header {
+    padding: 14px !important;
+  }
+
+  body:has(.app-shell) .operation-dialog-v55-header > div,
+  body:has(.app-shell) .operation-dialog-v55-patient > div {
+    min-width: 0 !important;
+  }
+
+  body:has(.app-shell) .operation-dialog-v55-header :is(h2, p),
+  body:has(.app-shell) .operation-dialog-v55-patient :is(strong, small) {
+    overflow-wrap: anywhere;
+  }
+
+  body:has(.app-shell) .operation-dialog-v55-body {
+    padding: 12px 14px !important;
+  }
+
+  body:has(.app-shell) .operation-dialog-v55-field-grid {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+
+  body:has(.app-shell) .operation-dialog-v55-context dl {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 8px !important;
+  }
+
+  body:has(.app-shell) .operation-dialog-v55-form :is(input, select, textarea),
+  body:has(.app-shell) .operation-dialog-v55-note textarea,
+  body:has(.app-shell) .operation-dialog-v55-alert {
+    box-sizing: border-box !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+  }
+
+  html body:has(.app-shell) .modal-backdrop.operation-action-backdrop > .modal.operation-dialog-v55 > .operation-dialog-v55-actions {
+    position: relative !important;
+    inset: auto !important;
+    z-index: 2 !important;
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 8px !important;
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 10px 14px max(10px, env(safe-area-inset-bottom)) !important;
+    background: rgba(255, 255, 255, .98) !important;
+  }
+
+  html body:has(.app-shell) .modal.operation-dialog-v55 > .operation-dialog-v55-actions .btn {
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    justify-content: center !important;
+  }
+}
+
+@media (max-width: 379px) {
+  body:has(.app-shell) .operation-dialog-v55-context dl,
+  html body:has(.app-shell) .modal.operation-dialog-v55 > .operation-dialog-v55-actions {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+}
+
+/* ========================================================================== */
 /* Clinical scheduling / New Appointment                                      */
 /* Keep the shared six-step dialog centered and structurally stable.           */
 /* ========================================================================== */

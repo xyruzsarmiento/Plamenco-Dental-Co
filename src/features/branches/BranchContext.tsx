@@ -110,72 +110,74 @@ async function loadProviderAssignments(profileId: string): Promise<AssignmentRow
 
 export function BranchProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth()
+  const userId = user?.id ?? ''
+  const userRole = user?.role
   const [availableBranches, setAvailableBranches] = useState<Branch[]>([])
   const [authorizedBranchIds, setAuthorizedBranchIds] = useState<string[]>([])
   const [scope, setScope] = useState<BranchScope | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const canViewAllBranches = user?.role === 'super_admin'
+  const canViewAllBranches = userRole === 'super_admin'
 
   const refreshBranchAccess = useCallback(async () => {
-    if (!user || user.role === 'patient') {
+    if (!userId || userRole === 'patient') {
       setAvailableBranches([]); setAuthorizedBranchIds([]); setScope(null); setError(null); setIsLoading(false); return
     }
     setIsLoading(true); setError(null)
     try {
       const branches = await loadActiveBranches()
       let assignments: AssignmentRow[] = []
-      if (user.role === 'staff') assignments = await loadStaffAssignments(user.id)
-      if (user.role === 'dentist' || user.role === 'associate_dentist') assignments = await loadProviderAssignments(user.id)
-      const branchIds = user.role === 'super_admin' ? branches.map((branch) => branch.id) : [...new Set(assignments.map((assignment) => assignment.branch_id))]
+      if (userRole === 'staff') assignments = await loadStaffAssignments(userId)
+      if (userRole === 'dentist' || userRole === 'associate_dentist') assignments = await loadProviderAssignments(userId)
+      const branchIds = userRole === 'super_admin' ? branches.map((branch) => branch.id) : [...new Set(assignments.map((assignment) => assignment.branch_id))]
       const authorizedBranches = branches.filter((branch) => branchIds.includes(branch.id))
       const normalizedIds = authorizedBranches.map((branch) => branch.id)
-      const primary = user.role === 'super_admin'
+      const primary = userRole === 'super_admin'
         ? authorizedBranches[0]?.id ?? null
         : assignments.find((assignment) => assignment.is_primary && normalizedIds.includes(assignment.branch_id))?.branch_id ?? authorizedBranches[0]?.id ?? null
       setAvailableBranches(authorizedBranches)
       setAuthorizedBranchIds(normalizedIds)
 
-      const stored = readStoredScope(user.id)
+      const stored = readStoredScope(userId)
       let nextScope: BranchScope | null = null
       if (normalizedIds.length === 1) nextScope = { kind: 'branch', branchId: normalizedIds[0] }
       else if (stored?.kind === 'branch' && normalizedIds.includes(stored.branchId)) nextScope = stored
-      else if (stored?.kind === 'all' && user.role === 'super_admin') nextScope = stored
+      else if (stored?.kind === 'all' && userRole === 'super_admin') nextScope = stored
       else if (primary) nextScope = { kind: 'branch', branchId: primary }
-      else if (user.role === 'super_admin') nextScope = { kind: 'all' }
+      else if (userRole === 'super_admin') nextScope = { kind: 'all' }
       setScope(nextScope)
-      if (nextScope) persistScope(user.id, nextScope)
+      if (nextScope) persistScope(userId, nextScope)
     } catch (cause) {
       setAvailableBranches([]); setAuthorizedBranchIds([]); setScope(null)
       setError(cause instanceof Error ? cause.message : 'Unable to establish branch workspace access.')
     } finally { setIsLoading(false) }
-  }, [user])
+  }, [userId, userRole])
 
   useEffect(() => { void refreshBranchAccess() }, [refreshBranchAccess])
 
   useEffect(() => {
     const client = supabase
-    if (!client || !user || user.role === 'patient' || user.role === 'super_admin') return
-    const channel = client.channel(`branch-access-${user.id}`)
-    if (user.role === 'staff') {
-      channel.on('postgres_changes', { event: '*', schema: 'public', table: 'staff_branch_assignments', filter: `profile_id=eq.${user.id}` }, () => { void refreshBranchAccess() })
+    if (!client || !userId || userRole === 'patient' || userRole === 'super_admin') return
+    const channel = client.channel(`branch-access-${userId}`)
+    if (userRole === 'staff') {
+      channel.on('postgres_changes', { event: '*', schema: 'public', table: 'staff_branch_assignments', filter: `profile_id=eq.${userId}` }, () => { void refreshBranchAccess() })
     } else {
       channel.on('postgres_changes', { event: '*', schema: 'public', table: 'provider_branch_assignments' }, () => { void refreshBranchAccess() })
-      channel.on('postgres_changes', { event: '*', schema: 'public', table: 'providers', filter: `profile_id=eq.${user.id}` }, () => { void refreshBranchAccess() })
+      channel.on('postgres_changes', { event: '*', schema: 'public', table: 'providers', filter: `profile_id=eq.${userId}` }, () => { void refreshBranchAccess() })
     }
     channel.subscribe()
     return () => { void client.removeChannel(channel) }
-  }, [refreshBranchAccess, user])
+  }, [refreshBranchAccess, userId, userRole])
 
   const setActiveBranch = useCallback((branchId: string) => {
-    if (!user || !authorizedBranchIds.includes(branchId)) return
-    const next: BranchScope = { kind: 'branch', branchId }; setScope(next); persistScope(user.id, next)
-  }, [authorizedBranchIds, user])
+    if (!userId || !authorizedBranchIds.includes(branchId)) return
+    const next: BranchScope = { kind: 'branch', branchId }; setScope(next); persistScope(userId, next)
+  }, [authorizedBranchIds, userId])
 
   const setAllBranches = useCallback(() => {
-    if (!user || user.role !== 'super_admin') return
-    const next: BranchScope = { kind: 'all' }; setScope(next); persistScope(user.id, next)
-  }, [user])
+    if (!userId || userRole !== 'super_admin') return
+    const next: BranchScope = { kind: 'all' }; setScope(next); persistScope(userId, next)
+  }, [userId, userRole])
 
   const activeBranchId = scope?.kind === 'branch' ? scope.branchId : null
   const activeBranch = activeBranchId ? availableBranches.find((branch) => branch.id === activeBranchId) ?? null : null

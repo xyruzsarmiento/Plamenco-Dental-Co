@@ -46,6 +46,21 @@ function cacheUser(user: AuthUser) {
   window.localStorage.setItem(STORAGE_KEY, JSON.stringify(user))
 }
 
+function authUsersEqual(current: AuthUser | null, next: AuthUser) {
+  if (!current) return false
+  const currentPermissions = current.permissions ?? []
+  const nextPermissions = next.permissions ?? []
+  return current.id === next.id
+    && current.name === next.name
+    && current.email === next.email
+    && current.role === next.role
+    && current.status === next.status
+    && current.patientId === next.patientId
+    && current.avatarUrl === next.avatarUrl
+    && currentPermissions.length === nextPermissions.length
+    && currentPermissions.every((permission, index) => permission === nextPermissions[index])
+}
+
 function withAuthTimeout<T>(operation: Promise<T>, message: string): Promise<T> {
   let timeoutId: number | undefined
   const timeout = new Promise<never>((_, reject) => {
@@ -291,12 +306,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
 
     let isMounted = true
+    let activeSessionUserId = ''
     const authStateTimers = new Set<number>()
     const applySession = async (sessionUser: SessionUser | null | undefined) => {
       if (!isMounted) return
       if (!sessionUser) {
-        if (allowLegacyLocalAuth) setUser(readStoredUser())
-        else { clearCachedUser(); setUser(null) }
+        if (allowLegacyLocalAuth) {
+          const storedUser = readStoredUser()
+          activeSessionUserId = storedUser?.id ?? ''
+          setUser(storedUser)
+        } else {
+          activeSessionUserId = ''
+          clearCachedUser()
+          clearAllQueryCache()
+          setUser(null)
+        }
         setIsLoading(false)
         return
       }
@@ -308,14 +332,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         )
         if (!isMounted) return
         if (nextUser) {
+          activeSessionUserId = nextUser.id
           cacheUser(nextUser)
-          setUser(nextUser)
+          setUser((current) => authUsersEqual(current, nextUser) ? current : nextUser)
           setAuthError(null)
           if (typeof window !== 'undefined') window.sessionStorage.removeItem(SOCIAL_INTENT_KEY)
           setIsLoading(false)
           return
         }
         const social = isSocialSession(sessionUser)
+        activeSessionUserId = ''
         clearCachedUser()
         clearAllQueryCache()
         setUser(null)
@@ -325,6 +351,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (social) void client.auth.signOut()
       } catch (cause) {
         if (!isMounted) return
+        activeSessionUserId = ''
         console.error('[auth session restore failed]', cause)
         clearCachedUser()
         clearAllQueryCache()
@@ -333,6 +360,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       } finally {
         if (isMounted) setIsLoading(false)
       }
+    }
+
+    const queueSessionApplication = (sessionUser: SessionUser | null | undefined) => {
+      const timer = window.setTimeout(() => {
+        authStateTimers.delete(timer)
+        void applySession(sessionUser)
+      }, 0)
+      authStateTimers.add(timer)
     }
 
     const applySupabaseSession = async () => {
@@ -417,12 +452,31 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
 
     void applySupabaseSession()
-    const { data: { subscription } } = client.auth.onAuthStateChange((_event, session) => {
-      const timer = window.setTimeout(() => {
-        authStateTimers.delete(timer)
-        void applySession(session?.user)
-      }, 0)
-      authStateTimers.add(timer)
+    const { data: { subscription } } = client.auth.onAuthStateChange((event, session) => {
+      switch (event) {
+        case 'INITIAL_SESSION':
+          // applySupabaseSession performs the single authoritative initial hydration.
+          return
+        case 'TOKEN_REFRESHED':
+          // Supabase already updated its session. App identity, route, branch scope,
+          // open dialogs, and local UI state must remain untouched.
+          return
+        case 'SIGNED_IN':
+          // SIGNED_IN can be emitted again when a tab regains focus. Only hydrate
+          // when the authenticated identity actually changed.
+          if (session?.user?.id && session.user.id === activeSessionUserId) return
+          queueSessionApplication(session?.user)
+          return
+        case 'USER_UPDATED':
+        case 'PASSWORD_RECOVERY':
+          queueSessionApplication(session?.user)
+          return
+        case 'SIGNED_OUT':
+          queueSessionApplication(null)
+          return
+        default:
+          return
+      }
     })
     return () => {
       isMounted = false
