@@ -91,9 +91,6 @@ function mutationError(message: string, cause?: { message?: string; code?: strin
   if (normalized.includes('already has another appointment at this time') || normalized.includes('already has an appointment during this time')) {
     return new Error('This dentist already has an appointment during this time.')
   }
-  if (normalized.includes('only the assigned dentist can update')) {
-    return new Error('Only the assigned dentist can update this clinical appointment step.')
-  }
   if (normalized.includes('not assigned to this appointment branch')) {
     return new Error('This dentist is not assigned to the appointment branch.')
   }

@@ -412,46 +412,81 @@ export function AppointmentsPage() {
     })
     return map
   }, [providers])
+  const isActiveInternalUser = Boolean(
+    user
+      && user.role !== 'patient'
+      && user.status !== 'inactive'
+      && user.status !== 'suspended',
+  )
   const isAssignedProvider = (appointment: Appointment) => {
-    if (!appointment.providerId || !appointment.branchId || !user?.id) return false
+    if (
+      !isActiveInternalUser
+      || !appointment.providerId
+      || !appointment.branchId
+      || !user?.id
+      || (user.role !== 'dentist' && user.role !== 'associate_dentist')
+    ) return false
     return providerMap.get(appointment.providerId)?.profileId === user.id
       && authorizedBranchIds.includes(appointment.branchId)
   }
   const canTransitionAppointment = (appointment: Appointment, status: AppointmentStatus) => {
     const hasBranchAccess = Boolean(appointment.branchId && authorizedBranchIds.includes(appointment.branchId))
-    const isBranchOperator = hasBranchAccess && (user?.role === 'staff' || user?.role === 'super_admin')
+    const isSuperAdmin = isActiveInternalUser && user?.role === 'super_admin'
+    const isStaffOperator = isActiveInternalUser && user?.role === 'staff' && hasBranchAccess
     const assignedProviderActor = isAssignedProvider(appointment)
 
-    if (status === 'confirmed') return isBranchOperator && permissions.can('appointments.approve')
-    if (status === 'rejected') return isBranchOperator && permissions.can('appointments.reject')
-    if (status === 'rescheduled') return isBranchOperator && permissions.can('appointments.reschedule')
+    if (status === 'confirmed') {
+      return isSuperAdmin || (isStaffOperator && permissions.can('appointments.approve'))
+    }
+    if (status === 'rejected') {
+      return isSuperAdmin || (isStaffOperator && permissions.can('appointments.reject'))
+    }
+    if (status === 'rescheduled') {
+      return isSuperAdmin
+        || (isStaffOperator && permissions.can('appointments.reschedule'))
+        || (assignedProviderActor && permissions.canAny(['appointments.reschedule', 'appointments.update_clinical_status']))
+    }
     if (status === 'checked_in' || status === 'waiting') {
-      return (isBranchOperator && permissions.can('appointments.check_in'))
+      return isSuperAdmin
+        || (isStaffOperator && permissions.can('appointments.check_in'))
         || (assignedProviderActor && permissions.can('appointments.update_clinical_status'))
     }
     if (status === 'cancelled') {
-      return (isBranchOperator && permissions.can('appointments.cancel'))
+      return isSuperAdmin
+        || (isStaffOperator && permissions.can('appointments.cancel'))
         || (assignedProviderActor && permissions.can('appointments.update_clinical_status'))
     }
     if (status === 'no_show') {
-      return (isBranchOperator && permissions.can('appointments.mark_no_show'))
+      return isSuperAdmin
+        || (isStaffOperator && permissions.can('appointments.mark_no_show'))
         || (assignedProviderActor && permissions.can('appointments.update_clinical_status'))
     }
     if (status === 'in_progress') {
-      return assignedProviderActor
-        && permissions.canAny(['appointments.start', 'appointments.update_clinical_status'])
+      return isSuperAdmin
+        || (isStaffOperator && permissions.can('appointments.start'))
+        || (assignedProviderActor && permissions.canAny(['appointments.start', 'appointments.update_clinical_status']))
     }
     if (status === 'completed') {
-      return assignedProviderActor
-        && permissions.canAny(['appointments.complete', 'appointments.update_clinical_status'])
+      return isSuperAdmin
+        || (isStaffOperator && permissions.can('appointments.complete'))
+        || (assignedProviderActor && permissions.canAny(['appointments.complete', 'appointments.update_clinical_status']))
     }
     return false
   }
   const clinicalRestrictionMessage = (appointment: Appointment, action: 'start' | 'complete') => {
     const assignedProvider = appointment.providerId ? providerMap.get(appointment.providerId) : undefined
     if (!appointment.providerId) return 'Assign a dentist before this visit can enter the clinical workflow.'
-    const providerName = assignedProvider?.displayName ?? 'the dentist assigned to this appointment'
-    return `Only ${providerName}, the dentist assigned to this appointment, can ${action} this visit.`
+    if (user?.role === 'dentist' || user?.role === 'associate_dentist') {
+      if (!assignedProvider?.displayName) return 'This appointment is assigned to another dentist.'
+      const providerName = /^dr\.?\s/i.test(assignedProvider.displayName)
+        ? assignedProvider.displayName
+        : `Dr. ${assignedProvider.displayName}`
+      return `This appointment is assigned to ${providerName}.`
+    }
+    if (user?.role === 'staff') {
+      return `You do not have permission to ${action} visits for this appointment branch.`
+    }
+    return `You do not have permission to ${action} this visit.`
   }
   const operatoryMap = useMemo(() => new Map(getOperatories().map((operatory) => [operatory.id, operatory])), [])
 
@@ -1156,10 +1191,10 @@ export function AppointmentsPage() {
                             </div>
                           </div>
                           <div className="operations-card-actions" onClick={(event) => event.stopPropagation()} onKeyDown={(event) => event.stopPropagation()}>
-                            {appointment.status === 'confirmed' && permissions.can('appointments.check_in') && (
+                            {appointment.status === 'confirmed' && canTransitionAppointment(appointment, 'checked_in') && (
                               <button type="button" className="text-button operations-card-action operations-card-action-primary" disabled={isAppointmentSaving} onClick={() => openOperationAction(appointment, 'checked_in', 'Check In')}>Check In</button>
                             )}
-                            {appointment.status === 'checked_in' && permissions.can('appointments.check_in') && (
+                            {appointment.status === 'checked_in' && canTransitionAppointment(appointment, 'waiting') && (
                               <button type="button" className="text-button operations-card-action operations-card-action-primary" disabled={isAppointmentSaving} onClick={() => openOperationAction(appointment, 'waiting', 'Move to Waiting')}>Move to Waiting</button>
                             )}
                             {appointment.status === 'waiting' && canTransitionAppointment(appointment, 'in_progress') && (
@@ -1168,7 +1203,7 @@ export function AppointmentsPage() {
                             {appointment.status === 'in_progress' && canTransitionAppointment(appointment, 'completed') && (
                               <button type="button" className="text-button operations-card-action operations-card-action-primary" disabled={isAppointmentSaving} onClick={() => openOperationAction(appointment, 'completed', 'Complete Visit')}>Complete</button>
                             )}
-                            {appointment.status === 'confirmed' && permissions.can('appointments.mark_no_show') && (
+                            {appointment.status === 'confirmed' && canTransitionAppointment(appointment, 'no_show') && (
                               <button type="button" className="text-button operations-card-action operations-card-action-danger" disabled={isAppointmentSaving} onClick={() => openOperationAction(appointment, 'no_show', 'Mark No Show', true)}>No Show</button>
                             )}
                           </div>
