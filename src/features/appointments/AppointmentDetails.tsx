@@ -43,6 +43,8 @@ type AppointmentDetailsProps = {
     notes?: string
   }>
   canManage?: boolean
+  canTransitionStatus?: (status: AppointmentStatus) => boolean
+  clinicalRestrictionMessage?: string
 }
 
 function formatDate(dateStr: string): string {
@@ -105,7 +107,7 @@ function getActionLabel(status: AppointmentStatus, fallback: string) {
 
 export function AppointmentDetails({
   appointment, onClose, onStatusChange, patient, branch, provider, operatory, service, history = [],
-  onActionRequest, onManualResend, onOpenPatientRecord, onOpenClinicalRecord, onBookFollowUp, onViewFollowUpRecommendation, canManage, communicationFeedback, communicationPendingKey,
+  onActionRequest, onManualResend, onOpenPatientRecord, onOpenClinicalRecord, onBookFollowUp, onViewFollowUpRecommendation, canManage, canTransitionStatus, clinicalRestrictionMessage, communicationFeedback, communicationPendingKey,
 }: AppointmentDetailsProps) {
   const communicationLogs = getCommunicationLogsByAppointment(appointment.id)
   const latestCommunication = [...communicationLogs].sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())[0]
@@ -138,7 +140,7 @@ export function AppointmentDetails({
   const nextFollowUp = activeFollowUps[0]
   const canBookNextFollowUp = Boolean(nextFollowUp && nextFollowUp.status !== 'booked' && !nextFollowUp.linkedAppointmentId)
 
-  const visibleActions: Array<{ status: AppointmentStatus; label: string; reason?: boolean }> = !canManage ? []
+  const statusActions: Array<{ status: AppointmentStatus; label: string; reason?: boolean }> = !canManage ? []
     : appointment.status === 'pending' ? [...(appointment.providerId ? [{ status: 'confirmed' as const, label: 'Confirm' }] : []), { status: 'rejected', label: 'Reject', reason: true }]
     : appointment.status === 'confirmed' ? [
       { status: 'checked_in', label: 'Check In' }, { status: 'rescheduled', label: 'Mark Rescheduled', reason: true },
@@ -148,6 +150,7 @@ export function AppointmentDetails({
     : appointment.status === 'waiting' ? [{ status: 'in_progress', label: 'Start Visit' }]
     : appointment.status === 'in_progress' ? [{ status: 'completed', label: 'Complete Visit' }]
     : []
+  const visibleActions = statusActions.filter((action) => canTransitionStatus?.(action.status) ?? true)
   const patientFlowStatuses: AppointmentStatus[] = ['confirmed', 'checked_in', 'waiting', 'in_progress', 'completed']
   const exceptionStatuses: AppointmentStatus[] = ['rejected', 'rescheduled', 'cancelled', 'no_show']
   const primaryFlowByStatus: Partial<Record<AppointmentStatus, AppointmentStatus>> = {
@@ -200,7 +203,7 @@ export function AppointmentDetails({
           <section className="appointment-details-v40-overview">
             <article><CalendarClock size={17} /><div><span>Schedule</span><strong>{formatTime(appointment.startTime)} – {formatTime(appointment.endTime)}</strong><small>{appointment.durationMinutes ?? service?.duration ?? 0} minutes</small></div></article>
             <article><MapPin size={17} /><div><span>Branch</span><strong>{branch?.name ?? 'Not assigned'}</strong><small>{operatory?.name ?? 'No chair assigned'}</small></div></article>
-            <article><Stethoscope size={17} /><div><span>Dentist</span><strong>{provider?.displayName ?? 'Not assigned'}</strong><small>{service?.name ?? 'Service unavailable'}</small></div></article>
+            <article><Stethoscope size={17} /><div><span>Dentist</span><strong>{provider?.displayName ?? (appointment.providerId ? 'Assigned dentist unavailable' : 'Unassigned')}</strong><small>{service?.name ?? 'Service unavailable'}</small></div></article>
             <article><Wallet size={17} /><div><span>Patient balance</span><strong>{outstandingBalanceCents > 0 ? formatCurrency(outstandingBalanceCents) : 'No outstanding balance'}</strong><small>{(appointment.paymentStatus ?? 'not_billed').replaceAll('_', ' ')}</small></div></article>
           </section>
 
@@ -284,6 +287,7 @@ export function AppointmentDetails({
                   <div className="appointment-details-v40-workflow">
                     <section className="appointment-details-v40-action-group">
                       <div className="appointment-details-v40-action-heading"><span>Patient flow</span><small>{patientFlowActions.length ? 'Next valid appointment step' : `${getStatusLabel(appointment.status)} has no active flow step`}</small></div>
+                      {clinicalRestrictionMessage && <p className="appointment-details-v40-action-restriction" role="status">{clinicalRestrictionMessage}</p>}
                       {appointment.status === 'in_progress' && onOpenClinicalRecord && <Button className="appointment-details-v40-action is-secondary-flow" variant="secondary" onClick={() => onOpenClinicalRecord(appointment)}><ClipboardList size={14}/>Open clinical record</Button>}
                       {patientFlowActions.length ? patientFlowActions.map(({ status, label, reason }) => (
                         <Button

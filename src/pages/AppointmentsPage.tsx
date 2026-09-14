@@ -50,8 +50,9 @@ import type { DentalRecord } from '../features/dentalRecords/dentalRecordTypes'
 import { formatAppointmentTime, getAvailableAppointmentSlots, getEligibleProviders } from '../features/appointments/availabilityEngine'
 import { usePermissions } from '../features/auth/permissions'
 import { getStoredBranches } from '../features/branches/branchStore'
+import { useBranchContext } from '../features/branches/BranchContext'
 import type { Branch } from '../features/branches/branchTypes'
-import { getStoredProviders, loadProviderFoundationFromSupabase } from '../features/dentists/dentistStore'
+import { loadProviderFoundationFromSupabase } from '../features/dentists/dentistStore'
 import type { Provider } from '../features/dentists/dentistTypes'
 import { getStoredPatients } from '../features/patients/patientStore'
 import { loadPatientsFromSupabase } from '../features/patients/patientPersistence'
@@ -64,7 +65,7 @@ import { completeRecall, linkRecallToAppointment, listPatientRecalls, type Recal
 
 type ViewTab = 'queue' | 'calendar' | 'requests'
 type OperationAction = {
-  appointment: Appointment
+  appointmentId: string
   status: AppointmentStatus
   label: string
   requiresReason?: boolean
@@ -220,12 +221,13 @@ export function AppointmentsPage() {
   const navigate = useNavigate()
   const { user } = useAuth()
   const permissions = usePermissions()
+  const { authorizedBranchIds } = useBranchContext()
   const canAssignDentist = permissions.can('appointments.assign_dentist')
-  const [appointments, setAppointments] = useState<Appointment[]>(getStoredAppointments())
+  const [appointments, setAppointments] = useState<Appointment[]>([])
   const [patients, setPatients] = useState<Patient[]>(getStoredPatients())
   const [services, setServices] = useState<Service[]>(getStoredServices())
   const [branches] = useState<Branch[]>(getStoredBranches().filter((branch) => branch.status === 'active'))
-  const [providers, setProviders] = useState<Provider[]>(getStoredProviders())
+  const [providers, setProviders] = useState<Provider[]>([])
   const [viewTab, setViewTab] = useState<ViewTab>('queue')
   const [statusFilter, setStatusFilter] = useState<AppointmentStatus | 'all'>('all')
   const [serviceFilter, setServiceFilter] = useState('all')
@@ -315,7 +317,7 @@ export function AppointmentsPage() {
 
   useEffect(() => {
     let active = true
-    void loadProviderFoundationFromSupabase()
+    void loadProviderFoundationFromSupabase({ strict: true })
       .then((foundation) => {
         if (active) setProviders(foundation.providers)
       })
@@ -407,10 +409,50 @@ export function AppointmentsPage() {
     const map = new Map<string, Provider>()
     providers.forEach((provider) => {
       map.set(provider.id, provider)
-      if (provider.profileId) map.set(provider.profileId, provider)
     })
     return map
   }, [providers])
+  const isAssignedProvider = (appointment: Appointment) => {
+    if (!appointment.providerId || !appointment.branchId || !user?.id) return false
+    return providerMap.get(appointment.providerId)?.profileId === user.id
+      && authorizedBranchIds.includes(appointment.branchId)
+  }
+  const canTransitionAppointment = (appointment: Appointment, status: AppointmentStatus) => {
+    const hasBranchAccess = Boolean(appointment.branchId && authorizedBranchIds.includes(appointment.branchId))
+    const isBranchOperator = hasBranchAccess && (user?.role === 'staff' || user?.role === 'super_admin')
+    const assignedProviderActor = isAssignedProvider(appointment)
+
+    if (status === 'confirmed') return isBranchOperator && permissions.can('appointments.approve')
+    if (status === 'rejected') return isBranchOperator && permissions.can('appointments.reject')
+    if (status === 'rescheduled') return isBranchOperator && permissions.can('appointments.reschedule')
+    if (status === 'checked_in' || status === 'waiting') {
+      return (isBranchOperator && permissions.can('appointments.check_in'))
+        || (assignedProviderActor && permissions.can('appointments.update_clinical_status'))
+    }
+    if (status === 'cancelled') {
+      return (isBranchOperator && permissions.can('appointments.cancel'))
+        || (assignedProviderActor && permissions.can('appointments.update_clinical_status'))
+    }
+    if (status === 'no_show') {
+      return (isBranchOperator && permissions.can('appointments.mark_no_show'))
+        || (assignedProviderActor && permissions.can('appointments.update_clinical_status'))
+    }
+    if (status === 'in_progress') {
+      return assignedProviderActor
+        && permissions.canAny(['appointments.start', 'appointments.update_clinical_status'])
+    }
+    if (status === 'completed') {
+      return assignedProviderActor
+        && permissions.canAny(['appointments.complete', 'appointments.update_clinical_status'])
+    }
+    return false
+  }
+  const clinicalRestrictionMessage = (appointment: Appointment, action: 'start' | 'complete') => {
+    const assignedProvider = appointment.providerId ? providerMap.get(appointment.providerId) : undefined
+    if (!appointment.providerId) return 'Assign a dentist before this visit can enter the clinical workflow.'
+    const providerName = assignedProvider?.displayName ?? 'the dentist assigned to this appointment'
+    return `Only ${providerName}, the dentist assigned to this appointment, can ${action} this visit.`
+  }
   const operatoryMap = useMemo(() => new Map(getOperatories().map((operatory) => [operatory.id, operatory])), [])
 
   function openPatientRecordForAppointment(appointment: Appointment) {
@@ -617,18 +659,23 @@ export function AppointmentsPage() {
 
   async function handleStatusChange(status: AppointmentStatus) {
     if (!selectedAppointment || isAppointmentSaving) return
-    if (status === 'confirmed' && !selectedAppointment.providerId) {
+    const appointment = appointments.find((entry) => entry.id === selectedAppointment.id)
+    if (!appointment) {
+      alert('This appointment is no longer available. Refresh the appointment workspace and try again.')
+      return
+    }
+    if (status === 'confirmed' && !appointment.providerId) {
       alert('Assign a dentist before confirming this appointment.')
       return
     }
     setIsAppointmentSaving(true)
     try {
-      const updated = await transitionAppointmentStatusPersisted(selectedAppointment.id, status, {
+      const updated = await transitionAppointmentStatusPersisted(appointment.id, status, {
         actor: user?.email ?? 'clinic-user',
-        expectedUpdatedAt: selectedAppointment.updatedAt,
+        expectedUpdatedAt: appointment.updatedAt,
       })
       await completeLinkedRecallIfNeeded(updated)
-      setAppointments(getStoredAppointments())
+      setAppointments((current) => current.map((entry) => entry.id === updated.id ? updated : entry))
       setSelectedAppointment(updated)
     } catch (cause) {
       alert(cause instanceof Error ? cause.message : 'The appointment status could not be changed.')
@@ -688,7 +735,7 @@ export function AppointmentsPage() {
   }
 
   function openOperationAction(appointment: Appointment, status: AppointmentStatus, label: string, requiresReason = false) {
-    setOperationAction({ appointment, status, label, requiresReason })
+    setOperationAction({ appointmentId: appointment.id, status, label, requiresReason })
     setOperationReason('')
     setRescheduleDraft({
       date: appointment.date,
@@ -700,6 +747,19 @@ export function AppointmentsPage() {
 
   async function confirmOperationAction() {
     if (!operationAction || isAppointmentSaving) return
+    const appointment = appointments.find((entry) => entry.id === operationAction.appointmentId)
+    if (!appointment) {
+      setOperationError('This appointment is no longer available. Refresh the appointment workspace and try again.')
+      return
+    }
+    if (!canTransitionAppointment(appointment, operationAction.status)) {
+      const isStart = operationAction.status === 'in_progress'
+      const isComplete = operationAction.status === 'completed'
+      setOperationError(isStart || isComplete
+        ? clinicalRestrictionMessage(appointment, isStart ? 'start' : 'complete')
+        : 'You do not have permission to perform this appointment action for the assigned branch.')
+      return
+    }
     if (operationAction.requiresReason && !operationReason.trim()) {
       setOperationError('Please enter a reason before continuing.')
       return
@@ -709,14 +769,14 @@ export function AppointmentsPage() {
     setOperationError(null)
     try {
       const updated = operationAction.status === 'rescheduled'
-        ? await confirmRescheduleOperation(operationAction.appointment)
-        : await transitionAppointmentStatusPersisted(operationAction.appointment.id, operationAction.status, {
+        ? await confirmRescheduleOperation(appointment)
+        : await transitionAppointmentStatusPersisted(appointment.id, operationAction.status, {
           actor: user?.email ?? 'clinic-user',
           reason: operationReason.trim(),
-          expectedUpdatedAt: operationAction.appointment.updatedAt,
+          expectedUpdatedAt: appointment.updatedAt,
         })
       await completeLinkedRecallIfNeeded(updated)
-      setAppointments(getStoredAppointments())
+      setAppointments((current) => current.map((entry) => entry.id === updated.id ? updated : entry))
       setSelectedAppointment(updated)
       setOperationAction(null)
       setOperationReason('')
@@ -873,10 +933,16 @@ export function AppointmentsPage() {
     setConflictError(null)
   }
 
-  const selectedAppointmentData = selectedAppointment
+  const currentSelectedAppointment = selectedAppointment
+    ? appointments.find((appointment) => appointment.id === selectedAppointment.id)
+    : undefined
+  const operationAppointment = operationAction
+    ? appointments.find((appointment) => appointment.id === operationAction.appointmentId)
+    : undefined
+  const selectedAppointmentData = currentSelectedAppointment
     ? {
-        patient: patientMap.get(selectedAppointment.patientId),
-        service: serviceMap.get(selectedAppointment.serviceId),
+        patient: patientMap.get(currentSelectedAppointment.patientId),
+        service: serviceMap.get(currentSelectedAppointment.serviceId),
       }
     : { patient: undefined, service: undefined }
 
@@ -1096,10 +1162,10 @@ export function AppointmentsPage() {
                             {appointment.status === 'checked_in' && permissions.can('appointments.check_in') && (
                               <button type="button" className="text-button operations-card-action operations-card-action-primary" disabled={isAppointmentSaving} onClick={() => openOperationAction(appointment, 'waiting', 'Move to Waiting')}>Move to Waiting</button>
                             )}
-                            {appointment.status === 'waiting' && permissions.can('appointments.start') && (
+                            {appointment.status === 'waiting' && canTransitionAppointment(appointment, 'in_progress') && (
                               <button type="button" className="text-button operations-card-action operations-card-action-primary" disabled={isAppointmentSaving} onClick={() => openOperationAction(appointment, 'in_progress', 'Start Visit')}>Start Visit</button>
                             )}
-                            {appointment.status === 'in_progress' && permissions.can('appointments.complete') && (
+                            {appointment.status === 'in_progress' && canTransitionAppointment(appointment, 'completed') && (
                               <button type="button" className="text-button operations-card-action operations-card-action-primary" disabled={isAppointmentSaving} onClick={() => openOperationAction(appointment, 'completed', 'Complete Visit')}>Complete</button>
                             )}
                             {appointment.status === 'confirmed' && permissions.can('appointments.mark_no_show') && (
@@ -1309,22 +1375,32 @@ export function AppointmentsPage() {
         />
       )}
 
-      {selectedAppointment && (
+      {currentSelectedAppointment && (
         <AppointmentDetails
-          appointment={selectedAppointment}
+          appointment={currentSelectedAppointment}
           patient={selectedAppointmentData.patient}
           service={selectedAppointmentData.service}
-          branch={selectedAppointment.branchId ? branchMap.get(selectedAppointment.branchId) : undefined}
-          provider={selectedAppointment.providerId ? providerMap.get(selectedAppointment.providerId) : undefined}
-          operatory={selectedAppointment.operatoryId ? operatoryMap.get(selectedAppointment.operatoryId) : undefined}
-          history={getAppointmentHistory(selectedAppointment.id)}
+          branch={currentSelectedAppointment.branchId ? branchMap.get(currentSelectedAppointment.branchId) : undefined}
+          provider={currentSelectedAppointment.providerId ? providerMap.get(currentSelectedAppointment.providerId) : undefined}
+          operatory={currentSelectedAppointment.operatoryId ? operatoryMap.get(currentSelectedAppointment.operatoryId) : undefined}
+          history={getAppointmentHistory(currentSelectedAppointment.id)}
           canManage={Boolean(user && user.role !== 'patient')}
+          canTransitionStatus={(status) => canTransitionAppointment(currentSelectedAppointment, status)}
+          clinicalRestrictionMessage={
+            currentSelectedAppointment.status === 'checked_in' || currentSelectedAppointment.status === 'waiting'
+              ? (!canTransitionAppointment(currentSelectedAppointment, 'in_progress')
+                  ? clinicalRestrictionMessage(currentSelectedAppointment, 'start')
+                  : undefined)
+              : currentSelectedAppointment.status === 'in_progress' && !canTransitionAppointment(currentSelectedAppointment, 'completed')
+                ? clinicalRestrictionMessage(currentSelectedAppointment, 'complete')
+                : undefined
+          }
           onClose={() => setSelectedAppointment(null)}
           onStatusChange={(status) => void handleStatusChange(status)}
           onActionRequest={(appointment, status, label, requiresReason) => openOperationAction(appointment, status, label, requiresReason)}
           onManualResend={handleManualResend}
           communicationPendingKey={communicationPendingKey}
-          communicationFeedback={communicationFeedback?.appointmentId === selectedAppointment.id ? communicationFeedback : null}
+          communicationFeedback={communicationFeedback?.appointmentId === currentSelectedAppointment.id ? communicationFeedback : null}
           onOpenPatientRecord={openPatientRecordForAppointment}
           onOpenClinicalRecord={(appointment) => void openClinicalRecord(appointment)}
           onBookFollowUp={handleBookFollowUpAppointment}
@@ -1390,10 +1466,10 @@ export function AppointmentsPage() {
         />
       )}
 
-      {operationAction && createPortal(
+      {operationAction && operationAppointment && createPortal(
         <div className="modal-backdrop modal-layer-child operation-action-backdrop" role="presentation">
           {(() => {
-            const appointment = operationAction.appointment
+            const appointment = operationAppointment
             const patient = patientMap.get(appointment.patientId)
             const service = serviceMap.get(appointment.serviceId)
             const provider = appointment.providerId ? providerMap.get(appointment.providerId) : undefined
@@ -1445,7 +1521,7 @@ export function AppointmentsPage() {
                     <dl>
                       <div><dt>Current date</dt><dd>{formatDate(appointment.date)}</dd></div>
                       <div><dt>Current time</dt><dd>{formatAppointmentTime(appointment.startTime)} - {formatAppointmentTime(appointment.endTime)}</dd></div>
-                      <div><dt>Dentist</dt><dd>{provider?.displayName ?? 'Not assigned'}</dd></div>
+                      <div><dt>Dentist</dt><dd>{provider?.displayName ?? (appointment.providerId ? 'Assigned dentist unavailable' : 'Unassigned')}</dd></div>
                       <div><dt>Service</dt><dd>{service?.name ?? 'Service not assigned'}</dd></div>
                       <div><dt>Branch</dt><dd>{branch?.name ?? 'No branch assigned'}</dd></div>
                     </dl>

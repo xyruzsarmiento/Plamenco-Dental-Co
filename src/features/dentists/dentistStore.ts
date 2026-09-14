@@ -195,19 +195,29 @@ export async function loadProviderFoundationFromSupabase(options: { strict?: boo
     throw new Error(`Unable to load ${failures[0][0]}: ${failures[0][1].message}`)
   }
 
-  if (!providerResult.error && Array.isArray(providerResult.data)) {
-    const providers = await hydrateProviderRows(providerResult.data as Record<string, any>[])
-    saveStoredProviders(providers)
-  }
-  if (!assignmentResult.error && Array.isArray(assignmentResult.data)) saveProviderBranchAssignments(assignmentResult.data.map(mapAssignmentRow))
-  if (!scheduleResult.error && Array.isArray(scheduleResult.data)) saveProviderScheduleBlocks(scheduleResult.data.map(mapScheduleRow))
-  if (!overrideResult.error && Array.isArray(overrideResult.data)) saveProviderAvailabilityOverrides(overrideResult.data.map(mapOverrideRow))
+  const providers = !providerResult.error && Array.isArray(providerResult.data)
+    ? await hydrateProviderRows(providerResult.data as Record<string, any>[])
+    : getStoredProviders()
+  const assignments = !assignmentResult.error && Array.isArray(assignmentResult.data)
+    ? assignmentResult.data.map(mapAssignmentRow)
+    : getProviderBranchAssignments()
+  const schedules = !scheduleResult.error && Array.isArray(scheduleResult.data)
+    ? scheduleResult.data.map(mapScheduleRow)
+    : getProviderScheduleBlocks()
+  const overrides = !overrideResult.error && Array.isArray(overrideResult.data)
+    ? overrideResult.data.map(mapOverrideRow)
+    : getProviderAvailabilityOverrides()
+
+  if (!providerResult.error) saveStoredProviders(providers)
+  if (!assignmentResult.error) saveProviderBranchAssignments(assignments)
+  if (!scheduleResult.error) saveProviderScheduleBlocks(schedules)
+  if (!overrideResult.error) saveProviderAvailabilityOverrides(overrides)
 
   return {
-    providers: getStoredProviders(),
-    assignments: getProviderBranchAssignments(),
-    schedules: getProviderScheduleBlocks(),
-    overrides: getProviderAvailabilityOverrides(),
+    providers,
+    assignments,
+    schedules,
+    overrides,
   }
 }
 

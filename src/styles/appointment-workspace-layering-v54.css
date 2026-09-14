@@ -13,6 +13,18 @@
   top: auto !important;
 }
 
+.appointment-details-v40-action-restriction {
+  margin: 0;
+  padding: 10px 11px;
+  border: 1px solid #bfdbfe;
+  border-radius: 11px;
+  background: #eff6ff;
+  color: #1e40af;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.45;
+}
+
 .modal-layer-child {
   z-index: var(--modal-layer-child) !important;
 }
