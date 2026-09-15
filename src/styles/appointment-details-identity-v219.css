@@ -1,0 +1,9 @@
+/* Keep the patient identity visually grouped in the appointment details header. */
+.appointment-details-v40-title-row {
+  justify-content: flex-start !important;
+}
+
+.appointment-details-v40-title-row > div {
+  flex: 1 1 auto !important;
+  min-width: 0 !important;
+}
