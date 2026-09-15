@@ -12,7 +12,6 @@ import {
   Sparkles,
   Stethoscope,
   UserRound,
-  UsersRound,
   X,
 } from 'lucide-react'
 import { Button } from '../../components/ui/Button'
@@ -20,7 +19,6 @@ import { Input } from '../../components/ui/Input'
 import { Textarea } from '../../components/ui/Textarea'
 import type { Patient } from '../patients/patientTypes'
 import type { Branch } from '../branches/branchTypes'
-import type { Provider } from '../dentists/dentistTypes'
 import type { Service } from '../services/serviceTypes'
 import { formatServicePrice, servicePriceToCents } from '../services/serviceStore'
 import type { AppointmentFormValues } from './appointmentTypes'
@@ -32,7 +30,6 @@ type AppointmentFormModalProps = {
   patients: Patient[]
   services: Service[]
   branches: Branch[]
-  providers: Provider[]
   values: AppointmentFormValues
   onChange: (values: AppointmentFormValues) => void
   onClose: () => void
@@ -49,7 +46,6 @@ export function AppointmentFormModal({
   onSubmit,
   patients,
   branches,
-  providers,
   services,
   values,
 }: AppointmentFormModalProps) {
@@ -63,7 +59,6 @@ export function AppointmentFormModal({
   const selectedPatient = patients.find((patient) => patient.id === values.patientId || patient.patientId === values.patientId)
   const selectedService = services.find((service) => String(service.id) === String(values.serviceId))
   const selectedBranch = branches.find((branch) => branch.id === values.branchId)
-  const selectedProvider = providers.find((provider) => provider.id === values.providerId)
   const operatories = getOperatories().filter((operatory) => operatory.branchId === values.branchId && operatory.status === 'active')
   const selectedOperatory = operatories.find((operatory) => operatory.id === values.operatoryId)
   const activeServices = services.filter((service) => service.status === 'active')
@@ -73,16 +68,14 @@ export function AppointmentFormModal({
       branchId: values.branchId,
       serviceId: values.serviceId,
       date: values.date,
-      providerId: values.providerId || undefined,
       operatoryId: values.operatoryId || undefined,
     })
-  }, [values.branchId, values.date, values.operatoryId, values.providerId, values.serviceId])
+  }, [values.branchId, values.date, values.operatoryId, values.serviceId])
 
   const steps = [
     { label: 'Patient', icon: UserRound },
     { label: 'Branch', icon: Building2 },
     { label: 'Service', icon: Stethoscope },
-    { label: 'Assignment', icon: UsersRound },
     { label: 'Date & Time', icon: CalendarDays },
     { label: 'Review', icon: CheckCircle2 },
   ]
@@ -103,11 +96,11 @@ export function AppointmentFormModal({
     })
   }
 
-  function chooseSlot(startTime: string, providerId: string, operatoryId?: string) {
+  function chooseSlot(startTime: string, operatoryId?: string) {
     if (!selectedService) return
     onChange({
       ...values,
-      providerId,
+      providerId: '',
       operatoryId: operatoryId || values.operatoryId || undefined,
       startTime,
       endTime: addMinutesToTime(startTime, selectedService.duration),
@@ -120,8 +113,7 @@ export function AppointmentFormModal({
     if (step === 0) return Boolean(values.patientId)
     if (step === 1) return Boolean(values.branchId)
     if (step === 2) return Boolean(values.serviceId)
-    if (step === 3) return true
-    if (step === 4) return Boolean(values.date && values.startTime)
+    if (step === 3) return Boolean(values.date && values.startTime)
     return true
   }
 
@@ -226,29 +218,14 @@ export function AppointmentFormModal({
 
             {step === 3 && (
               <section className="appointment37-section">
-                <div className="appointment37-section-head"><div><span>Step 4</span><h3>Dentist assignment</h3><p>Assign a dentist now or leave this request unassigned for the clinic workflow.</p></div><UsersRound size={21} /></div>
-                <div className="appointment37-card-grid">
-                  <button type="button" className={`appointment37-option-card ${!values.providerId ? 'is-selected' : ''}`} onClick={() => onChange({ ...values, providerId: '', startTime: '' })}>
-                    <span className="appointment37-option-icon"><UsersRound size={18} /></span><span><strong>To be assigned</strong><small>Recommended for appointment requests</small><em>Staff or an eligible dentist can confirm later.</em></span><i><Check size={14} /></i>
-                  </button>
-                  {providers.map((provider) => <button key={provider.id} type="button" className={`appointment37-option-card ${values.providerId === provider.id ? 'is-selected' : ''}`} onClick={() => onChange({ ...values, providerId: provider.id, startTime: '' })}>
-                    <span className="appointment37-option-icon"><UserRound size={18} /></span><span><strong>{provider.displayName}</strong><small>{provider.role.replaceAll('_', ' ')}</small><em>{provider.specialization || 'Dental provider'}</em></span><i><Check size={14} /></i>
-                  </button>)}
-                  {values.branchId && providers.length === 0 && <div className="appointment37-empty"><UsersRound size={22} /><strong>No assigned dentists</strong><span>No active dentists are currently available for this branch.</span></div>}
-                </div>
-              </section>
-            )}
-
-            {step === 4 && (
-              <section className="appointment37-section">
-                <div className="appointment37-section-head"><div><span>Step 5</span><h3>Date & time</h3><p>Select the visit date and clinic time. Dentist assignment is handled separately.</p></div><CalendarDays size={21} /></div>
+                <div className="appointment37-section-head"><div><span>Step 4</span><h3>Date & time</h3><p>Select the visit date and clinic time. Dentist assignment is handled separately.</p></div><CalendarDays size={21} /></div>
                 <div className="appointment37-date-controls">
                   <Input label="Appointment date" type="date" value={values.date} onChange={(event) => onChange({ ...values, date: event.target.value, startTime: '' })} required />
                   {operatories.length > 0 && <label><span>Operatory / chair</span><select value={values.operatoryId ?? ''} onChange={(event) => onChange({ ...values, operatoryId: event.target.value || undefined, startTime: '' })}><option value="">Any available operatory</option>{operatories.map((operatory) => <option key={operatory.id} value={operatory.id}>{operatory.name}</option>)}</select></label>}
                 </div>
                 {values.branchId && values.serviceId && values.date ? (
                   <div className="appointment37-slot-grid">
-                    {availableSlots.map((slot) => <button key={`${slot.providerId ?? 'unassigned'}-${slot.operatoryId ?? 'any'}-${slot.startTime}`} type="button" className={values.startTime === slot.startTime && values.providerId === (slot.providerId ?? '') ? 'is-selected' : ''} onClick={() => chooseSlot(slot.startTime, slot.providerId ?? '', slot.operatoryId)}>
+                    {availableSlots.map((slot) => <button key={`${slot.providerId ?? 'unassigned'}-${slot.operatoryId ?? 'any'}-${slot.startTime}`} type="button" className={values.startTime === slot.startTime ? 'is-selected' : ''} onClick={() => chooseSlot(slot.startTime, slot.operatoryId)}>
                       <Clock3 size={16} /><span><strong>{formatAppointmentTime(slot.startTime)}</strong><small>{slot.providerName}{slot.operatoryName ? ` · ${slot.operatoryName}` : ''}</small></span><i><Check size={14} /></i>
                     </button>)}
                     {availableSlots.length === 0 && <div className="appointment37-empty appointment37-empty-wide"><CalendarDays size={22} /><strong>No clinic times available</strong><span>Try another date or operatory.</span></div>}
@@ -257,13 +234,13 @@ export function AppointmentFormModal({
               </section>
             )}
 
-            {step === 5 && (
+            {step === 4 && (
               <section className="appointment37-section">
                 <div className="appointment37-section-head"><div><span>Final step</span><h3>Review appointment</h3><p>Confirm the visit details before creating the booking.</p></div><CheckCircle2 size={21} /></div>
                 <div className="appointment37-review-hero"><span className="appointment37-review-icon"><CalendarDays size={22} /></span><div><span>{selectedPatient ? `${selectedPatient.firstName} ${selectedPatient.lastName}` : 'Patient'}</span><strong>{selectedService?.name ?? 'Service not selected'}</strong><small>{values.date} · {values.startTime ? `${formatAppointmentTime(values.startTime)}–${formatAppointmentTime(values.endTime)}` : 'No time selected'}</small></div></div>
                 <div className="appointment37-review-grid">
                   <div><span>Branch</span><strong>{selectedBranch?.name ?? 'No branch selected'}</strong></div>
-                  <div><span>Dentist</span><strong>{selectedProvider?.displayName ?? 'To be assigned'}</strong></div>
+                  <div><span>Dentist</span><strong>To be assigned</strong></div>
                   <div><span>Operatory</span><strong>{selectedOperatory?.name ?? 'Any available'}</strong></div>
                   <div><span>Duration</span><strong>{values.durationMinutes ?? selectedService?.duration ?? 0} minutes</strong></div>
                   <div><span>Estimated price</span><strong>{selectedService ? formatServicePrice(selectedService.price) : 'Price to be confirmed'}</strong></div>

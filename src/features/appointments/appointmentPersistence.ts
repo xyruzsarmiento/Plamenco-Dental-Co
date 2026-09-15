@@ -222,7 +222,7 @@ export async function createAppointmentPersisted(values: AppointmentFormValues, 
     .insert({
       patient_id: patientDatabaseId(values.patientId),
       branch_id: values.branchId || null,
-      provider_id: values.providerId || null,
+      provider_id: null,
       service_id: values.serviceId,
       operatory_id: values.operatoryId || null,
       appointment_date: values.date,

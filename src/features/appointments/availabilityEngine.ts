@@ -134,6 +134,17 @@ function isBranchSlotOpen({
   // capacity for the exact same interval. PostgreSQL enforces the same rule.
   if (branchOverlapCount(branchId, date, startTime, endTime, excludeAppointmentId) > 0) return false
 
+  const blockedWindow = getScheduleConflictDetail(
+    date,
+    startTime,
+    endTime,
+    excludeAppointmentId,
+    '',
+    branchId,
+    operatoryId,
+  )
+  if (blockedWindow?.type === 'block') return false
+
   if (operatoryId) {
     const activeOperatory = getOperatories().find(
       (operatory) => operatory.id === operatoryId && operatory.branchId === branchId && operatory.status === 'active',
@@ -214,13 +225,11 @@ export function getAppointmentAvailability({
 
     if (!providerId) {
       if (!isBranchSlotOpen({ branchId, date, startTime, endTime, excludeAppointmentId, operatoryId })) continue
-
-      const availableProviders = providers.filter((provider) =>
-        isProviderAvailable({ branchId, providerId: provider.id, date, startTime, endTime, excludeAppointmentId }),
-      )
       const openOperatory = candidateOperatories.find((operatory) =>
-        !isBookingBusy({ branchId, operatoryId: operatory.id, date, startTime, endTime, excludeAppointmentId }),
+        !isBookingBusy({ branchId, operatoryId: operatory.id, date, startTime, endTime, excludeAppointmentId })
+        && !getScheduleConflictDetail(date, startTime, endTime, excludeAppointmentId, '', branchId, operatory.id),
       )
+      if (candidateOperatories.length && !openOperatory) continue
 
       slots.push({
         startTime,
@@ -229,7 +238,6 @@ export function getAppointmentAvailability({
         providerName: 'Dentist to be assigned',
         operatoryId: openOperatory?.id,
         operatoryName: openOperatory?.name,
-        remainingCapacity: availableProviders.length,
       })
       continue
     }

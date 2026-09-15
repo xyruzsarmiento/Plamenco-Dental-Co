@@ -407,7 +407,7 @@ export function DentistPremiumDashboardV130() {
               <article key={appointment.id} className="dentist130-request-row">
                 <div className="dentist130-time"><strong>{formatTime(appointment.startTime)}</strong><small>{appointment.date}</small></div>
                 <div className="dentist130-patient patient-identity-inline">{patient && <PatientAvatar patient={patient} size="small" decorative />}<span className="patient-identity-copy"><strong>{patientName(patient)}</strong><span>{service?.name ?? appointment.reasonForVisit ?? 'Dental visit'} · {service?.duration ?? appointment.durationMinutes ?? 30} min</span><small>{branch?.name ?? 'Clinic branch'}</small></span></div>
-                <div className="dentist130-row-actions"><StatusBadge status="pending" label="Unassigned" variant="compact" /><Button size="sm" disabled={Boolean(busyId)} onClick={() => void acceptRequest(appointment)}><CheckCircle2 size={14} />{accepting ? 'Accepting…' : 'Accept appointment'}</Button></div>
+                <div className="dentist130-row-actions"><StatusBadge status="pending" label="Unassigned" variant="compact" /><Button size="sm" disabled={Boolean(busyId)} onClick={() => void acceptRequest(appointment)}><CheckCircle2 size={14} />{accepting ? 'Accepting…' : 'Accept & assign to me'}</Button></div>
               </article>
             )
           })}

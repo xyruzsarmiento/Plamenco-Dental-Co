@@ -140,7 +140,7 @@ function AppointmentSuccessModal({ notice, onClose, onContinue }: { notice: Appo
           </section>
           <section className="appointment-success-meta-grid" aria-label="Clinic details">
             <div><span><Building2 size={14} />Clinic branch</span><strong>{branch?.name ?? 'Clinic branch'}</strong></div>
-            <div><span><Stethoscope size={14} />Dentist</span><strong>{provider?.displayName ?? 'Assigned dentist'}</strong></div>
+            <div><span><Stethoscope size={14} />Dentist</span><strong>{provider?.displayName ?? 'To be assigned'}</strong></div>
             <div className="appointment-success-meta-wide"><span><MapPin size={14} />Location</span><strong>{[branch?.city, branch?.province].filter(Boolean).join(', ') || branch?.address || 'Clinic location'}</strong></div>
           </section>
         </div>

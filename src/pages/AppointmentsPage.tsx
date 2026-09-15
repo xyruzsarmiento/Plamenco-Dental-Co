@@ -222,7 +222,7 @@ export function AppointmentsPage() {
   const { user } = useAuth()
   const permissions = usePermissions()
   const { authorizedBranchIds } = useBranchContext()
-  const canAssignDentist = permissions.can('appointments.assign_dentist')
+  const canAssignDentist = permissions.can('appointments.approve') && permissions.can('appointments.assign_dentist')
   const [appointments, setAppointments] = useState<Appointment[]>([])
   const [patients, setPatients] = useState<Patient[]>(getStoredPatients())
   const [services, setServices] = useState<Service[]>(getStoredServices())
@@ -279,7 +279,7 @@ export function AppointmentsPage() {
     setFormValues({
       patientId: recall.patientId,
       branchId: recall.branchId || branches[0]?.id || '',
-      providerId: recall.providerId ?? '',
+      providerId: '',
       serviceId: recall.serviceId ?? '',
       date: recall.dueDate || manilaDate(),
       startTime: '09:00',
@@ -367,7 +367,7 @@ export function AppointmentsPage() {
   const checkedInTodayCount = todayAppointments.filter((appointment) => appointment.status === 'checked_in').length
 
   const pendingRequests = useMemo(
-    () => appointments.filter((appointment) => appointment.status === 'pending'),
+    () => appointments.filter((appointment) => appointment.status === 'pending' && !appointment.providerId),
     [appointments]
   )
 
@@ -544,7 +544,7 @@ export function AppointmentsPage() {
     setFormValues({
       patientId: '',
       branchId: branchFilter !== 'all' ? branchFilter : branches[0]?.id ?? '',
-      providerId: providerFilter !== 'all' ? providerFilter : '',
+      providerId: '',
       serviceId: '',
       date,
       startTime: time || '09:00',
@@ -573,7 +573,7 @@ export function AppointmentsPage() {
     setFormValues({
       patientId: appointment.patientId,
       branchId: appointment.branchId || (branchFilter !== 'all' ? branchFilter : branches[0]?.id ?? ''),
-      providerId: appointment.providerId ?? '',
+      providerId: '',
       serviceId: appointment.serviceId,
       date: recall.dueDate || manilaDate(),
       startTime: '09:00',
@@ -597,16 +597,17 @@ export function AppointmentsPage() {
   }
 
   function handleFormValueChange(values: AppointmentFormValues) {
-    setFormValues(values)
+    const unassignedValues = { ...values, providerId: '' }
+    setFormValues(unassignedValues)
 
-    if (values.date && values.startTime && values.endTime) {
-      const conflict = values.providerId || values.operatoryId
-        ? getScheduleConflictDetail(values.date, values.startTime, values.endTime, undefined, values.providerId, values.branchId, values.operatoryId)
+    if (unassignedValues.date && unassignedValues.startTime && unassignedValues.endTime) {
+      const conflict = unassignedValues.operatoryId
+        ? getScheduleConflictDetail(unassignedValues.date, unassignedValues.startTime, unassignedValues.endTime, undefined, '', unassignedValues.branchId, unassignedValues.operatoryId)
         : null
       if (conflict && 'appointment' in conflict) {
         const provider = conflict.appointment.providerId ? providerMap.get(conflict.appointment.providerId) : undefined
         setConflictError(`${provider?.displayName ?? 'The selected resource'} already has an appointment from ${formatAppointmentTime(conflict.appointment.startTime)} to ${formatAppointmentTime(conflict.appointment.endTime)}.`)
-      } else if (checkScheduleConflict(values.date, values.startTime, values.endTime, undefined, values.providerId, values.branchId, values.operatoryId)) {
+      } else if (checkScheduleConflict(unassignedValues.date, unassignedValues.startTime, unassignedValues.endTime, undefined, '', unassignedValues.branchId, unassignedValues.operatoryId)) {
         setConflictError('This time overlaps an existing appointment. Please choose another slot.')
       } else {
         setConflictError(null)
@@ -645,10 +646,10 @@ export function AppointmentsPage() {
     const endTime = selectedService ? addMinutesToTime(formValues.startTime, selectedService.duration) : formValues.endTime
     const availableSlot = getAvailableAppointmentSlots({
       branchId: formValues.branchId,
-      providerId: formValues.providerId || undefined,
       serviceId: formValues.serviceId,
       date: formValues.date,
-    }).some((slot) => slot.startTime === formValues.startTime && (!formValues.providerId || slot.providerId === formValues.providerId))
+      operatoryId: formValues.operatoryId || undefined,
+    }).some((slot) => slot.startTime === formValues.startTime)
 
     if (!availableSlot) {
       setFormError('That clinic time is no longer available. Please choose another time.')
@@ -660,6 +661,7 @@ export function AppointmentsPage() {
     try {
       const confirmed = await createAppointmentPersisted({
         ...formValues,
+        providerId: '',
         endTime,
         durationMinutes: selectedService?.duration,
         estimatedAmountCents: undefined,
@@ -1351,7 +1353,7 @@ export function AppointmentsPage() {
                       <div className="detail-col"><span className="detail-label">Price</span><strong>{service ? formatCurrency(service.price) : '—'}</strong></div>
                       <div className="detail-col"><span className="detail-label">Contact</span><p>{patient?.phone}</p></div>
                       <div className="detail-col"><span className="detail-label">Branch</span><p>{branch?.name ?? 'No branch'}</p></div>
-                      <div className="detail-col"><span className="detail-label">Assigned dentist</span><p>None yet</p></div>
+                      <div className="detail-col"><span className="detail-label">Assigned dentist</span><p>Not assigned yet</p></div>
                     </div>
 
                     {canAssignDentist ? (
@@ -1400,7 +1402,6 @@ export function AppointmentsPage() {
           patients={patients}
           services={services}
           branches={branches}
-          providers={formValues.branchId ? getEligibleProviders(formValues.branchId) : []}
           values={formValues}
           onChange={handleFormValueChange}
           onSubmit={() => void handleSubmitForm()}
