@@ -51,8 +51,20 @@ export function AppointmentFormModal({
 }: AppointmentFormModalProps) {
   const [step, setStep] = useState(0)
 
+  const steps = [
+    { label: 'Patient', icon: UserRound },
+    { label: 'Branch', icon: Building2 },
+    { label: 'Service', icon: Stethoscope },
+    { label: 'Date & Time', icon: CalendarDays },
+    { label: 'Review', icon: CheckCircle2 },
+  ]
+  const finalStepIndex = steps.length - 1
+
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
+    // Persist only from the explicit confirmation step. This also protects
+    // against a navigation click being interpreted as a native form submit.
+    if (step !== finalStepIndex) return
     onSubmit()
   }
 
@@ -71,14 +83,6 @@ export function AppointmentFormModal({
       operatoryId: values.operatoryId || undefined,
     })
   }, [values.branchId, values.date, values.operatoryId, values.serviceId])
-
-  const steps = [
-    { label: 'Patient', icon: UserRound },
-    { label: 'Branch', icon: Building2 },
-    { label: 'Service', icon: Stethoscope },
-    { label: 'Date & Time', icon: CalendarDays },
-    { label: 'Review', icon: CheckCircle2 },
-  ]
 
   function handleServiceChange(serviceId: string) {
     const service = services.find((entry) => String(entry.id) === String(serviceId))
@@ -261,7 +265,23 @@ export function AppointmentFormModal({
             <Button variant="secondary" type="button" onClick={onClose}>Cancel</Button>
             <div>
               {step > 0 && <Button variant="secondary" type="button" onClick={() => setStep((current) => Math.max(current - 1, 0))}><ArrowLeft size={15} />Back</Button>}
-              {step < steps.length - 1 ? <Button type="button" disabled={!canContinue()} onClick={() => setStep((current) => Math.min(current + 1, steps.length - 1))}>Continue<ArrowRight size={15} /></Button> : <Button type="submit" disabled={Boolean(conflictError)}>Confirm booking<CheckCircle2 size={15} /></Button>}
+              {step < finalStepIndex ? (
+                <Button
+                  key="appointment-continue"
+                  type="button"
+                  disabled={!canContinue()}
+                  onClick={(event) => {
+                    event.preventDefault()
+                    setStep((current) => Math.min(current + 1, finalStepIndex))
+                  }}
+                >
+                  Continue<ArrowRight size={15} />
+                </Button>
+              ) : (
+                <Button key="appointment-confirm" type="submit" disabled={Boolean(conflictError)}>
+                  Confirm booking<CheckCircle2 size={15} />
+                </Button>
+              )}
             </div>
           </footer>
         </form>
