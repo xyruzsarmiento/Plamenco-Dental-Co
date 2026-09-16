@@ -1,0 +1,92 @@
+.rx221-medication-picker {
+  display: grid;
+  grid-template-columns: minmax(0, 1.35fr) minmax(180px, .65fr);
+  gap: 12px;
+}
+
+.rx221-control-group {
+  display: grid;
+  gap: 7px;
+}
+
+.rx221-control-label {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text, #172033);
+}
+
+.rx221-stepper-row {
+  display: grid;
+  grid-template-columns: 42px minmax(64px, 82px) 42px minmax(120px, 1fr);
+  align-items: stretch;
+  gap: 8px;
+}
+
+.rx221-stepper-row button {
+  min-height: 42px;
+  border: 1px solid #d8e1ee;
+  border-radius: 10px;
+  background: #fff;
+  color: #1d4ed8;
+  font-size: 20px;
+  line-height: 1;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.rx221-stepper-row button:hover:not(:disabled) {
+  background: #f4f7ff;
+  border-color: #b8c9f5;
+}
+
+.rx221-stepper-row button:disabled {
+  opacity: .5;
+  cursor: not-allowed;
+}
+
+.rx221-stepper-value {
+  min-height: 42px;
+  border: 1px solid #d8e1ee;
+  border-radius: 10px;
+  background: #fff;
+  display: grid;
+  place-items: center;
+  font-weight: 750;
+  color: #172033;
+}
+
+.rx221-custom-input {
+  margin-top: 8px;
+}
+
+.rx221-presets-note {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: #f8faff;
+  border: 1px solid #dce6fb;
+  color: #61708a;
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.rx221-presets-note strong {
+  color: #315bb9;
+}
+
+.rx116-form select {
+  min-height: 42px;
+}
+
+@media (max-width: 720px) {
+  .rx221-medication-picker {
+    grid-template-columns: 1fr;
+  }
+
+  .rx221-stepper-row {
+    grid-template-columns: 40px minmax(54px, 70px) 40px minmax(0, 1fr);
+  }
+}
