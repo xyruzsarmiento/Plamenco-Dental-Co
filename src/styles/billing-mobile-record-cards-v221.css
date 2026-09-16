@@ -65,7 +65,6 @@
     text-transform: uppercase !important;
   }
 
-  /* Give the key identity fields more visual weight without increasing height. */
   .app-shell .bp153-table td[data-label='Invoice #'],
   .app-shell .bp153-table td[data-label='Payment #'] {
     order: 1 !important;
@@ -106,7 +105,6 @@
     white-space: nowrap !important;
   }
 
-  /* Invoice / receivable ordering. */
   .app-shell .bp153-table td[data-label='Amount'] { order: 4 !important; }
   .app-shell .bp153-table td[data-label='Balance'] { order: 5 !important; }
   .app-shell .bp153-table td[data-label='Paid'] { order: 6 !important; }
@@ -119,7 +117,6 @@
     border-radius: 0 !important;
   }
 
-  /* Payment ordering. */
   .app-shell .bp153-table td[data-label='Method'] { order: 4 !important; }
   .app-shell .bp153-table td[data-label='Date'] { order: 6 !important; }
   .app-shell .bp153-table td[data-label='Receipt'] { order: 7 !important; }
@@ -134,7 +131,6 @@
     color: #1d4ed8 !important;
   }
 
-  /* Receipts already use dedicated buttons; keep them compact and phone-friendly. */
   .app-shell .bp153-receipts {
     gap: 8px !important;
     padding: 8px !important;
@@ -170,6 +166,76 @@
     padding: 9px 10px !important;
     font-size: 11px !important;
   }
+
+  /* Billing modal centering correction.
+   * v199 and v201 bottom-anchor bp153 surfaces on mobile. Restore a centered
+   * floating-card model for invoice/payment/receipt details and invoice editor.
+   */
+  body:has(.app-shell) .bp153-dialog-layer,
+  body:has(.app-shell) .bp153-drawer-layer {
+    position: fixed !important;
+    inset: 0 !important;
+    z-index: 16000 !important;
+    display: grid !important;
+    place-items: center !important;
+    align-items: center !important;
+    justify-items: center !important;
+    box-sizing: border-box !important;
+    width: 100vw !important;
+    height: 100dvh !important;
+    padding:
+      max(12px, env(safe-area-inset-top))
+      max(12px, env(safe-area-inset-right))
+      max(12px, env(safe-area-inset-bottom))
+      max(12px, env(safe-area-inset-left)) !important;
+    overflow: hidden !important;
+  }
+
+  body:has(.app-shell) .bp153-dialog-layer > .bp153-dialog,
+  body:has(.app-shell) .bp153-drawer-layer > .bp153-drawer {
+    position: relative !important;
+    inset: auto !important;
+    top: auto !important;
+    right: auto !important;
+    bottom: auto !important;
+    left: auto !important;
+    align-self: center !important;
+    justify-self: center !important;
+    box-sizing: border-box !important;
+    width: min(620px, calc(100vw - 24px)) !important;
+    max-width: calc(100vw - 24px) !important;
+    height: auto !important;
+    max-height: calc(
+      100dvh
+      - max(12px, env(safe-area-inset-top))
+      - max(12px, env(safe-area-inset-bottom))
+    ) !important;
+    min-height: 0 !important;
+    margin: 0 !important;
+    border: 1px solid rgba(191, 219, 254, .9) !important;
+    border-radius: 18px !important;
+    transform: none !important;
+    overflow: hidden !important;
+  }
+
+  body:has(.app-shell) .bp153-dialog-layer > .bp153-invoice-dialog {
+    width: min(680px, calc(100vw - 24px)) !important;
+  }
+
+  body:has(.app-shell) .bp153-drawer-layer > .bp153-drawer {
+    display: grid !important;
+    grid-template-rows: auto minmax(0, 1fr) auto !important;
+  }
+
+  .bp153-dialog-body,
+  .bp153-drawer-body,
+  .bp153-invoice-body {
+    min-height: 0 !important;
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+    overscroll-behavior: contain !important;
+    -webkit-overflow-scrolling: touch !important;
+  }
 }
 
 @media (max-width: 420px) {
@@ -185,5 +251,21 @@
   .app-shell .bp153-table tbody td {
     padding: 6px 7px !important;
     font-size: 11px !important;
+  }
+
+  body:has(.app-shell) .bp153-dialog-layer,
+  body:has(.app-shell) .bp153-drawer-layer {
+    padding:
+      max(10px, env(safe-area-inset-top))
+      max(10px, env(safe-area-inset-right))
+      max(10px, env(safe-area-inset-bottom))
+      max(10px, env(safe-area-inset-left)) !important;
+  }
+
+  body:has(.app-shell) .bp153-dialog-layer > .bp153-dialog,
+  body:has(.app-shell) .bp153-drawer-layer > .bp153-drawer {
+    width: calc(100vw - 20px) !important;
+    max-width: calc(100vw - 20px) !important;
+    border-radius: 17px !important;
   }
 }
