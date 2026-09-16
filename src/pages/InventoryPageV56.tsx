@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { InventoryEnhancerV183 } from '../components/system/InventoryEnhancerV183'
+import { InventoryWorkflowEnhancerV225 } from '../components/system/InventoryWorkflowEnhancerV225'
 import { useBranchContext } from '../features/branches/BranchContext'
 import { refreshInventoryOperationalCaches } from '../features/inventory/inventoryPersistence'
 import { isSupabaseConfigured, supabase } from '../lib/supabase'
@@ -85,12 +86,15 @@ export function InventoryPageV56() {
     return <section className="inv224-database-gate" role="alert"><div><strong>Inventory database unavailable</strong><span>{databaseError}</span><button className="btn btn-primary" type="button" onClick={() => void hydrateFromDatabase()}>Retry database load</button></div></section>
   }
 
+  const refreshWorkspace = () => {
+    void hydrateFromDatabase().then((loaded) => {
+      if (loaded) setRevision((value) => value + 1)
+    })
+  }
+
   return <>
     <InventoryPageV182 key={revision} />
-    <InventoryEnhancerV183 onInventoryChanged={() => {
-      void hydrateFromDatabase().then((loaded) => {
-        if (loaded) setRevision((value) => value + 1)
-      })
-    }} />
+    <InventoryEnhancerV183 onInventoryChanged={refreshWorkspace} />
+    <InventoryWorkflowEnhancerV225 onInventoryChanged={refreshWorkspace} />
   </>
 }
