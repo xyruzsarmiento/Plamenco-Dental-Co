@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { InventoryBatchExpiryV227 } from '../components/system/InventoryBatchExpiryV227'
 import { InventoryEnhancerV183 } from '../components/system/InventoryEnhancerV183'
 import { InventoryMovementLedgerV228 } from '../components/system/InventoryMovementLedgerV228'
+import { InventoryReorderCenterV229 } from '../components/system/InventoryReorderCenterV229'
 import { InventoryTransferWorkflowV226 } from '../components/system/InventoryTransferWorkflowV226'
 import { InventoryWorkflowEnhancerV225 } from '../components/system/InventoryWorkflowEnhancerV225'
 import { useBranchContext } from '../features/branches/BranchContext'
@@ -102,5 +103,6 @@ export function InventoryPageV56() {
     <InventoryTransferWorkflowV226 />
     <InventoryBatchExpiryV227 />
     <InventoryMovementLedgerV228 />
+    <InventoryReorderCenterV229 />
   </>
 }
