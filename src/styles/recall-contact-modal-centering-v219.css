@@ -90,3 +90,43 @@
     -webkit-overflow-scrolling: touch;
   }
 }
+
+/* Document upload control hardening.
+ * modal-responsive-polish-v218.css intentionally expands normal text inputs to
+ * 100% width on mobile. Because that selector also matches input[type=checkbox],
+ * the patient-portal sharing checkbox was stretched into a large block. Restore
+ * intrinsic checkbox sizing and keep the share card's three-column layout stable.
+ */
+body:has(.app-shell) .documents-v10-upload-panel .document-share-toggle-v10 {
+  grid-template-columns: 18px 34px minmax(0, 1fr) !important;
+  align-items: center !important;
+}
+
+body:has(.app-shell) .documents-v10-upload-panel .document-share-toggle-v10 > input[type='checkbox'] {
+  appearance: auto !important;
+  -webkit-appearance: checkbox !important;
+  box-sizing: border-box !important;
+  width: 18px !important;
+  min-width: 18px !important;
+  max-width: 18px !important;
+  height: 18px !important;
+  min-height: 18px !important;
+  max-height: 18px !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  flex: 0 0 18px !important;
+  font-size: initial !important;
+}
+
+@media (max-width: 520px) {
+  body:has(.app-shell) .documents-v10-upload-panel .document-share-toggle-v10 {
+    grid-template-columns: 18px 32px minmax(0, 1fr) !important;
+    gap: 9px !important;
+    padding: 12px !important;
+  }
+
+  body:has(.app-shell) .documents-v10-upload-panel .document-share-icon-v10 {
+    width: 32px !important;
+    height: 32px !important;
+  }
+}
