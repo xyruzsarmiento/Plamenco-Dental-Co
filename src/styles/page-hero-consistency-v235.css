@@ -1,0 +1,349 @@
+/* V235 — final page-hero consistency pass.
+   Goals: one semantic icon tile, one Lucide-style Sparkles cue, vertically centered
+   icon/text/action alignment, and no legacy recall ring/decorative orb treatment. */
+
+.app-shell .content-area {
+  --hero235-border:#d6e3f5;
+  --hero235-bg:linear-gradient(135deg,#ffffff 0%,#fbfdff 70%,#f3f7fe 100%);
+  --hero235-icon-bg:#eef5ff;
+  --hero235-icon-border:#c9ddfb;
+  --hero235-blue:#2563eb;
+  --hero235-ink:#111827;
+  --hero235-muted:#607086;
+}
+
+/* Shared scaffold hero: Documents-style rectangular icon tile, never the old circular ring. */
+.app-shell .portal-page-hero {
+  position:relative!important;
+  overflow:hidden!important;
+  min-height:112px!important;
+  padding:20px 22px!important;
+  border:1px solid var(--hero235-border)!important;
+  border-radius:20px!important;
+  background:var(--hero235-bg)!important;
+  box-shadow:0 10px 28px rgba(37,99,235,.05)!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:space-between!important;
+  gap:20px!important;
+}
+
+.app-shell .portal-page-hero::before,
+.app-shell .portal-page-hero::after {
+  content:none!important;
+  display:none!important;
+}
+
+.app-shell .portal-page-hero-copy {
+  display:flex!important;
+  align-items:center!important;
+  gap:16px!important;
+  min-width:0!important;
+  flex:1 1 auto!important;
+}
+
+.app-shell .portal-page-hero-icon {
+  flex:0 0 52px!important;
+  width:52px!important;
+  height:52px!important;
+  margin:0!important;
+  display:grid!important;
+  place-items:center!important;
+  align-self:center!important;
+  border:1px solid var(--hero235-icon-border)!important;
+  border-radius:15px!important;
+  background:var(--hero235-icon-bg)!important;
+  color:var(--hero235-blue)!important;
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.72)!important;
+}
+
+.app-shell .portal-page-hero-icon svg {
+  width:22px!important;
+  height:22px!important;
+  stroke-width:1.85!important;
+}
+
+.app-shell .portal-page-hero-text {
+  min-width:0!important;
+  display:flex!important;
+  flex-direction:column!important;
+  justify-content:center!important;
+}
+
+.app-shell .portal-page-hero-actions {
+  flex:0 0 auto!important;
+  align-self:center!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:flex-end!important;
+  gap:9px!important;
+  flex-wrap:wrap!important;
+}
+
+/* Remove all tiny text-star pseudo decorations introduced by earlier layers. */
+.app-shell :is(
+  .portal-page-hero .eyebrow,
+  .portal-card-kicker,
+  .bp153-title > span:first-child,
+  .ex161-hero > div:first-child > span:first-child,
+  .svc15-command > div:first-child > span:first-child,
+  .rep162-eyebrow,
+  .branches-v27-eyebrow,
+  .settings-v30-eyebrow,
+  .sys58-kicker,
+  .team-v26-kicker,
+  .patients36-hero-copy > span:first-child,
+  .inventory-v22-kicker,
+  .internal-profile-kicker,
+  .sav56-eyebrow,
+  .tx43-eyebrow,
+  .tp80-eyebrow,
+  .forms-v28-kicker,
+  .dv108-eyebrow,
+  .notifications-v25-kicker,
+  .prescriptions-hero .eyebrow,
+  .bill14-kicker,
+  .dr11-kicker,
+  .data-import-v21-kicker
+)::before {
+  content:""!important;
+  display:inline-block!important;
+  width:14px!important;
+  height:14px!important;
+  margin:0 5px 0 0!important;
+  flex:0 0 14px!important;
+  background:center/14px 14px no-repeat url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%232563eb' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m12 3-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3L12 21l1.9-5.8a2 2 0 0 1 1.3-1.3L21 12l-5.8-1.9a2 2 0 0 1-1.3-1.3L12 3Z'/%3E%3Cpath d='M5 3v4M3 5h4M19 17v4M17 19h4'/%3E%3C/svg%3E")!important;
+}
+
+/* Existing JSX already contains Sparkles on several legacy heroes. Hide it so the
+   standardized two-accent Sparkles cue above appears exactly once. */
+.app-shell :is(
+  .tx43-eyebrow,
+  .tp80-eyebrow,
+  .dr11-kicker,
+  .prescriptions-hero .eyebrow
+) > svg:first-child {
+  display:none!important;
+}
+
+/* Center icon tiles within bespoke clinical hero copy rather than letting them sit at the top. */
+.app-shell :is(.tx43-hero-copy,.tp80-hero-title,.dr11-command-title,.patients36-hero-copy) {
+  position:relative!important;
+  min-height:54px!important;
+  padding-left:68px!important;
+  display:flex!important;
+  flex-direction:column!important;
+  justify-content:center!important;
+  align-items:flex-start!important;
+}
+
+.app-shell :is(.tx43-hero-copy,.tp80-hero-title,.dr11-command-title,.patients36-hero-copy) > :is(
+  .portal-card-heading-icon,.tp80-hero-icon,.dr11-command-icon,.patients36-hero-icon
+) {
+  position:absolute!important;
+  left:0!important;
+  top:50%!important;
+  transform:translateY(-50%)!important;
+  width:52px!important;
+  height:52px!important;
+  margin:0!important;
+  display:grid!important;
+  place-items:center!important;
+  border:1px solid var(--hero235-icon-border)!important;
+  border-radius:15px!important;
+  background:var(--hero235-icon-bg)!important;
+  color:var(--hero235-blue)!important;
+}
+
+/* Legacy heroes without a real icon node: create exactly one semantic tile. */
+.app-shell :is(
+  .bp153-header,
+  .ex161-hero,
+  .svc15-command,
+  .rep162-toolbar,
+  .team-v26-hero,
+  .sys58-hero,
+  .settings-v30-hero,
+  .data-import-v21-hero
+) {
+  display:grid!important;
+  grid-template-columns:52px minmax(0,1fr) auto!important;
+  align-items:center!important;
+  column-gap:16px!important;
+  min-height:112px!important;
+  padding:20px 22px!important;
+  border:1px solid var(--hero235-border)!important;
+  border-radius:20px!important;
+  background:var(--hero235-bg)!important;
+  box-shadow:0 10px 28px rgba(37,99,235,.05)!important;
+}
+
+.app-shell :is(
+  .bp153-header,
+  .ex161-hero,
+  .svc15-command,
+  .rep162-toolbar,
+  .team-v26-hero,
+  .sys58-hero,
+  .settings-v30-hero,
+  .data-import-v21-hero
+)::before {
+  content:""!important;
+  grid-column:1!important;
+  grid-row:1!important;
+  align-self:center!important;
+  justify-self:center!important;
+  display:block!important;
+  width:52px!important;
+  height:52px!important;
+  margin:0!important;
+  border:1px solid var(--hero235-icon-border)!important;
+  border-radius:15px!important;
+  background-color:var(--hero235-icon-bg)!important;
+  background-position:center!important;
+  background-repeat:no-repeat!important;
+  background-size:23px 23px!important;
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.72)!important;
+}
+
+/* Semantic icons. */
+.app-shell .bp153-header::before { background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%232563eb' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect width='20' height='14' x='2' y='5' rx='2'/%3E%3Cpath d='M2 10h20M6 15h4'/%3E%3C/svg%3E")!important; }
+.app-shell .ex161-hero::before { background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%232563eb' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 7V6a2 2 0 0 0-2-2H5a3 3 0 0 0 0 6h15v8a2 2 0 0 1-2 2H5a3 3 0 0 1-3-3V7'/%3E%3Cpath d='M16 14h2'/%3E%3C/svg%3E")!important; }
+.app-shell .svc15-command::before { background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%232563eb' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 3v5a4 4 0 0 0 8 0V3'/%3E%3Cpath d='M10 12v3a4 4 0 0 0 8 0v-1'/%3E%3Ccircle cx='18' cy='11' r='2'/%3E%3C/svg%3E")!important; }
+.app-shell .rep162-toolbar::before { background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%232563eb' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3 3v18h18'/%3E%3Cpath d='m7 16 4-5 4 3 5-7'/%3E%3C/svg%3E")!important; }
+.app-shell .team-v26-hero::before { background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%232563eb' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2'/%3E%3Ccircle cx='9' cy='7' r='4'/%3E%3Cpath d='M19 8v6M22 11h-6'/%3E%3C/svg%3E")!important; }
+.app-shell .sys58-hero::before { background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%232563eb' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 3l7 3v5c0 5-3 8-7 10-4-2-7-5-7-10V6z'/%3E%3Cpath d='M9 12l2 2 4-4'/%3E%3C/svg%3E")!important; }
+.app-shell .settings-v30-hero::before { background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%232563eb' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 15.5A3.5 3.5 0 1 0 12 8a3.5 3.5 0 0 0 0 7.5Z'/%3E%3Cpath d='M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1-2.8 2.8-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.6V21h-4v-.1a1.7 1.7 0 0 0-1-1.6 1.7 1.7 0 0 0-1.9.3l-.1.1L4.2 17l.1-.1a1.7 1.7 0 0 0 .3-1.9A1.7 1.7 0 0 0 3 14H3v-4h.1a1.7 1.7 0 0 0 1.6-1 1.7 1.7 0 0 0-.3-1.9L4.2 7 7 4.2l.1.1a1.7 1.7 0 0 0 1.9.3 1.7 1.7 0 0 0 1-1.6V3h4v.1a1.7 1.7 0 0 0 1 1.6 1.7 1.7 0 0 0 1.9-.3l.1-.1L19.8 7l-.1.1a1.7 1.7 0 0 0-.3 1.9 1.7 1.7 0 0 0 1.6 1H21v4h-.1a1.7 1.7 0 0 0-1.5 1Z'/%3E%3C/svg%3E")!important; }
+.app-shell .data-import-v21-hero::before { background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%232563eb' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cellipse cx='12' cy='5' rx='8' ry='3'/%3E%3Cpath d='M4 5v6c0 1.7 3.6 3 8 3s8-1.3 8-3V5'/%3E%3Cpath d='M4 11v6c0 1.7 3.6 3 8 3 2.1 0 4-.3 5.4-.8'/%3E%3Cpath d='M19 16v6M16 19h6'/%3E%3C/svg%3E")!important; }
+
+/* Ensure text and utility panels occupy the correct grid columns. */
+.app-shell .bp153-header > .bp153-title,
+.app-shell .ex161-hero > div:first-of-type,
+.app-shell .svc15-command > div:first-of-type,
+.app-shell .rep162-toolbar > .rep162-title-block,
+.app-shell .team-v26-hero > div:first-of-type,
+.app-shell .sys58-hero > div:first-of-type,
+.app-shell .settings-v30-hero > div:first-of-type,
+.app-shell .data-import-v21-hero > div:first-of-type {
+  grid-column:2!important;
+  grid-row:1!important;
+  align-self:center!important;
+  min-width:0!important;
+}
+
+.app-shell .bp153-header > .bp153-actions,
+.app-shell .ex161-hero > :last-child,
+.app-shell .svc15-command > .btn,
+.app-shell .rep162-toolbar > :last-child,
+.app-shell .team-v26-hero > .team-v26-hero-actions,
+.app-shell .sys58-hero > :last-child,
+.app-shell .settings-v30-hero > :last-child,
+.app-shell .data-import-v21-hero > .data-import-v21-safety {
+  grid-column:3!important;
+  grid-row:1!important;
+  align-self:center!important;
+  justify-self:end!important;
+}
+
+/* Recalls used an older circular/ring language and a decorative orb. Force it into
+   the same rectangular Documents-style hero as every other PageScaffold page. */
+.app-shell .premium-page-scaffold > .portal-page-hero:has(.portal-page-hero-text h2) {
+  background:var(--hero235-bg)!important;
+}
+
+.app-shell .premium-page-scaffold > .portal-page-hero .portal-page-hero-icon {
+  border-radius:15px!important;
+  background:var(--hero235-icon-bg)!important;
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.72)!important;
+}
+
+/* Keep title rhythm consistent. */
+.app-shell :is(
+  .portal-page-hero,
+  .tx43-hero,
+  .tp80-hero,
+  .dr11-command-header,
+  .bp153-header,
+  .ex161-hero,
+  .svc15-command,
+  .rep162-toolbar,
+  .team-v26-hero,
+  .sys58-hero,
+  .settings-v30-hero,
+  .data-import-v21-hero
+) :is(h1,h2) {
+  margin:0!important;
+  color:var(--hero235-ink)!important;
+  font-size:clamp(1.65rem,2vw,2.05rem)!important;
+  font-weight:780!important;
+  line-height:1.08!important;
+  letter-spacing:-.024em!important;
+}
+
+.app-shell :is(
+  .portal-page-hero,
+  .tx43-hero,
+  .tp80-hero,
+  .dr11-command-header,
+  .bp153-header,
+  .ex161-hero,
+  .svc15-command,
+  .rep162-toolbar,
+  .team-v26-hero,
+  .sys58-hero,
+  .settings-v30-hero,
+  .data-import-v21-hero
+) p {
+  margin:6px 0 0!important;
+  color:var(--hero235-muted)!important;
+  font-size:13px!important;
+  line-height:1.48!important;
+}
+
+@media (max-width:900px) {
+  .app-shell .portal-page-hero {
+    align-items:flex-start!important;
+    flex-direction:column!important;
+    padding:17px!important;
+  }
+  .app-shell .portal-page-hero-actions { width:100%!important;justify-content:flex-start!important; }
+
+  .app-shell :is(.bp153-header,.ex161-hero,.svc15-command,.rep162-toolbar,.team-v26-hero,.sys58-hero,.settings-v30-hero,.data-import-v21-hero) {
+    grid-template-columns:48px minmax(0,1fr)!important;
+    padding:17px!important;
+    row-gap:12px!important;
+  }
+  .app-shell :is(.bp153-header,.ex161-hero,.svc15-command,.rep162-toolbar,.team-v26-hero,.sys58-hero,.settings-v30-hero,.data-import-v21-hero)::before {
+    width:48px!important;height:48px!important;border-radius:14px!important;
+  }
+  .app-shell .bp153-header > .bp153-actions,
+  .app-shell .ex161-hero > :last-child,
+  .app-shell .svc15-command > .btn,
+  .app-shell .rep162-toolbar > :last-child,
+  .app-shell .team-v26-hero > .team-v26-hero-actions,
+  .app-shell .sys58-hero > :last-child,
+  .app-shell .settings-v30-hero > :last-child,
+  .app-shell .data-import-v21-hero > .data-import-v21-safety {
+    grid-column:1/-1!important;
+    grid-row:2!important;
+    justify-self:start!important;
+    width:auto!important;
+  }
+}
+
+@media (max-width:600px) {
+  .app-shell .portal-page-hero,
+  .app-shell :is(.tx43-hero,.tp80-hero,.dr11-command-header,.bp153-header,.ex161-hero,.svc15-command,.rep162-toolbar,.team-v26-hero,.sys58-hero,.settings-v30-hero,.data-import-v21-hero) {
+    min-height:0!important;
+    padding:15px!important;
+    border-radius:17px!important;
+  }
+  .app-shell .portal-page-hero-copy { align-items:flex-start!important;gap:13px!important; }
+  .app-shell .portal-page-hero-icon { width:46px!important;height:46px!important;flex-basis:46px!important;border-radius:13px!important; }
+  .app-shell :is(.tx43-hero-copy,.tp80-hero-title,.dr11-command-title,.patients36-hero-copy) {
+    padding-left:60px!important;
+  }
+  .app-shell :is(.tx43-hero-copy,.tp80-hero-title,.dr11-command-title,.patients36-hero-copy) > :is(.portal-card-heading-icon,.tp80-hero-icon,.dr11-command-icon,.patients36-hero-icon) {
+    width:46px!important;height:46px!important;border-radius:13px!important;
+  }
+}
