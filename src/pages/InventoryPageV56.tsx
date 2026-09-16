@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { InventoryBatchExpiryV227 } from '../components/system/InventoryBatchExpiryV227'
 import { InventoryEnhancerV183 } from '../components/system/InventoryEnhancerV183'
+import { InventoryHistoricalAnalyticsV230 } from '../components/system/InventoryHistoricalAnalyticsV230'
 import { InventoryMovementLedgerV228 } from '../components/system/InventoryMovementLedgerV228'
 import { InventoryReorderCenterV229 } from '../components/system/InventoryReorderCenterV229'
 import { InventoryTransferWorkflowV226 } from '../components/system/InventoryTransferWorkflowV226'
@@ -35,7 +36,6 @@ export function InventoryPageV56() {
       return false
     }
 
-    // Let the inventory page render its existing "no branch assigned" state.
     if (!isAllBranchesMode && !activeBranchId) {
       setDatabaseState('ready')
       setDatabaseError('')
@@ -47,8 +47,6 @@ export function InventoryPageV56() {
     setDatabaseError('')
 
     try {
-      // Prevent an unauthenticated RLS response from being mistaken for an
-      // intentionally empty inventory and overwriting the browser cache.
       const { data: sessionData, error: sessionError } = await supabase.auth.getSession()
       if (sessionError) throw sessionError
       if (!sessionData.session) throw new Error('Your database session is not ready. Please sign in again if this persists.')
@@ -104,5 +102,6 @@ export function InventoryPageV56() {
     <InventoryBatchExpiryV227 />
     <InventoryMovementLedgerV228 />
     <InventoryReorderCenterV229 />
+    <InventoryHistoricalAnalyticsV230 />
   </>
 }
