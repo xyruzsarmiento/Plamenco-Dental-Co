@@ -1,0 +1,41 @@
+/* Expenses V224: keep operational dialogs centered instead of bottom-sheet aligned. */
+@media (max-width: 720px) {
+  body:has(.page-expenses) .expense-modal-backdrop,
+  body:has(.page-expenses) .expense-record-v153-backdrop {
+    position: fixed !important;
+    inset: 0 !important;
+    z-index: 12000 !important;
+    display: grid !important;
+    place-items: center !important;
+    align-items: center !important;
+    justify-items: center !important;
+    width: 100vw !important;
+    height: 100dvh !important;
+    padding: max(12px, env(safe-area-inset-top)) 12px max(12px, env(safe-area-inset-bottom)) !important;
+    overflow: hidden !important;
+  }
+
+  body:has(.page-expenses) .expense-modal-backdrop > .expense-modal,
+  body:has(.page-expenses) .expense-modal-backdrop > [role='dialog'],
+  body:has(.page-expenses) .expense-record-v153-backdrop > .expense-record-v153,
+  body:has(.page-expenses) .expense-record-v153-backdrop > [role='dialog'] {
+    align-self: center !important;
+    justify-self: center !important;
+    margin: 0 !important;
+    margin-top: 0 !important;
+    margin-bottom: 0 !important;
+    width: min(560px, 100%) !important;
+    max-width: 100% !important;
+    height: auto !important;
+    max-height: calc(100dvh - max(24px, env(safe-area-inset-top) + env(safe-area-inset-bottom))) !important;
+    border-radius: 16px !important;
+    overflow: hidden !important;
+  }
+
+  body:has(.page-expenses) .expense-modal-body,
+  body:has(.page-expenses) .expense-record-v153-body {
+    min-height: 0 !important;
+    overflow-y: auto !important;
+    overscroll-behavior: contain !important;
+  }
+}
