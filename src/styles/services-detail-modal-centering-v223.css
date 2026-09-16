@@ -1,3 +1,5 @@
+@import './expenses-modal-centering-v224.css';
+
 /* Services detail modal centering correction.
  *
  * Root cause: internal-mobile-bottom-sheet-v199.css treats svc15 overlays as
