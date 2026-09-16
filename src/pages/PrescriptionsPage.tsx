@@ -384,11 +384,11 @@ export function PrescriptionsPage() {
         </div>
       )}
       {selectedPrescription && (
-        <div className="rx116-backdrop" role="presentation" onMouseDown={(event) => event.target === event.currentTarget && (setSelectedPrescription(null), setSelectedPatientId(null))}>
+        <div className="rx116-backdrop" role="presentation" onMouseDown={(event) => event.target === event.currentTarget && setSelectedPrescription(null)}>
           <section className="rx116-modal rx116-detail-modal" role="dialog" aria-modal="true" aria-labelledby="rx116-detail-title">
             <header className="rx116-head">
               <div><span className="eyebrow">Prescription details</span><h2 id="rx116-detail-title">{selectedPrescription.medication || 'Prescription'}</h2><p>{formatDate(selectedPrescription.prescriptionDate)} · {branchMap.get(selectedPrescription.branchId ?? '') ?? 'Branch not recorded'}</p></div>
-              <button type="button" aria-label="Close prescription details" onClick={() => { setSelectedPrescription(null); setSelectedPatientId(null) }}><X size={18} /></button>
+              <button type="button" aria-label="Close prescription details" onClick={() => setSelectedPrescription(null)}><X size={18} /></button>
             </header>
             <div className="rx116-detail-body">
               <div className="rx116-detail-grid">
@@ -405,7 +405,7 @@ export function PrescriptionsPage() {
               {error && <div className="rx116-error rx116-detail-error" role="alert">{error}</div>}
               {deleteConfirmOpen && <div className="rx116-delete-confirm" role="alertdialog" aria-labelledby="rx116-delete-title" aria-describedby="rx116-delete-copy"><div><strong id="rx116-delete-title">Delete this prescription?</strong><span id="rx116-delete-copy">It will be removed from this workspace and the patient portal.</span></div><div><Button variant="secondary" size="sm" onClick={() => setDeleteConfirmOpen(false)} disabled={statusBusy}>Cancel</Button><Button variant="danger" size="sm" onClick={() => void deletePrescription()} disabled={statusBusy}>{statusBusy ? 'Deleting...' : 'Delete prescription'}</Button></div></div>}
             </div>
-            <footer className="rx116-footer rx-prescription-detail-footer"><Button variant="secondary" onClick={() => { setSelectedPrescription(null); setSelectedPatientId(null); setDeleteConfirmOpen(false) }}>Close</Button>{canManagePrescriptions && effectiveStatus(selectedPrescription) !== 'voided' && <><Button variant="secondary" icon={<Pencil size={15} />} onClick={() => editPrescription(selectedPrescription)} disabled={statusBusy}>Edit</Button><Button variant="danger" icon={<Trash2 size={15} />} onClick={() => setDeleteConfirmOpen(true)} disabled={statusBusy}>Delete</Button><Button onClick={() => void changeStatus(effectiveStatus(selectedPrescription) === 'active' ? 'inactive' : 'active')} disabled={statusBusy}>{statusBusy ? 'Saving...' : effectiveStatus(selectedPrescription) === 'active' ? 'Mark inactive' : 'Mark active'}</Button></>}</footer>
+            <footer className="rx116-footer rx-prescription-detail-footer"><Button variant="secondary" onClick={() => { setSelectedPrescription(null); setDeleteConfirmOpen(false) }}>Close</Button>{canManagePrescriptions && effectiveStatus(selectedPrescription) !== 'voided' && <><Button variant="secondary" icon={<Pencil size={15} />} onClick={() => editPrescription(selectedPrescription)} disabled={statusBusy}>Edit</Button><Button variant="danger" icon={<Trash2 size={15} />} onClick={() => setDeleteConfirmOpen(true)} disabled={statusBusy}>Delete</Button><Button onClick={() => void changeStatus(effectiveStatus(selectedPrescription) === 'active' ? 'inactive' : 'active')} disabled={statusBusy}>{statusBusy ? 'Saving...' : effectiveStatus(selectedPrescription) === 'active' ? 'Mark inactive' : 'Mark active'}</Button></>}</footer>
           </section>
         </div>
       )}
