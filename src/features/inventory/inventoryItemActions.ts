@@ -47,6 +47,30 @@ function mapItem(item: InventoryItem) {
   }
 }
 
+async function assertInventoryItemCanBeDeactivated(itemId: string) {
+  if (isSupabaseConfigured && supabase) {
+    const { data, error } = await supabase
+      .from('branch_inventory')
+      .select('branch_id, quantity_on_hand')
+      .eq('inventory_item_id', itemId)
+
+    if (error) throw new Error(`Unable to verify inventory balance: ${error.message}`)
+
+    const stockedPosition = (data ?? []).find((row) => Math.abs(Number(row.quantity_on_hand ?? 0)) > 0.000001)
+    if (stockedPosition) {
+      throw new Error('This item still has stock on hand. Reduce all branch quantities to zero before archiving or deactivating it.')
+    }
+    return
+  }
+
+  const hasStockOnHand = readList<{ itemId: string; quantityOnHand?: number }>(BRANCH_STOCK_KEY)
+    .some((row) => row.itemId === itemId && Math.abs(Number(row.quantityOnHand ?? 0)) > 0.000001)
+
+  if (hasStockOnHand) {
+    throw new Error('This item still has stock on hand. Reduce all branch quantities to zero before archiving or deactivating it.')
+  }
+}
+
 export async function updateInventoryItemRecord(itemId: string, patch: Partial<Omit<InventoryItem, 'id' | 'createdAt'>>) {
   const items = readItems()
   const current = items.find((item) => item.id === itemId)
@@ -69,6 +93,10 @@ export async function updateInventoryItemRecord(itemId: string, patch: Partial<O
   if (!updated.categoryId) throw new Error('Category is required.')
   if (!Number.isFinite(updated.defaultReorderLevel) || updated.defaultReorderLevel < 0) throw new Error('Reorder level must be zero or greater.')
   if (updated.trackExpiry && (!Number.isInteger(updated.expiryWarningDays) || updated.expiryWarningDays <= 0)) throw new Error('Expiry warning days must be a positive whole number.')
+
+  if (current.status === 'active' && updated.status !== 'active') {
+    await assertInventoryItemCanBeDeactivated(itemId)
+  }
 
   if (isSupabaseConfigured && supabase) {
     const { data, error } = await supabase.from('inventory_items').update(mapItem(updated)).eq('id', itemId).select('id').maybeSingle()
@@ -110,6 +138,8 @@ export async function archiveInventoryItemRecord(itemId: string) {
   const current = items.find((item) => item.id === itemId)
   if (!current) throw new Error('Inventory item not found.')
   if (current.status === 'archived') return current
+
+  await assertInventoryItemCanBeDeactivated(itemId)
 
   const archived: InventoryItem = {
     ...current,
