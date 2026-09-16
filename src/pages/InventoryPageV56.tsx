@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { InventoryEnhancerV183 } from '../components/system/InventoryEnhancerV183'
+import { InventoryTransferWorkflowV226 } from '../components/system/InventoryTransferWorkflowV226'
 import { InventoryWorkflowEnhancerV225 } from '../components/system/InventoryWorkflowEnhancerV225'
 import { useBranchContext } from '../features/branches/BranchContext'
 import { refreshInventoryOperationalCaches } from '../features/inventory/inventoryPersistence'
@@ -96,5 +97,6 @@ export function InventoryPageV56() {
     <InventoryPageV182 key={revision} />
     <InventoryEnhancerV183 onInventoryChanged={refreshWorkspace} />
     <InventoryWorkflowEnhancerV225 onInventoryChanged={refreshWorkspace} />
+    <InventoryTransferWorkflowV226 />
   </>
 }
