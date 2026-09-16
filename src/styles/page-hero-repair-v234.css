@@ -1,0 +1,162 @@
+/* V234 — repair the page-header regressions introduced by layering a shared hero
+   on top of pages that already own a complete operational hero. Keep exactly one
+   page-level title surface and use semantic module icons instead of sparkle tiles. */
+
+/* Pages below already render their own full hero. PageScaffold remains useful for
+   layout/empty states, but its generated hero would duplicate the title and actions. */
+.app-shell .premium-page-scaffold:has(> .dr11-page > .dr11-command-header) > .portal-page-hero,
+.app-shell .premium-page-scaffold:has(> .tp80-page > .tp80-hero) > .portal-page-hero,
+.app-shell .premium-page-scaffold:has(> .svc15-page > .svc15-command) > .portal-page-hero,
+.app-shell .premium-page-scaffold:has(> .team-v26 > .team-v26-hero) > .portal-page-hero {
+  display: none !important;
+}
+
+/* A hero copy block must never become a second card inside its parent hero. */
+.app-shell [class*="-hero"] > .portal-card-heading-with-icon,
+.app-shell [class*="-header"] > .portal-card-heading-with-icon,
+.app-shell .clinical-standard-hero > .portal-card-heading-with-icon {
+  min-height: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  overflow: visible !important;
+}
+
+/* Unified single-card treatment. This intentionally avoids the card-inside-card
+   appearance visible on Appointments, Patients and Treatments. */
+.app-shell :is(
+  .tx43-hero,
+  .tp80-hero,
+  .dr11-command-header,
+  .svc15-command,
+  .team-v26-hero,
+  .bp153-header,
+  .ex161-hero,
+  .rep162-toolbar,
+  .sys58-hero
+) {
+  min-height: 112px !important;
+  padding: 20px 22px !important;
+  border: 1px solid #d7e4f5 !important;
+  border-radius: 20px !important;
+  background: linear-gradient(135deg, #fff 0%, #fbfdff 68%, #f2f7ff 100%) !important;
+  box-shadow: 0 10px 28px rgba(37, 99, 235, .055) !important;
+}
+
+/* Legacy operational heroes that do not have an icon element in JSX get one
+   semantic CSS icon. No generic sparkle icon is used. */
+.app-shell :is(.bp153-header,.ex161-hero,.svc15-command,.rep162-toolbar,.team-v26-hero,.sys58-hero) {
+  display: grid !important;
+  grid-template-columns: 52px minmax(0, 1fr) auto !important;
+  align-items: center !important;
+  gap: 15px !important;
+}
+
+.app-shell :is(.bp153-header,.ex161-hero,.svc15-command,.rep162-toolbar,.team-v26-hero,.sys58-hero)::before {
+  content: "" !important;
+  display: block !important;
+  width: 52px !important;
+  height: 52px !important;
+  border: 1px solid #c7dcff !important;
+  border-radius: 15px !important;
+  background-color: #eef5ff !important;
+  background-position: center !important;
+  background-repeat: no-repeat !important;
+  background-size: 23px 23px !important;
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,.72) !important;
+}
+
+/* Billing & Payments — receipt/card icon. */
+.app-shell .bp153-header::before {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%232563eb' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 6h16v12H4z'/%3E%3Cpath d='M4 10h16'/%3E%3Cpath d='M8 15h3'/%3E%3C/svg%3E") !important;
+}
+
+/* Expenses — wallet/finance icon. */
+.app-shell .ex161-hero::before {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%232563eb' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 7a2 2 0 0 1 2-2h12v14H6a2 2 0 0 1-2-2z'/%3E%3Cpath d='M15 11h5v4h-5a2 2 0 0 1 0-4z'/%3E%3C/svg%3E") !important;
+}
+
+/* Services — stethoscope icon. */
+.app-shell .svc15-command::before {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%232563eb' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 3v5a4 4 0 0 0 8 0V3'/%3E%3Cpath d='M10 12v3a4 4 0 0 0 8 0v-1'/%3E%3Ccircle cx='18' cy='11' r='2'/%3E%3C/svg%3E") !important;
+}
+
+/* Reports & Analytics — bar chart icon. */
+.app-shell .rep162-toolbar::before {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%232563eb' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 20V10'/%3E%3Cpath d='M10 20V4'/%3E%3Cpath d='M16 20v-7'/%3E%3Cpath d='M22 20H2'/%3E%3C/svg%3E") !important;
+}
+
+/* Team & Access — users/shield icon. */
+.app-shell .team-v26-hero::before {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%232563eb' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2'/%3E%3Ccircle cx='9' cy='7' r='4'/%3E%3Cpath d='M16 11l2 2 4-4'/%3E%3C/svg%3E") !important;
+}
+
+/* System Administration — shield/settings icon. */
+.app-shell .sys58-hero::before {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%232563eb' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 3l7 3v5c0 5-3 8-7 10-4-2-7-5-7-10V6z'/%3E%3Cpath d='M9 12l2 2 4-4'/%3E%3C/svg%3E") !important;
+}
+
+/* Place text/actions into the repaired three-column legacy heroes. */
+.app-shell .bp153-header > .bp153-title,
+.app-shell .ex161-hero > div:first-of-type,
+.app-shell .svc15-command > div:first-of-type,
+.app-shell .rep162-toolbar > .rep162-title-block,
+.app-shell .team-v26-hero > div:first-of-type,
+.app-shell .sys58-hero > div:first-of-type {
+  grid-column: 2 !important;
+  min-width: 0 !important;
+}
+
+.app-shell .bp153-header > .bp153-actions,
+.app-shell .ex161-hero > :last-child,
+.app-shell .svc15-command > .btn,
+.app-shell .rep162-toolbar > :last-child,
+.app-shell .team-v26-hero > .team-v26-hero-actions,
+.app-shell .sys58-hero > :last-child {
+  grid-column: 3 !important;
+  justify-self: end !important;
+}
+
+/* Do not render a second decorative sparkle from older unification layers. */
+.app-shell :is(.bp153-header,.ex161-hero,.svc15-command,.rep162-toolbar,.team-v26-hero,.sys58-hero)::after {
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+
+/* Keep eyebrow decoration restrained: one cue only, never doubled with an SVG sparkle. */
+.app-shell .portal-page-hero .eyebrow::before {
+  content: "✦";
+  margin-right: 5px;
+  color: #2563eb;
+}
+
+@media (max-width: 900px) {
+  .app-shell :is(.bp153-header,.ex161-hero,.svc15-command,.rep162-toolbar,.team-v26-hero,.sys58-hero) {
+    grid-template-columns: 48px minmax(0,1fr) !important;
+    padding: 17px !important;
+  }
+  .app-shell :is(.bp153-header,.ex161-hero,.svc15-command,.rep162-toolbar,.team-v26-hero,.sys58-hero)::before {
+    width: 48px !important;
+    height: 48px !important;
+  }
+  .app-shell .bp153-header > .bp153-actions,
+  .app-shell .ex161-hero > :last-child,
+  .app-shell .svc15-command > .btn,
+  .app-shell .rep162-toolbar > :last-child,
+  .app-shell .team-v26-hero > .team-v26-hero-actions,
+  .app-shell .sys58-hero > :last-child {
+    grid-column: 1 / -1 !important;
+    justify-self: start !important;
+    margin-top: 4px !important;
+  }
+}
+
+@media (max-width: 600px) {
+  .app-shell :is(.tx43-hero,.tp80-hero,.dr11-command-header,.svc15-command,.team-v26-hero,.bp153-header,.ex161-hero,.rep162-toolbar,.sys58-hero) {
+    min-height: 0 !important;
+    padding: 15px !important;
+    border-radius: 17px !important;
+  }
+}
