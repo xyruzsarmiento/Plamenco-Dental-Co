@@ -1,0 +1,88 @@
+/* Inventory modal centering v224
+   Loaded from InventoryPageV56. High-specificity selectors intentionally beat
+   the global mobile bottom-sheet rules without changing other workspaces. */
+
+html body:has(.page-inventory) .inv56-backdrop,
+html body:has(.page-inventory) .inv182-modal-backdrop {
+  position: fixed !important;
+  inset: 0 !important;
+  display: grid !important;
+  place-items: center !important;
+  align-items: center !important;
+  justify-items: center !important;
+  width: 100vw !important;
+  height: 100dvh !important;
+  padding: 16px !important;
+  overflow: hidden !important;
+}
+
+html body:has(.page-inventory) .inv56-backdrop > [role="dialog"],
+html body:has(.page-inventory) .inv182-modal-backdrop > [role="dialog"],
+html body:has(.page-inventory) .inv56-backdrop > .inventory-action-modal,
+html body:has(.page-inventory) .inv182-modal-backdrop > .inv182-add-modal,
+html body:has(.page-inventory) .inv182-modal-backdrop > .inv183-manage-modal {
+  align-self: center !important;
+  justify-self: center !important;
+  margin: 0 !important;
+  margin-top: 0 !important;
+  margin-bottom: 0 !important;
+  max-height: calc(100dvh - 32px) !important;
+  border-radius: 18px !important;
+}
+
+@media (max-width: 640px) {
+  html body:has(.page-inventory) .inv56-backdrop,
+  html body:has(.page-inventory) .inv182-modal-backdrop {
+    place-items: center !important;
+    align-items: center !important;
+    justify-items: center !important;
+    padding:
+      max(12px, env(safe-area-inset-top))
+      12px
+      max(12px, env(safe-area-inset-bottom)) !important;
+  }
+
+  html body:has(.page-inventory) .inv56-backdrop > [role="dialog"],
+  html body:has(.page-inventory) .inv182-modal-backdrop > [role="dialog"],
+  html body:has(.page-inventory) .inv56-backdrop > .inventory-action-modal,
+  html body:has(.page-inventory) .inv182-modal-backdrop > .inv182-add-modal,
+  html body:has(.page-inventory) .inv182-modal-backdrop > .inv183-manage-modal {
+    align-self: center !important;
+    justify-self: stretch !important;
+    width: 100% !important;
+    max-width: 640px !important;
+    height: auto !important;
+    max-height: calc(100dvh - 24px - env(safe-area-inset-top) - env(safe-area-inset-bottom)) !important;
+    margin: 0 !important;
+    border-radius: 16px !important;
+    overflow: hidden !important;
+  }
+}
+
+.inv224-database-gate {
+  min-height: 280px;
+  display: grid;
+  place-items: center;
+  padding: 28px;
+}
+
+.inv224-database-gate > div {
+  width: min(560px, 100%);
+  padding: 22px;
+  border: 1px solid #dce6f1;
+  border-radius: 16px;
+  background: #fff;
+  text-align: center;
+}
+
+.inv224-database-gate strong,
+.inv224-database-gate span {
+  display: block;
+}
+
+.inv224-database-gate span {
+  margin-top: 6px;
+  color: #64748b;
+  font-size: 12px;
+  line-height: 1.5;
+}
