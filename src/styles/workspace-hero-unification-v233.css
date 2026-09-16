@@ -1,0 +1,416 @@
+/* V233 — One premium page-hero language across Super Admin, Dentist, and Staff.
+   Documents is the visual reference: soft blue shell, icon tile, sparkle eyebrow,
+   compact hierarchy, balanced contextual actions, and responsive stacking. */
+
+.app-shell .content-area {
+  --hero233-border:#d5e3f7;
+  --hero233-bg:linear-gradient(135deg,#ffffff 0%,#f9fbff 67%,#eef5ff 100%);
+  --hero233-ink:#0f172a;
+  --hero233-muted:#5f6f86;
+  --hero233-blue:#2563eb;
+  --hero233-blue-soft:#edf4ff;
+  --hero233-shadow:0 14px 34px rgba(37,99,235,.065);
+}
+
+/* Existing shared card headings already used by Patient Records and several role-shared pages. */
+.app-shell .portal-card.portal-card-heading,
+.app-shell .portal-card-heading-with-icon {
+  position:relative;
+  overflow:hidden;
+  min-height:116px;
+  padding:22px 24px!important;
+  border:1px solid var(--hero233-border)!important;
+  border-radius:22px!important;
+  background:var(--hero233-bg)!important;
+  box-shadow:var(--hero233-shadow)!important;
+}
+
+.app-shell .portal-card-heading-with-icon {
+  display:grid!important;
+  grid-template-columns:54px minmax(0,1fr) auto!important;
+  grid-template-rows:auto!important;
+  align-items:center!important;
+  column-gap:16px!important;
+}
+
+.app-shell .portal-card-heading-with-icon > .portal-card-heading-icon,
+.app-shell .portal-card-heading-with-icon > .portal-heading-icon {
+  grid-column:1!important;
+  grid-row:1!important;
+  display:grid!important;
+  place-items:center!important;
+  width:54px!important;
+  height:54px!important;
+  margin:0!important;
+  padding:0!important;
+  border:1px solid #c7dcff!important;
+  border-radius:16px!important;
+  background:var(--hero233-blue-soft)!important;
+  color:var(--hero233-blue)!important;
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.65)!important;
+}
+
+.app-shell .portal-card-heading-with-icon > .portal-card-heading-copy {
+  grid-column:2!important;
+  grid-row:1!important;
+  align-self:center!important;
+  min-width:0!important;
+}
+
+.app-shell .portal-card-heading-with-icon > .portal-card-heading-actions {
+  grid-column:3!important;
+  grid-row:1!important;
+  align-self:center!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:flex-end!important;
+  gap:9px!important;
+  flex-wrap:wrap!important;
+  min-width:0!important;
+}
+
+/* Current bespoke heroes. These are shared routes, so this reaches every internal role portal. */
+.app-shell :is(
+  .bp153-header,
+  .ex161-hero,
+  .svc15-command,
+  .rep162-toolbar,
+  .branches-v27-hero,
+  .settings-v30-hero,
+  .sys58-hero,
+  .team-v26-hero,
+  .patients36-hero,
+  .inventory-v22-hero,
+  .inventory56-all-hero,
+  .inv121-hero,
+  .sav56-hero,
+  .rv56-hero,
+  .tx43-hero,
+  .tp80-hero,
+  .forms-v28-hero,
+  .dv108-hero,
+  .notifications-v25-hero,
+  .prescriptions-hero,
+  .bill14-command-header,
+  .dr11-command-header
+) {
+  position:relative!important;
+  isolation:isolate!important;
+  overflow:hidden!important;
+  min-height:116px!important;
+  padding:22px 24px!important;
+  border:1px solid var(--hero233-border)!important;
+  border-radius:22px!important;
+  background:var(--hero233-bg)!important;
+  box-shadow:var(--hero233-shadow)!important;
+}
+
+/* Add the Documents-style visual anchor where a legacy hero has no icon tile in markup. */
+.app-shell :is(.bp153-header,.ex161-hero,.svc15-command,.rep162-toolbar) {
+  display:grid!important;
+  grid-template-columns:54px minmax(0,1fr) auto!important;
+  align-items:center!important;
+  gap:16px!important;
+}
+
+.app-shell :is(.bp153-header,.ex161-hero,.svc15-command,.rep162-toolbar)::before {
+  content:"";
+  display:block;
+  width:54px;
+  height:54px;
+  border:1px solid #c7dcff;
+  border-radius:16px;
+  background-color:var(--hero233-blue-soft);
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%232563eb' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 3l1.2 3.2L16.5 7.5l-3.3 1.3L12 12l-1.2-3.2-3.3-1.3 3.3-1.3L12 3z'/%3E%3Cpath d='M6 13l.8 2.2L9 16l-2.2.8L6 19l-.8-2.2L3 16l2.2-.8L6 13z'/%3E%3Cpath d='M18 12l.9 2.4 2.4.9-2.4.9L18 18.6l-.9-2.4-2.4-.9 2.4-.9L18 12z'/%3E%3C/svg%3E");
+  background-position:center;
+  background-repeat:no-repeat;
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.7);
+}
+
+.app-shell .bp153-header > .bp153-title,
+.app-shell .ex161-hero > div:first-of-type,
+.app-shell .svc15-command > div:first-of-type,
+.app-shell .rep162-toolbar > .rep162-title-block {
+  grid-column:2!important;
+  min-width:0!important;
+}
+
+.app-shell .bp153-header > .bp153-actions,
+.app-shell .ex161-hero > :last-child,
+.app-shell .svc15-command > .btn,
+.app-shell .rep162-toolbar > :last-child {
+  grid-column:3!important;
+  justify-self:end!important;
+}
+
+/* Documents stays canonical, but normalize dimensions so every page feels like the same system. */
+.app-shell .doc132-hero {
+  min-height:116px!important;
+  padding:22px 24px!important;
+  border:1px solid var(--hero233-border)!important;
+  border-radius:22px!important;
+  background:var(--hero233-bg)!important;
+  box-shadow:var(--hero233-shadow)!important;
+}
+.app-shell .doc132-hero::after { opacity:.55!important; }
+.app-shell .doc132-hero-icon { width:54px!important;height:54px!important;border-radius:16px!important;background:var(--hero233-blue-soft)!important;box-shadow:inset 0 0 0 1px #c7dcff!important; }
+
+/* Profile remains identity-first: preserve avatar, unify only the shell and action language. */
+.app-shell .internal-profile-hero,
+.app-shell [class*="profile-hero"] {
+  border:1px solid var(--hero233-border)!important;
+  border-radius:22px!important;
+  background:var(--hero233-bg)!important;
+  box-shadow:var(--hero233-shadow)!important;
+}
+
+/* Typography and the small sparkle cue from Documents. */
+.app-shell :is(
+  .portal-card-kicker,
+  .bp153-title > span:first-child,
+  .ex161-hero > div:first-child > span:first-child,
+  .svc15-command > div:first-child > span:first-child,
+  .rep162-eyebrow,
+  .branches-v27-eyebrow,
+  .settings-v30-eyebrow,
+  .sys58-kicker,
+  .team-v26-kicker,
+  .patients36-hero-copy > span:first-child,
+  .inventory-v22-kicker,
+  .internal-profile-kicker,
+  .sav56-eyebrow,
+  .tx43-eyebrow,
+  .tp80-eyebrow,
+  .forms-v28-kicker,
+  .dv108-eyebrow,
+  .notifications-v25-kicker,
+  .prescriptions-hero .eyebrow,
+  .bill14-kicker,
+  .dr11-kicker
+) {
+  display:inline-flex!important;
+  align-items:center!important;
+  gap:6px!important;
+  margin:0 0 5px!important;
+  color:var(--hero233-blue)!important;
+  font-size:10px!important;
+  font-weight:900!important;
+  letter-spacing:.085em!important;
+  line-height:1.2!important;
+  text-transform:uppercase!important;
+}
+
+.app-shell :is(
+  .portal-card-kicker,
+  .bp153-title > span:first-child,
+  .ex161-hero > div:first-child > span:first-child,
+  .svc15-command > div:first-child > span:first-child,
+  .rep162-eyebrow,
+  .branches-v27-eyebrow,
+  .settings-v30-eyebrow,
+  .sys58-kicker,
+  .team-v26-kicker,
+  .patients36-hero-copy > span:first-child,
+  .inventory-v22-kicker,
+  .internal-profile-kicker,
+  .sav56-eyebrow,
+  .tx43-eyebrow,
+  .tp80-eyebrow,
+  .forms-v28-kicker,
+  .dv108-eyebrow,
+  .notifications-v25-kicker,
+  .prescriptions-hero .eyebrow,
+  .bill14-kicker,
+  .dr11-kicker
+)::before {
+  content:"✦";
+  color:var(--hero233-blue);
+  font-size:11px;
+  line-height:1;
+  letter-spacing:0;
+}
+
+.app-shell :is(
+  .portal-card-heading,
+  .bp153-header,
+  .ex161-hero,
+  .svc15-command,
+  .rep162-toolbar,
+  .branches-v27-hero,
+  .settings-v30-hero,
+  .sys58-hero,
+  .team-v26-hero,
+  .patients36-hero,
+  .inventory-v22-hero,
+  .inventory56-all-hero,
+  .inv121-hero,
+  .sav56-hero,
+  .rv56-hero,
+  .tx43-hero,
+  .tp80-hero,
+  .forms-v28-hero,
+  .dv108-hero,
+  .notifications-v25-hero,
+  .prescriptions-hero,
+  .bill14-command-header,
+  .dr11-command-header,
+  .doc132-hero
+) :is(h1,h2) {
+  margin:0!important;
+  color:var(--hero233-ink)!important;
+  font-size:clamp(1.65rem,2.1vw,2.15rem)!important;
+  font-weight:780!important;
+  line-height:1.08!important;
+  letter-spacing:-.025em!important;
+}
+
+.app-shell :is(
+  .portal-card-heading,
+  .bp153-header,
+  .ex161-hero,
+  .svc15-command,
+  .rep162-toolbar,
+  .branches-v27-hero,
+  .settings-v30-hero,
+  .sys58-hero,
+  .team-v26-hero,
+  .patients36-hero,
+  .inventory-v22-hero,
+  .inventory56-all-hero,
+  .inv121-hero,
+  .sav56-hero,
+  .rv56-hero,
+  .tx43-hero,
+  .tp80-hero,
+  .forms-v28-hero,
+  .dv108-hero,
+  .notifications-v25-hero,
+  .prescriptions-hero,
+  .bill14-command-header,
+  .dr11-command-header,
+  .doc132-hero
+) p {
+  max-width:780px!important;
+  margin:6px 0 0!important;
+  color:var(--hero233-muted)!important;
+  font-size:13px!important;
+  font-weight:500!important;
+  line-height:1.5!important;
+}
+
+/* Context pills and right-side utility panels should read as secondary, never as a second hero. */
+.app-shell :is(
+  .doc132-context,
+  .rep162-scope,
+  .portal-page-hero-metric,
+  .branches-v27-health,
+  .team-v26-owner,
+  .sys58-hero-card
+) {
+  border:1px solid #d6e3f3!important;
+  border-radius:13px!important;
+  background:rgba(255,255,255,.88)!important;
+  box-shadow:0 7px 18px rgba(15,23,42,.035)!important;
+}
+
+/* Consistent actions across every internal role. */
+.app-shell :is(
+  .portal-card-heading-actions,
+  .bp153-actions,
+  .ex161-hero-actions,
+  .doc132-hero-actions,
+  .rep162-toolbar-actions,
+  .portal-page-hero-actions
+) .btn,
+.app-shell :is(.svc15-command,.branches-v27-hero,.settings-v30-hero,.sys58-hero,.team-v26-hero,.patients36-hero,.inventory-v22-hero,.inv121-hero,.sav56-hero,.rv56-hero) .btn {
+  min-height:40px!important;
+  padding-inline:14px!important;
+  border-radius:11px!important;
+  font-size:12px!important;
+  font-weight:760!important;
+  white-space:nowrap!important;
+}
+
+/* Remove older oversized decorative bubbles: the Documents-style surface is the decoration. */
+.app-shell :is(
+  .bp153-header,
+  .ex161-hero,
+  .svc15-command,
+  .rep162-toolbar,
+  .branches-v27-hero,
+  .settings-v30-hero,
+  .sys58-hero,
+  .team-v26-hero,
+  .patients36-hero,
+  .inventory-v22-hero,
+  .inventory56-all-hero,
+  .inv121-hero,
+  .sav56-hero,
+  .rv56-hero,
+  .tx43-hero,
+  .tp80-hero,
+  .forms-v28-hero,
+  .dv108-hero,
+  .notifications-v25-hero,
+  .prescriptions-hero,
+  .bill14-command-header,
+  .dr11-command-header
+)::after {
+  opacity:0!important;
+  pointer-events:none!important;
+}
+
+@media (max-width:980px) {
+  .app-shell :is(.bp153-header,.ex161-hero,.svc15-command,.rep162-toolbar) {
+    grid-template-columns:50px minmax(0,1fr)!important;
+    gap:14px!important;
+  }
+  .app-shell :is(.bp153-header,.ex161-hero,.svc15-command,.rep162-toolbar)::before {
+    width:50px;height:50px;border-radius:15px;
+  }
+  .app-shell .bp153-header > .bp153-actions,
+  .app-shell .ex161-hero > :last-child,
+  .app-shell .svc15-command > .btn,
+  .app-shell .rep162-toolbar > :last-child {
+    grid-column:1/-1!important;
+    justify-self:start!important;
+    width:auto!important;
+  }
+  .app-shell .portal-card-heading-with-icon {
+    grid-template-columns:50px minmax(0,1fr)!important;
+  }
+  .app-shell .portal-card-heading-with-icon > .portal-card-heading-icon,
+  .app-shell .portal-card-heading-with-icon > .portal-heading-icon { width:50px!important;height:50px!important;border-radius:15px!important; }
+  .app-shell .portal-card-heading-with-icon > .portal-card-heading-actions { grid-column:1/-1!important;grid-row:2!important;justify-content:flex-start!important;margin-top:12px!important; }
+}
+
+@media (max-width:640px) {
+  .app-shell .portal-card.portal-card-heading,
+  .app-shell .portal-card-heading-with-icon,
+  .app-shell :is(.bp153-header,.ex161-hero,.svc15-command,.rep162-toolbar,.branches-v27-hero,.settings-v30-hero,.sys58-hero,.team-v26-hero,.patients36-hero,.inventory-v22-hero,.inventory56-all-hero,.inv121-hero,.sav56-hero,.rv56-hero,.tx43-hero,.tp80-hero,.forms-v28-hero,.dv108-hero,.notifications-v25-hero,.prescriptions-hero,.bill14-command-header,.dr11-command-header,.doc132-hero) {
+    min-height:0!important;
+    padding:16px!important;
+    border-radius:18px!important;
+  }
+  .app-shell :is(.bp153-header,.ex161-hero,.svc15-command,.rep162-toolbar) {
+    grid-template-columns:44px minmax(0,1fr)!important;
+    column-gap:12px!important;
+  }
+  .app-shell :is(.bp153-header,.ex161-hero,.svc15-command,.rep162-toolbar)::before {
+    width:44px;height:44px;border-radius:13px;background-size:20px;
+  }
+  .app-shell .portal-card-heading-with-icon { grid-template-columns:44px minmax(0,1fr)!important;column-gap:12px!important; }
+  .app-shell .portal-card-heading-with-icon > .portal-card-heading-icon,
+  .app-shell .portal-card-heading-with-icon > .portal-heading-icon { width:44px!important;height:44px!important;border-radius:13px!important; }
+  .app-shell :is(.portal-card-heading,.bp153-header,.ex161-hero,.svc15-command,.rep162-toolbar,.branches-v27-hero,.settings-v30-hero,.sys58-hero,.team-v26-hero,.patients36-hero,.inventory-v22-hero,.inventory56-all-hero,.inv121-hero,.sav56-hero,.rv56-hero,.doc132-hero) :is(h1,h2) {
+    font-size:clamp(1.45rem,7vw,1.8rem)!important;
+  }
+  .app-shell :is(.portal-card-heading-actions,.bp153-actions,.ex161-hero-actions,.doc132-hero-actions,.rep162-toolbar-actions,.portal-page-hero-actions) {
+    width:100%!important;
+    justify-content:flex-start!important;
+  }
+  .app-shell :is(.portal-card-heading-actions,.bp153-actions,.ex161-hero-actions,.doc132-hero-actions,.rep162-toolbar-actions,.portal-page-hero-actions) .btn {
+    flex:1 1 145px!important;
+    justify-content:center!important;
+  }
+}
