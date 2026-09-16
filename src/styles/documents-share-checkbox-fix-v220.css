@@ -1,0 +1,61 @@
+/* Documents upload checkbox correction.
+ *
+ * Root cause: documents-upload-premium-v191.css applies text-field dimensions
+ * (including min-height: 44px) to every input inside .document-upload-panel-v10.
+ * The active Documents upload modal is .doc149-upload-modal, so the earlier
+ * .documents-v10-upload-panel-scoped override never matched this route. Keep
+ * text fields unchanged while restoring native checkbox dimensions here.
+ */
+
+.app-shell .doc149-upload-modal .document-share-toggle-v10,
+.app-shell .document-upload-panel-v10 .document-share-toggle-v10 {
+  display: grid !important;
+  grid-template-columns: 18px 34px minmax(0, 1fr) !important;
+  align-items: center !important;
+  gap: 10px !important;
+  min-width: 0 !important;
+}
+
+.app-shell .doc149-upload-modal .document-share-toggle-v10 > input[type='checkbox'],
+.app-shell .document-upload-panel-v10 .document-share-toggle-v10 > input[type='checkbox'] {
+  appearance: auto !important;
+  -webkit-appearance: checkbox !important;
+  inline-size: 18px !important;
+  block-size: 18px !important;
+  width: 18px !important;
+  min-width: 18px !important;
+  max-width: 18px !important;
+  height: 18px !important;
+  min-height: 18px !important;
+  max-height: 18px !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  border-radius: 3px !important;
+  flex: 0 0 18px !important;
+  align-self: center !important;
+  justify-self: center !important;
+  box-shadow: none !important;
+  transform: none !important;
+}
+
+.app-shell .doc149-upload-modal .document-share-toggle-v10 > span:last-child,
+.app-shell .document-upload-panel-v10 .document-share-toggle-v10 > span:last-child {
+  min-width: 0 !important;
+}
+
+@media (max-width: 520px) {
+  .app-shell .doc149-upload-modal .document-share-toggle-v10,
+  .app-shell .document-upload-panel-v10 .document-share-toggle-v10 {
+    grid-template-columns: 18px 30px minmax(0, 1fr) !important;
+    gap: 8px !important;
+    padding: 11px 12px !important;
+  }
+
+  .app-shell .doc149-upload-modal .document-share-icon-v10,
+  .app-shell .document-upload-panel-v10 .document-share-icon-v10 {
+    width: 30px !important;
+    height: 30px !important;
+    min-width: 30px !important;
+    min-height: 30px !important;
+  }
+}
