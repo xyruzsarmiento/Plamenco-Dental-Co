@@ -5,6 +5,7 @@ import { InventoryHistoricalAnalyticsV230 } from '../components/system/Inventory
 import { InventoryMovementLedgerV228 } from '../components/system/InventoryMovementLedgerV228'
 import { InventoryReorderCenterV229 } from '../components/system/InventoryReorderCenterV229'
 import { InventoryTransferWorkflowV226 } from '../components/system/InventoryTransferWorkflowV226'
+import { InventoryValuationSnapshotsV231 } from '../components/system/InventoryValuationSnapshotsV231'
 import { InventoryWorkflowEnhancerV225 } from '../components/system/InventoryWorkflowEnhancerV225'
 import { useBranchContext } from '../features/branches/BranchContext'
 import { refreshInventoryOperationalCaches } from '../features/inventory/inventoryPersistence'
@@ -103,5 +104,6 @@ export function InventoryPageV56() {
     <InventoryMovementLedgerV228 />
     <InventoryReorderCenterV229 />
     <InventoryHistoricalAnalyticsV230 />
+    <InventoryValuationSnapshotsV231 />
   </>
 }
