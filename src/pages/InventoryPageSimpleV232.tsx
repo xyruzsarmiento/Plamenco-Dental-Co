@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
 import {
+  AlertCircle,
   ArrowDownToLine,
   ArrowRightLeft,
   ArrowUpFromLine,
@@ -138,7 +139,8 @@ export function InventoryPageSimpleV232({ onInventoryChanged }: { onInventoryCha
 
     return <section className="inv232-page">
       <header className="inv232-header">
-        <div><span>Inventory</span><h1>Choose a branch</h1><p>Open one location to check stock, record supplies coming in, or record items being used.</p></div>
+        <div className="inv232-header-mark"><Package size={22}/></div>
+        <div className="inv232-header-copy"><span>Inventory</span><h1>Choose a branch</h1><p>Open one location to check stock, record supplies coming in, or record items being used.</p></div>
       </header>
       <div className="inv232-branch-grid">
         {branchSummaries.map(({ branch, items: itemCount, units, low, out }) => <button key={branch.id} type="button" className="inv232-branch-card" onClick={() => setActiveBranch(branch.id)}>
@@ -156,21 +158,17 @@ export function InventoryPageSimpleV232({ onInventoryChanged }: { onInventoryCha
 
   return <section className="inv232-page">
     <header className="inv232-header">
-      <div><span>Branch inventory</span><h1>Inventory</h1><p>See what is on hand at <strong>{activeBranch.name}</strong> and record stock changes without dealing with unnecessary workflow screens.</p></div>
-      {permissions.can('inventory.create_item') && <Button onClick={() => setDialog({ type: 'add_item' })}><PackagePlus size={16}/> Add item</Button>}
+      <div className="inv232-header-mark"><Package size={22}/></div>
+      <div className="inv232-header-copy"><span>Inventory</span><h1>Manage clinic stock</h1><p>Track supplies and materials for <strong>{activeBranch.name}</strong>.</p></div>
+      <div className="inv232-header-actions">{permissions.can('inventory.create_item') && <Button onClick={() => setDialog({ type: 'add_item' })}><PackagePlus size={16}/> Add item</Button>}</div>
     </header>
 
     <section className="inv232-summary" aria-label="Inventory summary">
       <article><i><Package size={18}/></i><div><span>Items</span><strong>{branchRows.length}</strong></div></article>
       <article><i><Boxes size={18}/></i><div><span>Units on hand</span><strong>{totalUnits.toLocaleString('en-PH', { maximumFractionDigits: 3 })}</strong></div></article>
-      <article className={lowRows.length ? 'is-warning' : ''}><i><PackageMinus size={18}/></i><div><span>Low stock</span><strong>{lowRows.length}</strong></div></article>
-      <article className={outRows.length ? 'is-danger' : ''}><i><PackageX size={18}/></i><div><span>Out of stock</span><strong>{outRows.length}</strong></div></article>
+      <article><i><PackageMinus size={18}/></i><div><span>Low stock</span><strong>{lowRows.length}</strong></div></article>
+      <article><i><PackageX size={18}/></i><div><span>Out of stock</span><strong>{outRows.length}</strong></div></article>
     </section>
-
-    {(lowRows.length > 0 || outRows.length > 0) && <section className="inv232-attention">
-      <div><span>Needs attention</span><strong>{outRows.length ? `${outRows.length} out of stock` : `${lowRows.length} low-stock item${lowRows.length === 1 ? '' : 's'}`}</strong><p>Restock these supplies before they affect clinic operations.</p></div>
-      <div className="inv232-attention-list">{[...outRows, ...lowRows].slice(0, 4).map(({ item, stock }) => <button key={stock.id} type="button" onClick={() => setDialog({ type: 'stock_in', item })}><span>{item.name}</span><b>{Number(stock.quantityOnHand || 0).toLocaleString('en-PH')} on hand</b><em>+ Stock in</em></button>)}</div>
-    </section>}
 
     <div className="inv232-toolbar">
       <nav aria-label="Inventory views"><button type="button" className={tab === 'stock' ? 'is-active' : ''} onClick={() => setTab('stock')}>Stock</button><button type="button" className={tab === 'activity' ? 'is-active' : ''} onClick={() => setTab('activity')}>Activity</button></nav>
@@ -178,7 +176,11 @@ export function InventoryPageSimpleV232({ onInventoryChanged }: { onInventoryCha
     </div>
 
     {tab === 'stock' && <section className="inv232-panel">
-      <header><div><span>Current stock</span><h2>Supplies and materials</h2><p>Use Stock in when supplies arrive. Use Stock out when supplies are used, damaged, expired, or otherwise removed.</p></div><b>{filteredRows.length} item{filteredRows.length === 1 ? '' : 's'}</b></header>
+      <header><div><span>Current stock</span><h2>Supplies and materials</h2><p>Use Stock in when supplies arrive. Use Stock out when supplies are used or removed.</p></div><b>{filteredRows.length} item{filteredRows.length === 1 ? '' : 's'}</b></header>
+      {(lowRows.length > 0 || outRows.length > 0) && <div className="inv232-risk-strip">
+        <div className="inv232-risk-copy"><i><AlertCircle size={17}/></i><div><strong>Stock needs attention</strong><span>{outRows.length > 0 ? `${outRows.length} out of stock` : `${lowRows.length} low-stock item${lowRows.length === 1 ? '' : 's'}`}</span></div></div>
+        <div className="inv232-risk-items">{[...outRows, ...lowRows].slice(0, 4).map(({ item, stock }) => <button key={stock.id} type="button" onClick={() => setDialog({ type: 'stock_in', item })}><span>{item.name}</span><b>{Number(stock.quantityOnHand || 0).toLocaleString('en-PH')} on hand</b><em>Stock in</em></button>)}</div>
+      </div>}
       <div className="inv232-stock-list">
         {filteredRows.map(({ item, stock }) => {
           const status = getStockStatus(stock)
