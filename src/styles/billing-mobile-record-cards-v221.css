@@ -236,6 +236,57 @@
     overscroll-behavior: contain !important;
     -webkit-overflow-scrolling: touch !important;
   }
+
+  /* Invoice-line mobile composition.
+   * The remove button was left to CSS grid auto-placement, so after the fields
+   * wrapped it dropped into the first column at the bottom of the card. Reserve
+   * the right-hand control column on the first row and pin remove beside Service.
+   */
+  .bp153-invoice-dialog .bp153-service-line-row {
+    grid-template-columns: 28px minmax(0, 1fr) 36px !important;
+    align-items: center !important;
+  }
+
+  .bp153-invoice-dialog .bp153-service-line-row > span:first-child {
+    grid-column: 1 !important;
+    grid-row: 1 !important;
+    align-self: center !important;
+  }
+
+  .bp153-invoice-dialog .bp153-service-line-row > select {
+    grid-column: 2 !important;
+    grid-row: 1 !important;
+  }
+
+  .bp153-invoice-dialog .bp153-service-line-row > button:last-child {
+    grid-column: 3 !important;
+    grid-row: 1 !important;
+    align-self: center !important;
+    justify-self: end !important;
+    width: 34px !important;
+    height: 34px !important;
+    margin: 0 !important;
+  }
+
+  .bp153-invoice-dialog .bp153-service-line-row > input:first-of-type {
+    grid-column: 2 / -1 !important;
+    grid-row: 2 !important;
+  }
+
+  .bp153-invoice-dialog .bp153-service-line-row > input:nth-of-type(2) {
+    grid-column: 2 / -1 !important;
+    grid-row: 3 !important;
+  }
+
+  .bp153-invoice-dialog .bp153-service-line-row > input:nth-of-type(3) {
+    grid-column: 2 / -1 !important;
+    grid-row: 4 !important;
+  }
+
+  .bp153-invoice-dialog .bp153-service-line-row > input:nth-of-type(4) {
+    grid-column: 2 / -1 !important;
+    grid-row: 5 !important;
+  }
 }
 
 @media (max-width: 420px) {
