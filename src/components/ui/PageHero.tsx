@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react'
+import { Sparkles } from 'lucide-react'
 import { Badge } from './Badge'
 
 type PageHeroProps = {
@@ -37,10 +38,10 @@ export function PageHero({
   return (
     <header className={`portal-page-hero premium-page-header ${className}`.trim()}>
       <div className="portal-page-hero-copy">
-        {icon && <span className="portal-page-hero-icon" aria-hidden="true">{icon}</span>}
+        <span className="portal-page-hero-icon" aria-hidden="true">{icon ?? <Sparkles size={21} />}</span>
         <div className="portal-page-hero-text">
           <div className="portal-page-hero-meta">
-            {eyebrow && <p className="eyebrow">{eyebrow}</p>}
+            {eyebrow && <p className="eyebrow"><Sparkles size={11} aria-hidden="true" />{eyebrow}</p>}
             {status && <Badge tone="info">{status}</Badge>}
           </div>
           <h2>{title}</h2>
