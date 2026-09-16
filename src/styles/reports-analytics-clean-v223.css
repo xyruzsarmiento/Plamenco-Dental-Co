@@ -1,0 +1,510 @@
+/* Reports & Analytics v223 — clean clinic UI, shared by super admin, dentist, and staff portals.
+ * Presentation-only override. Keeps the existing live report data, permissions, exports, and RPCs intact.
+ */
+
+.rep162.rep163 {
+  --r-blue: #2563eb;
+  --r-blue-700: #1d4ed8;
+  --r-blue-100: #dbeafe;
+  --r-blue-50: #eff6ff;
+  --r-ink: #111827;
+  --r-text: #334155;
+  --r-muted: #64748b;
+  --r-border: #dbe5f0;
+  --r-border-soft: #e9eff6;
+  --r-panel: #ffffff;
+  --r-soft: #f8fafc;
+  gap: 14px !important;
+  color: var(--r-ink) !important;
+}
+
+.rep162.rep163 * { box-sizing: border-box; }
+.rep162.rep163 h2,
+.rep162.rep163 h3,
+.rep162.rep163 strong { color: var(--r-ink); }
+.rep162.rep163 p,
+.rep162.rep163 small { color: var(--r-muted); }
+
+/* Page intro: intentionally simple, no gradients or decorative blobs. */
+.rep162.rep163 .rep162-toolbar {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 18px !important;
+  padding: 18px 20px !important;
+  border: 1px solid var(--r-border) !important;
+  border-radius: 14px !important;
+  background: var(--r-panel) !important;
+  box-shadow: none !important;
+  overflow: visible !important;
+}
+.rep162.rep163 .rep162-toolbar::before,
+.rep162.rep163 .rep162-toolbar::after,
+.rep162.rep163 .rep162-trend-card::after { display: none !important; }
+.rep162.rep163 .rep162-title-block { max-width: 760px !important; }
+.rep162.rep163 .rep162-eyebrow {
+  margin: 0 0 4px !important;
+  color: var(--r-blue) !important;
+  font-size: 10px !important;
+  font-weight: 850 !important;
+  letter-spacing: .075em !important;
+  text-transform: uppercase !important;
+}
+.rep162.rep163 .rep162-title-block h2 {
+  margin: 0 !important;
+  font-size: clamp(22px, 2.2vw, 30px) !important;
+  line-height: 1.12 !important;
+  letter-spacing: -.025em !important;
+}
+.rep162.rep163 .rep162-title-block p {
+  max-width: 680px !important;
+  margin-top: 6px !important;
+  font-size: 12px !important;
+  line-height: 1.5 !important;
+}
+.rep162.rep163 .rep162-toolbar-actions {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-end !important;
+  gap: 8px !important;
+  flex-wrap: wrap !important;
+}
+.rep162.rep163 .rep162-scope {
+  min-height: 38px !important;
+  max-width: 320px !important;
+  padding: 0 11px !important;
+  border: 1px solid var(--r-border) !important;
+  border-radius: 9px !important;
+  background: #fff !important;
+  color: var(--r-text) !important;
+  box-shadow: none !important;
+  font-size: 11px !important;
+  font-weight: 750 !important;
+}
+.rep162.rep163 .rep162-export .btn {
+  min-height: 38px !important;
+  border-radius: 9px !important;
+  box-shadow: none !important;
+}
+.rep162.rep163 .rep162-export-menu {
+  width: 270px !important;
+  padding: 6px !important;
+  border: 1px solid var(--r-border) !important;
+  border-radius: 11px !important;
+  box-shadow: 0 16px 40px rgba(15,23,42,.14) !important;
+}
+
+/* Report controls read as one coherent toolbar instead of separate AI cards. */
+.rep162.rep163 .rep162-filterbar {
+  display: grid !important;
+  grid-template-columns: minmax(170px,.85fr) minmax(180px,.9fr) minmax(330px,1.35fr) 42px !important;
+  gap: 10px !important;
+  align-items: end !important;
+  padding: 12px !important;
+  border: 1px solid var(--r-border) !important;
+  border-radius: 12px !important;
+  background: #fff !important;
+  box-shadow: none !important;
+}
+.rep162.rep163 .rep162-filterbar label { gap: 5px !important; }
+.rep162.rep163 .rep162-filterbar label > span {
+  padding: 0 1px !important;
+  color: var(--r-muted) !important;
+  font-size: 9px !important;
+  font-weight: 800 !important;
+  letter-spacing: .055em !important;
+  text-transform: uppercase !important;
+}
+.rep162.rep163 .rep162-filterbar input,
+.rep162.rep163 .rep162-filterbar select {
+  min-height: 40px !important;
+  padding: 8px 10px !important;
+  border: 1px solid var(--r-border) !important;
+  border-radius: 9px !important;
+  background: #fff !important;
+  color: var(--r-ink) !important;
+  box-shadow: none !important;
+  font-size: 12px !important;
+  font-weight: 650 !important;
+}
+.rep162.rep163 .rep162-filterbar input:focus,
+.rep162.rep163 .rep162-filterbar select:focus {
+  border-color: #93b4fb !important;
+  outline: 3px solid rgba(37,99,235,.08) !important;
+}
+.rep162.rep163 .rep163-date-range {
+  display: grid !important;
+  grid-template-columns: repeat(2,minmax(0,1fr)) !important;
+  gap: 8px !important;
+}
+.rep162.rep163 .rep162-refresh {
+  width: 42px !important;
+  height: 40px !important;
+  border: 1px solid var(--r-border) !important;
+  border-radius: 9px !important;
+  background: #fff !important;
+  color: var(--r-blue) !important;
+}
+.rep162.rep163 .rep162-refresh:hover:not(:disabled) { background: var(--r-blue-50) !important; }
+.rep162.rep163 .rep162-period-summary {
+  min-height: 40px !important;
+  border: 1px solid var(--r-border-soft) !important;
+  border-radius: 9px !important;
+  background: var(--r-soft) !important;
+  color: var(--r-text) !important;
+}
+
+/* Executive summary: one information surface, not five colored tiles. */
+.rep162.rep163 .rep162-executive {
+  padding: 0 !important;
+  border: 1px solid var(--r-border) !important;
+  border-radius: 14px !important;
+  background: #fff !important;
+  box-shadow: none !important;
+  overflow: hidden !important;
+}
+.rep162.rep163 .rep162-executive-head {
+  margin: 0 !important;
+  padding: 15px 17px 13px !important;
+  border-bottom: 1px solid var(--r-border-soft) !important;
+}
+.rep162.rep163 .rep162-executive-head h3 {
+  font-size: 15px !important;
+  letter-spacing: -.015em !important;
+}
+.rep162.rep163 .rep162-period-chip {
+  min-height: 24px !important;
+  padding: 0 8px !important;
+  border: 1px solid var(--r-blue-100) !important;
+  border-radius: 999px !important;
+  background: var(--r-blue-50) !important;
+  color: var(--r-blue-700) !important;
+  font-size: 9px !important;
+}
+.rep162.rep163 .rep162-primary-kpis {
+  display: grid !important;
+  grid-template-columns: repeat(5,minmax(0,1fr)) !important;
+  gap: 0 !important;
+  border-bottom: 1px solid var(--r-border-soft) !important;
+}
+.rep162.rep163 .rep162-kpi,
+.rep162.rep163 .rep162-kpi-good,
+.rep162.rep163 .rep162-kpi-warn,
+.rep162.rep163 .rep162-kpi-bad {
+  min-height: 104px !important;
+  padding: 15px 16px !important;
+  border: 0 !important;
+  border-right: 1px solid var(--r-border-soft) !important;
+  border-radius: 0 !important;
+  background: #fff !important;
+  box-shadow: none !important;
+}
+.rep162.rep163 .rep162-kpi:last-child { border-right: 0 !important; }
+.rep162.rep163 .rep162-kpi::before { display: none !important; }
+.rep162.rep163 .rep162-kpi span {
+  color: var(--r-muted) !important;
+  font-size: 9px !important;
+  font-weight: 800 !important;
+  letter-spacing: .05em !important;
+}
+.rep162.rep163 .rep162-kpi strong {
+  margin-top: 7px !important;
+  font-size: clamp(20px,1.8vw,26px) !important;
+  letter-spacing: -.03em !important;
+}
+.rep162.rep163 .rep162-kpi small {
+  margin-top: 5px !important;
+  font-size: 10px !important;
+  line-height: 1.35 !important;
+}
+.rep162.rep163 .rep162-secondary-kpis {
+  display: grid !important;
+  grid-template-columns: repeat(5,minmax(0,1fr)) !important;
+  gap: 0 !important;
+  margin: 0 !important;
+}
+.rep162.rep163 .rep162-secondary-kpis > div {
+  min-height: 58px !important;
+  padding: 11px 14px !important;
+  border: 0 !important;
+  border-right: 1px solid var(--r-border-soft) !important;
+  border-radius: 0 !important;
+  background: var(--r-soft) !important;
+}
+.rep162.rep163 .rep162-secondary-kpis > div:last-child { border-right: 0 !important; }
+.rep162.rep163 .rep162-secondary-kpis svg { color: var(--r-blue) !important; }
+.rep162.rep163 .rep162-secondary-kpis span { color: var(--r-muted) !important; font-size: 10px !important; }
+.rep162.rep163 .rep162-secondary-kpis strong { font-size: 14px !important; }
+
+/* Content sections match the rest of the clinic workspace: flat white panels, thin borders. */
+.rep162.rep163 .rep162-card {
+  min-width: 0 !important;
+  padding: 16px !important;
+  border: 1px solid var(--r-border) !important;
+  border-radius: 14px !important;
+  background: #fff !important;
+  box-shadow: none !important;
+}
+.rep162.rep163 .rep162-card-head {
+  align-items: flex-start !important;
+  gap: 10px !important;
+  margin-bottom: 13px !important;
+}
+.rep162.rep163 .rep162-card-head > svg {
+  width: 30px !important;
+  height: 30px !important;
+  padding: 7px !important;
+  flex: 0 0 30px !important;
+  border: 1px solid var(--r-blue-100) !important;
+  border-radius: 8px !important;
+  background: var(--r-blue-50) !important;
+  color: var(--r-blue) !important;
+}
+.rep162.rep163 .rep162-card-head h3 { font-size: 14px !important; }
+.rep162.rep163 .rep162-card-head p {
+  margin-top: 3px !important;
+  color: var(--r-muted) !important;
+  font-size: 10.5px !important;
+  line-height: 1.45 !important;
+}
+.rep162.rep163 .rep162-grid {
+  display: grid !important;
+  grid-template-columns: repeat(2,minmax(0,1fr)) !important;
+  gap: 12px !important;
+}
+.rep162.rep163 .rep162-grid > .rep162-card { height: 100% !important; }
+.rep162.rep163 .rep162-trend-card { padding: 16px !important; overflow: hidden !important; }
+
+/* Monochrome chart language: blue primary and muted slate secondary. */
+.rep162.rep163 .premium-chart-grid-v35 { stroke: #e7edf5 !important; }
+.rep162.rep163 .premium-chart-series-v35.series-0 .premium-chart-line-v35 { stroke: var(--r-blue) !important; }
+.rep162.rep163 .premium-chart-series-v35.series-1 .premium-chart-line-v35 { stroke: #94a3b8 !important; }
+.rep162.rep163 .premium-chart-series-v35.series-0 .premium-chart-dot-v35 { fill: #fff !important; stroke: var(--r-blue) !important; }
+.rep162.rep163 .premium-chart-series-v35.series-1 .premium-chart-dot-v35 { fill: #fff !important; stroke: #94a3b8 !important; }
+.rep162.rep163 .rep163-chart-legend { color: var(--r-muted) !important; font-size: 10px !important; }
+.rep162.rep163 .rep163-chart-legend .is-collections { background: var(--r-blue) !important; }
+.rep162.rep163 .rep163-chart-legend .is-expenses { background: #94a3b8 !important; }
+.rep162.rep163 .rep162-progress-track { height: 5px !important; background: #e9eff6 !important; }
+.rep162.rep163 .rep162-progress-track i { background: var(--r-blue) !important; }
+
+/* Lists and metric groups become compact report rows. */
+.rep162.rep163 .rep162-ranks { gap: 0 !important; border: 1px solid var(--r-border-soft) !important; border-radius: 10px !important; overflow: hidden !important; }
+.rep162.rep163 .rep162-rank {
+  min-height: 52px !important;
+  padding: 9px 11px !important;
+  border: 0 !important;
+  border-bottom: 1px solid var(--r-border-soft) !important;
+  border-radius: 0 !important;
+  background: #fff !important;
+}
+.rep162.rep163 .rep162-rank:last-child { border-bottom: 0 !important; }
+.rep162.rep163 .rep162-rank strong { font-size: 11px !important; }
+.rep162.rep163 .rep162-rank small { font-size: 9.5px !important; }
+.rep162.rep163 .rep162-rank em { color: var(--r-blue-700) !important; font-size: 10px !important; }
+.rep162.rep163 .rep162-progress-list { gap: 12px !important; }
+.rep162.rep163 .rep162-progress-row strong { font-size: 11px !important; }
+.rep162.rep163 .rep162-progress-row span { font-size: 9.5px !important; }
+.rep162.rep163 .rep162-patient-summary,
+.rep162.rep163 .rep162-metric-grid,
+.rep162.rep163 .rep162-qrph,
+.rep162.rep163 .rep162-tax-facts {
+  display: grid !important;
+  grid-template-columns: repeat(3,minmax(0,1fr)) !important;
+  gap: 8px !important;
+}
+.rep162.rep163 .rep162-patient-summary > div,
+.rep162.rep163 .rep162-metric-grid > div,
+.rep162.rep163 .rep162-qrph > div,
+.rep162.rep163 .rep162-tax-facts > div {
+  min-height: 66px !important;
+  padding: 10px 11px !important;
+  border: 1px solid var(--r-border-soft) !important;
+  border-radius: 9px !important;
+  background: var(--r-soft) !important;
+}
+.rep162.rep163 .rep162-patient-summary span,
+.rep162.rep163 .rep162-metric-grid span,
+.rep162.rep163 .rep162-qrph span,
+.rep162.rep163 .rep162-tax-facts span {
+  color: var(--r-muted) !important;
+  font-size: 8.5px !important;
+  font-weight: 800 !important;
+}
+.rep162.rep163 .rep162-patient-summary strong,
+.rep162.rep163 .rep162-metric-grid strong,
+.rep162.rep163 .rep162-qrph strong,
+.rep162.rep163 .rep162-tax-facts strong {
+  margin-top: 4px !important;
+  font-size: 15px !important;
+}
+.rep162.rep163 .rep162-empty {
+  padding: 18px 14px !important;
+  border: 1px dashed #cbd8e8 !important;
+  border-radius: 9px !important;
+  background: var(--r-soft) !important;
+  color: var(--r-muted) !important;
+}
+
+/* Tax / settlement keep the same visual language — no one-off green/amber/red blocks. */
+.rep162.rep163 .rep162-tax-card { background: #fff !important; }
+.rep162.rep163 .rep162-tax-layout { gap: 10px !important; }
+.rep162.rep163 .rep162-tax-value {
+  padding: 15px !important;
+  border: 1px solid var(--r-blue-100) !important;
+  border-radius: 10px !important;
+  background: var(--r-blue-50) !important;
+  color: var(--r-ink) !important;
+  box-shadow: none !important;
+}
+.rep162.rep163 .rep162-tax-value span { color: var(--r-muted) !important; opacity: 1 !important; }
+.rep162.rep163 .rep162-tax-value strong { color: var(--r-ink) !important; }
+.rep162.rep163 .rep162-disclaimer { color: var(--r-muted) !important; }
+
+/* Remove semantic rainbow accents from the dashboard while preserving text meaning. */
+.rep162.rep163 .rep162-kpi-good,
+.rep162.rep163 .rep162-kpi-warn,
+.rep162.rep163 .rep162-kpi-bad,
+.rep162.rep163 .rep162-status.is-error { border-color: var(--r-border) !important; background: #fff !important; color: var(--r-text) !important; }
+
+/* Dialogs align with the centered modal system used elsewhere. */
+.rep162.rep163 .rep162-modal-backdrop {
+  position: fixed !important;
+  inset: 0 !important;
+  display: grid !important;
+  place-items: center !important;
+  padding: 18px !important;
+  background: rgba(15,23,42,.48) !important;
+  backdrop-filter: blur(5px) !important;
+}
+.rep162.rep163 .rep162-export-modal,
+.rep162.rep163 .rep162-dialog {
+  width: min(960px,calc(100vw - 36px)) !important;
+  max-height: calc(100dvh - 36px) !important;
+  margin: 0 !important;
+  border: 1px solid var(--r-border) !important;
+  border-radius: 14px !important;
+  background: #fff !important;
+  box-shadow: 0 24px 70px rgba(15,23,42,.22) !important;
+}
+.rep162.rep163 .rep162-dialog { width: min(540px,calc(100vw - 36px)) !important; }
+
+@media (max-width: 1280px) {
+  .rep162.rep163 .rep162-primary-kpis { grid-template-columns: repeat(3,minmax(0,1fr)) !important; }
+  .rep162.rep163 .rep162-primary-kpis .rep162-kpi { border-bottom: 1px solid var(--r-border-soft) !important; }
+  .rep162.rep163 .rep162-secondary-kpis { grid-template-columns: repeat(3,minmax(0,1fr)) !important; }
+  .rep162.rep163 .rep162-filterbar { grid-template-columns: repeat(2,minmax(0,1fr)) 42px !important; }
+  .rep162.rep163 .rep163-date-range { grid-column: 1 / 3 !important; }
+}
+
+@media (max-width: 920px) {
+  .rep162.rep163 .rep162-toolbar { display: grid !important; }
+  .rep162.rep163 .rep162-toolbar-actions { justify-content: flex-start !important; }
+  .rep162.rep163 .rep162-grid { grid-template-columns: 1fr !important; }
+  .rep162.rep163 .rep162-primary-kpis,
+  .rep162.rep163 .rep162-secondary-kpis { grid-template-columns: repeat(2,minmax(0,1fr)) !important; }
+  .rep162.rep163 .rep162-filterbar { grid-template-columns: repeat(2,minmax(0,1fr)) !important; }
+  .rep162.rep163 .rep163-date-range { grid-column: 1 / -1 !important; }
+  .rep162.rep163 .rep162-refresh { width: 100% !important; }
+}
+
+@media (max-width: 640px) {
+  .rep162.rep163 { gap: 10px !important; }
+
+  .rep162.rep163 .rep162-toolbar {
+    gap: 12px !important;
+    padding: 14px !important;
+    border-radius: 12px !important;
+  }
+  .rep162.rep163 .rep162-title-block h2 { font-size: 21px !important; }
+  .rep162.rep163 .rep162-title-block p { font-size: 11px !important; }
+  .rep162.rep163 .rep162-toolbar-actions {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    width: 100% !important;
+  }
+  .rep162.rep163 .rep162-scope {
+    grid-column: 1 / -1 !important;
+    max-width: none !important;
+    width: 100% !important;
+    justify-content: center !important;
+  }
+  .rep162.rep163 .rep162-export,
+  .rep162.rep163 .rep162-export .btn { width: 100% !important; }
+
+  .rep162.rep163 .rep162-filterbar {
+    grid-template-columns: 1fr !important;
+    padding: 10px !important;
+    border-radius: 11px !important;
+  }
+  .rep162.rep163 .rep163-date-range { grid-template-columns: 1fr 1fr !important; grid-column: auto !important; }
+  .rep162.rep163 .rep162-refresh { width: 100% !important; }
+
+  /* Compact mobile summary: avoids the huge vertical cards visible in the old design. */
+  .rep162.rep163 .rep162-executive { border-radius: 12px !important; }
+  .rep162.rep163 .rep162-executive-head { padding: 12px !important; }
+  .rep162.rep163 .rep162-primary-kpis {
+    grid-template-columns: repeat(2,minmax(0,1fr)) !important;
+    gap: 0 !important;
+  }
+  .rep162.rep163 .rep162-kpi,
+  .rep162.rep163 .rep162-kpi-good,
+  .rep162.rep163 .rep162-kpi-warn,
+  .rep162.rep163 .rep162-kpi-bad {
+    min-height: 86px !important;
+    padding: 11px 12px !important;
+    border-right: 1px solid var(--r-border-soft) !important;
+    border-bottom: 1px solid var(--r-border-soft) !important;
+  }
+  .rep162.rep163 .rep162-kpi:nth-child(even) { border-right: 0 !important; }
+  .rep162.rep163 .rep162-kpi strong { font-size: 18px !important; }
+  .rep162.rep163 .rep162-kpi small { font-size: 9px !important; }
+  .rep162.rep163 .rep162-secondary-kpis {
+    grid-template-columns: repeat(2,minmax(0,1fr)) !important;
+  }
+  .rep162.rep163 .rep162-secondary-kpis > div {
+    min-height: 50px !important;
+    padding: 8px 10px !important;
+    border-right: 1px solid var(--r-border-soft) !important;
+    border-bottom: 1px solid var(--r-border-soft) !important;
+  }
+  .rep162.rep163 .rep162-secondary-kpis > div:nth-child(even) { border-right: 0 !important; }
+
+  .rep162.rep163 .rep162-card {
+    padding: 12px !important;
+    border-radius: 12px !important;
+  }
+  .rep162.rep163 .rep162-card-head { margin-bottom: 10px !important; }
+  .rep162.rep163 .rep162-card-head h3 { font-size: 13px !important; }
+  .rep162.rep163 .rep162-card-head p { font-size: 9.5px !important; }
+  .rep162.rep163 .rep162-patient-summary,
+  .rep162.rep163 .rep162-metric-grid,
+  .rep162.rep163 .rep162-qrph,
+  .rep162.rep163 .rep162-tax-facts { grid-template-columns: repeat(2,minmax(0,1fr)) !important; }
+  .rep162.rep163 .rep162-patient-summary > div,
+  .rep162.rep163 .rep162-metric-grid > div,
+  .rep162.rep163 .rep162-qrph > div,
+  .rep162.rep163 .rep162-tax-facts > div { min-height: 58px !important; padding: 9px !important; }
+  .rep162.rep163 .rep162-rank { min-height: 48px !important; padding: 8px 9px !important; }
+
+  .rep162.rep163 .premium-chart-series-v35.series-1 .premium-chart-line-v35 { stroke: #94a3b8 !important; }
+  .rep162.rep163 .premium-line-chart-v35 { min-width: 620px !important; }
+
+  .rep162.rep163 .rep162-modal-backdrop {
+    place-items: center !important;
+    padding: 12px !important;
+  }
+  .rep162.rep163 .rep162-export-modal,
+  .rep162.rep163 .rep162-dialog {
+    width: calc(100vw - 24px) !important;
+    height: auto !important;
+    max-height: calc(100dvh - 24px) !important;
+    border-radius: 13px !important;
+  }
+}
+
+@media (max-width: 420px) {
+  .rep162.rep163 .rep163-date-range { grid-template-columns: 1fr !important; }
+  .rep162.rep163 .rep162-toolbar-actions { grid-template-columns: 1fr !important; }
+  .rep162.rep163 .rep162-primary-kpis,
+  .rep162.rep163 .rep162-secondary-kpis { grid-template-columns: 1fr 1fr !important; }
+}
