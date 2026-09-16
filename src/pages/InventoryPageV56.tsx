@@ -1,22 +1,14 @@
 import { useEffect, useRef, useState } from 'react'
-import { InventoryBatchExpiryV227 } from '../components/system/InventoryBatchExpiryV227'
-import { InventoryEnhancerV183 } from '../components/system/InventoryEnhancerV183'
-import { InventoryHistoricalAnalyticsV230 } from '../components/system/InventoryHistoricalAnalyticsV230'
-import { InventoryMovementLedgerV228 } from '../components/system/InventoryMovementLedgerV228'
-import { InventoryReorderCenterV229 } from '../components/system/InventoryReorderCenterV229'
-import { InventoryTransferWorkflowV226 } from '../components/system/InventoryTransferWorkflowV226'
-import { InventoryValuationSnapshotsV231 } from '../components/system/InventoryValuationSnapshotsV231'
-import { InventoryWorkflowEnhancerV225 } from '../components/system/InventoryWorkflowEnhancerV225'
 import { useBranchContext } from '../features/branches/BranchContext'
 import { refreshInventoryOperationalCaches } from '../features/inventory/inventoryPersistence'
 import { isSupabaseConfigured, supabase } from '../lib/supabase'
 import '../styles/inventory-modal-centering-v224.css'
-import { InventoryPageV182 } from './InventoryPageV182'
+import { InventoryPageSimpleV232 } from './InventoryPageSimpleV232'
 
 type DatabaseGateState = 'loading' | 'ready' | 'error'
 
 export function InventoryPageV56() {
-  const [revision, setRevision] = useState(0)
+  const [, setRevision] = useState(0)
   const [databaseState, setDatabaseState] = useState<DatabaseGateState>(isSupabaseConfigured ? 'loading' : 'error')
   const [databaseError, setDatabaseError] = useState(isSupabaseConfigured ? '' : 'Supabase is not configured for this clinic workspace.')
   const hydrateRequestRef = useRef(0)
@@ -95,15 +87,5 @@ export function InventoryPageV56() {
     })
   }
 
-  return <>
-    <InventoryPageV182 key={revision} />
-    <InventoryEnhancerV183 onInventoryChanged={refreshWorkspace} />
-    <InventoryWorkflowEnhancerV225 onInventoryChanged={refreshWorkspace} />
-    <InventoryTransferWorkflowV226 />
-    <InventoryBatchExpiryV227 />
-    <InventoryMovementLedgerV228 />
-    <InventoryReorderCenterV229 />
-    <InventoryHistoricalAnalyticsV230 />
-    <InventoryValuationSnapshotsV231 />
-  </>
+  return <InventoryPageSimpleV232 onInventoryChanged={refreshWorkspace} />
 }
