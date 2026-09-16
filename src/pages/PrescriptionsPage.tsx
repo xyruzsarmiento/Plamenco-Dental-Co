@@ -37,10 +37,10 @@ function prescriptionEndDate(prescription: Prescription) {
   return date
 }
 
+// Status is an explicit clinical lifecycle decision. Course-end dates remain
+// informational and must not silently override a manual status change.
 function effectiveStatus(prescription: Prescription): PrescriptionStatus {
-  if (prescription.status !== 'active') return prescription.status
-  const endDate = prescriptionEndDate(prescription)
-  return endDate && endDate < new Date(new Date().setHours(0, 0, 0, 0)) ? 'inactive' : 'active'
+  return prescription.status
 }
 
 function formatDate(value: string) {
@@ -128,7 +128,6 @@ export function PrescriptionsPage() {
     if (!selectedPatientId && patientGroups[0]) setSelectedPatientId(patientGroups[0].id)
   }, [patientGroups, selectedPatientId])
 
-
   useEffect(() => { setPage(1) }, [query])
   useEffect(() => { setPage((current) => Math.min(current, pageCount)) }, [pageCount])
 
@@ -139,8 +138,6 @@ export function PrescriptionsPage() {
       setLoadingRecords(true)
       setLoadError(null)
       try {
-        // Patients load first because prescription rows store the durable public
-        // patient number and the page resolves that reference for display/search.
         const nextPatients = await loadPatientsFromSupabase({ strict: true })
         if (!active) return
         setPatientList(nextPatients)
@@ -148,17 +145,6 @@ export function PrescriptionsPage() {
         const nextPrescriptions = await loadPrescriptionsFromSupabase({ strict: true })
         if (!active) return
         setPrescriptions(nextPrescriptions)
-        if (canManagePrescriptions) {
-          const expired = nextPrescriptions.filter((rx) => rx.status === 'active' && effectiveStatus(rx) === 'inactive')
-          if (expired.length) {
-            void Promise.all(expired.map((rx) => updatePrescriptionStatusPersisted(rx.id, 'inactive')))
-              .then((updated) => setPrescriptions((current) => current.map((entry) => updated.find((item) => item.id === entry.id) ?? entry)))
-              .catch((cause) => {
-                const message = cause instanceof Error ? cause.message : String(cause)
-                if (import.meta.env.DEV && !message.includes('no longer available')) console.warn('[prescription lifecycle] expiry sync', cause)
-              })
-          }
-        }
       } catch (cause) {
         if (!active) return
         setLoadError(cause instanceof Error ? cause.message : 'Unable to load the clinical prescription workspace.')
@@ -169,7 +155,7 @@ export function PrescriptionsPage() {
 
     void loadClinicalWorkspace()
     return () => { active = false }
-  }, [canManagePrescriptions])
+  }, [])
 
   function resetForm() {
     setEditingPrescription(null)
@@ -189,16 +175,27 @@ export function PrescriptionsPage() {
     const nextPrescriptions = await loadPrescriptionsFromSupabase({ strict: true })
     setPrescriptions(nextPrescriptions)
     setLoadError(null)
+    return nextPrescriptions
   }
 
   async function changeStatus(status: PrescriptionStatus) {
     if (!selectedPrescription || statusBusy) return
+    const selectedId = selectedPrescription.id
     setStatusBusy(true)
     setError(null)
     try {
-      const confirmed = await updatePrescriptionStatusPersisted(selectedPrescription.id, status)
+      const confirmed = await updatePrescriptionStatusPersisted(selectedId, status)
       setSelectedPrescription(confirmed)
       setPrescriptions((current) => current.map((entry) => entry.id === confirmed.id ? confirmed : entry))
+      try {
+        const refreshed = await refreshPrescriptions()
+        const refreshedSelected = refreshed.find((entry) => entry.id === selectedId)
+        if (refreshedSelected) setSelectedPrescription(refreshedSelected)
+      } catch (refreshCause) {
+        setLoadError(refreshCause instanceof Error
+          ? `Prescription status was saved, but the list could not be refreshed: ${refreshCause.message}`
+          : 'Prescription status was saved, but the list could not be refreshed from the clinic database.')
+      }
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : 'Prescription status could not be saved.')
     } finally {
@@ -244,9 +241,10 @@ export function PrescriptionsPage() {
   async function savePrescription() {
     if (busy) return
     if (!patientId) return setError('Select a patient.')
-    const resolvedBranchId = branchContext?.isAllBranchesMode ? branchId : branchContext?.activeBranchId ?? branchId
+    const resolvedBranchId = editingPrescription?.branchId
+      ?? (branchContext?.isAllBranchesMode ? branchId : branchContext?.activeBranchId ?? branchId)
     if (!resolvedBranchId) return setError('Choose the clinic branch for this prescription before saving.')
-    const prescriber = user?.name || user?.email || ''
+    const prescriber = editingPrescription?.prescribedBy || user?.name || user?.email || ''
     if (!prescriber) return setError('A signed-in prescriber is required.')
     if (!medication.trim() || !dosage.trim() || !frequency.trim()) return setError('Medication, dosage, and frequency are required.')
 
@@ -256,6 +254,9 @@ export function PrescriptionsPage() {
       const input: PrescriptionInput = {
         patientId,
         branchId: resolvedBranchId,
+        dentalRecordId: editingPrescription?.dentalRecordId,
+        appointmentId: editingPrescription?.appointmentId,
+        prescriptionDate: editingPrescription?.prescriptionDate,
         items: [{
           medication: medication.trim(),
           strength: strength.trim(),
@@ -266,17 +267,12 @@ export function PrescriptionsPage() {
         }],
         notes: notes.trim(),
         prescribedBy: prescriber,
-        // Editing medication details must not change patient visibility. The
-        // status is changed explicitly from the prescription details modal.
         status: editingPrescription?.status ?? 'active',
       }
       const confirmed = editingPrescription
         ? await updatePrescriptionPersisted(editingPrescription.id, input)
         : await createPrescriptionPersisted(input)
 
-      // The RPC-confirmed PostgreSQL row is immediately safe to display. A
-      // fresh database read then reconciles the complete registry without ever
-      // treating browser storage as the source of truth.
       setPrescriptions((current) => editingPrescription
         ? current.map((entry) => entry.id === confirmed.id ? confirmed : entry)
         : [confirmed, ...current.filter((entry) => entry.id !== confirmed.id)])
