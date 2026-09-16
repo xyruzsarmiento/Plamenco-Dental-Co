@@ -16,8 +16,15 @@ import { createPrescriptionPersisted, type Prescription, type PrescriptionInput,
 import { loadPrescriptionsFromSupabase } from '../features/prescriptions/prescriptionPersistence'
 import '../styles/prescriptions-workspace-v96.css'
 import '../styles/prescription-order-cards-v97.css'
+import '../styles/prescription-entry-controls-v221.css'
 
 const PRESCRIPTION_PAGE_SIZE = 12
+const MEDICATION_OPTIONS = ['Amoxicillin', 'Biogesic', 'Ibuprofen', 'Mefenamic Acid', 'Paracetamol', 'Co-amoxiclav', 'Clindamycin', 'Azithromycin', 'Metronidazole']
+const STRENGTH_OPTIONS = ['100 mg', '125 mg', '200 mg', '250 mg', '400 mg', '500 mg', '625 mg', '875 mg']
+const FREQUENCY_OPTIONS = ['Once daily', 'Twice daily', 'Three times daily', 'Every 4 hours', 'Every 6 hours', 'Every 8 hours', 'Every 12 hours', 'As needed']
+const INSTRUCTION_OPTIONS = ['Take after meals', 'Take with food', 'Take before meals', 'Take with a full glass of water', 'Use as directed']
+const DOSE_UNITS = ['tablet', 'capsule', 'mL', 'sachet', 'drop']
+const DURATION_UNITS = ['day', 'week', 'month']
 
 function durationInDays(value: string) {
   const match = value.toLowerCase().match(/(\d+(?:\.\d+)?)\s*(day|days|week|weeks|month|months)/)
@@ -37,8 +44,6 @@ function prescriptionEndDate(prescription: Prescription) {
   return date
 }
 
-// Status is an explicit clinical lifecycle decision. Course-end dates remain
-// informational and must not silently override a manual status change.
 function effectiveStatus(prescription: Prescription): PrescriptionStatus {
   return prescription.status
 }
@@ -47,6 +52,23 @@ function formatDate(value: string) {
   if (!value) return '—'
   const date = new Date(`${value}T00:00:00`)
   return Number.isNaN(date.getTime()) ? value : date.toLocaleDateString('en-PH', { month: 'short', day: 'numeric', year: 'numeric' })
+}
+
+function parseQuantity(value: string, fallbackAmount: number, fallbackUnit: string) {
+  const match = value.trim().match(/^(\d+(?:\.\d+)?)\s*(.*)$/)
+  if (!match) return { amount: fallbackAmount, unit: fallbackUnit }
+  const parsedAmount = Number(match[1])
+  const rawUnit = match[2].trim().toLowerCase().replace(/s$/, '')
+  return {
+    amount: Number.isFinite(parsedAmount) && parsedAmount > 0 ? parsedAmount : fallbackAmount,
+    unit: rawUnit || fallbackUnit,
+  }
+}
+
+function pluralizedQuantity(amount: number, unit: string) {
+  if (!unit) return String(amount)
+  if (unit === 'mL') return `${amount} mL`
+  return `${amount} ${unit}${amount === 1 ? '' : 's'}`
 }
 
 export function PrescriptionsPage() {
@@ -68,9 +90,11 @@ export function PrescriptionsPage() {
   const [branchId, setBranchId] = useState('')
   const [medication, setMedication] = useState('')
   const [strength, setStrength] = useState('')
-  const [dosage, setDosage] = useState('')
+  const [doseAmount, setDoseAmount] = useState(1)
+  const [doseUnit, setDoseUnit] = useState('capsule')
   const [frequency, setFrequency] = useState('')
-  const [duration, setDuration] = useState('')
+  const [durationAmount, setDurationAmount] = useState(7)
+  const [durationUnit, setDurationUnit] = useState('day')
   const [instructions, setInstructions] = useState('')
   const [notes, setNotes] = useState('')
   const [page, setPage] = useState(1)
@@ -163,9 +187,11 @@ export function PrescriptionsPage() {
     setBranchId(branchContext?.isAllBranchesMode ? '' : branchContext?.activeBranchId ?? '')
     setMedication('')
     setStrength('')
-    setDosage('')
+    setDoseAmount(1)
+    setDoseUnit('capsule')
     setFrequency('')
-    setDuration('')
+    setDurationAmount(7)
+    setDurationUnit('day')
     setInstructions('')
     setNotes('')
     setError(null)
@@ -222,14 +248,21 @@ export function PrescriptionsPage() {
 
   function editPrescription(prescription: Prescription) {
     const item = prescription.items?.[0]
+    const currentDosage = item?.dosage ?? prescription.dosage
+    const currentDuration = item?.duration ?? prescription.duration
+    const parsedDose = parseQuantity(currentDosage, 1, 'capsule')
+    const parsedDuration = parseQuantity(currentDuration, 7, 'day')
+
     setEditingPrescription(prescription)
     setPatientId(prescription.patientId)
     setBranchId(prescription.branchId ?? branchContext?.activeBranchId ?? '')
     setMedication(item?.medication ?? prescription.medication)
     setStrength(item?.strength ?? '')
-    setDosage(item?.dosage ?? prescription.dosage)
+    setDoseAmount(parsedDose.amount)
+    setDoseUnit(parsedDose.unit)
     setFrequency(item?.frequency ?? prescription.frequency)
-    setDuration(item?.duration ?? prescription.duration)
+    setDurationAmount(parsedDuration.amount)
+    setDurationUnit(parsedDuration.unit)
     setInstructions(item?.instructions ?? prescription.instructions)
     setNotes(prescription.notes)
     setError(null)
@@ -246,7 +279,10 @@ export function PrescriptionsPage() {
     if (!resolvedBranchId) return setError('Choose the clinic branch for this prescription before saving.')
     const prescriber = editingPrescription?.prescribedBy || user?.name || user?.email || ''
     if (!prescriber) return setError('A signed-in prescriber is required.')
-    if (!medication.trim() || !dosage.trim() || !frequency.trim()) return setError('Medication, dosage, and frequency are required.')
+    if (!medication.trim() || !frequency.trim()) return setError('Medication and frequency are required.')
+
+    const dosage = pluralizedQuantity(doseAmount, doseUnit)
+    const duration = pluralizedQuantity(durationAmount, durationUnit)
 
     setBusy(true)
     setError(null)
@@ -260,9 +296,9 @@ export function PrescriptionsPage() {
         items: [{
           medication: medication.trim(),
           strength: strength.trim(),
-          dosage: dosage.trim(),
+          dosage,
           frequency: frequency.trim(),
-          duration: duration.trim(),
+          duration,
           instructions: instructions.trim(),
         }],
         notes: notes.trim(),
@@ -363,19 +399,44 @@ export function PrescriptionsPage() {
         <div className="rx116-backdrop" role="presentation" onMouseDown={(event) => event.target === event.currentTarget && !busy && setCreating(false)}>
           <section className="rx116-modal" role="dialog" aria-modal="true" aria-labelledby="rx116-title">
             <header className="rx116-head">
-              <div><span className="eyebrow">Clinical prescription</span><h2 id="rx116-title">{editingPrescription ? 'Edit prescription' : 'New prescription'}</h2><p>{editingPrescription ? 'Update the medication instructions and save the revised clinical order.' : 'Select a patient and enter the medication instructions. The authenticated dentist is recorded by the database.'}</p></div>
+              <div><span className="eyebrow">Clinical prescription</span><h2 id="rx116-title">{editingPrescription ? 'Edit prescription' : 'New prescription'}</h2><p>{editingPrescription ? 'Update the medication instructions and save the revised clinical order.' : 'Select a patient and build the medication order using structured presets or custom values.'}</p></div>
               <button type="button" aria-label="Close prescription dialog" onClick={() => setCreating(false)} disabled={busy}><X size={18} /></button>
             </header>
             <div className="rx116-form">
               <div className="rx116-span-2 rx116-patient-search"><PatientSearchCombobox patients={patientList} value={patientId} required disabled={busy || loadingRecords} placeholder={loadingRecords ? 'Loading patients from clinic database…' : 'Search by name, patient ID, phone or email'} scopeFilter={(patient) => patient.status === 'active'} onSelect={(patient) => setPatientId(patient?.patientId ?? '')} /></div>
               <label className="rx116-span-2"><span>Clinic branch</span><select value={branchContext?.isAllBranchesMode ? branchId : branchContext?.activeBranchId ?? branchId} onChange={(event) => setBranchId(event.target.value)} disabled={busy || (!branchContext?.isAllBranchesMode && Boolean(branchContext?.activeBranchId))}><option value="">Select branch</option>{branchOptions.map((branch) => <option key={branch.id} value={branch.id}>{branch.name}</option>)}</select></label>
               <div className="rx116-span-2 rx116-context-note"><Building2 size={15} /><span>{branchContext?.isAllBranchesMode ? 'Select the branch that owns this prescription record.' : `Prescription will be linked to ${branchContext?.activeBranch?.name ?? 'the active clinic branch'}.`}</span></div>
-              <label><span>Medication</span><input value={medication} onChange={(event) => setMedication(event.target.value)} placeholder="e.g. Amoxicillin" disabled={busy} /></label>
-              <label><span>Strength</span><input value={strength} onChange={(event) => setStrength(event.target.value)} placeholder="e.g. 500 mg" disabled={busy} /></label>
-              <label><span>Dosage</span><input value={dosage} onChange={(event) => setDosage(event.target.value)} placeholder="e.g. 1 capsule" disabled={busy} /></label>
-              <label><span>Frequency</span><input value={frequency} onChange={(event) => setFrequency(event.target.value)} placeholder="e.g. Every 8 hours" disabled={busy} /></label>
-              <label><span>Duration</span><input value={duration} onChange={(event) => setDuration(event.target.value)} placeholder="e.g. 7 days" disabled={busy} /></label>
-              <label><span>Instructions</span><input value={instructions} onChange={(event) => setInstructions(event.target.value)} placeholder="e.g. Take after meals" disabled={busy} /></label>
+
+              <div className="rx116-span-2 rx221-medication-picker">
+                <label><span>Medication</span><input list="rx221-medications" value={medication} onChange={(event) => setMedication(event.target.value)} placeholder="Search or type medication" disabled={busy} /><datalist id="rx221-medications">{MEDICATION_OPTIONS.map((option) => <option key={option} value={option} />)}</datalist></label>
+                <label><span>Strength</span><input list="rx221-strengths" value={strength} onChange={(event) => setStrength(event.target.value)} placeholder="Select or type strength" disabled={busy} /><datalist id="rx221-strengths">{STRENGTH_OPTIONS.map((option) => <option key={option} value={option} />)}</datalist></label>
+              </div>
+
+              <div className="rx221-control-group">
+                <span className="rx221-control-label">Dose</span>
+                <div className="rx221-stepper-row">
+                  <button type="button" aria-label="Decrease dose" onClick={() => setDoseAmount((current) => Math.max(1, current - 1))} disabled={busy || doseAmount <= 1}>−</button>
+                  <span className="rx221-stepper-value" aria-live="polite">{doseAmount}</span>
+                  <button type="button" aria-label="Increase dose" onClick={() => setDoseAmount((current) => current + 1)} disabled={busy}>+</button>
+                  <select aria-label="Dose unit" value={doseUnit} onChange={(event) => setDoseUnit(event.target.value)} disabled={busy}>{DOSE_UNITS.map((unit) => <option key={unit} value={unit}>{unit === 'mL' ? unit : `${unit}${doseAmount === 1 ? '' : 's'}`}</option>)}</select>
+                </div>
+              </div>
+
+              <label><span>Frequency</span><input list="rx221-frequencies" value={frequency} onChange={(event) => setFrequency(event.target.value)} placeholder="Select or type frequency" disabled={busy} /><datalist id="rx221-frequencies">{FREQUENCY_OPTIONS.map((option) => <option key={option} value={option} />)}</datalist></label>
+
+              <div className="rx221-control-group">
+                <span className="rx221-control-label">Duration</span>
+                <div className="rx221-stepper-row">
+                  <button type="button" aria-label="Decrease duration" onClick={() => setDurationAmount((current) => Math.max(1, current - 1))} disabled={busy || durationAmount <= 1}>−</button>
+                  <span className="rx221-stepper-value" aria-live="polite">{durationAmount}</span>
+                  <button type="button" aria-label="Increase duration" onClick={() => setDurationAmount((current) => current + 1)} disabled={busy}>+</button>
+                  <select aria-label="Duration unit" value={durationUnit} onChange={(event) => setDurationUnit(event.target.value)} disabled={busy}>{DURATION_UNITS.map((unit) => <option key={unit} value={unit}>{unit}{durationAmount === 1 ? '' : 's'}</option>)}</select>
+                </div>
+              </div>
+
+              <label><span>Instructions</span><input list="rx221-instructions" value={instructions} onChange={(event) => setInstructions(event.target.value)} placeholder="Select preset or type custom instructions" disabled={busy} /><datalist id="rx221-instructions">{INSTRUCTION_OPTIONS.map((option) => <option key={option} value={option} />)}</datalist></label>
+
+              <div className="rx221-presets-note"><Pill size={15} /><span><strong>Structured entry:</strong> presets are shortcuts only. The clinician should review the final medication, strength, dose, frequency, duration, and instructions before saving.</span></div>
               <label className="rx116-span-2"><span>Clinical notes</span><textarea value={notes} onChange={(event) => setNotes(event.target.value)} placeholder="Optional notes" disabled={busy} /></label>
               {error && <div className="rx116-error" role="alert">{error}</div>}
             </div>
