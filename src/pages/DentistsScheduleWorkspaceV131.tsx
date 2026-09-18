@@ -229,7 +229,7 @@ export function DentistsScheduleWorkspaceV131() {
       <section className="dentists133-hero">
         <div className="dentists133-hero-icon"><Stethoscope size={24} /></div>
         <div>
-          <span className="dentists133-kicker"><Sparkles size={14} /><span>Clinical team</span></span>
+          <span className="dentists133-kicker" style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}><Sparkles size={14} /><span>Clinical team</span></span>
           <h1>Dentists</h1>
           <p>Manage dentist profiles, branch access, and assigned appointment work.</p>
         </div>
