@@ -92,9 +92,6 @@ export function SettingsPageV30() {
           <h2>Settings</h2>
           <p>Govern clinic identity, review important changes, and manage your current session from one workspace.</p>
         </div>
-        <div className="settings-v30-hero-actions">
-          <Button variant="secondary" icon={<RefreshCw size={16} />} onClick={() => setRefreshKey((value) => value + 1)}>Refresh</Button>
-        </div>
       </header>
 
       <section className="settings-v30-metrics" aria-label="Settings summary">
