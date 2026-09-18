@@ -3,6 +3,7 @@ import { EmptyState } from './EmptyState'
 import { PageHero } from './PageHero'
 
 type PageScaffoldProps = {
+  heroClassName?: string
   title: string
   description: string
   eyebrow?: string
@@ -17,6 +18,7 @@ type PageScaffoldProps = {
 
 export function PageScaffold({
   actions,
+  heroClassName,
   children,
   description,
   eyebrow,
@@ -31,6 +33,7 @@ export function PageScaffold({
     <section className="page-stack premium-page-scaffold">
       <PageHero
         actions={actions}
+        className={heroClassName}
         description={description}
         eyebrow={eyebrow}
         icon={icon}
