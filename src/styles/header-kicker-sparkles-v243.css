@@ -1,0 +1,92 @@
+/* V243 — standardize header kicker sparkles.
+   Real Lucide Sparkles SVGs only. Remove legacy text-star pseudo-elements. */
+
+html body .app-shell :is(
+  .recalls-standard-hero .portal-page-hero-meta .eyebrow.has-sparkles-icon,
+  .svc15-command-kicker,
+  .inv232-kicker,
+  .branches-v27-kicker,
+  .settings-v30-kicker,
+  .dashboard-greeting-eyebrow
+) {
+  display:inline-flex!important;
+  align-items:center!important;
+  gap:6px!important;
+}
+
+html body .app-shell :is(
+  .recalls-standard-hero .portal-page-hero-meta .eyebrow.has-sparkles-icon,
+  .svc15-command-kicker,
+  .inv232-kicker,
+  .branches-v27-kicker,
+  .settings-v30-kicker,
+  .dashboard-greeting-eyebrow
+)::before,
+html body .app-shell :is(
+  .recalls-standard-hero .portal-page-hero-meta .eyebrow.has-sparkles-icon,
+  .svc15-command-kicker,
+  .inv232-kicker,
+  .branches-v27-kicker,
+  .settings-v30-kicker,
+  .dashboard-greeting-eyebrow
+)::after {
+  content:none!important;
+  display:none!important;
+  width:0!important;
+  height:0!important;
+  margin:0!important;
+  background:none!important;
+  background-image:none!important;
+}
+
+html body .app-shell :is(
+  .recalls-standard-hero .portal-page-hero-meta .eyebrow.has-sparkles-icon,
+  .svc15-command-kicker,
+  .inv232-kicker,
+  .branches-v27-kicker,
+  .settings-v30-kicker,
+  .dashboard-greeting-eyebrow
+) > svg {
+  display:block!important;
+  width:14px!important;
+  height:14px!important;
+  min-width:14px!important;
+  flex:0 0 14px!important;
+  margin:0!important;
+  padding:0!important;
+  color:#2563eb!important;
+  stroke:currentColor!important;
+  stroke-width:2!important;
+  transform:none!important;
+}
+
+/* Keep kicker typography aligned to the approved Appointments / Patient Records language. */
+html body .app-shell :is(
+  .svc15-command-kicker,
+  .inv232-kicker,
+  .branches-v27-kicker,
+  .settings-v30-kicker,
+  .dashboard-greeting-eyebrow
+) {
+  width:fit-content!important;
+  margin:0 0 4px!important;
+  padding:0!important;
+  border:0!important;
+  background:transparent!important;
+  color:#2563eb!important;
+  font-size:10px!important;
+  font-weight:900!important;
+  line-height:1.2!important;
+  letter-spacing:.08em!important;
+  text-transform:uppercase!important;
+}
+
+/* Recalls already has its dedicated final typography; only normalize the real icon. */
+html body .app-shell .recalls-standard-hero .portal-page-hero-meta .eyebrow.has-sparkles-icon {
+  color:#2563eb!important;
+  font-size:10px!important;
+  font-weight:900!important;
+  line-height:1.2!important;
+  letter-spacing:.08em!important;
+  text-transform:uppercase!important;
+}
