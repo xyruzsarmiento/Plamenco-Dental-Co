@@ -1,0 +1,389 @@
+/* V244 — mobile card/header action parity.
+   Desktop remains unchanged. At phone widths, card actions become full-width
+   and headers collapse into predictable icon/copy/action rows. */
+
+@media (max-width: 640px) {
+  /* Shared clinical headers: copy stays compact, action spans full card width. */
+  html body .app-shell .clinical-standard-hero {
+    align-items: stretch !important;
+    gap: 14px !important;
+    padding: 16px !important;
+  }
+
+  html body .app-shell .clinical-standard-hero > .clinical-standard-hero-copy {
+    width: 100% !important;
+    max-width: none !important;
+    min-width: 0 !important;
+  }
+
+  html body .app-shell :is(
+    .tx43-hero,
+    .tp80-hero,
+    .patients36-hero,
+    .appointments-v40 .sa-appointments-header
+  ) > :not(.clinical-standard-hero-copy):not(.tx43-hero-copy):not(.tp80-hero-title):not(.patients36-hero-copy):not(.sa-appointments-header-copy) {
+    width: 100% !important;
+    max-width: none !important;
+  }
+
+  html body .app-shell :is(
+    .tx43-hero,
+    .tp80-hero
+  ) > .btn,
+  html body .app-shell .patients36-hero-actions > *,
+  html body .app-shell .appointments-v40 .sa-appointments-header-actions > * {
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: none !important;
+    justify-content: center !important;
+  }
+
+  /* Recalls */
+  html body .app-shell .portal-page-hero.recalls-standard-hero {
+    align-items: stretch !important;
+    gap: 14px !important;
+  }
+
+  html body .app-shell .recalls-standard-hero .portal-page-hero-copy,
+  html body .app-shell .recalls-standard-hero .portal-page-hero-actions {
+    width: 100% !important;
+    max-width: none !important;
+    min-width: 0 !important;
+  }
+
+  html body .app-shell .recalls-standard-hero .portal-page-hero-actions {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+
+  html body .app-shell .recalls-standard-hero .portal-page-hero-actions > * {
+    width: 100% !important;
+    min-width: 0 !important;
+    justify-content: center !important;
+  }
+
+  /* Billing */
+  html body .app-shell .bp153-header {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 14px !important;
+  }
+
+  html body .app-shell .bp153-title,
+  html body .app-shell .bp153-actions {
+    width: 100% !important;
+    min-width: 0 !important;
+  }
+
+  html body .app-shell .bp153-actions {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) !important;
+    gap: 8px !important;
+  }
+
+  html body .app-shell .bp153-actions > .btn,
+  html body .app-shell .bp153-more,
+  html body .app-shell .bp153-more > .btn {
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: none !important;
+    justify-content: center !important;
+  }
+
+  html body .app-shell .bp153-more-menu {
+    position: static !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: none !important;
+    margin-top: 6px !important;
+  }
+
+  /* Dentists — keep icon + copy together, then full-width action. */
+  html body .app-shell .dentists133-hero {
+    display: grid !important;
+    grid-template-columns: 44px minmax(0, 1fr) !important;
+    align-items: center !important;
+    gap: 0 14px !important;
+    padding: 16px !important;
+  }
+
+  html body .app-shell .dentists133-hero-icon {
+    grid-column: 1 !important;
+    grid-row: 1 !important;
+    align-self: center !important;
+  }
+
+  html body .app-shell .dentists133-hero > div:nth-child(2) {
+    grid-column: 2 !important;
+    grid-row: 1 !important;
+    min-width: 0 !important;
+  }
+
+  html body .app-shell .dentists133-hero > .btn {
+    grid-column: 1 / -1 !important;
+    grid-row: 2 !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: none !important;
+    margin-top: 14px !important;
+    justify-content: center !important;
+  }
+
+  /* Reports */
+  html body .app-shell .rep162-toolbar {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 14px !important;
+  }
+
+  html body .app-shell .rep162-title-block,
+  html body .app-shell .rep162-toolbar-actions,
+  html body .app-shell .rep162-export,
+  html body .app-shell .rep162-export > .btn,
+  html body .app-shell .rep162-scope {
+    width: 100% !important;
+    max-width: none !important;
+    min-width: 0 !important;
+  }
+
+  html body .app-shell .rep162-toolbar-actions {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) !important;
+    gap: 8px !important;
+  }
+
+  html body .app-shell .rep162-export > .btn,
+  html body .app-shell .rep162-scope {
+    justify-content: center !important;
+  }
+
+  html body .app-shell .rep162-export-menu {
+    position: static !important;
+    width: 100% !important;
+    max-width: none !important;
+    min-width: 0 !important;
+    margin-top: 6px !important;
+  }
+
+  /* Inventory */
+  html body .app-shell .inv232-header {
+    grid-template-columns: 44px minmax(0, 1fr) !important;
+    gap: 0 14px !important;
+    align-items: center !important;
+    padding: 16px !important;
+  }
+
+  html body .app-shell .inv232-header-mark {
+    grid-column: 1 !important;
+    grid-row: 1 !important;
+  }
+
+  html body .app-shell .inv232-header-copy {
+    grid-column: 2 !important;
+    grid-row: 1 !important;
+    min-width: 0 !important;
+  }
+
+  html body .app-shell .inv232-header-actions {
+    grid-column: 1 / -1 !important;
+    grid-row: 2 !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    margin-top: 14px !important;
+  }
+
+  html body .app-shell .inv232-header-actions > *,
+  html body .app-shell .inv232-header-actions .btn {
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: none !important;
+    justify-content: center !important;
+  }
+
+  /* Expenses */
+  html body .app-shell.page-expenses .ex161-hero {
+    align-items: stretch !important;
+  }
+
+  html body .app-shell.page-expenses .ex161-hero-actions {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) !important;
+    gap: 8px !important;
+    width: 100% !important;
+  }
+
+  html body .app-shell.page-expenses .ex161-hero-actions > *,
+  html body .app-shell.page-expenses .ex161-hero-actions .ex161-menu,
+  html body .app-shell.page-expenses .ex161-hero-actions .btn,
+  html body .app-shell.page-expenses .ex161-menu > .btn {
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: none !important;
+    justify-content: center !important;
+  }
+
+  html body .app-shell.page-expenses .ex161-menu-list {
+    position: static !important;
+    inset: auto !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: none !important;
+    margin-top: 6px !important;
+  }
+
+  /* Team & Access */
+  html body .app-shell .team-v26-hero.header-icon-parity {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 14px !important;
+  }
+
+  html body .app-shell .team-v26-hero-copy,
+  html body .app-shell .team-v26-hero-actions {
+    width: 100% !important;
+    max-width: none !important;
+    min-width: 0 !important;
+  }
+
+  html body .app-shell .team-v26-hero-actions {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) !important;
+    gap: 8px !important;
+  }
+
+  html body .app-shell .team-v26-hero-actions > *,
+  html body .app-shell .team-v26-hero-actions .btn {
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: none !important;
+    justify-content: center !important;
+  }
+
+  /* Settings has no action button now; keep icon+copy compact. */
+  html body .app-shell .settings-v30-hero.header-icon-parity {
+    align-items: stretch !important;
+  }
+
+  html body .app-shell .settings-v30-hero-copy {
+    width: 100% !important;
+    max-width: none !important;
+    min-width: 0 !important;
+  }
+
+  /* Internal profile */
+  html body .app-shell .internal-profile-hero {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 16px !important;
+    padding: 16px !important;
+  }
+
+  html body .app-shell .internal-profile-identity,
+  html body .app-shell .internal-profile-actions {
+    width: 100% !important;
+    min-width: 0 !important;
+  }
+
+  html body .app-shell .internal-profile-actions {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) !important;
+    gap: 8px !important;
+  }
+
+  html body .app-shell .internal-profile-actions > *,
+  html body .app-shell .internal-profile-actions .btn,
+  html body .app-shell .internal-profile-photo-action {
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: none !important;
+    justify-content: center !important;
+  }
+
+  /* Executive dashboard: icon + greeting, context/actions on full row below. */
+  html body .app-shell.page-dashboard .dashboard-greeting-v2 {
+    display: grid !important;
+    grid-template-columns: 44px minmax(0, 1fr) !important;
+    align-items: start !important;
+    gap: 0 14px !important;
+    padding: 16px !important;
+  }
+
+  html body .app-shell.page-dashboard .dashboard-greeting-v2-icon {
+    grid-column: 1 !important;
+    grid-row: 1 !important;
+    align-self: start !important;
+  }
+
+  html body .app-shell.page-dashboard .dashboard-greeting-v2-copy {
+    grid-column: 2 !important;
+    grid-row: 1 !important;
+    min-width: 0 !important;
+  }
+
+  html body .app-shell.page-dashboard .dashboard-greeting-v2-context {
+    grid-column: 1 / -1 !important;
+    grid-row: 2 !important;
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) !important;
+    gap: 8px !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    margin-top: 14px !important;
+  }
+
+  html body .app-shell.page-dashboard .dashboard-greeting-v2-context > div:first-child,
+  html body .app-shell.page-dashboard .dashboard-greeting-v2-actions {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) !important;
+    gap: 8px !important;
+    width: 100% !important;
+  }
+
+  html body .app-shell.page-dashboard .dashboard-greeting-v2-context :is(a, button, time, span) {
+    max-width: 100% !important;
+  }
+
+  html body .app-shell.page-dashboard .dashboard-greeting-v2-actions > a,
+  html body .app-shell.page-dashboard .dashboard-greeting-v2-actions > button {
+    width: 100% !important;
+    min-width: 0 !important;
+    justify-content: center !important;
+  }
+
+  /* Prevent long labels from pushing card width. */
+  html body .app-shell :is(
+    .tx43-hero,
+    .tp80-hero,
+    .recalls-standard-hero,
+    .bp153-header,
+    .dentists133-hero,
+    .rep162-toolbar,
+    .inv232-header,
+    .ex161-hero,
+    .team-v26-hero,
+    .settings-v30-hero,
+    .internal-profile-hero,
+    .dashboard-greeting-v2
+  ) :is(h1,h2,p,strong,span) {
+    overflow-wrap: anywhere;
+  }
+}
+
+@media (max-width: 390px) {
+  html body .app-shell .internal-profile-identity {
+    display: grid !important;
+    grid-template-columns: 64px minmax(0, 1fr) !important;
+    align-items: start !important;
+    gap: 12px !important;
+  }
+
+  html body .app-shell .internal-profile-avatar-wrap,
+  html body .app-shell .internal-profile-avatar {
+    width: 64px !important;
+    height: 64px !important;
+  }
+}
