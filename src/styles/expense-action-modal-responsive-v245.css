@@ -1,0 +1,134 @@
+/* V245 — mobile expense action modal correction.
+   Desktop remains unchanged. Phone/tablet layout stays centered, bounded by the
+   viewport, scrolls only the body, and keeps footer actions reachable. */
+
+@media (max-width: 720px) {
+  html body .expense-modal-backdrop {
+    display: grid !important;
+    place-items: center !important;
+    align-items: center !important;
+    justify-content: center !important;
+    box-sizing: border-box !important;
+    width: 100vw !important;
+    height: 100dvh !important;
+    padding: 12px !important;
+    overflow: hidden !important;
+  }
+
+  html body .expense-modal-backdrop > .expense-modal {
+    position: relative !important;
+    inset: auto !important;
+    display: grid !important;
+    grid-template-rows: auto minmax(0, 1fr) auto !important;
+    box-sizing: border-box !important;
+    width: min(100%, 520px) !important;
+    max-width: min(100%, 520px) !important;
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: calc(100dvh - 24px) !important;
+    margin: 0 !important;
+    overflow: hidden !important;
+    border-radius: 18px !important;
+    transform: none !important;
+  }
+
+  html body .expense-modal-header {
+    position: relative !important;
+    z-index: 3 !important;
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) auto !important;
+    align-items: start !important;
+    gap: 10px !important;
+    padding: 14px !important;
+    background: #fff !important;
+  }
+
+  html body .expense-modal-header > div,
+  html body .expense-modal-header h2,
+  html body .expense-modal-header p,
+  html body .ex122-modal-branch {
+    min-width: 0 !important;
+    max-width: 100% !important;
+    overflow-wrap: anywhere !important;
+  }
+
+  html body .expense-modal-close {
+    width: 36px !important;
+    height: 36px !important;
+    min-width: 36px !important;
+    padding: 0 !important;
+    display: grid !important;
+    place-items: center !important;
+  }
+
+  html body .expense-modal-body {
+    min-width: 0 !important;
+    min-height: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    padding: 12px 14px 18px !important;
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+    overscroll-behavior: contain !important;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  html body .expense-form-grid {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) !important;
+    gap: 12px !important;
+    width: 100% !important;
+    min-width: 0 !important;
+  }
+
+  html body .expense-form-grid > *,
+  html body .expense-form-full,
+  html body .expense-checkbox,
+  html body .expense-form-grid :is(label, input, select, textarea, .field, .input-wrap, .select-wrap) {
+    grid-column: auto !important;
+    box-sizing: border-box !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+  }
+
+  html body .expense-form-grid :is(input, select, textarea) {
+    font-size: 16px !important;
+  }
+
+  html body .expense-modal-footer {
+    position: relative !important;
+    bottom: auto !important;
+    z-index: 4 !important;
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 8px !important;
+    width: 100% !important;
+    padding: 10px 14px max(10px, env(safe-area-inset-bottom)) !important;
+    background: rgba(255,255,255,.98) !important;
+    backdrop-filter: blur(12px) !important;
+    -webkit-backdrop-filter: blur(12px) !important;
+  }
+
+  html body .expense-modal-footer > .btn {
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: none !important;
+    justify-content: center !important;
+  }
+}
+
+@media (max-width: 390px) {
+  html body .expense-modal-backdrop {
+    padding: 8px !important;
+  }
+
+  html body .expense-modal-backdrop > .expense-modal {
+    max-height: calc(100dvh - 16px) !important;
+    border-radius: 16px !important;
+  }
+
+  html body .expense-modal-footer {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+}
