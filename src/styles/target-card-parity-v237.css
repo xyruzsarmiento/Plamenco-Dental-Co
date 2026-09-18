@@ -1,0 +1,588 @@
+/* V237 — exact target-card parity with the approved Treatments clinical header.
+   IMPORTANT: this stylesheet intentionally targets only the cards requested for
+   correction. Approved Dental Records / Treatments / Treatment Plans /
+   Prescriptions / Documents / Billing / Reports / Expenses are not selectors here. */
+
+.app-shell .content-area {
+  --target237-border:#cfe0f7;
+  --target237-bg:linear-gradient(105deg,#fff 0%,#fff 72%,#f9fbff 87%,#edf5ff 100%);
+  --target237-icon-border:#bfd7ff;
+  --target237-icon-bg:#eff6ff;
+  --target237-blue:#2563eb;
+  --target237-ink:#172033;
+  --target237-muted:#667085;
+  --target237-shadow:0 16px 38px rgba(37,99,235,.075);
+}
+
+/* Exact approved Treatments shell. */
+html body .app-shell :is(
+  .dashboard-greeting-v2,
+  .appointments-v40 .sa-appointments-header,
+  .patients36-hero,
+  .portal-page-hero:has(.recall-v18-hero-actions),
+  .svc15-command,
+  .dv16-hero,
+  .dv108-hero,
+  .data-import-v21-hero,
+  .inv232-header,
+  .team-v26-hero,
+  .branches-v27-hero,
+  .sys58-hero,
+  .settings-v30-hero,
+  .internal-profile-hero
+) {
+  position:relative!important;
+  isolation:isolate!important;
+  box-sizing:border-box!important;
+  width:100%!important;
+  min-width:0!important;
+  min-height:0!important;
+  margin:0!important;
+  padding:22px 24px!important;
+  overflow:hidden!important;
+  border:1px solid var(--target237-border)!important;
+  border-radius:20px!important;
+  background:var(--target237-bg)!important;
+  background-image:var(--target237-bg)!important;
+  box-shadow:var(--target237-shadow)!important;
+}
+
+/* Remove legacy hero ornaments only on the corrected targets. */
+html body .app-shell :is(
+  .dashboard-greeting-v2,
+  .appointments-v40 .sa-appointments-header,
+  .patients36-hero,
+  .portal-page-hero:has(.recall-v18-hero-actions),
+  .svc15-command,
+  .dv16-hero,
+  .dv108-hero,
+  .data-import-v21-hero,
+  .inv232-header,
+  .team-v26-hero,
+  .branches-v27-hero,
+  .sys58-hero,
+  .settings-v30-hero,
+  .internal-profile-hero
+)::after {
+  content:none!important;
+  display:none!important;
+}
+
+/* ---------------- Existing semantic-icon targets ---------------- */
+html body .app-shell :is(
+  .dashboard-greeting-v2-icon,
+  .patients36-hero .portal-card-heading-icon,
+  .portal-page-hero:has(.recall-v18-hero-actions) .portal-page-hero-icon,
+  .inv232-header-mark,
+  .branches-v27-hero-icon
+) {
+  display:grid!important;
+  place-items:center!important;
+  box-sizing:border-box!important;
+  width:44px!important;
+  height:44px!important;
+  min-width:44px!important;
+  flex:0 0 44px!important;
+  margin:0!important;
+  padding:0!important;
+  border:1px solid var(--target237-icon-border)!important;
+  border-radius:8px!important;
+  background:var(--target237-icon-bg)!important;
+  color:var(--target237-blue)!important;
+  box-shadow:none!important;
+}
+
+html body .app-shell :is(
+  .dashboard-greeting-v2-icon,
+  .patients36-hero .portal-card-heading-icon,
+  .portal-page-hero:has(.recall-v18-hero-actions) .portal-page-hero-icon,
+  .inv232-header-mark,
+  .branches-v27-hero-icon
+) svg {
+  width:20px!important;
+  height:20px!important;
+  stroke-width:1.85!important;
+}
+
+/* ---------------- Targets without a real icon element ----------------
+   Supply one semantic tile so they use the same visual grammar as Treatments. */
+html body .app-shell :is(
+  .appointments-v40 .sa-appointments-header,
+  .svc15-command,
+  .dv16-hero,
+  .dv108-hero,
+  .data-import-v21-hero,
+  .team-v26-hero,
+  .sys58-hero,
+  .settings-v30-hero
+) {
+  display:grid!important;
+  grid-template-columns:44px minmax(0,1fr) auto!important;
+  align-items:center!important;
+  justify-content:stretch!important;
+  gap:14px!important;
+}
+
+html body .app-shell :is(
+  .appointments-v40 .sa-appointments-header,
+  .svc15-command,
+  .dv16-hero,
+  .dv108-hero,
+  .data-import-v21-hero,
+  .team-v26-hero,
+  .sys58-hero,
+  .settings-v30-hero
+)::before {
+  content:""!important;
+  display:block!important;
+  grid-column:1!important;
+  grid-row:1!important;
+  align-self:center!important;
+  box-sizing:border-box!important;
+  width:44px!important;
+  height:44px!important;
+  margin:0!important;
+  padding:0!important;
+  border:1px solid var(--target237-icon-border)!important;
+  border-radius:8px!important;
+  background-color:var(--target237-icon-bg)!important;
+  background-repeat:no-repeat!important;
+  background-position:center!important;
+  background-size:20px 20px!important;
+  box-shadow:none!important;
+}
+
+/* Calendar / appointments */
+html body .app-shell .appointments-v40 .sa-appointments-header::before {
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='%232563eb' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect width='18' height='18' x='3' y='4' rx='2'/%3E%3Cpath d='M16 2v4M8 2v4M3 10h18M8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01'/%3E%3C/svg%3E")!important;
+}
+/* Service operations */
+html body .app-shell .svc15-command::before {
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='%232563eb' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6'/%3E%3C/svg%3E")!important;
+}
+/* Dentist clinical team */
+html body .app-shell :is(.dv16-hero,.dv108-hero)::before {
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='%232563eb' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 3v5a4 4 0 0 0 8 0V3'/%3E%3Cpath d='M10 12v3a4 4 0 0 0 8 0v-1'/%3E%3Ccircle cx='18' cy='11' r='2'/%3E%3C/svg%3E")!important;
+}
+/* Data import */
+html body .app-shell .data-import-v21-hero::before {
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='%232563eb' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 3v12M7 10l5 5 5-5'/%3E%3Cpath d='M5 21h14'/%3E%3C/svg%3E")!important;
+}
+/* Team & access */
+html body .app-shell .team-v26-hero::before {
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='%232563eb' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2'/%3E%3Ccircle cx='9' cy='7' r='4'/%3E%3Cpath d='M19 8v6M22 11h-6'/%3E%3C/svg%3E")!important;
+}
+/* System admin */
+html body .app-shell .sys58-hero::before {
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='%232563eb' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 3l7 3v5c0 5-3 8-7 10-4-2-7-5-7-10V6z'/%3E%3Cpath d='M9 12l2 2 4-4'/%3E%3C/svg%3E")!important;
+}
+/* Settings */
+html body .app-shell .settings-v30-hero::before {
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='%232563eb' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='3'/%3E%3Cpath d='M19.4 15a1.7 1.7 0 0 0 .3 1.9l-2.8 2.8a1.7 1.7 0 0 0-1.9-.3A1.7 1.7 0 0 0 14 21h-4a1.7 1.7 0 0 0-1-1.6 1.7 1.7 0 0 0-1.9.3L4.3 17a1.7 1.7 0 0 0 .3-1.9A1.7 1.7 0 0 0 3 14v-4a1.7 1.7 0 0 0 1.6-1 1.7 1.7 0 0 0-.3-1.9L7.1 4.3A1.7 1.7 0 0 0 9 4.6 1.7 1.7 0 0 0 10 3h4a1.7 1.7 0 0 0 1 1.6 1.7 1.7 0 0 0 1.9-.3l2.8 2.8a1.7 1.7 0 0 0-.3 1.9A1.7 1.7 0 0 0 21 10v4a1.7 1.7 0 0 0-1.6 1Z'/%3E%3C/svg%3E")!important;
+}
+
+/* Put copy + actions into the approved icon | copy | actions structure. */
+html body .app-shell .appointments-v40 .sa-appointments-header-copy,
+html body .app-shell .svc15-command > div:first-child,
+html body .app-shell .dv16-hero > div:first-child,
+html body .app-shell .dv108-hero > div:first-child,
+html body .app-shell .data-import-v21-hero > div:first-child,
+html body .app-shell .team-v26-hero > div:first-child,
+html body .app-shell .sys58-hero-copy,
+html body .app-shell .settings-v30-hero > div:first-child {
+  grid-column:2!important;
+  grid-row:1!important;
+  align-self:center!important;
+  min-width:0!important;
+}
+
+html body .app-shell .appointments-v40 .sa-appointments-header-actions,
+html body .app-shell .svc15-command > :last-child,
+html body .app-shell .dv16-hero > :last-child,
+html body .app-shell .dv108-hero > :last-child,
+html body .app-shell .data-import-v21-hero > :last-child,
+html body .app-shell .team-v26-hero > :last-child,
+html body .app-shell .sys58-hero-status,
+html body .app-shell .settings-v30-hero-actions {
+  grid-column:3!important;
+  grid-row:1!important;
+  align-self:center!important;
+  justify-self:end!important;
+  min-width:0!important;
+}
+
+/* Existing-icon layouts. */
+html body .app-shell .patients36-hero {
+  display:grid!important;
+  grid-template-columns:minmax(0,1fr) auto!important;
+  align-items:center!important;
+  gap:24px!important;
+}
+html body .app-shell .patients36-hero-copy {
+  position:relative!important;
+  display:flex!important;
+  flex-direction:column!important;
+  justify-content:center!important;
+  min-height:44px!important;
+  padding-left:58px!important;
+}
+html body .app-shell .patients36-hero-copy > .portal-card-heading-icon {
+  position:absolute!important;
+  left:0!important;
+  top:50%!important;
+  transform:translateY(-50%)!important;
+}
+
+html body .app-shell .portal-page-hero:has(.recall-v18-hero-actions) {
+  display:grid!important;
+  grid-template-columns:minmax(0,1fr) auto!important;
+  align-items:center!important;
+  gap:24px!important;
+}
+html body .app-shell .portal-page-hero:has(.recall-v18-hero-actions) .portal-page-hero-copy {
+  display:flex!important;
+  align-items:center!important;
+  gap:14px!important;
+  min-width:0!important;
+}
+html body .app-shell .portal-page-hero:has(.recall-v18-hero-actions) .portal-page-hero-text {
+  min-width:0!important;
+}
+html body .app-shell .portal-page-hero:has(.recall-v18-hero-actions) .portal-page-hero-actions {
+  display:flex!important;
+  align-items:center!important;
+  justify-content:flex-end!important;
+  gap:8px!important;
+  flex-wrap:wrap!important;
+}
+
+html body .app-shell .inv232-header {
+  display:grid!important;
+  grid-template-columns:44px minmax(0,1fr) auto!important;
+  align-items:center!important;
+  gap:14px!important;
+}
+html body .app-shell .inv232-header-mark { grid-column:1!important;grid-row:1!important; }
+html body .app-shell .inv232-header-copy { grid-column:2!important;grid-row:1!important;align-self:center!important; }
+html body .app-shell .inv232-header-actions { grid-column:3!important;grid-row:1!important;align-self:center!important;justify-self:end!important; }
+
+html body .app-shell .branches-v27-hero {
+  display:grid!important;
+  grid-template-columns:minmax(0,1fr) auto!important;
+  align-items:center!important;
+  gap:24px!important;
+}
+html body .app-shell .branches-v27-hero-title {
+  display:flex!important;
+  align-items:center!important;
+  gap:14px!important;
+  min-width:0!important;
+}
+
+/* Executive dashboard: same approved geometry. */
+html body .app-shell.page-dashboard .dashboard-greeting-v2 {
+  display:grid!important;
+  grid-template-columns:44px minmax(0,1fr) auto!important;
+  align-items:center!important;
+  gap:14px!important;
+  border-left:1px solid var(--target237-border)!important;
+}
+html body .app-shell.page-dashboard .dashboard-greeting-v2-icon { grid-column:1!important;grid-row:1!important; }
+html body .app-shell.page-dashboard .dashboard-greeting-v2-copy { grid-column:2!important;grid-row:1!important;align-self:center!important; }
+html body .app-shell.page-dashboard .dashboard-greeting-v2-context { grid-column:3!important;grid-row:1!important;align-self:center!important;justify-self:end!important; }
+
+/* ---------------- Typography: exact clinical header hierarchy ---------------- */
+html body .app-shell :is(
+  .dashboard-greeting-eyebrow,
+  .sa-appointments-kicker,
+  .patients36-hero-copy > span:not(.portal-card-heading-icon),
+  .portal-page-hero:has(.recall-v18-hero-actions) .eyebrow,
+  .svc15-command > div:first-child > span:first-child,
+  .dv16-kicker,
+  .dv108-eyebrow,
+  .data-import-v21-kicker,
+  .inv232-header-copy > span:first-child,
+  .team-v26-kicker,
+  .branches-v27-kicker,
+  .sys58-kicker,
+  .settings-v30-kicker,
+  .internal-profile-kicker
+) {
+  display:inline-flex!important;
+  align-items:center!important;
+  gap:6px!important;
+  width:fit-content!important;
+  margin:0 0 4px!important;
+  padding:0!important;
+  border:0!important;
+  background:transparent!important;
+  color:var(--target237-blue)!important;
+  font-size:10px!important;
+  font-weight:900!important;
+  line-height:1.2!important;
+  letter-spacing:.08em!important;
+  text-transform:uppercase!important;
+}
+
+html body .app-shell :is(
+  .dashboard-greeting-v2 h1,
+  .sa-appointments-header h2,
+  .patients36-hero h1,
+  .portal-page-hero:has(.recall-v18-hero-actions) h1,
+  .portal-page-hero:has(.recall-v18-hero-actions) h2,
+  .svc15-command h2,
+  .dv16-hero h2,
+  .dv108-hero h2,
+  .data-import-v21-hero h1,
+  .data-import-v21-hero h2,
+  .inv232-header h1,
+  .team-v26-hero h1,
+  .branches-v27-hero h2,
+  .sys58-hero h1,
+  .settings-v30-hero h2,
+  .internal-profile-title h2
+) {
+  margin:2px 0 0!important;
+  color:var(--target237-ink)!important;
+  font-size:clamp(1.5rem,2vw,2rem)!important;
+  font-weight:800!important;
+  line-height:1.12!important;
+  letter-spacing:0!important;
+  overflow-wrap:anywhere!important;
+}
+
+html body .app-shell :is(
+  .dashboard-greeting-v2 p,
+  .sa-appointments-header p,
+  .patients36-hero p,
+  .portal-page-hero:has(.recall-v18-hero-actions) p,
+  .svc15-command p,
+  .dv16-hero p,
+  .dv108-hero p,
+  .data-import-v21-hero p,
+  .inv232-header p,
+  .team-v26-hero p,
+  .branches-v27-hero p,
+  .sys58-hero p,
+  .settings-v30-hero p,
+  .internal-profile-title > p
+) {
+  max-width:900px!important;
+  margin:5px 0 0!important;
+  color:var(--target237-muted)!important;
+  font-size:13px!important;
+  font-weight:400!important;
+  line-height:1.55!important;
+}
+
+/* Buttons follow the same compact action rhythm as the approved clinical cards. */
+html body .app-shell :is(
+  .dashboard-greeting-v2,
+  .appointments-v40 .sa-appointments-header,
+  .patients36-hero,
+  .portal-page-hero:has(.recall-v18-hero-actions),
+  .svc15-command,
+  .dv16-hero,
+  .dv108-hero,
+  .data-import-v21-hero,
+  .inv232-header,
+  .team-v26-hero,
+  .branches-v27-hero,
+  .sys58-hero,
+  .settings-v30-hero
+) :is(.btn,.button,button) {
+  border-radius:10px;
+}
+
+/* Internal account: same shell, but preserve the real identity photo instead of
+   replacing it with a generic icon. */
+html body .app-shell .internal-profile-hero {
+  display:grid!important;
+  grid-template-columns:minmax(0,1fr) auto!important;
+  align-items:center!important;
+  gap:24px!important;
+}
+html body .app-shell .internal-profile-identity {
+  display:flex!important;
+  align-items:center!important;
+  gap:16px!important;
+  min-width:0!important;
+}
+html body .app-shell .internal-profile-avatar-wrap {
+  width:76px!important;
+  height:76px!important;
+  flex:0 0 76px!important;
+}
+html body .app-shell .internal-profile-avatar {
+  width:76px!important;
+  height:76px!important;
+  border:1px solid var(--target237-icon-border)!important;
+  border-radius:14px!important;
+  box-shadow:0 8px 20px rgba(37,99,235,.10)!important;
+}
+html body .app-shell .internal-profile-avatar-wrap button {
+  width:32px!important;
+  height:32px!important;
+  right:-4px!important;
+  bottom:-4px!important;
+  border-radius:8px!important;
+}
+html body .app-shell .internal-profile-actions {
+  align-self:center!important;
+  justify-self:end!important;
+  justify-content:flex-end!important;
+}
+
+/* Right-side information callouts stay functional but lose unrelated hero styling. */
+html body .app-shell :is(
+  .data-import-v21-safety,
+  .branches-v27-hero-badge,
+  .sys58-hero-status
+) {
+  border-radius:10px!important;
+  box-shadow:none!important;
+}
+
+/* Responsive parity follows clinical-header-standard-v211. */
+@media (max-width:820px) {
+  html body .app-shell :is(
+    .dashboard-greeting-v2,
+    .appointments-v40 .sa-appointments-header,
+    .patients36-hero,
+    .portal-page-hero:has(.recall-v18-hero-actions),
+    .svc15-command,
+    .dv16-hero,
+    .dv108-hero,
+    .data-import-v21-hero,
+    .inv232-header,
+    .team-v26-hero,
+    .branches-v27-hero,
+    .sys58-hero,
+    .settings-v30-hero,
+    .internal-profile-hero
+  ) {
+    padding:18px!important;
+    border-radius:18px!important;
+  }
+
+  html body .app-shell :is(
+    .appointments-v40 .sa-appointments-header,
+    .svc15-command,
+    .dv16-hero,
+    .dv108-hero,
+    .data-import-v21-hero,
+    .team-v26-hero,
+    .sys58-hero,
+    .settings-v30-hero,
+    .dashboard-greeting-v2,
+    .inv232-header
+  ) {
+    grid-template-columns:44px minmax(0,1fr)!important;
+  }
+
+  html body .app-shell .appointments-v40 .sa-appointments-header-actions,
+  html body .app-shell .svc15-command > :last-child,
+  html body .app-shell .dv16-hero > :last-child,
+  html body .app-shell .dv108-hero > :last-child,
+  html body .app-shell .data-import-v21-hero > :last-child,
+  html body .app-shell .team-v26-hero > :last-child,
+  html body .app-shell .sys58-hero-status,
+  html body .app-shell .settings-v30-hero-actions,
+  html body .app-shell .dashboard-greeting-v2-context,
+  html body .app-shell .inv232-header-actions {
+    grid-column:2!important;
+    grid-row:2!important;
+    justify-self:start!important;
+    justify-content:flex-start!important;
+    margin-top:8px!important;
+  }
+
+  html body .app-shell :is(
+    .patients36-hero,
+    .portal-page-hero:has(.recall-v18-hero-actions),
+    .branches-v27-hero,
+    .internal-profile-hero
+  ) {
+    grid-template-columns:1fr!important;
+    gap:16px!important;
+  }
+
+  html body .app-shell :is(
+    .patients36-hero-actions,
+    .portal-page-hero:has(.recall-v18-hero-actions) .portal-page-hero-actions,
+    .branches-v27-hero-badge,
+    .internal-profile-actions
+  ) {
+    justify-self:start!important;
+    justify-content:flex-start!important;
+  }
+}
+
+@media (max-width:520px) {
+  html body .app-shell :is(
+    .dashboard-greeting-v2,
+    .appointments-v40 .sa-appointments-header,
+    .patients36-hero,
+    .portal-page-hero:has(.recall-v18-hero-actions),
+    .svc15-command,
+    .dv16-hero,
+    .dv108-hero,
+    .data-import-v21-hero,
+    .inv232-header,
+    .team-v26-hero,
+    .branches-v27-hero,
+    .sys58-hero,
+    .settings-v30-hero,
+    .internal-profile-hero
+  ) {
+    padding:16px!important;
+  }
+
+  html body .app-shell :is(
+    .patients36-hero-actions,
+    .portal-page-hero:has(.recall-v18-hero-actions) .portal-page-hero-actions,
+    .sa-appointments-header-actions,
+    .inv232-header-actions,
+    .internal-profile-actions
+  ) {
+    width:100%!important;
+    display:grid!important;
+    grid-template-columns:1fr!important;
+  }
+
+  html body .app-shell :is(
+    .patients36-hero-actions,
+    .portal-page-hero:has(.recall-v18-hero-actions) .portal-page-hero-actions,
+    .sa-appointments-header-actions,
+    .inv232-header-actions,
+    .internal-profile-actions
+  ) > * {
+    width:100%!important;
+    justify-content:center!important;
+  }
+
+  html body .app-shell .internal-profile-identity {
+    align-items:flex-start!important;
+  }
+}
+
+@media (max-width:390px) {
+  html body .app-shell .patients36-hero-copy {
+    padding-left:0!important;
+  }
+  html body .app-shell .patients36-hero-copy > .portal-card-heading-icon {
+    display:none!important;
+  }
+  html body .app-shell .portal-page-hero:has(.recall-v18-hero-actions) .portal-page-hero-icon {
+    display:none!important;
+  }
+  html body .app-shell .internal-profile-identity {
+    display:grid!important;
+    grid-template-columns:64px minmax(0,1fr)!important;
+  }
+  html body .app-shell .internal-profile-avatar-wrap,
+  html body .app-shell .internal-profile-avatar {
+    width:64px!important;
+    height:64px!important;
+  }
+}
