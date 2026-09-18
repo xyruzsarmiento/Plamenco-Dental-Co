@@ -1,0 +1,130 @@
+/* V238 — Appointments header spacing correction only.
+   Keeps the V237 visual standard, but fully resets legacy V40 layout properties
+   that were leaving excess vertical space between kicker, title and description. */
+
+html body .app-shell .appointments-v40 .sa-appointments-header {
+  display:grid!important;
+  grid-template-columns:44px minmax(0,1fr) auto!important;
+  align-items:center!important;
+  column-gap:14px!important;
+  row-gap:0!important;
+  min-height:0!important;
+  padding:22px 24px!important;
+}
+
+html body .app-shell .appointments-v40 .sa-appointments-header::before {
+  position:static!important;
+  inset:auto!important;
+  right:auto!important;
+  bottom:auto!important;
+  top:auto!important;
+  left:auto!important;
+  transform:none!important;
+  align-self:center!important;
+  justify-self:start!important;
+  width:44px!important;
+  height:44px!important;
+  margin:0!important;
+  border-radius:8px!important;
+}
+
+html body .app-shell .appointments-v40 .sa-appointments-header-copy {
+  position:relative!important;
+  z-index:1!important;
+  grid-column:2!important;
+  grid-row:1!important;
+  align-self:center!important;
+  display:flex!important;
+  flex-direction:column!important;
+  align-items:flex-start!important;
+  justify-content:center!important;
+  gap:0!important;
+  width:100%!important;
+  max-width:900px!important;
+  min-width:0!important;
+  margin:0!important;
+  padding:0!important;
+}
+
+html body .app-shell .appointments-v40 .sa-appointments-header-copy > .sa-appointments-kicker {
+  display:inline-flex!important;
+  align-items:center!important;
+  gap:6px!important;
+  width:fit-content!important;
+  min-height:0!important;
+  margin:0 0 4px!important;
+  padding:0!important;
+  border:0!important;
+  border-radius:0!important;
+  background:transparent!important;
+  line-height:1.2!important;
+}
+
+html body .app-shell .appointments-v40 .sa-appointments-header-copy > h2 {
+  display:block!important;
+  width:auto!important;
+  margin:0!important;
+  padding:0!important;
+  line-height:1.12!important;
+}
+
+html body .app-shell .appointments-v40 .sa-appointments-header-copy > p {
+  display:block!important;
+  width:auto!important;
+  margin:5px 0 0!important;
+  padding:0!important;
+}
+
+html body .app-shell .appointments-v40 .sa-appointments-header-actions {
+  position:relative!important;
+  z-index:1!important;
+  grid-column:3!important;
+  grid-row:1!important;
+  align-self:center!important;
+  justify-self:end!important;
+  display:flex!important;
+  flex-direction:column!important;
+  align-items:flex-end!important;
+  justify-content:center!important;
+  gap:8px!important;
+  margin:0!important;
+  padding:0!important;
+}
+
+html body .app-shell .appointments-v40 .sa-appointments-date-chip,
+html body .app-shell .appointments-v40 .sa-appointments-header-actions :is(.btn,.button) {
+  margin:0!important;
+}
+
+@media (max-width:820px) {
+  html body .app-shell .appointments-v40 .sa-appointments-header {
+    grid-template-columns:44px minmax(0,1fr)!important;
+    column-gap:14px!important;
+    row-gap:12px!important;
+    padding:18px!important;
+  }
+
+  html body .app-shell .appointments-v40 .sa-appointments-header-actions {
+    grid-column:2!important;
+    grid-row:2!important;
+    align-items:flex-start!important;
+    justify-self:start!important;
+  }
+}
+
+@media (max-width:520px) {
+  html body .app-shell .appointments-v40 .sa-appointments-header {
+    padding:16px!important;
+  }
+
+  html body .app-shell .appointments-v40 .sa-appointments-header-actions {
+    width:100%!important;
+    display:grid!important;
+    grid-template-columns:1fr!important;
+  }
+
+  html body .app-shell .appointments-v40 .sa-appointments-header-actions > * {
+    width:100%!important;
+    justify-content:center!important;
+  }
+}
