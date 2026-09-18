@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Activity, CheckCircle2, Clock3, Database, Eye, Filter, Layers3, PencilLine, PhilippinePeso, Plus, Search, ShieldCheck, Stethoscope, X, XCircle } from 'lucide-react'
+import { Activity, CheckCircle2, Clock3, Database, Eye, Filter, Layers3, PencilLine, PhilippinePeso, Plus, Search, ShieldCheck, Sparkles, Stethoscope, X, XCircle } from 'lucide-react'
 import { PageScaffold } from '../components/ui/PageScaffold'
 import { Button } from '../components/ui/Button'
 import { Pagination } from '../components/ui/DesignSystem'
