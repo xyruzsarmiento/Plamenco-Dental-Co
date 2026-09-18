@@ -1,4 +1,4 @@
-import { Building2, CheckCircle2, Clock3, History, LogOut, RefreshCw, Save, ShieldCheck, SlidersHorizontal, UserRound } from 'lucide-react'
+import { Building2, CheckCircle2, Clock3, History, LogOut, RefreshCw, Save, ShieldCheck, SlidersHorizontal, Sparkles, UserRound } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { Badge } from '../components/ui/Badge'
 import { Button } from '../components/ui/Button'
@@ -88,7 +88,7 @@ export function SettingsPageV30() {
       <header className="settings-v30-hero header-icon-parity">
         <div className="settings-v30-hero-copy">
           <div className="header-icon-parity-tile" aria-hidden="true"><SlidersHorizontal size={20} strokeWidth={1.85} /></div>
-          <span className="settings-v30-kicker">Administration controls</span>
+          <span className="settings-v30-kicker"><Sparkles size={14} />Administration controls</span>
           <h2>Settings</h2>
           <p>Govern clinic identity, review important changes, and manage your current session from one workspace.</p>
         </div>
