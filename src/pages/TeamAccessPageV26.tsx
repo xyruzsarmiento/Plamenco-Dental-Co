@@ -602,8 +602,8 @@ export function TeamAccessPageV26() {
   return (
     <PageScaffold title="Team & Access" description="Manage clinic accounts, roles, workforce visibility, providers and compensation.">
       <div className="team-v26 team-v26-ia">
-        <section className="team-v26-hero">
-          <div><span className="team-v26-kicker">Team & access</span><h2>Manage clinic team access</h2><p>Control internal accounts, roles and branch access from one secure workspace.</p></div>
+        <section className="team-v26-hero header-icon-parity">
+          <div className="team-v26-hero-copy"><div className="header-icon-parity-tile" aria-hidden="true"><UsersRound size={20} strokeWidth={1.85} /></div><span className="team-v26-kicker">Team & access</span><h2>Manage clinic team access</h2><p>Control internal accounts, roles and branch access from one secure workspace.</p></div>
           <div className="team-v26-hero-actions"><span><ShieldCheck size={14} /> Owner controlled</span><Button onClick={() => { setMessage(null); setInviteOpen(true) }}><Plus size={16} /> Invite Team Member</Button></div>
         </section>
 
