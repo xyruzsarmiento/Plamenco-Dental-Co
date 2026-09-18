@@ -244,8 +244,8 @@ export function PatientsPageV36() {
 
   return (
     <section className="patients36-page">
-      <header className="patients36-hero">
-        <div className="patients36-hero-copy portal-card-heading-with-icon"><span className="portal-card-heading-icon" aria-hidden="true"><UsersRound size={21} /></span><span>PATIENT INTELLIGENCE</span><h1>Patient Records</h1><p>Search, review and manage the clinic's patient population from one workspace.</p></div>
+      <header className="patients36-hero clinical-standard-hero">
+        <div className="patients36-hero-copy portal-card-heading-with-icon clinical-standard-hero-copy"><span className="portal-card-heading-icon" aria-hidden="true"><UsersRound size={21} /></span><span>PATIENT INTELLIGENCE</span><h1>Patient Records</h1><p>Search, review and manage the clinic's patient population from one workspace.</p></div>
         <div className="patients36-hero-actions">{canImport && <Button variant="secondary" onClick={() => setShowImport(true)}><Import size={16} />Import</Button>}{canCreate && <Button onClick={openAdd}><Plus size={16} />Add patient</Button>}</div>
       </header>
 
