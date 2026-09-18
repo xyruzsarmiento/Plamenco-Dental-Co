@@ -148,8 +148,13 @@ export function ServicesPageV15() {
   return (
     <PageScaffold title="Services" description="Manage the clinic catalogue, pricing, duration and service availability.">
       <section className="svc15-page">
-        <header className="svc15-command">
-          <div><span>Clinic catalogue</span><h2>Service operations</h2><p>Maintain one clean source of truth for procedures used by booking, treatment planning and billing.</p></div>
+        <header className="svc15-command service-standard-hero">
+          <div className="svc15-command-copy">
+            <div className="svc15-command-icon" aria-hidden="true"><Stethoscope size={20} strokeWidth={1.85} /></div>
+            <span className="svc15-command-kicker">Clinic catalogue</span>
+            <h2>Service operations</h2>
+            <p>Maintain one clean source of truth for procedures used by booking, treatment planning and billing.</p>
+          </div>
           <Button className="svc15-add-service-btn" onClick={add} icon={<Plus size={17} />}>Add service</Button>
         </header>
 
