@@ -206,3 +206,24 @@ html body .app-shell .patients36-hero-actions > * {
     grid-column:1!important;
   }
 }
+
+
+/* Neutralize the legacy workspace-v233 sparkle decoration.
+   In Patient Records the first span is the real icon tile, not the eyebrow. */
+html body .app-shell .patients36-hero-copy > .portal-card-heading-icon::before,
+html body .app-shell .patients36-hero-copy > .portal-card-heading-icon::after {
+  content:none!important;
+  display:none!important;
+}
+
+/* The removed portal-card-heading-with-icon class used to make the copy block
+   behave like a nested card. Keep the copy block visually transparent so the
+   outer hero is the only card shell, matching Appointments exactly. */
+html body .app-shell .patients36-hero-copy.clinical-standard-hero-copy {
+  overflow:visible!important;
+  border:0!important;
+  border-radius:0!important;
+  background:transparent!important;
+  background-image:none!important;
+  box-shadow:none!important;
+}
