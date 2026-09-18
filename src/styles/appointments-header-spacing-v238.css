@@ -185,6 +185,20 @@ html body .app-shell .appointments-v40 .sa-appointments-header-actions :is(.btn,
     border-radius:18px!important;
   }
 
+  /* Critical responsive reset: desktop uses flex-basis:900px to cap the copy
+     width in a row. Once the hero becomes a column, that same basis becomes
+     vertical height unless explicitly reset. */
+  html body .app-shell .appointments-v40 .sa-appointments-header-copy.clinical-standard-hero-copy {
+    flex:0 0 auto!important;
+    flex-basis:auto!important;
+    width:100%!important;
+    max-width:none!important;
+    height:auto!important;
+    min-height:0!important;
+    max-height:none!important;
+    align-self:stretch!important;
+  }
+
   html body .app-shell .appointments-v40 .sa-appointments-header-actions {
     width:100%!important;
     min-width:0!important;
