@@ -10,6 +10,7 @@ import {
   Phone,
   Search,
   ShieldCheck,
+  Sparkles,
   Stethoscope,
   UsersRound,
   X,
@@ -256,7 +257,7 @@ export function BranchesPageV27() {
         <div className="branches-v27-hero-title">
           <span className="branches-v27-hero-icon"><Building2 size={22} /></span>
           <div>
-            <span className="branches-v27-kicker">Clinic network</span>
+            <span className="branches-v27-kicker"><Sparkles size={14} />Clinic network</span>
             <h2>Branch Operations</h2>
             <p>Review each location's contact details, clinical coverage, and daily schedule.</p>
           </div>
