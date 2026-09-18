@@ -221,8 +221,9 @@ export function DataImportPageV21() {
 
   return (
     <section className="data-import-v21">
-      <header className="data-import-v21-hero">
-        <div>
+      <header className="data-import-v21-hero header-icon-parity">
+        <div className="data-import-v21-hero-copy">
+          <div className="header-icon-parity-tile" aria-hidden="true"><DatabaseZap size={20} strokeWidth={1.85} /></div>
           <span className="data-import-v21-kicker">Controlled migration workspace</span>
           <h2>Data Import</h2>
           <p>Upload, map, validate and review historical clinic records before committing them to the patient registry.</p>
