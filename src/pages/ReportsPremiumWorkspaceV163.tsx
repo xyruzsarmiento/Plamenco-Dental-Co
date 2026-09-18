@@ -217,7 +217,6 @@ export function ReportsPremiumWorkspaceV163() {
         <label><span>From</span><input type="date" value={startDate} onChange={(event) => { setPreset('custom'); setStartDate(event.target.value) }} /></label>
         <label><span>To</span><input type="date" value={endDate} onChange={(event) => { setPreset('custom'); setEndDate(event.target.value) }} /></label>
       </div>
-      <button className="rep162-refresh" type="button" onClick={() => void refresh()} disabled={loading} aria-label="Refresh report"><RefreshCw size={16} className={loading ? 'is-spinning' : ''} /></button>
     </section>
 
     {loading && <div className="rep162-status">Loading persisted clinic transactions...</div>}
