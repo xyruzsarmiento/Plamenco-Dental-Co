@@ -23,6 +23,7 @@ type PageHeroProps = {
   title: string
   description: string
   eyebrow?: string
+  eyebrowIcon?: ReactNode
   icon?: ReactNode
   metric?: ReactNode
   status?: string
@@ -57,6 +58,7 @@ export function PageHero({
   className = '',
   description,
   eyebrow,
+  eyebrowIcon,
   icon,
   metric,
   primaryAction,
@@ -78,7 +80,7 @@ export function PageHero({
         <span className="portal-page-hero-icon" aria-hidden="true">{icon ?? defaultPageIcon(title)}</span>
         <div className="portal-page-hero-text">
           <div className="portal-page-hero-meta">
-            {eyebrow && <p className="eyebrow">{eyebrow}</p>}
+            {eyebrow && <p className={`eyebrow ${eyebrowIcon ? 'has-sparkles-icon' : ''}`.trim()}>{eyebrowIcon}{eyebrow}</p>}
             {status && <Badge tone="info">{status}</Badge>}
           </div>
           <h2>{title}</h2>
