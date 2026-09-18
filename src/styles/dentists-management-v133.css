@@ -974,3 +974,55 @@
     overflow-x: auto;
   }
 }
+
+
+/* V248 mobile header parity — Patient Records reference */
+@media(max-width:860px){
+  .dentists133-hero{
+    display:grid!important;
+    grid-template-columns:44px minmax(0,1fr)!important;
+    grid-template-rows:auto auto!important;
+    gap:0 14px!important;
+    align-items:center!important;
+    padding:16px!important;
+  }
+  .dentists133-hero>.dentists133-hero-icon{
+    grid-column:1!important;
+    grid-row:1!important;
+    place-self:center start!important;
+    width:44px!important;
+    height:44px!important;
+    min-width:44px!important;
+    margin:0!important;
+    transform:none!important;
+    border-radius:8px!important;
+  }
+  .dentists133-hero>div:nth-child(2){
+    grid-column:2!important;
+    grid-row:1!important;
+    width:100%!important;
+    min-width:0!important;
+  }
+  .dentists133-hero>.btn{
+    grid-column:1/-1!important;
+    grid-row:2!important;
+    width:100%!important;
+    min-width:0!important;
+    max-width:none!important;
+    justify-self:stretch!important;
+    justify-content:center!important;
+    gap:8px!important;
+    margin:14px 0 0!important;
+  }
+  .dentists133-hero>.btn>svg{
+    position:static!important;
+    margin:0!important;
+    flex:0 0 auto!important;
+  }
+  .dentists133-hero>.btn>span{
+    display:inline-flex!important;
+    align-items:center!important;
+    justify-content:center!important;
+    flex:0 0 auto!important;
+  }
+}
