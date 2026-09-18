@@ -227,3 +227,96 @@ html body .app-shell .patients36-hero-copy.clinical-standard-hero-copy {
   background-image:none!important;
   box-shadow:none!important;
 }
+
+
+/* V240 hardening — exact Patient Records icon/kicker behavior.
+   The icon element is now a DIV so legacy span:first-child selectors cannot inject
+   the workspace sparkle into the icon tile. */
+
+html body .app-shell .patients36-hero-copy.clinical-standard-hero-copy > .portal-card-heading-icon {
+  position:static!important;
+  inset:auto!important;
+  left:auto!important;
+  top:auto!important;
+  right:auto!important;
+  bottom:auto!important;
+  transform:none!important;
+  grid-column:1!important;
+  grid-row:1 / -1!important;
+  align-self:center!important;
+  justify-self:start!important;
+  display:grid!important;
+  place-items:center!important;
+  box-sizing:border-box!important;
+  width:44px!important;
+  height:44px!important;
+  min-width:44px!important;
+  min-height:44px!important;
+  max-width:44px!important;
+  max-height:44px!important;
+  margin:0!important;
+  padding:0!important;
+  overflow:hidden!important;
+  border:1px solid #bfd7ff!important;
+  border-radius:8px!important;
+  background:#eff6ff!important;
+  background-image:none!important;
+  color:#2563eb!important;
+  line-height:1!important;
+  box-shadow:none!important;
+}
+
+html body .app-shell .patients36-hero-copy.clinical-standard-hero-copy > .portal-card-heading-icon::before,
+html body .app-shell .patients36-hero-copy.clinical-standard-hero-copy > .portal-card-heading-icon::after {
+  content:none!important;
+  display:none!important;
+  background:none!important;
+  background-image:none!important;
+}
+
+html body .app-shell .patients36-hero-copy.clinical-standard-hero-copy > .portal-card-heading-icon svg {
+  display:block!important;
+  position:static!important;
+  width:20px!important;
+  height:20px!important;
+  margin:0!important;
+  padding:0!important;
+  transform:none!important;
+  flex:none!important;
+  stroke-width:1.85!important;
+}
+
+html body .app-shell .patients36-hero-copy > .patients36-kicker {
+  display:inline-flex!important;
+  align-items:center!important;
+  gap:6px!important;
+  width:fit-content!important;
+  min-width:0!important;
+  min-height:0!important;
+  margin:0 0 4px!important;
+  padding:0!important;
+  border:0!important;
+  border-radius:0!important;
+  background:transparent!important;
+  background-image:none!important;
+  color:#2563eb!important;
+  font-size:10px!important;
+  font-weight:900!important;
+  line-height:1.2!important;
+  letter-spacing:.08em!important;
+  text-transform:uppercase!important;
+  box-shadow:none!important;
+}
+
+html body .app-shell .patients36-hero-copy > .patients36-kicker::before,
+html body .app-shell .patients36-hero-copy > .patients36-kicker::after {
+  content:none!important;
+  display:none!important;
+}
+
+/* Explicitly neutralize any old positional span rule still loaded earlier. */
+html body .app-shell .patients36-hero-copy > span:first-child::before,
+html body .app-shell .patients36-hero-copy > span:first-child::after {
+  content:none!important;
+  display:none!important;
+}
