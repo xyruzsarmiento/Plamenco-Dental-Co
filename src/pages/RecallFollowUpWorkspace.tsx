@@ -321,7 +321,7 @@ export function RecallFollowUpWorkspace() {
     description="Track patients who are due to return, document outreach, and convert follow-up recommendations into scheduled care."
     icon={<HeartPulse size={22} />}
     status={scopeLabel}
-    actions={<>{canCreate ? <Button size="sm" icon={<Plus size={15} />} onClick={openNewRecall}>New recall</Button> : null}<Button variant="secondary" size="sm" icon={<RefreshCw size={15} />} onClick={() => setReloadToken((value) => value + 1)} disabled={isLoading}>Refresh</Button></>}
+    actions={<>{canCreate ? <Button size="sm" icon={<Plus size={15} />} onClick={openNewRecall}>New recall</Button> : null}</>}
   >
     <section className="rc3-kpis" aria-label="Recall queue summary">
       {kpis.map(({ title, value, icon: Icon, tone }) => <article className={`is-${tone}`} key={title}><span><Icon size={17} /></span><div><small>{title}</small><strong>{isLoading ? '-' : value}</strong></div></article>)}
