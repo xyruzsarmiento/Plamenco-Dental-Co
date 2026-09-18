@@ -1,308 +1,522 @@
 /* V247 — canonical mobile header/card behavior.
-   Patient Records is the reference. Desktop is untouched.
-   This file replaces the earlier generic mobile action layers. */
+   Patient Records is the exact mobile reference.
+   Desktop geometry is intentionally untouched. */
 
-@media (max-width:520px) {
-  /* ---------------- Billing & Payments ---------------- */
+@media (max-width:640px) {
+  /* Shared mobile card shell behavior */
+  html body .app-shell :is(
+    .tx43-hero,
+    .tp80-hero,
+    .bp153-header,
+    .dentists133-hero,
+    .rep162-toolbar,
+    .inv232-header,
+    .team-v26-hero,
+    .sys58-hero,
+    .settings-v30-hero,
+    .internal-profile-hero
+  ) {
+    box-sizing:border-box!important;
+    width:100%!important;
+    min-width:0!important;
+    max-width:none!important;
+  }
+
+  /* ------------------------------------------------------------- */
+  /* Treatments + Treatment Plans                                  */
+  /* ------------------------------------------------------------- */
+  html body .app-shell :is(.tx43-hero,.tp80-hero) {
+    display:grid!important;
+    grid-template-columns:minmax(0,1fr)!important;
+    grid-template-rows:auto auto!important;
+    align-items:stretch!important;
+    justify-items:stretch!important;
+    gap:14px!important;
+    padding:16px!important;
+  }
+
+  html body .app-shell :is(.tx43-hero-copy,.tp80-hero-title) {
+    width:100%!important;
+    max-width:none!important;
+    min-width:0!important;
+    justify-self:stretch!important;
+  }
+
+  html body .app-shell :is(.tx43-hero-copy,.tp80-hero-title).clinical-standard-hero-copy {
+    display:grid!important;
+    grid-template-columns:44px minmax(0,1fr)!important;
+    grid-template-rows:auto auto auto!important;
+    column-gap:14px!important;
+    row-gap:0!important;
+    align-items:center!important;
+    padding:0!important;
+    min-height:0!important;
+  }
+
+  html body .app-shell .tx43-hero-copy > .portal-card-heading-icon,
+  html body .app-shell .tp80-hero-title > .tp80-hero-icon {
+    position:static!important;
+    inset:auto!important;
+    transform:none!important;
+    grid-column:1!important;
+    grid-row:1 / -1!important;
+    place-self:center start!important;
+    box-sizing:border-box!important;
+    width:44px!important;
+    height:44px!important;
+    min-width:44px!important;
+    max-width:44px!important;
+    margin:0!important;
+    padding:0!important;
+    border-radius:8px!important;
+  }
+
+  html body .app-shell .tx43-hero-copy > :not(.portal-card-heading-icon),
+  html body .app-shell .tp80-hero-title > :not(.tp80-hero-icon) {
+    grid-column:2!important;
+    min-width:0!important;
+  }
+
+  html body .app-shell .tx43-hero > .btn,
+  html body .app-shell .tx43-hero > button,
+  html body .app-shell .tp80-hero > .btn,
+  html body .app-shell .tp80-hero > button {
+    grid-column:1 / -1!important;
+    inline-size:100%!important;
+    width:100%!important;
+    min-width:0!important;
+    max-width:none!important;
+    flex:1 1 100%!important;
+    justify-self:stretch!important;
+    align-self:stretch!important;
+    justify-content:center!important;
+    margin:0!important;
+  }
+
+  /* ------------------------------------------------------------- */
+  /* Billing & Payments                                            */
+  /* ------------------------------------------------------------- */
   html body .app-shell .bp153-header {
     display:grid!important;
     grid-template-columns:44px minmax(0,1fr)!important;
     grid-template-rows:auto auto!important;
     align-items:center!important;
+    justify-items:stretch!important;
     gap:0 14px!important;
-    width:100%!important;
     padding:16px!important;
   }
+
   html body .app-shell .bp153-header::before {
     content:""!important;
     display:block!important;
     grid-column:1!important;
     grid-row:1!important;
+    place-self:center start!important;
+    box-sizing:border-box!important;
     width:44px!important;
     height:44px!important;
+    min-width:44px!important;
+    max-width:44px!important;
+    margin:0!important;
     border:1px solid #bfd7ff!important;
     border-radius:8px!important;
     background:#eff6ff center/20px 20px no-repeat!important;
     background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%232563eb' stroke-width='1.85' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='2' y='5' width='20' height='14' rx='2'/%3E%3Cpath d='M2 10h20M16 15h2'/%3E%3C/svg%3E")!important;
   }
+
   html body .app-shell .bp153-title {
     grid-column:2!important;
     grid-row:1!important;
     width:100%!important;
     min-width:0!important;
+    max-width:none!important;
+    justify-self:stretch!important;
   }
+
   html body .app-shell .bp153-title > span > svg { display:none!important; }
+
   html body .app-shell .bp153-actions {
     grid-column:1 / -1!important;
     grid-row:2!important;
     display:grid!important;
     grid-template-columns:minmax(0,1fr)!important;
     gap:8px!important;
-    width:100%!important;
-    min-width:0!important;
-    margin-top:14px!important;
-  }
-  html body .app-shell .bp153-actions > .btn,
-  html body .app-shell .bp153-actions > button,
-  html body .app-shell .bp153-more,
-  html body .app-shell .bp153-more > .btn,
-  html body .app-shell .bp153-more > button {
+    inline-size:100%!important;
     width:100%!important;
     min-width:0!important;
     max-width:none!important;
-    margin:0!important;
-    justify-content:center!important;
+    justify-self:stretch!important;
+    align-self:stretch!important;
+    margin:14px 0 0!important;
   }
+
+  html body .app-shell .bp153-actions > .btn,
+  html body .app-shell .bp153-actions > button,
+  html body .app-shell .bp153-actions > .bp153-more,
+  html body .app-shell .bp153-more > .btn,
+  html body .app-shell .bp153-more > button {
+    box-sizing:border-box!important;
+    inline-size:100%!important;
+    width:100%!important;
+    min-width:0!important;
+    max-width:none!important;
+    flex:1 1 100%!important;
+    justify-self:stretch!important;
+    align-self:stretch!important;
+    justify-content:center!important;
+    margin:0!important;
+  }
+
+  html body .app-shell .bp153-more { display:block!important; }
+
   html body .app-shell .bp153-more-menu {
     position:static!important;
     inset:auto!important;
+    inline-size:100%!important;
     width:100%!important;
     min-width:0!important;
     max-width:none!important;
-    margin-top:6px!important;
+    margin:6px 0 0!important;
   }
 
-  /* ---------------- Dentists ---------------- */
+  /* ------------------------------------------------------------- */
+  /* Dentists                                                      */
+  /* ------------------------------------------------------------- */
   html body .app-shell .dentists133-hero {
     display:grid!important;
     grid-template-columns:44px minmax(0,1fr)!important;
     grid-template-rows:auto auto!important;
     align-items:center!important;
+    justify-items:stretch!important;
     gap:0 14px!important;
-    width:100%!important;
     padding:16px!important;
   }
-  html body .app-shell .dentists133-hero-icon {
+
+  html body .app-shell .dentists133-hero > .dentists133-hero-icon {
     grid-column:1!important;
     grid-row:1!important;
+    place-self:center start!important;
+    box-sizing:border-box!important;
     width:44px!important;
     height:44px!important;
     min-width:44px!important;
+    max-width:44px!important;
     margin:0!important;
-    justify-self:start!important;
-    align-self:center!important;
+    transform:none!important;
     border-radius:8px!important;
   }
+
   html body .app-shell .dentists133-hero > div:nth-child(2) {
     grid-column:2!important;
     grid-row:1!important;
-    min-width:0!important;
     width:100%!important;
+    min-width:0!important;
+    max-width:none!important;
+    justify-self:stretch!important;
   }
+
   html body .app-shell .dentists133-hero > .btn,
   html body .app-shell .dentists133-hero > button {
     grid-column:1 / -1!important;
     grid-row:2!important;
+    box-sizing:border-box!important;
+    inline-size:100%!important;
     width:100%!important;
     min-width:0!important;
     max-width:none!important;
-    margin:14px 0 0!important;
+    flex:1 1 100%!important;
+    justify-self:stretch!important;
+    align-self:stretch!important;
     justify-content:center!important;
+    margin:14px 0 0!important;
   }
 
-  /* ---------------- Reports & Analytics ---------------- */
+  /* ------------------------------------------------------------- */
+  /* Reports & Analytics                                           */
+  /* ------------------------------------------------------------- */
   html body .app-shell .rep162-toolbar {
     display:grid!important;
     grid-template-columns:44px minmax(0,1fr)!important;
     grid-template-rows:auto auto!important;
     align-items:center!important;
+    justify-items:stretch!important;
     gap:0 14px!important;
-    width:100%!important;
     padding:16px!important;
   }
+
   html body .app-shell .rep162-toolbar::before {
     grid-column:1!important;
     grid-row:1!important;
+    place-self:center start!important;
+    box-sizing:border-box!important;
     width:44px!important;
     height:44px!important;
     min-width:44px!important;
+    max-width:44px!important;
     margin:0!important;
     border-radius:8px!important;
     background-size:20px 20px!important;
-    align-self:center!important;
   }
+
   html body .app-shell .rep162-title-block {
     grid-column:2!important;
     grid-row:1!important;
     width:100%!important;
     min-width:0!important;
+    max-width:none!important;
+    justify-self:stretch!important;
   }
+
   html body .app-shell .rep162-toolbar-actions {
     grid-column:1 / -1!important;
     grid-row:2!important;
     display:grid!important;
     grid-template-columns:minmax(0,1fr)!important;
     gap:8px!important;
+    inline-size:100%!important;
     width:100%!important;
     min-width:0!important;
-    margin-top:14px!important;
+    max-width:none!important;
+    justify-self:stretch!important;
+    align-self:stretch!important;
+    margin:14px 0 0!important;
   }
+
   html body .app-shell .rep162-scope,
   html body .app-shell .rep162-export,
   html body .app-shell .rep162-export > .btn,
   html body .app-shell .rep162-export > button {
+    box-sizing:border-box!important;
+    inline-size:100%!important;
     width:100%!important;
     min-width:0!important;
     max-width:none!important;
-    margin:0!important;
+    flex:1 1 100%!important;
+    justify-self:stretch!important;
+    align-self:stretch!important;
     justify-content:center!important;
+    margin:0!important;
   }
+
   html body .app-shell .rep162-export-menu {
     position:static!important;
     inset:auto!important;
+    inline-size:100%!important;
     width:100%!important;
     min-width:0!important;
     max-width:none!important;
-    margin-top:6px!important;
+    margin:6px 0 0!important;
   }
 
-  /* ---------------- Inventory ---------------- */
+  /* ------------------------------------------------------------- */
+  /* Inventory                                                     */
+  /* ------------------------------------------------------------- */
   html body .app-shell .inv232-header {
     display:grid!important;
     grid-template-columns:44px minmax(0,1fr)!important;
     grid-template-rows:auto auto!important;
     align-items:center!important;
+    justify-items:stretch!important;
     gap:0 14px!important;
-    width:100%!important;
     padding:16px!important;
   }
+
   html body .app-shell .inv232-header-mark {
     grid-column:1!important;
     grid-row:1!important;
+    place-self:center start!important;
+    box-sizing:border-box!important;
     width:44px!important;
     height:44px!important;
     min-width:44px!important;
+    max-width:44px!important;
     margin:0!important;
-    justify-self:start!important;
-    align-self:center!important;
     border-radius:8px!important;
   }
+
   html body .app-shell .inv232-header-copy {
     grid-column:2!important;
     grid-row:1!important;
     width:100%!important;
     min-width:0!important;
+    max-width:none!important;
+    justify-self:stretch!important;
   }
+
   html body .app-shell .inv232-header-actions {
     grid-column:1 / -1!important;
     grid-row:2!important;
     display:grid!important;
     grid-template-columns:minmax(0,1fr)!important;
-    width:100%!important;
-    min-width:0!important;
-    margin-top:14px!important;
-  }
-  html body .app-shell .inv232-header-actions > *,
-  html body .app-shell .inv232-header-actions .btn,
-  html body .app-shell .inv232-header-actions button {
+    inline-size:100%!important;
     width:100%!important;
     min-width:0!important;
     max-width:none!important;
-    margin:0!important;
-    justify-content:center!important;
+    justify-self:stretch!important;
+    align-self:stretch!important;
+    margin:14px 0 0!important;
   }
 
-  /* ---------------- Team & Access ---------------- */
+  html body .app-shell .inv232-header-actions > *,
+  html body .app-shell .inv232-header-actions .btn,
+  html body .app-shell .inv232-header-actions button {
+    box-sizing:border-box!important;
+    inline-size:100%!important;
+    width:100%!important;
+    min-width:0!important;
+    max-width:none!important;
+    flex:1 1 100%!important;
+    justify-self:stretch!important;
+    align-self:stretch!important;
+    justify-content:center!important;
+    margin:0!important;
+  }
+
+  /* ------------------------------------------------------------- */
+  /* Team & Access                                                 */
+  /* ------------------------------------------------------------- */
   html body .app-shell .team-v26-hero.header-icon-parity {
     display:flex!important;
     flex-direction:column!important;
     align-items:stretch!important;
+    justify-content:flex-start!important;
     gap:14px!important;
-    width:100%!important;
     padding:16px!important;
   }
-  html body .app-shell .team-v26-hero.header-icon-parity::before { display:none!important; content:none!important; }
+
+  html body .app-shell .team-v26-hero.header-icon-parity::before {
+    content:none!important;
+    display:none!important;
+  }
+
   html body .app-shell .team-v26-hero-copy {
+    inline-size:100%!important;
     width:100%!important;
     max-width:none!important;
     min-width:0!important;
+    justify-self:stretch!important;
   }
+
   html body .app-shell .team-v26-hero-actions {
     display:grid!important;
     grid-template-columns:minmax(0,1fr)!important;
     gap:8px!important;
-    width:100%!important;
-    min-width:0!important;
-  }
-  html body .app-shell .team-v26-hero-actions > span,
-  html body .app-shell .team-v26-hero-actions > .btn,
-  html body .app-shell .team-v26-hero-actions > button {
+    inline-size:100%!important;
     width:100%!important;
     min-width:0!important;
     max-width:none!important;
+    justify-items:stretch!important;
+    align-items:stretch!important;
+    align-self:stretch!important;
     margin:0!important;
-    justify-content:center!important;
   }
 
-  /* ---------------- System Administration ---------------- */
+  html body .app-shell .team-v26-hero-actions > span,
+  html body .app-shell .team-v26-hero-actions > .btn,
+  html body .app-shell .team-v26-hero-actions > button {
+    box-sizing:border-box!important;
+    display:flex!important;
+    inline-size:100%!important;
+    width:100%!important;
+    min-width:0!important;
+    max-width:none!important;
+    flex:1 1 100%!important;
+    justify-self:stretch!important;
+    align-self:stretch!important;
+    justify-content:center!important;
+    margin:0!important;
+  }
+
+  /* ------------------------------------------------------------- */
+  /* System Administration                                        */
+  /* ------------------------------------------------------------- */
   html body .app-shell .sys58-hero.header-icon-parity {
     display:flex!important;
     flex-direction:column!important;
     align-items:stretch!important;
+    justify-content:flex-start!important;
     gap:14px!important;
-    width:100%!important;
     padding:16px!important;
   }
-  html body .app-shell .sys58-hero.header-icon-parity::before { display:none!important; content:none!important; }
-  html body .app-shell .sys58-hero-copy {
-    width:100%!important;
-    max-width:none!important;
-    min-width:0!important;
-  }
-  html body .app-shell .sys58-hero-status {
-    width:100%!important;
-    min-width:0!important;
-    max-width:none!important;
-    box-sizing:border-box!important;
-    margin:0!important;
+
+  html body .app-shell .sys58-hero.header-icon-parity::before {
+    content:none!important;
+    display:none!important;
   }
 
-  /* ---------------- Settings ---------------- */
+  html body .app-shell .sys58-hero-copy,
+  html body .app-shell .sys58-hero-status {
+    inline-size:100%!important;
+    width:100%!important;
+    max-width:none!important;
+    min-width:0!important;
+    align-self:stretch!important;
+    justify-self:stretch!important;
+    box-sizing:border-box!important;
+  }
+
+  html body .app-shell .sys58-hero-status { margin:0!important; }
+
+  /* ------------------------------------------------------------- */
+  /* Settings                                                      */
+  /* ------------------------------------------------------------- */
   html body .app-shell .settings-v30-hero.header-icon-parity {
     align-items:stretch!important;
-    width:100%!important;
     padding:16px!important;
   }
-  html body .app-shell .settings-v30-hero.header-icon-parity::before { display:none!important; content:none!important; }
+
+  html body .app-shell .settings-v30-hero.header-icon-parity::before {
+    content:none!important;
+    display:none!important;
+  }
+
   html body .app-shell .settings-v30-hero-copy {
+    inline-size:100%!important;
     width:100%!important;
     max-width:none!important;
     min-width:0!important;
   }
 
-  /* ---------------- Internal Account / Profile ---------------- */
+  /* ------------------------------------------------------------- */
+  /* Internal Account / Profile                                    */
+  /* ------------------------------------------------------------- */
   html body .app-shell .internal-profile-hero {
     display:flex!important;
     flex-direction:column!important;
     align-items:stretch!important;
+    justify-content:flex-start!important;
     gap:16px!important;
-    width:100%!important;
     padding:16px!important;
   }
+
   html body .app-shell .internal-profile-identity,
   html body .app-shell .internal-profile-actions {
+    inline-size:100%!important;
     width:100%!important;
     min-width:0!important;
     max-width:none!important;
+    align-self:stretch!important;
   }
+
   html body .app-shell .internal-profile-actions {
     display:grid!important;
     grid-template-columns:minmax(0,1fr)!important;
     gap:8px!important;
+    justify-items:stretch!important;
   }
+
   html body .app-shell .internal-profile-actions > *,
   html body .app-shell .internal-profile-actions .btn,
   html body .app-shell .internal-profile-photo-action {
+    box-sizing:border-box!important;
+    inline-size:100%!important;
     width:100%!important;
     min-width:0!important;
     max-width:none!important;
-    margin:0!important;
+    flex:1 1 100%!important;
+    justify-self:stretch!important;
+    align-self:stretch!important;
     justify-content:center!important;
-  }
-}
-
-@media (max-width:390px) {
-  html body .app-shell :is(.bp153-header,.dentists133-hero,.rep162-toolbar,.inv232-header) {
-    grid-template-columns:44px minmax(0,1fr)!important;
+    margin:0!important;
   }
 }
