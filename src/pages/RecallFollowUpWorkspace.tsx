@@ -31,7 +31,6 @@ import {
   type RecallQueueItem, type RecallStatus,
 } from '../features/recalls/recallStore'
 import '../styles/recall-followups-workspace-part3.css'
-import '../styles/recalls-header-parity-v240.css'
 
 const terminalStatuses = new Set<RecallStatus>(['completed', 'dismissed', 'cancelled'])
 type DueFilter = 'all' | 'overdue' | 'today' | 'upcoming' | 'no_date'
