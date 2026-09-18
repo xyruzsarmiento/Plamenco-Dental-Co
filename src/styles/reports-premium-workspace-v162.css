@@ -21,3 +21,69 @@
 @media(max-width:1280px){.rep162-primary-kpis{grid-template-columns:repeat(3,minmax(0,1fr))}.rep162-secondary-kpis{grid-template-columns:repeat(3,minmax(0,1fr))}.rep162-filterbar{grid-template-columns:repeat(2,minmax(0,1fr)) auto}.rep162-period-summary{min-width:0}}
 @media(max-width:920px){.rep162-toolbar{display:grid}.rep162-toolbar-actions{justify-content:flex-start}.rep162-grid{grid-template-columns:1fr}.rep162-primary-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.rep162-secondary-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.rep162-filterbar{grid-template-columns:repeat(2,minmax(0,1fr))}.rep162-tax-layout{grid-template-columns:1fr}.rep162-export-modal{width:min(760px,100%)}}
 @media(max-width:640px){.rep162{gap:11px}.rep162-toolbar,.rep162-executive,.rep162-card{padding:15px;border-radius:18px}.rep162-toolbar-actions{display:grid;grid-template-columns:1fr 1fr;width:100%}.rep162-scope{grid-column:1/-1;justify-content:center}.rep162-export,.rep162-export .btn{width:100%}.rep162-export-menu{left:0;right:auto;width:min(280px,calc(100vw - 30px))}.rep162-filterbar{grid-template-columns:1fr;padding:11px}.rep162-filterbar label,.rep162-period-summary,.rep162-refresh{width:100%}.rep162-refresh{height:42px}.rep162-primary-kpis,.rep162-secondary-kpis,.rep162-patient-summary,.rep162-metric-grid,.rep162-qrph,.rep162-tax-facts{grid-template-columns:1fr}.rep162-kpi strong{white-space:normal}.rep162-secondary-kpis>div{justify-content:space-between}.rep162-card-head{gap:8px}.rep162-modal-backdrop{padding:0;place-items:stretch}.rep162-export-modal,.rep162-dialog{width:100%;height:100dvh;max-height:none;border:0;border-radius:0}.rep162-export-head{padding:14px}.rep162-export-body{padding:9px}.rep162-pdf-frame{min-height:calc(100dvh - 170px)}.rep162-export-actions{padding:10px;display:grid;grid-template-columns:1fr 1fr}.rep162-export-actions .btn{width:100%;justify-content:center}.rep162-form{padding:14px}.rep162-dialog-actions{display:grid;grid-template-columns:1fr 1fr}.rep162-dialog-actions .btn{width:100%;justify-content:center}.rep162-skeleton-grid{grid-template-columns:1fr 1fr}}
+
+
+/* V248 mobile header parity — Patient Records reference */
+@media(max-width:640px){
+  .rep162-toolbar{
+    display:grid!important;
+    grid-template-columns:44px minmax(0,1fr)!important;
+    grid-template-rows:auto auto!important;
+    gap:0 14px!important;
+    align-items:center!important;
+    padding:16px!important;
+  }
+  .rep162-toolbar::before{
+    grid-column:1!important;
+    grid-row:1!important;
+    place-self:center start!important;
+    width:44px!important;
+    height:44px!important;
+    min-width:44px!important;
+    margin:0!important;
+    border-radius:8px!important;
+  }
+  .rep162-title-block{
+    grid-column:2!important;
+    grid-row:1!important;
+    width:100%!important;
+    min-width:0!important;
+  }
+  .rep162-toolbar-actions{
+    grid-column:1/-1!important;
+    grid-row:2!important;
+    display:grid!important;
+    grid-template-columns:minmax(0,1fr)!important;
+    gap:8px!important;
+    width:100%!important;
+    min-width:0!important;
+    max-width:none!important;
+    margin:14px 0 0!important;
+  }
+  .rep162-scope,
+  .rep162-export,
+  .rep162-export>.btn{
+    width:100%!important;
+    min-width:0!important;
+    max-width:none!important;
+    justify-self:stretch!important;
+    justify-content:center!important;
+    margin:0!important;
+  }
+  .rep162-export>.btn{
+    display:flex!important;
+    gap:8px!important;
+  }
+  .rep162-export>.btn>svg{
+    position:static!important;
+    margin:0!important;
+    flex:0 0 auto!important;
+  }
+  .rep162-export>.btn>span{
+    display:inline-flex!important;
+    align-items:center!important;
+    justify-content:center!important;
+    gap:6px!important;
+    flex:0 0 auto!important;
+  }
+}
