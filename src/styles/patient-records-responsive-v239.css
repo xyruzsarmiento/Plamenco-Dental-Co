@@ -1,0 +1,129 @@
+/* V239 — Patient Records responsive correction only.
+   Desktop layout remains unchanged. On tablet/mobile, reset desktop positioning
+   and let the existing real icon/copy/actions structure collapse cleanly. */
+
+@media (max-width:820px) {
+  html body .app-shell .patients36-hero {
+    display:flex!important;
+    flex-direction:column!important;
+    align-items:stretch!important;
+    gap:16px!important;
+    padding:18px!important;
+    border-radius:18px!important;
+  }
+
+  html body .app-shell .patients36-hero-copy.portal-card-heading-with-icon {
+    position:relative!important;
+    display:grid!important;
+    grid-template-columns:44px minmax(0,1fr)!important;
+    grid-template-rows:auto auto auto!important;
+    align-items:center!important;
+    column-gap:14px!important;
+    row-gap:0!important;
+    flex:0 0 auto!important;
+    flex-basis:auto!important;
+    width:100%!important;
+    max-width:none!important;
+    min-width:0!important;
+    height:auto!important;
+    min-height:0!important;
+    max-height:none!important;
+    margin:0!important;
+    padding:0!important;
+  }
+
+  html body .app-shell .patients36-hero-copy.portal-card-heading-with-icon > .portal-card-heading-icon {
+    position:static!important;
+    inset:auto!important;
+    left:auto!important;
+    top:auto!important;
+    transform:none!important;
+    grid-column:1!important;
+    grid-row:1 / -1!important;
+    align-self:center!important;
+    display:grid!important;
+    place-items:center!important;
+    box-sizing:border-box!important;
+    width:44px!important;
+    height:44px!important;
+    min-width:44px!important;
+    margin:0!important;
+    padding:0!important;
+    border:1px solid #bfd7ff!important;
+    border-radius:8px!important;
+    background:#eff6ff!important;
+    color:#2563eb!important;
+    box-shadow:none!important;
+  }
+
+  html body .app-shell .patients36-hero-copy.portal-card-heading-with-icon > .portal-card-heading-icon svg {
+    width:20px!important;
+    height:20px!important;
+    stroke-width:1.85!important;
+  }
+
+  html body .app-shell .patients36-hero-copy.portal-card-heading-with-icon > :not(.portal-card-heading-icon) {
+    grid-column:2!important;
+    min-width:0!important;
+  }
+
+  html body .app-shell .patients36-hero-copy > span:not(.portal-card-heading-icon) {
+    margin:0 0 4px!important;
+  }
+
+  html body .app-shell .patients36-hero-copy > h1 {
+    margin:2px 0 0!important;
+  }
+
+  html body .app-shell .patients36-hero-copy > p {
+    margin:5px 0 0!important;
+  }
+
+  html body .app-shell .patients36-hero-actions {
+    display:flex!important;
+    flex-wrap:wrap!important;
+    align-items:center!important;
+    justify-content:flex-start!important;
+    gap:8px!important;
+    width:100%!important;
+    min-width:0!important;
+    margin:0!important;
+    padding:0!important;
+  }
+
+  html body .app-shell .patients36-hero-actions > * {
+    flex:0 0 auto!important;
+  }
+}
+
+@media (max-width:520px) {
+  html body .app-shell .patients36-hero {
+    padding:16px!important;
+  }
+
+  html body .app-shell .patients36-hero-actions {
+    display:grid!important;
+    grid-template-columns:1fr!important;
+    width:100%!important;
+  }
+
+  html body .app-shell .patients36-hero-actions > * {
+    width:100%!important;
+    min-width:0!important;
+    justify-content:center!important;
+  }
+}
+
+@media (max-width:390px) {
+  html body .app-shell .patients36-hero-copy.portal-card-heading-with-icon {
+    grid-template-columns:1fr!important;
+  }
+
+  html body .app-shell .patients36-hero-copy.portal-card-heading-with-icon > .portal-card-heading-icon {
+    display:none!important;
+  }
+
+  html body .app-shell .patients36-hero-copy.portal-card-heading-with-icon > :not(.portal-card-heading-icon) {
+    grid-column:1!important;
+  }
+}
