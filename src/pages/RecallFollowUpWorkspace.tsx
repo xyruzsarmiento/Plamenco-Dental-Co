@@ -31,6 +31,7 @@ import {
   type RecallQueueItem, type RecallStatus,
 } from '../features/recalls/recallStore'
 import '../styles/recall-followups-workspace-part3.css'
+import '../styles/recalls-header-parity-v240.css'
 
 const terminalStatuses = new Set<RecallStatus>(['completed', 'dismissed', 'cancelled'])
 type DueFilter = 'all' | 'overdue' | 'today' | 'upcoming' | 'no_date'
@@ -309,11 +310,12 @@ export function RecallFollowUpWorkspace() {
     return null
   }
 
-  if (!canView) return <PageScaffold eyebrow="Continuity of care" title="Recalls & Follow-Ups" description="Track patients who are due to return, document outreach, and convert follow-up recommendations into scheduled care." icon={<HeartPulse size={22} />}><section className="rc3-state is-error" role="alert"><AlertTriangle size={22} /><div><h2>Permission required</h2><p>Your account does not have access to the recall queue.</p></div></section></PageScaffold>
-  if (!branch.isLoading && branch.error) return <PageScaffold eyebrow="Continuity of care" title="Recalls & Follow-Ups" description="Track patients who are due to return, document outreach, and convert follow-up recommendations into scheduled care." icon={<HeartPulse size={22} />}><section className="rc3-state is-error" role="alert"><AlertTriangle size={22} /><div><h2>Branch access unavailable</h2><p>{branch.error}</p></div></section></PageScaffold>
-  if (!branch.isLoading && !branchReady) return <PageScaffold eyebrow="Continuity of care" title="Recalls & Follow-Ups" description="Track patients who are due to return, document outreach, and convert follow-up recommendations into scheduled care." icon={<HeartPulse size={22} />}><section className="rc3-state"><MapPin size={22} /><div><h2>Select a clinic branch</h2><p>Choose an authorized branch before opening its patient return-care queue.</p></div></section></PageScaffold>
+  if (!canView) return <PageScaffold heroClassName="recalls-standard-hero" eyebrow="Continuity of care" title="Recalls & Follow-Ups" description="Track patients who are due to return, document outreach, and convert follow-up recommendations into scheduled care." icon={<HeartPulse size={22} />}><section className="rc3-state is-error" role="alert"><AlertTriangle size={22} /><div><h2>Permission required</h2><p>Your account does not have access to the recall queue.</p></div></section></PageScaffold>
+  if (!branch.isLoading && branch.error) return <PageScaffold heroClassName="recalls-standard-hero" eyebrow="Continuity of care" title="Recalls & Follow-Ups" description="Track patients who are due to return, document outreach, and convert follow-up recommendations into scheduled care." icon={<HeartPulse size={22} />}><section className="rc3-state is-error" role="alert"><AlertTriangle size={22} /><div><h2>Branch access unavailable</h2><p>{branch.error}</p></div></section></PageScaffold>
+  if (!branch.isLoading && !branchReady) return <PageScaffold heroClassName="recalls-standard-hero" eyebrow="Continuity of care" title="Recalls & Follow-Ups" description="Track patients who are due to return, document outreach, and convert follow-up recommendations into scheduled care." icon={<HeartPulse size={22} />}><section className="rc3-state"><MapPin size={22} /><div><h2>Select a clinic branch</h2><p>Choose an authorized branch before opening its patient return-care queue.</p></div></section></PageScaffold>
 
   return <PageScaffold
+    heroClassName="recalls-standard-hero"
     eyebrow="Continuity of care"
     title="Recalls & Follow-Ups"
     description="Track patients who are due to return, document outreach, and convert follow-up recommendations into scheduled care."
