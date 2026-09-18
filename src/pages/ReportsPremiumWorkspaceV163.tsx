@@ -11,7 +11,6 @@ import {
   FileText,
   PackageSearch,
   ReceiptText,
-  RefreshCw,
   Stethoscope,
   UsersRound,
   WalletCards,
