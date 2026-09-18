@@ -1,5 +1,7 @@
 import type { ReactNode } from 'react'
-import { BarChart3, CalendarDays, FileText, Hand, Search, Settings, ShieldCheck, Stethoscope, UserPlus, UsersRound } from 'lucide-react'
+import { BarChart3, CalendarDays, FileText, Hand, Search, Settings, ShieldCheck, Stethoscope, UserPlus, UsersRound ,
+  Sparkles,
+} from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../../features/auth/AuthContext'
 import type { UserRole } from '../../features/auth/authTypes'
@@ -55,7 +57,7 @@ export function DashboardGreeting({ actions, eyebrow, icon, name, signal, subtit
   return (
     <section className={`dashboard-greeting-card dashboard-greeting-v2 ${isPatient ? 'dashboard-greeting-patient' : ''}`} aria-label="Dashboard greeting">
       <div className="dashboard-greeting-v2-icon" aria-hidden="true">{icon ?? <Hand size={24} />}</div>
-      <div className="dashboard-greeting-v2-copy"><span className="dashboard-greeting-eyebrow">{eyebrow ?? roleCopy.eyebrow}</span><h1>{getDashboardGreeting()}, <span>{nameLabel}</span></h1><p>{subtitle ?? workspaceSubtitle}</p></div>
+      <div className="dashboard-greeting-v2-copy"><span className="dashboard-greeting-eyebrow"><Sparkles size={14} />{eyebrow ?? roleCopy.eyebrow}</span><h1>{getDashboardGreeting()}, <span>{nameLabel}</span></h1><p>{subtitle ?? workspaceSubtitle}</p></div>
       <aside className="dashboard-greeting-v2-context" aria-label="Dashboard context">
         <div><span>{icon ?? <Icon size={16} />} {signalLabel}</span><time dateTime={new Date().toISOString()}>{today}</time></div>
         {actions ? <div className="dashboard-greeting-v2-actions" aria-label="Dashboard quick actions">{actions}</div> : <nav className="dashboard-greeting-v2-actions" aria-label="Dashboard quick actions">{roleCopy.actions.map((action) => { const ActionIcon = action.icon; return <Link key={action.path} to={action.path}><ActionIcon size={15} />{action.label}</Link> })}<Link to="/app/patients" className="is-secondary"><Search size={15} />Search</Link></nav>}
