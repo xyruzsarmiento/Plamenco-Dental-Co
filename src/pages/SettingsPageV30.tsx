@@ -85,8 +85,9 @@ export function SettingsPageV30() {
 
   return (
     <section className="settings-v30 settings-v56">
-      <header className="settings-v30-hero">
-        <div>
+      <header className="settings-v30-hero header-icon-parity">
+        <div className="settings-v30-hero-copy">
+          <div className="header-icon-parity-tile" aria-hidden="true"><SlidersHorizontal size={20} strokeWidth={1.85} /></div>
           <span className="settings-v30-kicker">Administration controls</span>
           <h2>Settings</h2>
           <p>Govern clinic identity, review important changes, and manage your current session from one workspace.</p>
