@@ -1,4 +1,4 @@
-import { Building2, CheckCircle2, Clock3, History, LogOut, RefreshCw, Save, ShieldCheck, SlidersHorizontal, Sparkles, UserRound } from 'lucide-react'
+import { Building2, CheckCircle2, Clock3, History, LogOut, Save, ShieldCheck, SlidersHorizontal, Sparkles, UserRound } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { Badge } from '../components/ui/Badge'
 import { Button } from '../components/ui/Button'
