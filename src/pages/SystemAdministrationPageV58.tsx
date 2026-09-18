@@ -29,8 +29,9 @@ export function SystemAdministrationPageV58() {
 
   return (
     <section className="sys58-page">
-      <header className="sys58-hero">
+      <header className="sys58-hero header-icon-parity">
         <div className="sys58-hero-copy">
+          <div className="header-icon-parity-tile" aria-hidden="true"><Wrench size={20} strokeWidth={1.85} /></div>
           <span className="sys58-kicker">OWNER CONTROL CENTER</span>
           <h1>System Administration</h1>
           <p>Business-facing clinic administration first. Technical recovery, infrastructure and diagnostic tools are kept in a separate advanced area.</p>
