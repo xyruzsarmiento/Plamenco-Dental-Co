@@ -1,5 +1,16 @@
 import { useEffect, useMemo, useState } from 'react'
-import { ArrowRight, CalendarDays, Import, Mail, Phone, Plus, Search, UserRound, UsersRound } from 'lucide-react'
+import {
+  ArrowRight,
+  CalendarDays,
+  Import,
+  Mail,
+  Phone,
+  Plus,
+  Search,
+  UserRound,
+  UsersRound,
+  Sparkles,
+} from 'lucide-react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { Button } from '../components/ui/Button'
 import { StatusBadge } from '../components/ui/Badge'
@@ -247,7 +258,7 @@ export function PatientsPageV36() {
       <header className="patients36-hero clinical-standard-hero">
         <div className="patients36-hero-copy clinical-standard-hero-copy">
           <div className="portal-card-heading-icon" aria-hidden="true"><UsersRound size={20} strokeWidth={1.85} /></div>
-          <span className="patients36-kicker">PATIENT INTELLIGENCE</span>
+          <span className="patients36-kicker"><Sparkles size={14} /> PATIENT INTELLIGENCE</span>
           <h1>Patient Records</h1>
           <p>Search, review and manage the clinic's patient population from one workspace.</p>
         </div>
