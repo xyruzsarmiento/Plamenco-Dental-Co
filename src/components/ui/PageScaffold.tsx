@@ -7,6 +7,7 @@ type PageScaffoldProps = {
   title: string
   description: string
   eyebrow?: string
+  eyebrowIcon?: ReactNode
   icon?: ReactNode
   metric?: ReactNode
   status?: string
@@ -22,6 +23,7 @@ export function PageScaffold({
   children,
   description,
   eyebrow,
+  eyebrowIcon,
   icon,
   metric,
   primaryAction,
@@ -36,6 +38,7 @@ export function PageScaffold({
         className={heroClassName}
         description={description}
         eyebrow={eyebrow}
+        eyebrowIcon={eyebrowIcon}
         icon={icon}
         metric={metric}
         primaryAction={primaryAction}
