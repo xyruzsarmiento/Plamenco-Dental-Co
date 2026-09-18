@@ -18,15 +18,20 @@ export function RoleHomePage() {
     )
   }
 
-  const workspace = user?.role === 'super_admin'
-    ? <SuperAdminBranchDashboardV128 />
-    : <StaffTodayWorkspace />
+  if (user?.role === 'super_admin') {
+    return (
+      <div className="role-home-with-greeting">
+        <AppointmentRequestAlert />
+        <SuperAdminBranchDashboardV128 />
+      </div>
+    )
+  }
 
   return (
     <div className="role-home-with-greeting">
       <DashboardGreeting />
       <AppointmentRequestAlert />
-      {workspace}
+      <StaffTodayWorkspace />
     </div>
   )
 }
