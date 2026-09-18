@@ -151,7 +151,7 @@ export function ServicesPageV15() {
         <header className="svc15-command service-standard-hero">
           <div className="svc15-command-copy">
             <div className="svc15-command-icon" aria-hidden="true"><Stethoscope size={20} strokeWidth={1.85} /></div>
-            <span className="svc15-command-kicker">Clinic catalogue</span>
+            <span className="svc15-command-kicker"><Sparkles size={14} />Clinic catalogue</span>
             <h2>Service operations</h2>
             <p>Maintain one clean source of truth for procedures used by booking, treatment planning and billing.</p>
           </div>
