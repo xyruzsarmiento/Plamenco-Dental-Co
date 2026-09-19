@@ -139,9 +139,9 @@ export function InventoryPageSimpleV232({ onInventoryChanged }: { onInventoryCha
       })
 
     return <section className="inv232-page">
-      <header className="inv232-header">
-        <div className="inv232-header-mark"><Package size={22}/></div>
-        <div className="inv232-header-copy"><span className="inv232-kicker"><Sparkles size={14} />Inventory</span><h1>Choose a branch</h1><p>Open one location to check stock, record supplies coming in, or record items being used.</p></div>
+      <header className="inv232-header mobile-card-standard">
+        <div className="inv232-header-mark mobile-card-standard-icon"><Package size={22}/></div>
+        <div className="inv232-header-copy mobile-card-standard-copy"><span className="inv232-kicker"><Sparkles size={14} />Inventory</span><h1>Choose a branch</h1><p>Open one location to check stock, record supplies coming in, or record items being used.</p></div>
       </header>
       <div className="inv232-branch-grid">
         {branchSummaries.map(({ branch, items: itemCount, units, low, out }) => <button key={branch.id} type="button" className="inv232-branch-card" onClick={() => setActiveBranch(branch.id)}>
@@ -158,10 +158,10 @@ export function InventoryPageSimpleV232({ onInventoryChanged }: { onInventoryCha
   }
 
   return <section className="inv232-page">
-    <header className="inv232-header">
-      <div className="inv232-header-mark"><Package size={22}/></div>
-      <div className="inv232-header-copy"><span className="inv232-kicker"><Sparkles size={14} />Inventory</span><h1>Manage clinic stock</h1><p>Track supplies and materials for <strong>{activeBranch.name}</strong>.</p></div>
-      <div className="inv232-header-actions">{permissions.can('inventory.create_item') && <Button onClick={() => setDialog({ type: 'add_item' })}><PackagePlus size={16}/> Add item</Button>}</div>
+    <header className="inv232-header mobile-card-standard">
+      <div className="inv232-header-mark mobile-card-standard-icon"><Package size={22}/></div>
+      <div className="inv232-header-copy mobile-card-standard-copy"><span className="inv232-kicker"><Sparkles size={14} />Inventory</span><h1>Manage clinic stock</h1><p>Track supplies and materials for <strong>{activeBranch.name}</strong>.</p></div>
+      <div className="inv232-header-actions mobile-card-standard-actions">{permissions.can('inventory.create_item') && <Button className="mobile-card-standard-action" onClick={() => setDialog({ type: 'add_item' })}><PackagePlus size={16}/> Add item</Button>}</div>
     </header>
 
     <section className="inv232-summary" aria-label="Inventory summary">
