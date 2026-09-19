@@ -195,12 +195,12 @@ export function ReportsPremiumWorkspaceV163() {
   if (!isAllBranchesMode && !activeBranchId) return <section className="rep162 rep163"><div className="rep162-status is-error">Your account needs an active branch assignment before reports can be opened.</div></section>
 
   return <section className="rep162 rep163">
-    <header className="rep162-toolbar">
-      <div className="rep162-title-block"><span className="rep162-eyebrow">{isSuperAdmin ? 'Executive clinic analytics' : 'Branch analytics'}</span><h2>Reports & Analytics</h2><p>Live financial and operational reporting from persisted Supabase records for {scopeName}.</p></div>
-      <div className="rep162-toolbar-actions">
-        <span className="rep162-scope"><Building2 size={14} /> {scopeName}</span>
-        <div className="rep162-export rep163-export" ref={exportRootRef}>
-          <Button variant="secondary" icon={<FileText size={15} />} onClick={() => setExportMenuOpen((current) => !current)} disabled={!report || loading}>Export <ChevronDown size={14} /></Button>
+    <header className="rep162-toolbar mobile-card-standard">
+      <div className="rep162-title-block mobile-card-standard-copy"><span className="rep162-eyebrow">{isSuperAdmin ? 'Executive clinic analytics' : 'Branch analytics'}</span><h2>Reports & Analytics</h2><p>Live financial and operational reporting from persisted Supabase records for {scopeName}.</p></div>
+      <div className="rep162-toolbar-actions mobile-card-standard-actions">
+        <span className="rep162-scope mobile-card-standard-action"><Building2 size={14} /> {scopeName}</span>
+        <div className="rep162-export rep163-export mobile-card-standard-action-wrap" ref={exportRootRef}>
+          <Button className="mobile-card-standard-action" variant="secondary" icon={<FileText size={15} />} onClick={() => setExportMenuOpen((current) => !current)} disabled={!report || loading}>Export <ChevronDown size={14} /></Button>
           {exportMenuOpen && <div className="rep162-export-menu" role="menu" aria-label="Download report">
             <button type="button" role="menuitem" onClick={downloadPdf}><FileText size={18} /><span><strong>Download PDF</strong><small>Directly save the management report</small></span></button>
             <button type="button" role="menuitem" onClick={downloadExcel}><FileSpreadsheet size={18} /><span><strong>Download Excel</strong><small>Directly save the workbook</small></span></button>
