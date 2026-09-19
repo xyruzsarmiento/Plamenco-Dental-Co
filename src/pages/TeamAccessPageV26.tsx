@@ -602,9 +602,9 @@ export function TeamAccessPageV26() {
   return (
     <PageScaffold title="Team & Access" description="Manage clinic accounts, roles, workforce visibility, providers and compensation.">
       <div className="team-v26 team-v26-ia">
-        <section className="team-v26-hero header-icon-parity">
-          <div className="team-v26-hero-copy"><div className="header-icon-parity-tile" aria-hidden="true"><UsersRound size={20} strokeWidth={1.85} /></div><span className="team-v26-kicker">Team & access</span><h2>Manage clinic team access</h2><p>Control internal accounts, roles and branch access from one secure workspace.</p></div>
-          <div className="team-v26-hero-actions"><span><ShieldCheck size={14} /> Owner controlled</span><Button onClick={() => { setMessage(null); setInviteOpen(true) }}><Plus size={16} /> Invite Team Member</Button></div>
+        <section className="team-v26-hero header-icon-parity mobile-card-standard">
+          <div className="team-v26-hero-copy mobile-card-standard-copy"><div className="header-icon-parity-tile mobile-card-standard-icon" aria-hidden="true"><UsersRound size={20} strokeWidth={1.85} /></div><span className="team-v26-kicker">Team & access</span><h2>Manage clinic team access</h2><p>Control internal accounts, roles and branch access from one secure workspace.</p></div>
+          <div className="team-v26-hero-actions mobile-card-standard-actions"><span className="mobile-card-standard-action"><ShieldCheck size={14} /> Owner controlled</span><Button className="mobile-card-standard-action" onClick={() => { setMessage(null); setInviteOpen(true) }}><Plus size={16} /> Invite Team Member</Button></div>
         </section>
 
         <section className="team-v26-trust"><ShieldCheck size={18} /><div><strong>Secure provisioning path</strong><span>New internal accounts are invited by the server-side Supabase Edge Function. The frontend never receives a service-role key.</span></div></section>
