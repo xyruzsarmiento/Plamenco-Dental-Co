@@ -462,17 +462,17 @@ export function BillingPaymentsWorkspaceV153() {
   }
 
   return <section className="bp153-page">
-    <header className="bp153-header">
-      <div className="bp153-title">
+    <header className="bp153-header mobile-card-standard">
+      <div className="bp153-title mobile-card-standard-copy">
         <span><Banknote size={17}/> {branchScopeLabel}</span>
         <h1>Billing & Payments</h1>
         <p>Manage invoices, collections and outstanding balances.</p>
       </div>
-      <div className="bp153-actions">
-        {permissions.can('billing.create') && <Button icon={<FilePlus2 size={16}/>} onClick={() => setInvoiceEditor({ mode: 'create' })}>New Invoice</Button>}
-        {permissions.can('payments.record_manual') && <Button variant="secondary" icon={<CreditCard size={16}/>} onClick={() => setPaymentOpen(true)}>Record Payment</Button>}
+      <div className="bp153-actions mobile-card-standard-actions">
+        {permissions.can('billing.create') && <Button className="mobile-card-standard-action" icon={<FilePlus2 size={16}/>} onClick={() => setInvoiceEditor({ mode: 'create' })}>New Invoice</Button>}
+        {permissions.can('payments.record_manual') && <Button className="mobile-card-standard-action" variant="secondary" icon={<CreditCard size={16}/>} onClick={() => setPaymentOpen(true)}>Record Payment</Button>}
         <div className="bp153-more">
-          <Button variant="secondary" icon={<MoreHorizontal size={16}/>} onClick={() => setMoreOpen((open) => !open)}>More <ChevronDown size={14}/></Button>
+          <Button className="mobile-card-standard-action" variant="secondary" icon={<MoreHorizontal size={16}/>} onClick={() => setMoreOpen((open) => !open)}>More <ChevronDown size={14}/></Button>
           {moreOpen && <div className="bp153-more-menu"><button type="button" onClick={() => { setTab('receipts'); setMoreOpen(false) }}>Receipt archive</button><button type="button" onClick={() => { setTab('receivables'); setMoreOpen(false) }}>Receivable review</button><span>Refund operations are retired from active workflows. Historical refund records stay in reporting.</span></div>}
         </div>
       </div>
