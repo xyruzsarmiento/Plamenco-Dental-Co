@@ -1,0 +1,171 @@
+/* V249 — direct mobile standard classes.
+   These classes are attached directly in JSX to the five remaining problem cards. */
+
+@media (max-width:640px) {
+  .mobile-card-standard {
+    display:grid!important;
+    grid-template-columns:44px minmax(0,1fr)!important;
+    grid-template-rows:auto auto!important;
+    align-items:center!important;
+    justify-items:stretch!important;
+    gap:0 14px!important;
+    width:100%!important;
+    min-width:0!important;
+    max-width:none!important;
+    box-sizing:border-box!important;
+  }
+
+  .mobile-card-standard-icon {
+    grid-column:1!important;
+    grid-row:1!important;
+    place-self:center start!important;
+    width:44px!important;
+    height:44px!important;
+    min-width:44px!important;
+    max-width:44px!important;
+    margin:0!important;
+    transform:none!important;
+    border-radius:8px!important;
+  }
+
+  .mobile-card-standard-copy {
+    grid-column:2!important;
+    grid-row:1!important;
+    width:100%!important;
+    min-width:0!important;
+    max-width:none!important;
+    margin:0!important;
+    justify-self:stretch!important;
+  }
+
+  .mobile-card-standard-actions {
+    grid-column:1 / -1!important;
+    grid-row:2!important;
+    display:grid!important;
+    grid-template-columns:minmax(0,1fr)!important;
+    gap:8px!important;
+    width:100%!important;
+    min-width:0!important;
+    max-width:none!important;
+    box-sizing:border-box!important;
+    margin:14px 0 0!important;
+    padding:0!important;
+    justify-self:stretch!important;
+    align-self:stretch!important;
+  }
+
+  .mobile-card-standard-action,
+  .mobile-card-standard-action-wrap {
+    box-sizing:border-box!important;
+    width:100%!important;
+    min-width:0!important;
+    max-width:none!important;
+    inline-size:100%!important;
+    margin:0!important;
+    justify-self:stretch!important;
+    align-self:stretch!important;
+  }
+
+  button.mobile-card-standard-action,
+  .mobile-card-standard-action.btn,
+  .mobile-card-standard-action-wrap > button,
+  .mobile-card-standard-action-wrap > .btn {
+    display:flex!important;
+    width:100%!important;
+    min-width:0!important;
+    max-width:none!important;
+    inline-size:100%!important;
+    justify-content:center!important;
+    align-items:center!important;
+    gap:8px!important;
+    margin:0!important;
+  }
+
+  .mobile-card-standard-action-wrap {
+    display:block!important;
+  }
+
+  .mobile-card-standard-action > svg,
+  .mobile-card-standard-action.btn > svg,
+  .mobile-card-standard-action-wrap > .btn > svg {
+    position:static!important;
+    inset:auto!important;
+    margin:0!important;
+    flex:0 0 auto!important;
+  }
+
+  .mobile-card-standard-action > span,
+  .mobile-card-standard-action.btn > span,
+  .mobile-card-standard-action-wrap > .btn > span {
+    display:inline-flex!important;
+    align-items:center!important;
+    justify-content:center!important;
+    gap:6px!important;
+    flex:0 0 auto!important;
+  }
+
+  /* Billing uses a generated header icon instead of a real JSX icon. */
+  .bp153-header.mobile-card-standard::before {
+    grid-column:1!important;
+    grid-row:1!important;
+    place-self:center start!important;
+    width:44px!important;
+    height:44px!important;
+    min-width:44px!important;
+    max-width:44px!important;
+    margin:0!important;
+    border-radius:8px!important;
+  }
+
+  .bp153-header.mobile-card-standard .bp153-title {
+    grid-column:2!important;
+    grid-row:1!important;
+    width:100%!important;
+    min-width:0!important;
+  }
+
+  /* Reports also uses a generated header icon. */
+  .rep162-toolbar.mobile-card-standard::before {
+    grid-column:1!important;
+    grid-row:1!important;
+    place-self:center start!important;
+    width:44px!important;
+    height:44px!important;
+    min-width:44px!important;
+    max-width:44px!important;
+    margin:0!important;
+    border-radius:8px!important;
+  }
+
+  /* Team card already has a real icon inside its copy.
+     Keep the copy itself as a nested 44px + text grid. */
+  .team-v26-hero.mobile-card-standard {
+    grid-template-columns:minmax(0,1fr)!important;
+  }
+
+  .team-v26-hero.mobile-card-standard .team-v26-hero-copy.mobile-card-standard-copy {
+    grid-column:1!important;
+    grid-row:1!important;
+    display:grid!important;
+    grid-template-columns:44px minmax(0,1fr)!important;
+    grid-template-rows:auto auto auto!important;
+    column-gap:14px!important;
+    row-gap:0!important;
+    align-items:center!important;
+  }
+
+  .team-v26-hero.mobile-card-standard .mobile-card-standard-icon {
+    grid-column:1!important;
+    grid-row:1 / -1!important;
+  }
+
+  .team-v26-hero.mobile-card-standard .team-v26-hero-copy > :not(.mobile-card-standard-icon) {
+    grid-column:2!important;
+    min-width:0!important;
+  }
+
+  .team-v26-hero.mobile-card-standard .mobile-card-standard-actions {
+    grid-column:1!important;
+    grid-row:2!important;
+  }
+}
