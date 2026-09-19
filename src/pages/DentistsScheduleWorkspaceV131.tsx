@@ -226,14 +226,14 @@ export function DentistsScheduleWorkspaceV131() {
 
   return (
     <main className="dentists133">
-      <section className="dentists133-hero">
-        <div className="dentists133-hero-icon"><Stethoscope size={24} /></div>
-        <div>
+      <section className="dentists133-hero mobile-card-standard">
+        <div className="dentists133-hero-icon mobile-card-standard-icon"><Stethoscope size={24} /></div>
+        <div className="mobile-card-standard-copy">
           <span className="dentists133-kicker" style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}><Sparkles size={14} /><span>Clinical team</span></span>
           <h1>Dentists</h1>
           <p>Manage dentist profiles, branch access, and assigned appointment work.</p>
         </div>
-        <Button onClick={() => navigate('/app/staff')}><Plus size={16} />Add Dentist</Button>
+        <Button className="mobile-card-standard-action" onClick={() => navigate('/app/staff')}><Plus size={16} />Add Dentist</Button>
       </section>
 
       <section className="dentists133-command" aria-label="Dentist filters">
