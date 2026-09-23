@@ -237,7 +237,7 @@ export function DentistsScheduleWorkspaceV131() {
       </section>
 
       <section className="dentists133-command" aria-label="Dentist filters">
-        <label><Search size={17} /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search dentists, specialty, email" /></label>
+        <label className="dentists133-search"><Search size={17} /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search dentists, specialty, email" /></label>
         <select value={branchFilter} onChange={(event) => setBranchFilter(event.target.value)} aria-label="Filter by branch">
           <option value="all">All branches</option>
           {branches.map((branch) => <option key={branch.id} value={branch.id}>{branch.name}</option>)}

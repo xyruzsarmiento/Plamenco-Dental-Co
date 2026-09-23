@@ -51,6 +51,29 @@
 }
 
 @media (max-width: 720px) {
+  /* Keep fallback initials centered without affecting uploaded avatar images. */
+  .bp153-dialog .patient-avatar,
+  .bp153-drawer .patient-avatar {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    text-align: center !important;
+    line-height: 1 !important;
+    padding: 0 !important;
+  }
+
+  .bp153-dialog .patient-avatar > .patient-avatar-initials,
+  .bp153-drawer .patient-avatar > .patient-avatar-initials {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 100% !important;
+    height: 100% !important;
+    padding: 0 !important;
+    text-align: center !important;
+    line-height: 1 !important;
+  }
+
   .bp153-dialog-layer {
     align-items: flex-end !important;
     justify-content: center !important;

@@ -6,7 +6,7 @@ import '../../styles/super-admin-branch-workspace-v119.css'
 import '../../styles/dentist-hero-ornament-removal-v132.css'
 import { Menu } from 'lucide-react'
 import { useEffect, useState, type CSSProperties } from 'react'
-import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
+import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../features/auth/AuthContext'
 import { roleLabels, usePermissions } from '../../features/auth/permissions'
 import { useBranchContext } from '../../features/branches/BranchContext'
@@ -15,13 +15,20 @@ import { getAvatarDisplayUrl, getInitials, loadOwnInternalProfile } from '../../
 import { clearModalScrollLocks } from '../../lib/modalScrollLock'
 import { Button } from '../ui/Button'
 import { BranchContextIndicator } from './BranchContextIndicator'
-import { navigationGroups, navigationItems } from './navigation'
+import { navigationGroups } from './navigation'
 import { SuperAdminBranchCreateGuard } from './SuperAdminBranchCreateGuard'
 
 function getPageClass(pathname: string) {
   if (pathname === '/app' || pathname === '/app/') return 'page-dashboard'
   const segment = pathname.replace(/^\/app\/?/, '').split('/')[0] || 'dashboard'
   return `page-${segment.replace(/[^a-z0-9-]/gi, '-').toLowerCase()}`
+}
+
+function routeMatches(pathname: string, path: string) {
+  const current = pathname.replace(/\/+$/, '') || '/'
+  const target = path.replace(/\/+$/, '') || '/'
+  if (target === '/app') return current === '/app'
+  return current === target || current.startsWith(`${target}/`)
 }
 
 export function AppLayout() {
@@ -77,14 +84,6 @@ export function AppLayout() {
     clearModalScrollLocks()
   }, [location.pathname])
 
-  const currentPage =
-    navigationItems.find(
-      (item) =>
-        location.pathname === item.path ||
-        (item.path !== '/app' && location.pathname.startsWith(`${item.path}/`)) ||
-        (item.path === '/app' && (location.pathname === '/app' || location.pathname === '/app/')),
-    )?.label ?? (location.pathname.startsWith('/app/notifications') ? 'Notifications' : 'Workspace')
-
   const visibleGroups = navigationGroups
     .map((group) => ({
       ...group,
@@ -94,6 +93,16 @@ export function AppLayout() {
       }),
     }))
     .filter((group) => group.items.length > 0)
+
+  const activeNavigationPath = visibleGroups
+    .flatMap((group) => group.items)
+    .filter((item) => routeMatches(location.pathname, item.path))
+    .sort((left, right) => right.path.length - left.path.length)[0]?.path
+
+  const currentPage = visibleGroups
+    .flatMap((group) => group.items)
+    .find((item) => item.path === activeNavigationPath)?.label
+    ?? (location.pathname.startsWith('/app/notifications') ? 'Notifications' : 'Workspace')
 
   const workspaceEyebrow =
     user?.role === 'staff'
@@ -132,10 +141,15 @@ export function AppLayout() {
               {group.items.map((item) => {
                 const Icon = item.icon
                 return (
-                  <NavLink key={item.path} to={item.path} end={item.path === '/app'} onClick={() => setIsMobileNavOpen(false)}>
+                  <Link
+                    key={item.path}
+                    to={item.path}
+                    className={activeNavigationPath === item.path ? 'active' : undefined}
+                    onClick={() => setIsMobileNavOpen(false)}
+                  >
                     <Icon size={18} aria-hidden="true" />
                     <span>{item.label}</span>
-                  </NavLink>
+                  </Link>
                 )
               })}
             </div>

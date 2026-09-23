@@ -98,6 +98,7 @@
 @media (max-width: 720px) {
   .app-shell .doc149-drawer-backdrop {
     place-items: center !important;
+    grid-template-columns: minmax(0, 1fr) !important;
     padding: 12px !important;
   }
 
@@ -121,6 +122,106 @@
     display: grid !important;
     grid-template-columns: 1fr !important;
     padding-inline: 14px !important;
+  }
+}
+
+/* Native archive confirmation for document details. */
+.app-shell .doc149-confirm-backdrop {
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: 17000 !important;
+  display: grid !important;
+  place-items: center !important;
+  grid-template-columns: minmax(0, 1fr) !important;
+  width: 100vw !important;
+  height: 100dvh !important;
+  padding: 16px !important;
+  box-sizing: border-box !important;
+  background: rgba(15, 23, 42, .42) !important;
+  backdrop-filter: blur(6px) !important;
+}
+
+.app-shell .doc149-confirm-dialog {
+  display: grid !important;
+  grid-template-rows: auto auto !important;
+  width: min(100%, 460px) !important;
+  max-width: 460px !important;
+  margin: 0 !important;
+  overflow: hidden !important;
+  border: 1px solid #dbe6f4 !important;
+  border-radius: 18px !important;
+  background: #fff !important;
+  box-shadow: 0 28px 80px rgba(15, 23, 42, .28) !important;
+}
+
+.app-shell .doc149-confirm-dialog > header {
+  display: flex !important;
+  align-items: flex-start !important;
+  justify-content: space-between !important;
+  gap: 14px !important;
+  padding: 18px 20px !important;
+  border-bottom: 1px solid #e5ebf3 !important;
+  background: linear-gradient(135deg, #fff, #f7fbff) !important;
+}
+
+.app-shell .doc149-confirm-dialog > header > div {
+  min-width: 0 !important;
+}
+
+.app-shell .doc149-confirm-dialog > header span {
+  display: block !important;
+  color: #2563eb !important;
+  font-size: 10px !important;
+  font-weight: 850 !important;
+  letter-spacing: .08em !important;
+  text-transform: uppercase !important;
+}
+
+.app-shell .doc149-confirm-dialog h2 {
+  margin: 5px 0 4px !important;
+  color: #172033 !important;
+  font-size: 1.25rem !important;
+}
+
+.app-shell .doc149-confirm-dialog p {
+  max-width: 390px !important;
+  margin: 0 !important;
+  color: #64748b !important;
+  font-size: 12px !important;
+  line-height: 1.5 !important;
+  overflow-wrap: anywhere !important;
+}
+
+.app-shell .doc149-confirm-dialog > footer {
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  gap: 8px !important;
+  padding: 12px 20px max(12px, env(safe-area-inset-bottom)) !important;
+  background: #fff !important;
+}
+
+.app-shell .doc149-confirm-dialog > footer .btn {
+  width: 100% !important;
+  min-width: 0 !important;
+  justify-content: center !important;
+}
+
+@media (max-width: 430px) {
+  .app-shell .doc149-confirm-backdrop {
+    padding: 12px !important;
+  }
+
+  .app-shell .doc149-confirm-dialog {
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+
+  .app-shell .doc149-confirm-dialog > header {
+    padding: 16px !important;
+  }
+
+  .app-shell .doc149-confirm-dialog > footer {
+    padding-inline: 16px !important;
   }
 }
 

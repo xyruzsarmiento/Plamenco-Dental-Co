@@ -30,6 +30,7 @@ import { PatientAvatar } from '../features/patients/PatientAvatar'
 import { getRecallDueBucket, getStoredPatientRecalls, listPatientRecalls, type RecallQueueItem } from '../features/recalls/recallStore'
 import { getStoredServices } from '../features/services/serviceStore'
 import { loadTreatmentsFromSupabase } from '../features/treatments/treatmentStore'
+import { loadDocumentsFromSupabase } from '../features/documents/documentStore'
 import { syncSupabaseToLocalStorage } from '../lib/supabaseSync'
 import '../styles/patient-branch-history-v125.css'
 import '../styles/patient-360-premium-v173.css'
@@ -91,10 +92,13 @@ export function PatientBranchAwareDetailV125() {
     setIsRefreshing(true)
     setRefreshError(null)
     try {
+      // Load patients first so document rows that use the database UUID can be
+      // normalized to the public patient ID used throughout Patient 360.
+      await loadPatientsFromSupabase({ strict: true })
       await Promise.all([
-        loadPatientsFromSupabase({ strict: true }),
         loadDentalRecordsFromSupabase({ strict: true }),
         loadTreatmentsFromSupabase({ strict: true }),
+        loadDocumentsFromSupabase(),
         syncSupabaseToLocalStorage(),
       ])
       setRevision((value) => value + 1)
@@ -206,7 +210,7 @@ export function PatientBranchAwareDetailV125() {
         <article className={activeRecalls.length ? 'has-attention' : ''}><span className="patient125-glance-icon"><HeartPulse size={18} /></span><div><small>Follow-ups</small><strong>{activeRecalls.length}</strong><p>{activeRecalls.length ? 'Needs review' : 'No active follow-ups'}</p></div></article>
       </section>
 
-      <nav className="patient125-tabs" aria-label="Patient record sections">{tabs.map((item) => <button key={item.key} type="button" className={tab === item.key ? 'is-active' : ''} onClick={() => setTab(item.key)}><span>{item.label}</span>{typeof item.count === 'number' && <em>{item.count}</em>}</button>)}</nav>
+      <nav className="patient125-tabs" aria-label="Patient record sections"><div className="patient125-tabs-row">{tabs.map((item) => <button key={item.key} type="button" className={tab === item.key ? 'is-active' : ''} onClick={() => setTab(item.key)}><span>{item.label}</span>{typeof item.count === 'number' && <em>{item.count}</em>}</button>)}</div></nav>
 
       {tab === 'overview' && <div className="patient125-overview">
         <section className="patient125-card patient125-primary-card"><header><div><span>Patient snapshot</span><h2>What you need to know</h2></div></header><div className="patient125-profile-grid"><div><Phone size={16} /><span><small>Phone</small><strong>{patient.phone || 'Not recorded'}</strong></span></div><div><Mail size={16} /><span><small>Email</small><strong>{patient.email || 'Not recorded'}</strong></span></div><div><MapPin size={16} /><span><small>Care locations</small><strong>{summary.branchHistory.length ? `${summary.branchHistory.length} branch${summary.branchHistory.length === 1 ? '' : 'es'}` : 'No branch activity'}</strong></span></div><div><CalendarDays size={16} /><span><small>Completed visits</small><strong>{summary.appointmentStats.completed}</strong></span></div></div><div className="patient125-safety-grid"><article className={patient.allergies ? 'has-warning' : ''}><span>Allergies</span><strong>{patient.allergies || 'None reported'}</strong></article><article className={patient.medicalConditions ? 'has-warning' : ''}><span>Medical conditions</span><strong>{patient.medicalConditions || 'None reported'}</strong></article></div></section>

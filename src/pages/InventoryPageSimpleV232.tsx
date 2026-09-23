@@ -1,4 +1,5 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
+import { createPortal } from 'react-dom'
 import {
   AlertCircle,
   ArrowDownToLine,
@@ -13,6 +14,7 @@ import {
   Search,
   SlidersHorizontal,
   Sparkles,
+  X,
 } from 'lucide-react'
 import { Button } from '../components/ui/Button'
 import { usePermissions } from '../features/auth/permissions'
@@ -28,6 +30,7 @@ import {
   type StockMovement,
 } from '../features/inventory/inventoryStore'
 import '../styles/inventory-simple-v232.css'
+import '../styles/inventory-item-actions-v232.css'
 
 type Tab = 'stock' | 'activity'
 
@@ -72,6 +75,73 @@ function statusCopy(status: string) {
   return 'In stock'
 }
 
+type InventoryStock = ReturnType<typeof getBranchInventory>[number]
+
+function InventoryItemActionsModal({
+  item,
+  stock,
+  branchName,
+  canAdjust,
+  canTransfer,
+  canEdit,
+  onAction,
+  onClose,
+}: {
+  item: InventoryItem
+  stock: InventoryStock
+  branchName: string
+  canAdjust: boolean
+  canTransfer: boolean
+  canEdit: boolean
+  onAction: (dialog: InventoryDialog) => void
+  onClose: () => void
+}) {
+  useEffect(() => {
+    const previousOverflow = document.body.style.overflow
+    const previousFocus = document.activeElement instanceof HTMLElement ? document.activeElement : null
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') onClose()
+    }
+    document.body.style.overflow = 'hidden'
+    document.addEventListener('keydown', handleKeyDown)
+    return () => {
+      document.body.style.overflow = previousOverflow
+      document.removeEventListener('keydown', handleKeyDown)
+      previousFocus?.focus()
+    }
+  }, [onClose])
+
+  const status = getStockStatus(stock)
+  const openAction = (dialog: InventoryDialog) => onAction(dialog)
+
+  return createPortal(
+    <div className="inv232-item-actions-layer" onMouseDown={(event) => { if (event.target === event.currentTarget) onClose() }}>
+      <section className="inv232-item-actions-dialog" role="dialog" aria-modal="true" aria-labelledby="inv232-item-actions-title" aria-describedby="inv232-item-actions-code">
+        <header>
+          <div>
+            <span>Inventory item</span>
+            <h2 id="inv232-item-actions-title">{item.name}</h2>
+            <p id="inv232-item-actions-code">{item.itemCode}</p>
+          </div>
+          <button type="button" className="inv232-item-actions-close" aria-label="Close item actions" onClick={onClose} autoFocus><X size={18}/></button>
+        </header>
+        <div className="inv232-item-actions-meta" aria-label="Item stock details">
+          <div><span>Current stock</span><strong>{Number(stock.quantityOnHand || 0).toLocaleString('en-PH', { maximumFractionDigits: 3 })}</strong></div>
+          <div><span>Status</span><strong className={`is-${status}`}>{statusCopy(status)}</strong></div>
+          <div><span>Branch</span><strong>{branchName}</strong></div>
+        </div>
+        <div className="inv232-item-actions-list">
+          {canAdjust && <button type="button" onClick={() => openAction({ type: 'adjust', item })}><SlidersHorizontal size={17}/>Correct quantity</button>}
+          {canTransfer && <button type="button" onClick={() => openAction({ type: 'quick_transfer', item })}><ArrowRightLeft size={17}/>Transfer to branch</button>}
+          {canEdit && <button type="button" onClick={() => openAction({ type: 'edit_item', item })}>Edit item</button>}
+          {canEdit && <button type="button" className="is-danger" onClick={() => openAction({ type: 'remove_item', item })}>Archive item</button>}
+        </div>
+      </section>
+    </div>,
+    document.body,
+  )
+}
+
 export function InventoryPageSimpleV232({ onInventoryChanged }: { onInventoryChanged: () => void }) {
   const permissions = usePermissions()
   const {
@@ -87,7 +157,7 @@ export function InventoryPageSimpleV232({ onInventoryChanged }: { onInventoryCha
   const [tab, setTab] = useState<Tab>('stock')
   const [search, setSearch] = useState('')
   const [dialog, setDialog] = useState<InventoryDialog | null>(null)
-  const [menuItemId, setMenuItemId] = useState<string | null>(null)
+  const [selectedItemId, setSelectedItemId] = useState<string | null>(null)
 
   const branches = getStoredBranches().filter((branch) => branch.status === 'active')
   const items = getInventoryItems().filter((item) => item.status === 'active')
@@ -108,6 +178,7 @@ export function InventoryPageSimpleV232({ onInventoryChanged }: { onInventoryCha
 
   const query = search.trim().toLowerCase()
   const filteredRows = branchRows.filter(({ item }) => !query || [item.name, item.itemCode, item.sku, item.brand].join(' ').toLowerCase().includes(query))
+  const selectedActionRow = branchRows.find(({ item }) => item.id === selectedItemId)
   const lowRows = branchRows.filter(({ stock }) => getStockStatus(stock) === 'low_stock')
   const outRows = branchRows.filter(({ stock }) => getStockStatus(stock) === 'out_of_stock')
   const totalUnits = scopedStocks.reduce((sum, stock) => sum + Number(stock.quantityOnHand || 0), 0)
@@ -120,8 +191,13 @@ export function InventoryPageSimpleV232({ onInventoryChanged }: { onInventoryCha
   const actionBranches = availableBranches.length ? availableBranches : branches
   const afterAction = () => {
     setDialog(null)
-    setMenuItemId(null)
+    setSelectedItemId(null)
     onInventoryChanged()
+  }
+
+  function openItemAction(dialog: InventoryDialog) {
+    setSelectedItemId(null)
+    setDialog(dialog)
   }
 
   if (isAllBranchesMode) {
@@ -185,7 +261,6 @@ export function InventoryPageSimpleV232({ onInventoryChanged }: { onInventoryCha
       <div className="inv232-stock-list">
         {filteredRows.map(({ item, stock }) => {
           const status = getStockStatus(stock)
-          const menuOpen = menuItemId === item.id
           return <article className="inv232-stock-row" key={stock.id}>
             <div className="inv232-item-icon"><Package size={18}/></div>
             <div className="inv232-item-copy"><span>{item.itemCode}</span><strong>{item.name}</strong><small>{item.brand || 'No brand'}{item.sku ? ` · ${item.sku}` : ''}</small></div>
@@ -194,12 +269,7 @@ export function InventoryPageSimpleV232({ onInventoryChanged }: { onInventoryCha
             <div className="inv232-actions">
               {permissions.can('inventory.stock_in') && <button type="button" className="inv232-primary-action" onClick={() => setDialog({ type: 'stock_in', item })}><ArrowDownToLine size={15}/> Stock in</button>}
               {permissions.can('inventory.stock_out') && <button type="button" onClick={() => setDialog({ type: 'stock_out', item })}><ArrowUpFromLine size={15}/> Stock out</button>}
-              <div className="inv232-more-wrap"><button type="button" aria-label={`More actions for ${item.name}`} onClick={() => setMenuItemId(menuOpen ? null : item.id)}><MoreHorizontal size={17}/></button>{menuOpen && <div className="inv232-more-menu">
-                {permissions.can('inventory.adjust') && <button type="button" onClick={() => setDialog({ type: 'adjust', item })}><SlidersHorizontal size={14}/> Correct quantity</button>}
-                {permissions.can('inventory.transfer') && actionBranches.length > 1 && <button type="button" onClick={() => setDialog({ type: 'quick_transfer', item })}><ArrowRightLeft size={14}/> Transfer to branch</button>}
-                {permissions.can('inventory.create_item') && <button type="button" onClick={() => setDialog({ type: 'edit_item', item })}>Edit item</button>}
-                {permissions.can('inventory.create_item') && <button type="button" className="is-danger" onClick={() => setDialog({ type: 'remove_item', item })}>Archive item</button>}
-              </div>}</div>
+              <div className="inv232-more-wrap"><button type="button" aria-label={`Actions for ${item.name}`} aria-haspopup="dialog" aria-expanded={selectedItemId === item.id} onClick={() => setSelectedItemId(item.id)}><MoreHorizontal size={17}/></button></div>
             </div>
           </article>
         })}
@@ -223,6 +293,16 @@ export function InventoryPageSimpleV232({ onInventoryChanged }: { onInventoryCha
       </div>
     </section>}
 
-    {dialog && <InventoryActionModal dialog={dialog} branches={actionBranches} preferredBranchId={activeBranchId} onClose={() => { setDialog(null); setMenuItemId(null) }} onSuccess={afterAction} />}
+    {selectedActionRow && <InventoryItemActionsModal
+      item={selectedActionRow.item}
+      stock={selectedActionRow.stock}
+      branchName={activeBranch.name}
+      canAdjust={permissions.can('inventory.adjust')}
+      canTransfer={permissions.can('inventory.transfer') && actionBranches.length > 1}
+      canEdit={permissions.can('inventory.create_item')}
+      onAction={openItemAction}
+      onClose={() => setSelectedItemId(null)}
+    />}
+    {dialog && <InventoryActionModal dialog={dialog} branches={actionBranches} preferredBranchId={activeBranchId} onClose={() => setDialog(null)} onSuccess={afterAction} />}
   </section>
 }

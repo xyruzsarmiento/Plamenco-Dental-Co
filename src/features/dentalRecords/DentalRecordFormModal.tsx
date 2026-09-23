@@ -50,6 +50,7 @@ export function DentalRecordFormModal({
         </div>
 
         <form className="form-stack" onSubmit={handleSubmit}>
+          <div className="dental-record-modal-body">
           <div className="form-section">
             <h3>Patient</h3>
             <div className="form-grid">
@@ -162,6 +163,8 @@ export function DentalRecordFormModal({
               <span>{successMessage}</span>
             </div>
           )}
+
+          </div>
 
           <div className="modal-actions">
             <Button variant="secondary" type="button" onClick={onClose}>

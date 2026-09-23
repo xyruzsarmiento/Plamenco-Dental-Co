@@ -5,6 +5,7 @@
 @media (max-width:640px) {
   /* Shared mobile card shell behavior */
   html body .app-shell :is(
+    .dr11-command-header,
     .tx43-hero,
     .tp80-hero,
     .bp153-header,
@@ -23,9 +24,9 @@
   }
 
   /* ------------------------------------------------------------- */
-  /* Treatments + Treatment Plans                                  */
+  /* Dental Records + Treatments + Treatment Plans                 */
   /* ------------------------------------------------------------- */
-  html body .app-shell :is(.tx43-hero,.tp80-hero) {
+  html body .app-shell :is(.dr11-command-header,.tx43-hero,.tp80-hero) {
     display:grid!important;
     grid-template-columns:minmax(0,1fr)!important;
     grid-template-rows:auto auto!important;
@@ -35,14 +36,14 @@
     padding:16px!important;
   }
 
-  html body .app-shell :is(.tx43-hero-copy,.tp80-hero-title) {
+  html body .app-shell :is(.dr11-command-title,.tx43-hero-copy,.tp80-hero-title) {
     width:100%!important;
     max-width:none!important;
     min-width:0!important;
     justify-self:stretch!important;
   }
 
-  html body .app-shell :is(.tx43-hero-copy,.tp80-hero-title).clinical-standard-hero-copy {
+  html body .app-shell :is(.dr11-command-title,.tx43-hero-copy,.tp80-hero-title).clinical-standard-hero-copy {
     display:grid!important;
     grid-template-columns:44px minmax(0,1fr)!important;
     grid-template-rows:auto auto auto!important;
@@ -53,8 +54,11 @@
     min-height:0!important;
   }
 
+  html body .app-shell .dr11-command-title > .dr11-command-icon,
   html body .app-shell .tx43-hero-copy > .portal-card-heading-icon,
   html body .app-shell .tp80-hero-title > .tp80-hero-icon {
+    display:grid!important;
+    place-items:center!important;
     position:static!important;
     inset:auto!important;
     transform:none!important;
@@ -71,12 +75,15 @@
     border-radius:8px!important;
   }
 
+  html body .app-shell .dr11-command-title > :not(.dr11-command-icon),
   html body .app-shell .tx43-hero-copy > :not(.portal-card-heading-icon),
   html body .app-shell .tp80-hero-title > :not(.tp80-hero-icon) {
     grid-column:2!important;
     min-width:0!important;
   }
 
+  html body .app-shell .dr11-command-header > .btn,
+  html body .app-shell .dr11-command-header > button,
   html body .app-shell .tx43-hero > .btn,
   html body .app-shell .tx43-hero > button,
   html body .app-shell .tp80-hero > .btn,
@@ -135,7 +142,7 @@
 
   html body .app-shell .bp153-title > span > svg { display:none!important; }
 
-  html body .app-shell .bp153-actions {
+  html body .app-shell .bp153-header.mobile-card-standard > .bp153-actions.mobile-card-standard-actions {
     grid-column:1 / -1!important;
     grid-row:2!important;
     display:grid!important;
@@ -147,6 +154,8 @@
     max-width:none!important;
     justify-self:stretch!important;
     align-self:stretch!important;
+    justify-items:stretch!important;
+    align-items:stretch!important;
     margin:14px 0 0!important;
   }
 
@@ -156,33 +165,83 @@
   html body .app-shell .bp153-more > .btn,
   html body .app-shell .bp153-more > button {
     box-sizing:border-box!important;
+    display:flex!important;
     inline-size:100%!important;
     width:100%!important;
     min-width:0!important;
     max-width:none!important;
-    flex:1 1 100%!important;
+    flex:none!important;
     justify-self:stretch!important;
     align-self:stretch!important;
     justify-content:center!important;
     margin:0!important;
+    display:flex!important;
+    align-items:center!important;
+    gap:8px!important;
   }
 
-  html body .app-shell .bp153-more { display:block!important; }
-
-  html body .app-shell .bp153-more-menu {
+  html body .app-shell :is(.dr11-command-header,.tx43-hero,.tp80-hero) > :is(.btn,button) > svg {
     position:static!important;
     inset:auto!important;
+    inline-size:auto!important;
+    width:auto!important;
+    max-width:20px!important;
+    margin:0!important;
+    flex:0 0 auto!important;
+  }
+
+  html body .app-shell :is(.dr11-command-header,.tx43-hero,.tp80-hero) > :is(.btn,button) > span {
+    display:inline-flex!important;
+    align-items:center!important;
+    inline-size:auto!important;
+    width:auto!important;
+    max-width:max-content!important;
+    margin:0!important;
+    position:static!important;
+    flex:0 0 auto!important;
+  }
+
+  html body .app-shell .bp153-more {
+    display:block!important;
     inline-size:100%!important;
     width:100%!important;
     min-width:0!important;
     max-width:none!important;
-    margin:6px 0 0!important;
+    justify-self:stretch!important;
+    position:relative!important;
+  }
+
+  html body .app-shell .bp153-more-menu {
+    position:absolute!important;
+    top:calc(100% + 8px)!important;
+    right:0!important;
+    left:auto!important;
+    inset-block-start:calc(100% + 8px)!important;
+    inset-inline-end:0!important;
+    inline-size:min(260px,calc(100vw - 24px))!important;
+    width:min(260px,calc(100vw - 24px))!important;
+    min-width:0!important;
+    max-width:calc(100vw - 24px)!important;
+    margin:0!important;
+    z-index:1000!important;
+  }
+
+  /* The page shell's horizontal guard otherwise establishes a vertical
+     clipping context for the open popover. */
+  html body .app-shell .bp153-page:has(.bp153-more-menu),
+  html body .app-shell .bp153-header:has(.bp153-more-menu) {
+    overflow: visible !important;
+  }
+
+  html body .app-shell .bp153-header:has(.bp153-more-menu) {
+    position: relative !important;
+    z-index: 20 !important;
   }
 
   /* ------------------------------------------------------------- */
   /* Dentists                                                      */
   /* ------------------------------------------------------------- */
-  html body .app-shell .dentists133-hero {
+  html body .app-shell .dentists133-hero.mobile-card-standard {
     display:grid!important;
     grid-template-columns:44px minmax(0,1fr)!important;
     grid-template-rows:auto auto!important;
@@ -192,21 +251,25 @@
     padding:16px!important;
   }
 
-  html body .app-shell .dentists133-hero > .dentists133-hero-icon {
+  html body .app-shell .dentists133-hero.mobile-card-standard > .dentists133-hero-icon {
+    display:grid!important;
+    place-items:center!important;
     grid-column:1!important;
     grid-row:1!important;
-    place-self:center start!important;
+    align-self:center!important;
+    justify-self:start!important;
     box-sizing:border-box!important;
     width:44px!important;
     height:44px!important;
     min-width:44px!important;
     max-width:44px!important;
     margin:0!important;
+    margin-inline:0!important;
     transform:none!important;
     border-radius:8px!important;
   }
 
-  html body .app-shell .dentists133-hero > div:nth-child(2) {
+  html body .app-shell .dentists133-hero.mobile-card-standard > div:nth-child(2) {
     grid-column:2!important;
     grid-row:1!important;
     width:100%!important;
@@ -267,7 +330,7 @@
     justify-self:stretch!important;
   }
 
-  html body .app-shell .rep162-toolbar-actions {
+  html body .app-shell .rep162.rep163 .rep162-toolbar-actions {
     grid-column:1 / -1!important;
     grid-row:2!important;
     display:grid!important;
@@ -279,13 +342,131 @@
     max-width:none!important;
     justify-self:stretch!important;
     align-self:stretch!important;
+    justify-items:stretch!important;
+    align-items:stretch!important;
     margin:14px 0 0!important;
   }
 
-  html body .app-shell .rep162-scope,
-  html body .app-shell .rep162-export,
-  html body .app-shell .rep162-export > .btn,
-  html body .app-shell .rep162-export > button {
+  /* ------------------------------------------------------------- */
+  /* Internal Account / Profile                                   */
+  /* ------------------------------------------------------------- */
+  html body .app-shell .internal-profile-hero {
+    grid-template-columns:minmax(0,1fr)!important;
+    grid-template-rows:auto auto!important;
+    align-items:stretch!important;
+    gap:16px!important;
+  }
+
+  html body .app-shell .internal-profile-hero .internal-profile-identity {
+    display:grid!important;
+    grid-template-columns:76px minmax(0,1fr)!important;
+    align-items:center!important;
+    column-gap:16px!important;
+    min-width:0!important;
+  }
+
+  html body .app-shell .internal-profile-hero .internal-profile-avatar-wrap {
+    grid-column:1!important;
+    grid-row:1!important;
+    align-self:center!important;
+    justify-self:start!important;
+    width:76px!important;
+    height:76px!important;
+    margin:0!important;
+  }
+
+  html body .app-shell .internal-profile-hero .internal-profile-title {
+    grid-column:2!important;
+    grid-row:1!important;
+    min-width:0!important;
+    align-self:center!important;
+  }
+
+  html body .app-shell .internal-profile-hero .internal-profile-actions {
+    grid-column:1!important;
+    grid-row:2!important;
+    display:grid!important;
+    grid-template-columns:minmax(0,1fr)!important;
+    gap:8px!important;
+    width:100%!important;
+    min-width:0!important;
+    max-width:none!important;
+    justify-self:stretch!important;
+    align-self:stretch!important;
+    justify-items:stretch!important;
+    margin:0!important;
+  }
+
+  html body .app-shell .internal-profile-hero .internal-profile-actions > * {
+    width:100%!important;
+    min-width:0!important;
+    max-width:none!important;
+    margin:0!important;
+    justify-self:stretch!important;
+    justify-content:center!important;
+    box-sizing:border-box!important;
+  }
+
+  /* ------------------------------------------------------------- */
+  /* Expenses More dropdown                                       */
+  /* ------------------------------------------------------------- */
+  html body .app-shell.page-expenses .ex161-hero {
+    overflow:visible!important;
+    isolation:auto!important;
+    position:relative!important;
+    z-index:10!important;
+  }
+
+  html body .app-shell.page-expenses .page-content:has(.ex161-page),
+  html body .app-shell.page-expenses main:has(.ex161-page) {
+    overflow:visible!important;
+    overflow-y:visible!important;
+  }
+
+  html body .app-shell.page-expenses .ex161-menu {
+    position:relative!important;
+    width:100%!important;
+    min-width:0!important;
+    max-width:none!important;
+  }
+
+  html body .app-shell.page-expenses .ex161-hero-actions {
+    width:100%!important;
+    min-width:0!important;
+    max-width:none!important;
+  }
+
+  html body .app-shell.page-expenses .ex161-menu-list {
+    position:absolute!important;
+    top:calc(100% + 8px)!important;
+    right:0!important;
+    left:auto!important;
+    inset-block-start:calc(100% + 8px)!important;
+    inset-inline-end:0!important;
+    width:min(260px,calc(100vw - 32px))!important;
+    min-width:0!important;
+    max-width:calc(100vw - 32px)!important;
+    margin:0!important;
+    z-index:1000!important;
+  }
+
+  @media (max-width:390px) {
+    html body .app-shell .internal-profile-hero .internal-profile-identity {
+      grid-template-columns:64px minmax(0,1fr)!important;
+      column-gap:14px!important;
+    }
+
+    html body .app-shell .internal-profile-hero .internal-profile-avatar-wrap {
+      width:64px!important;
+      height:64px!important;
+    }
+  }
+
+  html body .app-shell .rep162.rep163 .rep162-scope,
+  html body .app-shell .rep162.rep163 .rep162-export,
+  html body .app-shell .rep162.rep163 .rep162-export > .btn,
+  html body .app-shell .rep162.rep163 .rep162-export > button {
+    grid-column:1 / -1!important;
     box-sizing:border-box!important;
     inline-size:100%!important;
     width:100%!important;
@@ -296,6 +477,7 @@
     align-self:stretch!important;
     justify-content:center!important;
     margin:0!important;
+    margin-inline:0!important;
   }
 
   html body .app-shell .rep162-export-menu {
@@ -343,7 +525,7 @@
     justify-self:stretch!important;
   }
 
-  html body .app-shell .inv232-header-actions {
+  html body .app-shell .inv232-header.mobile-card-standard > .inv232-header-actions.mobile-card-standard-actions {
     grid-column:1 / -1!important;
     grid-row:2!important;
     display:grid!important;
@@ -354,10 +536,12 @@
     max-width:none!important;
     justify-self:stretch!important;
     align-self:stretch!important;
+    justify-items:stretch!important;
+    padding:0!important;
     margin:14px 0 0!important;
   }
 
-  html body .app-shell .inv232-header-actions > *,
+  html body .app-shell .inv232-header.mobile-card-standard > .inv232-header-actions.mobile-card-standard-actions > *,
   html body .app-shell .inv232-header-actions .btn,
   html body .app-shell .inv232-header-actions button {
     box-sizing:border-box!important;
@@ -370,14 +554,16 @@
     align-self:stretch!important;
     justify-content:center!important;
     margin:0!important;
+    margin-inline:0!important;
   }
 
   /* ------------------------------------------------------------- */
   /* Team & Access                                                 */
   /* ------------------------------------------------------------- */
   html body .app-shell .team-v26-hero.header-icon-parity {
-    display:flex!important;
-    flex-direction:column!important;
+    display:grid!important;
+    grid-template-columns:minmax(0,1fr)!important;
+    grid-template-rows:auto auto!important;
     align-items:stretch!important;
     justify-content:flex-start!important;
     gap:14px!important;
@@ -389,7 +575,13 @@
     display:none!important;
   }
 
-  html body .app-shell .team-v26-hero-copy {
+  html body .app-shell .team-v26-hero.header-icon-parity > .team-v26-hero-copy {
+    grid-column:1!important;
+    grid-row:1!important;
+    display:grid!important;
+    grid-template-columns:44px minmax(0,1fr)!important;
+    column-gap:14px!important;
+    align-items:center!important;
     inline-size:100%!important;
     width:100%!important;
     max-width:none!important;
@@ -397,7 +589,25 @@
     justify-self:stretch!important;
   }
 
-  html body .app-shell .team-v26-hero-actions {
+  html body .app-shell .team-v26-hero-copy > .header-icon-parity-tile {
+    display:grid!important;
+    grid-column:1!important;
+    grid-row:1 / -1!important;
+    place-self:center start!important;
+    inline-size:44px!important;
+    width:44px!important;
+    height:44px!important;
+    margin:0!important;
+  }
+
+  html body .app-shell .team-v26-hero-copy > :not(.header-icon-parity-tile) {
+    grid-column:2!important;
+    min-width:0!important;
+  }
+
+  html body .app-shell .team-v26-hero.header-icon-parity > .team-v26-hero-actions {
+    grid-column:1!important;
+    grid-row:2!important;
     display:grid!important;
     grid-template-columns:minmax(0,1fr)!important;
     gap:8px!important;
@@ -409,6 +619,8 @@
     align-items:stretch!important;
     align-self:stretch!important;
     margin:0!important;
+    margin-inline:0!important;
+    padding:0!important;
   }
 
   html body .app-shell .team-v26-hero-actions > span,
@@ -425,6 +637,7 @@
     align-self:stretch!important;
     justify-content:center!important;
     margin:0!important;
+    margin-inline:0!important;
   }
 
   /* ------------------------------------------------------------- */

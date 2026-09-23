@@ -198,3 +198,141 @@ html body .app-shell :is(
     grid-column:1!important;
   }
 }
+
+/* Tablet / narrow-desktop band: keep the four admin heroes compact while the
+   desktop sidebar is still present. Mobile rules begin at 820px and desktop
+   geometry resumes above 1180px. */
+@media (min-width:821px) and (max-width:1180px) {
+  html body .app-shell :is(
+    .data-import-v21-hero.header-icon-parity,
+    .team-v26-hero.header-icon-parity,
+    .sys58-hero.header-icon-parity,
+    .settings-v30-hero.header-icon-parity
+  ) {
+    display:grid!important;
+    grid-template-columns:44px minmax(0,1fr)!important;
+    grid-template-rows:auto auto!important;
+    align-items:center!important;
+    align-content:start!important;
+    justify-content:initial!important;
+    justify-items:stretch!important;
+    column-gap:16px!important;
+    row-gap:12px!important;
+    height:auto!important;
+    min-height:0!important;
+    padding:20px 24px!important;
+  }
+
+  html body .app-shell :is(
+    .data-import-v21-hero-copy,
+    .team-v26-hero-copy,
+    .sys58-hero-copy,
+    .settings-v30-hero-copy
+  ) {
+    grid-column:1 / -1!important;
+    grid-row:1!important;
+    width:100%!important;
+    max-width:none!important;
+    flex:none!important;
+    min-height:0!important;
+    align-self:center!important;
+  }
+
+  html body .app-shell :is(
+    .data-import-v21-hero-meta,
+    .team-v26-hero-actions,
+    .sys58-hero-status,
+    .settings-v30-hero-actions
+  ) {
+    grid-column:1 / -1!important;
+    grid-row:2!important;
+    width:100%!important;
+    min-width:0!important;
+    max-width:none!important;
+    margin:0!important;
+    justify-self:stretch!important;
+    align-self:start!important;
+  }
+
+  html body .app-shell .data-import-v21-hero-meta {
+    display:grid!important;
+    grid-template-columns:repeat(2,minmax(0,1fr))!important;
+    gap:9px!important;
+  }
+
+  /* Data Import has a three-line copy stack. Keep those lines content-sized;
+     inherited stretch/center alignment is what creates the dead vertical gaps. */
+  html body .app-shell .data-import-v21-hero.header-icon-parity {
+    align-content:start!important;
+  }
+
+  html body .app-shell .data-import-v21-hero-copy {
+    align-content:start!important;
+    justify-content:start!important;
+    grid-auto-rows:max-content!important;
+    grid-template-rows:max-content max-content max-content!important;
+    row-gap:0!important;
+  }
+
+  html body .app-shell .data-import-v21-hero-copy > :not(.header-icon-parity-tile) {
+    align-self:start!important;
+  }
+
+  /* Team & Access uses the same three-line identity stack. Keep the kicker,
+     title, and description content-sized instead of vertically distributed. */
+  html body .app-shell .team-v26-hero.header-icon-parity {
+    align-content:start!important;
+  }
+
+  html body .app-shell .team-v26-hero-copy {
+    align-content:start!important;
+    justify-content:start!important;
+    grid-auto-rows:max-content!important;
+    grid-template-rows:max-content max-content max-content!important;
+    row-gap:0!important;
+  }
+
+  html body .app-shell .team-v26-hero-copy > :not(.header-icon-parity-tile) {
+    align-self:start!important;
+  }
+
+  /* System Administration: keep the owner-control copy stack compact. */
+  html body .app-shell .sys58-hero.header-icon-parity {
+    align-content:start!important;
+  }
+
+  html body .app-shell .sys58-hero-copy {
+    align-content:start!important;
+    justify-content:start!important;
+    grid-auto-rows:max-content!important;
+    grid-template-rows:max-content max-content max-content!important;
+    row-gap:0!important;
+  }
+
+  html body .app-shell .sys58-hero-copy > :not(.header-icon-parity-tile) {
+    align-self:start!important;
+  }
+
+  /* Settings: keep the administration kicker, title, and description together. */
+  html body .app-shell .settings-v30-hero.header-icon-parity {
+    align-content:start!important;
+  }
+
+  html body .app-shell .settings-v30-hero-copy {
+    align-content:start!important;
+    justify-content:start!important;
+    grid-auto-rows:max-content!important;
+    grid-template-rows:max-content max-content max-content!important;
+    row-gap:0!important;
+  }
+
+  html body .app-shell .settings-v30-hero-copy > :not(.header-icon-parity-tile) {
+    align-self:start!important;
+  }
+
+  html body .app-shell .team-v26-hero-actions {
+    display:grid!important;
+    grid-template-columns:repeat(2,minmax(0,1fr))!important;
+    gap:8px!important;
+  }
+}

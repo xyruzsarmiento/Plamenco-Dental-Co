@@ -213,11 +213,37 @@ html body .branches-v27-branch-head { border-radius: 8px; }
   .branches-v27-detail-metrics article:last-child { border-bottom: 0; }
   .branches-v27-contact-list { grid-template-columns: 1fr; }
   .branches-v27-appointments > div { grid-template-columns: 72px minmax(0, 1fr); }
-  .branches-v27-modal-backdrop { align-items: end; padding: 0; }
-  .branches-v27-modal { width: 100%; max-height: 96dvh; border-radius: 8px 8px 0 0; }
+  .branches-v27-modal-backdrop {
+    display: grid;
+    place-items: center;
+    align-items: center;
+    justify-content: center;
+    padding: 12px;
+    box-sizing: border-box;
+  }
+  .branches-v27-modal {
+    width: min(100%, 520px);
+    max-width: 520px;
+    max-height: calc(100dvh - 24px);
+    margin: 0;
+    border-radius: 20px;
+    box-sizing: border-box;
+  }
   .branches-v27-modal > header { padding: 16px; }
   .branches-v27-modal-body { padding: 14px 16px; }
   .branches-v27-modal > footer { display: grid; grid-template-columns: 1fr 1fr; padding: 12px 16px; }
+  .branches-v27-modal > footer .button,
+  .branches-v27-modal > footer .btn {
+    width: 100%;
+    min-width: 0;
+    max-width: none;
+    justify-self: stretch;
+    box-sizing: border-box;
+  }
+}
+
+@media (max-width: 360px) {
+  .branches-v27-modal > footer { grid-template-columns: 1fr; }
 }
 
 @media (max-width: 390px) {

@@ -1,0 +1,88 @@
+/* Historical Migration / Import Patients only. Desktop remains unchanged. */
+@media (max-width: 760px) {
+  html body:has(.app-shell) .modal-backdrop:has(> .patient-import-modal) {
+    position: fixed !important;
+    inset: 0 !important;
+    display: grid !important;
+    place-items: center !important;
+    align-items: center !important;
+    justify-items: center !important;
+    justify-content: center !important;
+    width: 100vw !important;
+    height: 100dvh !important;
+    min-height: 100dvh !important;
+    padding: 12px !important;
+    margin: 0 !important;
+    box-sizing: border-box !important;
+    overflow: hidden !important;
+  }
+
+  html body:has(.app-shell) .modal-backdrop:has(> .patient-import-modal) > .patient-import-modal {
+    position: relative !important;
+    inset: auto !important;
+    left: auto !important;
+    right: auto !important;
+    top: auto !important;
+    bottom: auto !important;
+    align-self: center !important;
+    justify-self: center !important;
+    width: min(100%, 520px) !important;
+    max-width: 520px !important;
+    max-height: calc(100dvh - 24px) !important;
+    height: auto !important;
+    margin: 0 !important;
+    box-sizing: border-box !important;
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+    transform: none !important;
+  }
+
+  html body:has(.app-shell) .modal-backdrop:has(> .patient-import-modal) > .patient-import-modal > * {
+    min-width: 0 !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  html body:has(.app-shell) .patient-import-modal .import-step-grid,
+  html body:has(.app-shell) .patient-import-modal .import-mapping-grid,
+  html body:has(.app-shell) .patient-import-modal .import-mapping-row,
+  html body:has(.app-shell) .patient-import-modal .import-review-summary,
+  html body:has(.app-shell) .patient-import-modal .import-row {
+    grid-template-columns: minmax(0, 1fr) !important;
+    width: 100% !important;
+    min-width: 0 !important;
+  }
+
+  html body:has(.app-shell) .patient-import-modal .import-upload-zone,
+  html body:has(.app-shell) .patient-import-modal .import-preview-table,
+  html body:has(.app-shell) .patient-import-modal .import-row-list,
+  html body:has(.app-shell) .patient-import-modal .modal-actions {
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  html body:has(.app-shell) .patient-import-modal .import-preview-table {
+    overflow-x: auto !important;
+  }
+
+  html body:has(.app-shell) .patient-import-modal .modal-actions {
+    display: grid !important;
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    gap: 8px !important;
+  }
+
+  html body:has(.app-shell) .patient-import-modal .modal-actions > .btn {
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: none !important;
+    justify-content: center !important;
+  }
+}
+
+@media (max-width: 380px) {
+  html body:has(.app-shell) .patient-import-modal .modal-actions {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+}

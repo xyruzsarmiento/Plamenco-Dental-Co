@@ -186,7 +186,6 @@ export function InventoryTransferWorkflowV226() {
   return <>{panel}{mode === 'queue' && <TransferQueueModal
     transfers={transfers}
     branchMap={branchMap}
-    itemMap={itemMap}
     canTransfer={canTransfer}
     busy={busy}
     error={error}
@@ -222,10 +221,9 @@ export function InventoryTransferWorkflowV226() {
   />}</>
 }
 
-function TransferQueueModal({ transfers, branchMap, itemMap, canTransfer, busy, error, authorizedBranchIds, onClose, onCreate, onOpen, onDispatch, onReceive }: {
+function TransferQueueModal({ transfers, branchMap, canTransfer, busy, error, authorizedBranchIds, onClose, onCreate, onOpen, onDispatch, onReceive }: {
   transfers: StockTransfer[]
   branchMap: Map<string, string>
-  itemMap: Map<string, { name: string }>
   canTransfer: boolean
   busy: boolean
   error: string | null

@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import {
   AlertTriangle,
   ArrowRight,
+  Building2,
   CheckCircle2,
   DatabaseZap,
   FileSpreadsheet,
@@ -77,7 +78,7 @@ function downloadCsv(filename: string, rows: Array<Record<string, unknown>>) {
   URL.revokeObjectURL(url)
 }
 
-export function DataImportPageV21() {
+export function DataImportPageV21({ scopeLabel, isAllBranchesMode }: { scopeLabel?: string; isAllBranchesMode?: boolean } = {}) {
   const permissions = usePermissions()
   const inputRef = useRef<HTMLInputElement | null>(null)
   const [importType, setImportType] = useState<ImportType>('patients')
@@ -228,7 +229,11 @@ export function DataImportPageV21() {
           <h2>Data Import</h2>
           <p>Upload, map, validate and review historical clinic records before committing them to the patient registry.</p>
         </div>
-        <div className="data-import-v21-safety"><ShieldCheck size={18}/><div><strong>Portal-safe migration</strong><span>Legacy imports do not create patient login accounts.</span></div></div>
+        <div className="data-import-v21-hero-meta">
+          {scopeLabel && <div className="data-import-v21-scope"><Building2 size={16}/><div><span>Import scope</span><strong>{scopeLabel}</strong></div></div>}
+          <div className="data-import-v21-safety"><ShieldCheck size={18}/><div><strong>Portal-safe migration</strong><span>Legacy imports do not create patient login accounts.</span></div></div>
+          {isAllBranchesMode && <small className="data-import-v21-scope-note">Branch-sensitive imports require an explicit authorized branch.</small>}
+        </div>
       </header>
 
       {!canImport && <div className="data-import-v21-alert error"><AlertTriangle size={17}/><span>You need patient import permission to run migrations.</span></div>}

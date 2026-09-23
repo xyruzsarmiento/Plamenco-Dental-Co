@@ -85,8 +85,8 @@
 .tx12-modal-actions{position:sticky!important;bottom:0!important;z-index:4!important;display:flex!important;justify-content:center!important;gap:9px!important;margin:14px -20px 0!important;padding:13px 20px 15px!important;border-top:1px solid #e3e9f1!important;background:rgba(255,255,255,.97)!important}
 .tx12-modal-actions .btn{flex:1 1 0!important;max-width:210px!important}
 @media(max-width:650px){
-  .tx12-modal-backdrop{padding:12px!important}
-  .tx12-modal{width:calc(100vw - 24px)!important;max-height:86dvh!important;border-radius:19px!important}
+  .tx12-modal-backdrop{padding:12px!important;align-items:center!important;justify-content:center!important;place-items:center!important;box-sizing:border-box!important}
+  .tx12-modal{width:min(560px,calc(100vw - 24px))!important;max-width:560px!important;max-height:calc(100dvh - 24px)!important;margin:0!important;border-radius:19px!important;box-sizing:border-box!important}
   .tx12-modal-head{padding:14px 15px!important}
   .tx12-modal-form{padding:0 13px!important}
   .tx12-form-section{padding:13px!important;margin:10px 0!important}
@@ -94,6 +94,20 @@
   .tx12-form-grid .wide{grid-column:auto!important}
   .tx12-modal-actions{margin:12px -13px 0!important;padding:12px 13px 14px!important}
   .tx12-modal-actions .btn{max-width:none!important}
+}
+
+@media(max-width:760px){
+  .tx12-management .tx12-empty > .btn{
+    width:100%!important;
+    min-width:0!important;
+    max-width:none!important;
+    justify-self:stretch!important;
+    box-sizing:border-box!important;
+    display:flex!important;
+    align-items:center!important;
+    justify-content:center!important;
+    gap:8px!important;
+  }
 }
 
 /* ---------- Payment modal: premium finance surface ---------- */

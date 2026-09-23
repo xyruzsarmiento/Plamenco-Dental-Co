@@ -154,8 +154,7 @@ html body .app-shell.page-dental-records .dr11-command-header > .dr11-command-ti
     padding: 16px !important;
   }
 
-  html body .clinical-standard-hero > :not(.clinical-standard-hero-copy),
-  html body .clinical-standard-hero > :not(.clinical-standard-hero-copy) > * {
+  html body .clinical-standard-hero > :not(.clinical-standard-hero-copy) {
     width: 100% !important;
     max-width: none !important;
     justify-content: center !important;

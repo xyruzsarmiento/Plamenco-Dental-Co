@@ -820,6 +820,39 @@
 }
 
 @media (max-width: 720px) {
+  .dv108-toolbar {
+    width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    box-shadow: none;
+  }
+
+  .dv108-search,
+  .dv108-search input {
+    width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+  }
+
+  .dv108-search {
+    display: flex;
+    align-items: center;
+    border: 1px solid #d7e0ec !important;
+  }
+
+  .dv108-search input {
+    flex: 1 1 auto;
+  }
+
+  .dv108-search:focus-within {
+    border-color: #93c5fd;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, .12);
+    background: #fff;
+  }
+
   .dv108-hero,
   .dv108-profile,
   .dv108-section-head,

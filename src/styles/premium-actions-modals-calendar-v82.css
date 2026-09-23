@@ -245,8 +245,8 @@
   .sav56 .sav56-hero-actions{display:grid!important;grid-template-columns:1fr!important;width:100%!important}
   .sav56 .sav56-hero-actions a{width:100%!important;justify-content:center!important;min-height:44px!important}
 
-  .modal-backdrop:has(.patient-modal),.tx12-modal-backdrop,.tp80-backdrop,.pay14-backdrop,.team-v26-modal-backdrop,.forms-v28-modal-backdrop,.inv56-backdrop{align-items:flex-end!important;place-items:end stretch!important;padding:0!important}
-  .patient-modal,.tx12-modal,.tp80-create-modal,.pay14-modal,.team-v26-modal,.forms-v28-modal,.forms-v28-modal.large,.forms-v28-modal.compact,.inv56-modal{width:100%!important;max-width:none!important;max-height:94dvh!important;border-radius:24px 24px 0 0!important;border-bottom:0!important}
+  .modal-backdrop:has(.patient-modal),.tp80-backdrop,.pay14-backdrop,.team-v26-modal-backdrop,.forms-v28-modal-backdrop,.inv56-backdrop{align-items:flex-end!important;place-items:end stretch!important;padding:0!important}
+  .patient-modal,.tp80-create-modal,.pay14-modal,.team-v26-modal,.forms-v28-modal,.forms-v28-modal.large,.forms-v28-modal.compact,.inv56-modal{width:100%!important;max-width:none!important;max-height:94dvh!important;border-radius:24px 24px 0 0!important;border-bottom:0!important}
   .patient-modal .form-grid,.tx12-form-grid,.tp80-form-grid,.tp80-item-fields,.pay14-grid-2,.team-v26-form-grid,.team-v26-branch-picker,.forms-v28-form-grid,.inventory-form-grid,.inv56-toggle-grid{grid-template-columns:1fr!important}
   .tp80-form-grid .is-wide,.pay14-span-2,.team-v26-span-2{grid-column:auto!important}
   .tp80-item{grid-template-columns:auto minmax(0,1fr) auto!important;align-items:start!important}

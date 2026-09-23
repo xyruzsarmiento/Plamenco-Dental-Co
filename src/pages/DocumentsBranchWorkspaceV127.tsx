@@ -82,6 +82,7 @@ export function DocumentsBranchWorkspaceV127() {
   const [uploadPatientId, setUploadPatientId] = useState('')
   const [uploadOpen, setUploadOpen] = useState(false)
   const [selectedId, setSelectedId] = useState<string | null>(null)
+  const [archiveTarget, setArchiveTarget] = useState<BranchPatientDocument | null>(null)
   const [menuId, setMenuId] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -108,28 +109,29 @@ export function DocumentsBranchWorkspaceV127() {
   }, [activeBranchId, isAllBranchesMode])
 
   useEffect(() => { void refresh() }, [refresh])
-  useEffect(() => { setUploadOpen(false); setUploadPatientId(''); setSelectedId(null); setMenuId(null) }, [activeBranchId, isAllBranchesMode])
+  useEffect(() => { setUploadOpen(false); setUploadPatientId(''); setSelectedId(null); setArchiveTarget(null); setMenuId(null) }, [activeBranchId, isAllBranchesMode])
   useEffect(() => {
     if (!patients.length) return
     setSelectedPatientId((current) => patients.some((patient) => patient.id === current || patient.patientId === current) ? current : patients[0].patientId)
   }, [patients])
   useEffect(() => { setPage(1) }, [branchFilter, categoryFilter, query, selectedPatientId, sort, visibilityFilter])
   useEffect(() => {
-    if (!selectedId && !uploadOpen) return undefined
+    if (!selectedId && !uploadOpen && !archiveTarget) return undefined
     return acquireModalScrollLock()
-  }, [selectedId, uploadOpen])
+  }, [archiveTarget, selectedId, uploadOpen])
   useEffect(() => {
-    if (!selectedId && !uploadOpen && !menuId) return undefined
+    if (!selectedId && !uploadOpen && !archiveTarget && !menuId) return undefined
     const handleKey = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
         setSelectedId(null)
+        setArchiveTarget(null)
         setUploadOpen(false)
         setMenuId(null)
       }
     }
     document.addEventListener('keydown', handleKey)
     return () => document.removeEventListener('keydown', handleKey)
-  }, [menuId, selectedId, uploadOpen])
+  }, [archiveTarget, menuId, selectedId, uploadOpen])
 
   const categories = useMemo(() => Array.from(new Set(documents.map((document) => document.category))).sort(), [documents])
   const patientDocumentStats = useMemo(() => {
@@ -201,7 +203,7 @@ export function DocumentsBranchWorkspaceV127() {
   }
 
   async function archive(document: BranchPatientDocument) {
-    if (busyId || !window.confirm(`Archive ${document.fileName}?`)) return
+    if (busyId) return
     setBusyId(document.id)
     setError(null)
     setSuccess(null)
@@ -209,6 +211,7 @@ export function DocumentsBranchWorkspaceV127() {
       await archiveBranchDocumentV127(document.id)
       setDocuments((current) => current.filter((item) => item.id !== document.id))
       setSelectedId(null)
+      setArchiveTarget(null)
       setSuccess('Document archived.')
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : 'Document could not be archived.')
@@ -328,7 +331,7 @@ export function DocumentsBranchWorkspaceV127() {
                         <button type="button" className="doc149-icon-button" aria-label={`More actions for ${document.fileName}`} aria-haspopup="menu" aria-expanded={menuId === document.id} onClick={() => setMenuId(menuId === document.id ? null : document.id)}><MoreHorizontal size={16} /></button>
                         {menuId === document.id && <div className="doc149-menu" role="menu">
                           {canUpload && <button type="button" role="menuitem" disabled={busyId === document.id} onClick={() => void toggleVisibility(document)}>{document.patientVisible ? <LockKeyhole size={14} /> : <Share2 size={14} />}{document.patientVisible ? 'Make private' : 'Share with patient'}</button>}
-                          {canUpload && <button type="button" role="menuitem" disabled={busyId === document.id} onClick={() => void archive(document)}><Archive size={14} /> Archive</button>}
+                          {canUpload && <button type="button" role="menuitem" disabled={busyId === document.id} onClick={() => { setArchiveTarget(document); setMenuId(null) }}><Archive size={14} /> Archive</button>}
                           <button type="button" role="menuitem" onClick={() => { setSelectedId(document.id); setMenuId(null) }}><FileText size={14} /> Details</button>
                         </div>}
                       </div>
@@ -389,9 +392,15 @@ export function DocumentsBranchWorkspaceV127() {
           <footer>
             <Button icon={<Download size={15} />} disabled={busyId === selectedDocument.id} onClick={() => void downloadDocument(selectedDocument)}>Download</Button>
             {canUpload && <Button variant="secondary" icon={selectedDocument.patientVisible ? <LockKeyhole size={15} /> : <Share2 size={15} />} disabled={busyId === selectedDocument.id} onClick={() => void toggleVisibility(selectedDocument)}>{selectedDocument.patientVisible ? 'Make private' : 'Share'}</Button>}
-            {canUpload && <Button variant="danger" icon={<Archive size={15} />} disabled={busyId === selectedDocument.id} onClick={() => void archive(selectedDocument)}>Archive</Button>}
+            {canUpload && <Button variant="danger" icon={<Archive size={15} />} disabled={busyId === selectedDocument.id} onClick={() => setArchiveTarget(selectedDocument)}>Archive</Button>}
           </footer>
         </aside>
+      </div>}
+      {archiveTarget && <div className="doc149-confirm-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget && !busyId) setArchiveTarget(null) }}>
+        <section className="doc149-confirm-dialog" role="dialog" aria-modal="true" aria-labelledby="doc149-confirm-title">
+          <header><div><span>Document archive</span><h2 id="doc149-confirm-title">Archive document?</h2><p>{archiveTarget.fileName} will be moved out of the active document list. You can keep the existing archive behavior underneath.</p></div><button type="button" className="doc149-icon-button" onClick={() => !busyId && setArchiveTarget(null)} aria-label="Close archive confirmation"><X size={18} /></button></header>
+          <footer><Button variant="secondary" onClick={() => setArchiveTarget(null)} disabled={Boolean(busyId)}>Cancel</Button><Button variant="danger" icon={<Archive size={15} />} onClick={() => void archive(archiveTarget)} disabled={Boolean(busyId)}>{busyId ? 'Archiving...' : 'Archive'}</Button></footer>
+        </section>
       </div>}
     </section>
   )

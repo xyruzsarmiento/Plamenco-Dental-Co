@@ -311,9 +311,8 @@ body:has(.app-shell) :is(
     -webkit-backdrop-filter: blur(12px) !important;
   }
 
-  /* Preserve the two reference implementations explicitly. */
-  body:has(.app-shell) .appointment37-backdrop,
-  body:has(.app-shell) .expense-modal-backdrop {
+  /* Preserve the appointment reference implementation explicitly. */
+  body:has(.app-shell) .appointment37-backdrop {
     display: flex !important;
     flex-direction: column !important;
     align-items: stretch !important;
@@ -321,8 +320,7 @@ body:has(.app-shell) :is(
     padding: 0 !important;
   }
 
-  body:has(.app-shell) .appointment37-modal,
-  body:has(.app-shell) .expense-modal {
+  body:has(.app-shell) .appointment37-modal {
     align-self: flex-end !important;
     width: 100% !important;
     max-width: 100% !important;
