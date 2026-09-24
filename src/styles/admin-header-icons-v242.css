@@ -220,6 +220,7 @@ html body .app-shell :is(
     row-gap:12px!important;
     height:auto!important;
     min-height:0!important;
+    max-height:none!important;
     padding:20px 24px!important;
   }
 
@@ -234,7 +235,10 @@ html body .app-shell :is(
     width:100%!important;
     max-width:none!important;
     flex:none!important;
+    flex-basis:auto!important;
+    height:auto!important;
     min-height:0!important;
+    max-height:none!important;
     align-self:center!important;
   }
 
@@ -258,6 +262,84 @@ html body .app-shell :is(
     display:grid!important;
     grid-template-columns:repeat(2,minmax(0,1fr))!important;
     gap:9px!important;
+  }
+
+  /* V237 gives the first and last hero children columns 2 and 3 with a more
+     specific selector. At this width that creates an implicit meta column and
+     collapses the Data Import copy track to almost zero. Keep the real icon +
+     copy grid on the first row and move the meta cards onto a full-width row. */
+  html body .app-shell .data-import-v21-hero.header-icon-parity {
+    grid-template-columns:minmax(0,1fr)!important;
+    grid-template-rows:auto auto!important;
+  }
+
+  html body .app-shell .data-import-v21-hero.header-icon-parity > .data-import-v21-hero-copy {
+    grid-column:1!important;
+    grid-row:1!important;
+    width:100%!important;
+    min-width:0!important;
+    max-width:none!important;
+  }
+
+  html body .app-shell .data-import-v21-hero.header-icon-parity > .data-import-v21-hero-meta {
+    grid-column:1!important;
+    grid-row:2!important;
+    width:100%!important;
+    min-width:0!important;
+    max-width:none!important;
+    justify-self:stretch!important;
+  }
+
+  html body .app-shell .data-import-v21-hero-meta :is(.data-import-v21-scope,.data-import-v21-safety) {
+    width:100%!important;
+    min-width:0!important;
+    max-width:none!important;
+    box-sizing:border-box!important;
+  }
+
+  html body .app-shell .data-import-v21-scope-note {
+    grid-column:1 / -1!important;
+  }
+
+  /* System Administration also renders its icon inside .sys58-hero-copy.
+     Override V237's outer icon/copy/action placement so the hero does not
+     reserve a second empty 44px icon track at intermediate widths. */
+  html body .app-shell .sys58-hero.header-icon-parity {
+    grid-template-columns:minmax(0,1fr)!important;
+    grid-template-rows:auto auto!important;
+  }
+
+  html body .app-shell .sys58-hero.header-icon-parity > .sys58-hero-copy {
+    grid-column:1!important;
+    grid-row:1!important;
+    width:100%!important;
+    min-width:0!important;
+    max-width:none!important;
+  }
+
+  html body .app-shell .sys58-hero.header-icon-parity > .sys58-hero-status {
+    grid-column:1!important;
+    grid-row:2!important;
+    width:100%!important;
+    min-width:0!important;
+    max-width:none!important;
+    justify-self:stretch!important;
+    box-sizing:border-box!important;
+  }
+
+  /* Settings also renders its real icon inside .settings-v30-hero-copy.
+     Remove V237's duplicate outer icon track at intermediate widths. */
+  html body .app-shell .settings-v30-hero.header-icon-parity {
+    grid-template-columns:minmax(0,1fr)!important;
+    grid-template-rows:auto!important;
+  }
+
+  html body .app-shell .settings-v30-hero.header-icon-parity > .settings-v30-hero-copy {
+    grid-column:1!important;
+    grid-row:1!important;
+    width:100%!important;
+    min-width:0!important;
+    max-width:none!important;
   }
 
   /* Data Import has a three-line copy stack. Keep those lines content-sized;

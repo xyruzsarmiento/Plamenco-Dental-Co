@@ -47,14 +47,14 @@
 
 /* Legacy operational heroes that do not have an icon element in JSX get one
    semantic CSS icon. No generic sparkle icon is used. */
-.app-shell :is(.bp153-header,.ex161-hero,.svc15-command,.rep162-toolbar,.team-v26-hero,.sys58-hero) {
+.app-shell :is(.bp153-header,.ex161-hero,.svc15-command,.rep162-toolbar) {
   display: grid !important;
   grid-template-columns: 52px minmax(0, 1fr) auto !important;
   align-items: center !important;
   gap: 15px !important;
 }
 
-.app-shell :is(.bp153-header,.ex161-hero,.svc15-command,.rep162-toolbar,.team-v26-hero,.sys58-hero)::before {
+.app-shell :is(.bp153-header,.ex161-hero,.svc15-command,.rep162-toolbar)::before {
   content: "" !important;
   display: block !important;
   width: 52px !important;
@@ -102,9 +102,7 @@
 .app-shell .bp153-header > .bp153-title,
 .app-shell .ex161-hero > div:first-of-type,
 .app-shell .svc15-command > div:first-of-type,
-.app-shell .rep162-toolbar > .rep162-title-block,
-.app-shell .team-v26-hero > div:first-of-type,
-.app-shell .sys58-hero > div:first-of-type {
+.app-shell .rep162-toolbar > .rep162-title-block {
   grid-column: 2 !important;
   min-width: 0 !important;
 }
@@ -112,15 +110,13 @@
 .app-shell .bp153-header > .bp153-actions,
 .app-shell .ex161-hero > :last-child,
 .app-shell .svc15-command > .btn,
-.app-shell .rep162-toolbar > :last-child,
-.app-shell .team-v26-hero > .team-v26-hero-actions,
-.app-shell .sys58-hero > :last-child {
+.app-shell .rep162-toolbar > :last-child {
   grid-column: 3 !important;
   justify-self: end !important;
 }
 
 /* Do not render a second decorative sparkle from older unification layers. */
-.app-shell :is(.bp153-header,.ex161-hero,.svc15-command,.rep162-toolbar,.team-v26-hero,.sys58-hero)::after {
+.app-shell :is(.bp153-header,.ex161-hero,.svc15-command,.rep162-toolbar)::after {
   opacity: 0 !important;
   pointer-events: none !important;
 }
@@ -133,20 +129,18 @@
 }
 
 @media (max-width: 900px) {
-  .app-shell :is(.bp153-header,.ex161-hero,.svc15-command,.rep162-toolbar,.team-v26-hero,.sys58-hero) {
+  .app-shell :is(.bp153-header,.ex161-hero,.svc15-command,.rep162-toolbar) {
     grid-template-columns: 48px minmax(0,1fr) !important;
     padding: 17px !important;
   }
-  .app-shell :is(.bp153-header,.ex161-hero,.svc15-command,.rep162-toolbar,.team-v26-hero,.sys58-hero)::before {
+  .app-shell :is(.bp153-header,.ex161-hero,.svc15-command,.rep162-toolbar)::before {
     width: 48px !important;
     height: 48px !important;
   }
   .app-shell .bp153-header > .bp153-actions,
   .app-shell .ex161-hero > :last-child,
   .app-shell .svc15-command > .btn,
-  .app-shell .rep162-toolbar > :last-child,
-  .app-shell .team-v26-hero > .team-v26-hero-actions,
-  .app-shell .sys58-hero > :last-child {
+  .app-shell .rep162-toolbar > :last-child {
     grid-column: 1 / -1 !important;
     justify-self: start !important;
     margin-top: 4px !important;

@@ -155,16 +155,13 @@
   color:var(--hero235-blue)!important;
 }
 
-/* Legacy heroes without a real icon node: create exactly one semantic tile. */
+/* Legacy heroes without a real icon node: create exactly one semantic tile.
+   Admin header-icon-parity heroes own real JSX icon nodes and are excluded. */
 .app-shell :is(
   .bp153-header,
   .ex161-hero,
   .svc15-command,
-  .rep162-toolbar,
-  .team-v26-hero,
-  .sys58-hero,
-  .settings-v30-hero,
-  .data-import-v21-hero
+  .rep162-toolbar
 ) {
   display:grid!important;
   grid-template-columns:52px minmax(0,1fr) auto!important;
@@ -182,11 +179,7 @@
   .bp153-header,
   .ex161-hero,
   .svc15-command,
-  .rep162-toolbar,
-  .team-v26-hero,
-  .sys58-hero,
-  .settings-v30-hero,
-  .data-import-v21-hero
+  .rep162-toolbar
 )::before {
   content:""!important;
   grid-column:1!important;
@@ -220,11 +213,7 @@
 .app-shell .bp153-header > .bp153-title,
 .app-shell .ex161-hero > div:first-of-type,
 .app-shell .svc15-command > div:first-of-type,
-.app-shell .rep162-toolbar > .rep162-title-block,
-.app-shell .team-v26-hero > div:first-of-type,
-.app-shell .sys58-hero > div:first-of-type,
-.app-shell .settings-v30-hero > div:first-of-type,
-.app-shell .data-import-v21-hero > div:first-of-type {
+.app-shell .rep162-toolbar > .rep162-title-block {
   grid-column:2!important;
   grid-row:1!important;
   align-self:center!important;
@@ -234,11 +223,7 @@
 .app-shell .bp153-header > .bp153-actions,
 .app-shell .ex161-hero > :last-child,
 .app-shell .svc15-command > .btn,
-.app-shell .rep162-toolbar > :last-child,
-.app-shell .team-v26-hero > .team-v26-hero-actions,
-.app-shell .sys58-hero > :last-child,
-.app-shell .settings-v30-hero > :last-child,
-.app-shell .data-import-v21-hero > .data-import-v21-safety {
+.app-shell .rep162-toolbar > :last-child {
   grid-column:3!important;
   grid-row:1!important;
   align-self:center!important;
@@ -308,22 +293,18 @@
   }
   .app-shell .portal-page-hero-actions { width:100%!important;justify-content:flex-start!important; }
 
-  .app-shell :is(.bp153-header,.ex161-hero,.svc15-command,.rep162-toolbar,.team-v26-hero,.sys58-hero,.settings-v30-hero,.data-import-v21-hero) {
+  .app-shell :is(.bp153-header,.ex161-hero,.svc15-command,.rep162-toolbar) {
     grid-template-columns:48px minmax(0,1fr)!important;
     padding:17px!important;
     row-gap:12px!important;
   }
-  .app-shell :is(.bp153-header,.ex161-hero,.svc15-command,.rep162-toolbar,.team-v26-hero,.sys58-hero,.settings-v30-hero,.data-import-v21-hero)::before {
+  .app-shell :is(.bp153-header,.ex161-hero,.svc15-command,.rep162-toolbar)::before {
     width:48px!important;height:48px!important;border-radius:14px!important;
   }
   .app-shell .bp153-header > .bp153-actions,
   .app-shell .ex161-hero > :last-child,
   .app-shell .svc15-command > .btn,
-  .app-shell .rep162-toolbar > :last-child,
-  .app-shell .team-v26-hero > .team-v26-hero-actions,
-  .app-shell .sys58-hero > :last-child,
-  .app-shell .settings-v30-hero > :last-child,
-  .app-shell .data-import-v21-hero > .data-import-v21-safety {
+  .app-shell .rep162-toolbar > :last-child {
     grid-column:1/-1!important;
     grid-row:2!important;
     justify-self:start!important;

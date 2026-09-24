@@ -176,6 +176,32 @@ html body .app-shell .appointments-v40 .sa-appointments-header-actions :is(.btn,
   border-radius:10px!important;
 }
 
+/* Keep the narrow-desktop header content-driven. The shared V105 shell rule
+   switches headers with an action group to a column through 900px; without
+   this owning reset, the desktop 900px copy basis becomes vertical height. */
+@media (min-width:821px) and (max-width:900px) {
+  html body .app-shell .appointments-v40 .sa-appointments-header.clinical-standard-hero {
+    flex-direction:row!important;
+    align-items:center!important;
+    align-content:normal!important;
+    justify-content:space-between!important;
+    height:auto!important;
+    min-height:0!important;
+    max-height:none!important;
+  }
+
+  html body .app-shell .appointments-v40 .sa-appointments-header-copy.clinical-standard-hero-copy {
+    flex:0 1 auto!important;
+    flex-basis:auto!important;
+    height:auto!important;
+    min-height:0!important;
+    max-height:none!important;
+    align-self:center!important;
+    align-content:start!important;
+    grid-template-rows:auto auto auto!important;
+  }
+}
+
 @media (max-width:820px) {
   html body .app-shell .appointments-v40 .sa-appointments-header.clinical-standard-hero {
     align-items:stretch!important;

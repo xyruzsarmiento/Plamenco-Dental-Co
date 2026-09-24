@@ -105,16 +105,13 @@ html body .app-shell :is(
 }
 
 /* ---------------- Targets without a real icon element ----------------
-   Supply one semantic tile so they use the same visual grammar as Treatments. */
+   Supply one semantic tile so they use the same visual grammar as Treatments.
+   Admin header-icon-parity heroes own real icon nodes and are excluded. */
 html body .app-shell :is(
   .appointments-v40 .sa-appointments-header,
   .svc15-command,
   .dv16-hero,
-  .dv108-hero,
-  .data-import-v21-hero,
-  .team-v26-hero,
-  .sys58-hero,
-  .settings-v30-hero
+  .dv108-hero
 ) {
   display:grid!important;
   grid-template-columns:44px minmax(0,1fr) auto!important;
@@ -127,11 +124,7 @@ html body .app-shell :is(
   .appointments-v40 .sa-appointments-header,
   .svc15-command,
   .dv16-hero,
-  .dv108-hero,
-  .data-import-v21-hero,
-  .team-v26-hero,
-  .sys58-hero,
-  .settings-v30-hero
+  .dv108-hero
 )::before {
   content:""!important;
   display:block!important;
@@ -164,32 +157,11 @@ html body .app-shell .svc15-command::before {
 html body .app-shell :is(.dv16-hero,.dv108-hero)::before {
   background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='%232563eb' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 3v5a4 4 0 0 0 8 0V3'/%3E%3Cpath d='M10 12v3a4 4 0 0 0 8 0v-1'/%3E%3Ccircle cx='18' cy='11' r='2'/%3E%3C/svg%3E")!important;
 }
-/* Data import */
-html body .app-shell .data-import-v21-hero::before {
-  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='%232563eb' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 3v12M7 10l5 5 5-5'/%3E%3Cpath d='M5 21h14'/%3E%3C/svg%3E")!important;
-}
-/* Team & access */
-html body .app-shell .team-v26-hero::before {
-  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='%232563eb' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2'/%3E%3Ccircle cx='9' cy='7' r='4'/%3E%3Cpath d='M19 8v6M22 11h-6'/%3E%3C/svg%3E")!important;
-}
-/* System admin */
-html body .app-shell .sys58-hero::before {
-  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='%232563eb' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 3l7 3v5c0 5-3 8-7 10-4-2-7-5-7-10V6z'/%3E%3Cpath d='M9 12l2 2 4-4'/%3E%3C/svg%3E")!important;
-}
-/* Settings */
-html body .app-shell .settings-v30-hero::before {
-  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='%232563eb' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='3'/%3E%3Cpath d='M19.4 15a1.7 1.7 0 0 0 .3 1.9l-2.8 2.8a1.7 1.7 0 0 0-1.9-.3A1.7 1.7 0 0 0 14 21h-4a1.7 1.7 0 0 0-1-1.6 1.7 1.7 0 0 0-1.9.3L4.3 17a1.7 1.7 0 0 0 .3-1.9A1.7 1.7 0 0 0 3 14v-4a1.7 1.7 0 0 0 1.6-1 1.7 1.7 0 0 0-.3-1.9L7.1 4.3A1.7 1.7 0 0 0 9 4.6 1.7 1.7 0 0 0 10 3h4a1.7 1.7 0 0 0 1 1.6 1.7 1.7 0 0 0 1.9-.3l2.8 2.8a1.7 1.7 0 0 0-.3 1.9A1.7 1.7 0 0 0 21 10v4a1.7 1.7 0 0 0-1.6 1Z'/%3E%3C/svg%3E")!important;
-}
-
 /* Put copy + actions into the approved icon | copy | actions structure. */
 html body .app-shell .appointments-v40 .sa-appointments-header-copy,
 html body .app-shell .svc15-command > div:first-child,
 html body .app-shell .dv16-hero > div:first-child,
-html body .app-shell .dv108-hero > div:first-child,
-html body .app-shell .data-import-v21-hero > div:first-child,
-html body .app-shell .team-v26-hero > div:first-child,
-html body .app-shell .sys58-hero-copy,
-html body .app-shell .settings-v30-hero > div:first-child {
+html body .app-shell .dv108-hero > div:first-child {
   grid-column:2!important;
   grid-row:1!important;
   align-self:center!important;
@@ -199,11 +171,7 @@ html body .app-shell .settings-v30-hero > div:first-child {
 html body .app-shell .appointments-v40 .sa-appointments-header-actions,
 html body .app-shell .svc15-command > :last-child,
 html body .app-shell .dv16-hero > :last-child,
-html body .app-shell .dv108-hero > :last-child,
-html body .app-shell .data-import-v21-hero > :last-child,
-html body .app-shell .team-v26-hero > :last-child,
-html body .app-shell .sys58-hero-status,
-html body .app-shell .settings-v30-hero-actions {
+html body .app-shell .dv108-hero > :last-child {
   grid-column:3!important;
   grid-row:1!important;
   align-self:center!important;
@@ -470,10 +438,6 @@ html body .app-shell :is(
     .svc15-command,
     .dv16-hero,
     .dv108-hero,
-    .data-import-v21-hero,
-    .team-v26-hero,
-    .sys58-hero,
-    .settings-v30-hero,
     .dashboard-greeting-v2,
     .inv232-header
   ) {
@@ -484,10 +448,6 @@ html body .app-shell :is(
   html body .app-shell .svc15-command > :last-child,
   html body .app-shell .dv16-hero > :last-child,
   html body .app-shell .dv108-hero > :last-child,
-  html body .app-shell .data-import-v21-hero > :last-child,
-  html body .app-shell .team-v26-hero > :last-child,
-  html body .app-shell .sys58-hero-status,
-  html body .app-shell .settings-v30-hero-actions,
   html body .app-shell .dashboard-greeting-v2-context,
   html body .app-shell .inv232-header-actions {
     grid-column:2!important;

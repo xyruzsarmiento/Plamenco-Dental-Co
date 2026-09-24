@@ -85,12 +85,12 @@
   .dv16-hero > div:first-child,
   .dv108-hero > div:first-child,
   .rep162-toolbar > div:first-child,
-  .data-import-v21-hero > div:first-child,
+  .data-import-v21-hero-copy,
   .inv232-header-copy,
-  .team-v26-hero > div:first-child,
+  .team-v26-hero-copy,
   .branches-v27-hero-title > div,
   .sys58-hero-copy,
-  .settings-v30-hero > div:first-child,
+  .settings-v30-hero-copy,
   .internal-profile-title
 ) {
   min-width:0!important;
@@ -277,17 +277,14 @@
 .app-shell .portal-page-hero::before { content:none!important; display:none!important; }
 
 /* Heroes without an icon node in JSX get one semantic tile, positioned as a real
-   first column instead of stealing the eyebrow's star. */
+   first column instead of stealing the eyebrow's star. Admin header-icon-parity
+   heroes own real icon nodes and are intentionally excluded. */
 .app-shell :is(
   .appointments-v40 .sa-appointments-header,
   .svc15-command,
   .dv16-hero,
   .dv108-hero,
-  .rep162-toolbar,
-  .data-import-v21-hero,
-  .team-v26-hero,
-  .sys58-hero,
-  .settings-v30-hero
+  .rep162-toolbar
 ) {
   display:grid!important;
   grid-template-columns:52px minmax(0,1fr) auto!important;
@@ -300,11 +297,7 @@
   .svc15-command,
   .dv16-hero,
   .dv108-hero,
-  .rep162-toolbar,
-  .data-import-v21-hero,
-  .team-v26-hero,
-  .sys58-hero,
-  .settings-v30-hero
+  .rep162-toolbar
 )::before {
   content:""!important;
   display:block!important;
@@ -336,21 +329,13 @@
 .app-shell .svc15-command > div:first-child,
 .app-shell .dv16-hero > div:first-child,
 .app-shell .dv108-hero > div:first-child,
-.app-shell .rep162-toolbar > div:first-child,
-.app-shell .data-import-v21-hero > div:first-child,
-.app-shell .team-v26-hero > div:first-child,
-.app-shell .sys58-hero-copy,
-.app-shell .settings-v30-hero > div:first-child { grid-column:2!important; grid-row:1!important; align-self:center!important; }
+.app-shell .rep162-toolbar > div:first-child { grid-column:2!important; grid-row:1!important; align-self:center!important; }
 
 .app-shell .appointments-v40 .sa-appointments-header-actions,
 .app-shell .svc15-command > :last-child,
 .app-shell .dv16-hero > :last-child,
 .app-shell .dv108-hero > :last-child,
-.app-shell .rep162-toolbar > :last-child,
-.app-shell .data-import-v21-hero > :last-child,
-.app-shell .team-v26-hero > :last-child,
-.app-shell .sys58-hero-status,
-.app-shell .settings-v30-hero-actions {
+.app-shell .rep162-toolbar > :last-child {
   grid-column:3!important;
   grid-row:1!important;
   align-self:center!important;
@@ -410,11 +395,7 @@
     .dv16-hero,
     .dv108-hero,
     .rep162-toolbar,
-    .data-import-v21-hero,
-    .inv232-header,
-    .team-v26-hero,
-    .sys58-hero,
-    .settings-v30-hero
+    .inv232-header
   ) {
     grid-template-columns:52px minmax(0,1fr)!important;
     align-items:center!important;
@@ -425,10 +406,6 @@
     .dv16-hero > :last-child,
     .dv108-hero > :last-child,
     .rep162-toolbar > :last-child,
-    .data-import-v21-hero > :last-child,
-    .team-v26-hero > :last-child,
-    .sys58-hero-status,
-    .settings-v30-hero-actions,
     .inv232-header-actions,
     .dashboard-greeting-v2-context
   ) {
@@ -480,11 +457,7 @@
     .dv16-hero,
     .dv108-hero,
     .rep162-toolbar,
-    .data-import-v21-hero,
     .inv232-header,
-    .team-v26-hero,
-    .sys58-hero,
-    .settings-v30-hero,
     .dashboard-greeting-v2
   ) {
     grid-template-columns:44px minmax(0,1fr)!important;
@@ -496,11 +469,7 @@
     .svc15-command,
     .dv16-hero,
     .dv108-hero,
-    .rep162-toolbar,
-    .data-import-v21-hero,
-    .team-v26-hero,
-    .sys58-hero,
-    .settings-v30-hero
+    .rep162-toolbar
   )::before,
   .app-shell :is(
     .dashboard-greeting-v2-icon,
