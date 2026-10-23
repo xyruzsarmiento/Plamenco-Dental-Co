@@ -596,3 +596,152 @@
   .lpv2-member-copy p { font-size: .74rem; }
   .lpv2-coordination-card { padding: 14px; }
 }
+
+
+/* Premium floating-style navigation: restrained SaaS chrome, clear hierarchy, responsive menu. */
+.lpv2-header {
+  background: rgba(255,255,255,.88);
+  border-bottom-color: rgba(222,230,240,.72);
+  backdrop-filter: saturate(180%) blur(22px);
+  -webkit-backdrop-filter: saturate(180%) blur(22px);
+}
+.lpv2-header.is-scrolled {
+  background: rgba(255,255,255,.96);
+  border-bottom-color: #e3e9f1;
+  box-shadow: 0 8px 26px rgba(20, 35, 58, .065);
+}
+.lpv2-nav-shell {
+  width: min(1280px, calc(100% - 56px));
+  min-height: 76px;
+  gap: 22px;
+}
+.lpv2-brand { gap: 10px; }
+.lpv2-brand img {
+  width: 42px;
+  height: 42px;
+  border: 1px solid #edf0f4;
+  border-radius: 13px;
+  background: #fff;
+  box-shadow: 0 2px 7px rgba(20,35,58,.035);
+}
+.lpv2-brand strong {
+  color: #17243a;
+  font-size: .98rem;
+  font-weight: 800;
+  letter-spacing: -.035em;
+}
+.lpv2-brand small {
+  color: #8792a3;
+  font-size: .64rem;
+  font-weight: 750;
+  letter-spacing: .13em;
+}
+.lpv2-nav-links {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 5px;
+  border: 1px solid #edf0f4;
+  border-radius: 14px;
+  background: rgba(247,249,252,.86);
+}
+.lpv2-nav-links a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 35px;
+  padding: 0 12px;
+  border-radius: 9px;
+  color: #59667a;
+  font-size: .78rem;
+  font-weight: 730;
+  white-space: nowrap;
+  transition: color .16s ease, background .16s ease, box-shadow .16s ease;
+}
+.lpv2-nav-links a:hover {
+  color: #1d4ed8;
+  background: #fff;
+  box-shadow: 0 1px 3px rgba(20,35,58,.07);
+}
+.lpv2-nav-actions { gap: 10px; }
+.lpv2-login {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 42px;
+  padding: 0 12px;
+  border-radius: 10px;
+  color: #42516a;
+  font-size: .8rem;
+  font-weight: 760;
+  white-space: nowrap;
+}
+.lpv2-login:hover { color: #1d4ed8; background: #f5f8fe; }
+.lpv2-nav-actions > .lpv2-btn.primary {
+  min-height: 43px;
+  padding: 0 15px;
+  border: 1px solid #2459ce;
+  border-radius: 11px;
+  background: #285fd5;
+  box-shadow: 0 5px 12px rgba(37,99,235,.14);
+  font-size: .79rem;
+  font-weight: 780;
+  white-space: nowrap;
+}
+.lpv2-nav-actions > .lpv2-btn.primary:hover {
+  background: #1f50bd;
+  box-shadow: 0 8px 18px rgba(37,99,235,.2);
+}
+.lpv2-menu {
+  width: 42px;
+  height: 42px;
+  border-color: #e1e7ef;
+  border-radius: 11px;
+  background: #fff;
+  box-shadow: 0 2px 5px rgba(20,35,58,.025);
+}
+.lpv2-menu:hover { background: #f7f9fc; border-color: #cfd9e7; }
+.lpv2-mobile-menu {
+  padding: 12px max(22px, calc((100vw - 1280px) / 2)) 18px;
+  border-top: 1px solid #edf0f4;
+  background: rgba(255,255,255,.98);
+  box-shadow: 0 16px 26px rgba(20,35,58,.08);
+}
+.lpv2-mobile-menu a:not(.lpv2-btn) {
+  display: flex;
+  align-items: center;
+  min-height: 43px;
+  padding: 0 12px;
+  border-radius: 9px;
+  color: #44536a;
+  font-size: .88rem;
+  font-weight: 700;
+}
+.lpv2-mobile-menu a:not(.lpv2-btn):hover { color: #1d4ed8; background: #f5f8fe; }
+.lpv2-mobile-menu .lpv2-btn { margin-top: 8px; }
+@media (max-width: 1160px) {
+  .lpv2-nav-shell { gap: 14px; }
+  .lpv2-nav-links { gap: 1px; }
+  .lpv2-nav-links a { padding: 0 9px; font-size: .75rem; }
+  .lpv2-nav-actions { gap: 5px; }
+  .lpv2-nav-actions > .lpv2-btn.primary { padding: 0 12px; }
+}
+@media (max-width: 1020px) {
+  .lpv2-nav-shell { min-height: 70px; }
+  .lpv2-nav-links { display: none; }
+  .lpv2-nav-actions { margin-left: auto; }
+  .lpv2-menu { display: grid; }
+  .lpv2-mobile-menu { display: grid; gap: 3px; }
+}
+@media (max-width: 560px) {
+  .lpv2-nav-shell { width: calc(100% - 28px); min-height: 64px; gap: 8px; }
+  .lpv2-brand { gap: 8px; }
+  .lpv2-brand img { width: 37px; height: 37px; border-radius: 11px; }
+  .lpv2-brand strong { font-size: .9rem; }
+  .lpv2-brand small { margin-top: 3px; font-size: .58rem; }
+  .lpv2-nav-actions { gap: 6px; }
+  .lpv2-nav-actions > .lpv2-login { display: none; }
+  .lpv2-nav-actions > .lpv2-btn.primary { min-height: 39px; padding: 0 10px; border-radius: 10px; font-size: .72rem; gap: 6px; }
+  .lpv2-nav-actions > .lpv2-btn.primary svg { width: 15px; height: 15px; }
+  .lpv2-menu { width: 39px; height: 39px; }
+  .lpv2-mobile-menu { padding: 10px 14px 16px; }
+}
