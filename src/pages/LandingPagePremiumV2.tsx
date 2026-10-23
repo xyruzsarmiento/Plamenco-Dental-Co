@@ -127,10 +127,20 @@ export function LandingPagePremiumV2() {
           photoPath,
         }
       }))
-      if (active) setPublicTeam(rows.filter((row) => row.displayName && row.role !== 'clinic_leadership' || row.displayName && row.role === 'clinic_leadership'))
+      if (active) setPublicTeam(rows.filter((row) => row.displayName))
     }
     void loadPublicTeam()
-    return () => { active = false }
+
+    // Keep the public Care Team current when a dentist profile or avatar changes.
+    const channel = supabase?.channel('public-care-team-live')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'providers' }, () => { void loadPublicTeam() })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'profiles' }, () => { void loadPublicTeam() })
+      .subscribe()
+
+    return () => {
+      active = false
+      if (channel) void supabase?.removeChannel(channel)
+    }
   }, [])
 
   return (
