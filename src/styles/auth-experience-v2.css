@@ -518,3 +518,10 @@
 .auth-rebuilt .auth-form-grid .auth-field input:focus-visible {
   outline: none;
 }
+
+/* Compact registration heading and untouched field states. */
+.auth-rebuilt .auth-panel-header:has(.auth-rebuilt-eyebrow:empty) .auth-rebuilt-eyebrow { display: none; }
+.auth-rebuilt .auth-panel-header:has(.auth-rebuilt-eyebrow:empty) h1 { margin-top: 0; }
+.auth-rebuilt .auth-form input:not([aria-invalid="true"]):invalid,
+.auth-rebuilt .auth-form select:not([aria-invalid="true"]):invalid,
+.auth-rebuilt .auth-form textarea:not([aria-invalid="true"]):invalid { border-color: #dce6f3 !important; background: #f8fbff !important; box-shadow: none !important; }

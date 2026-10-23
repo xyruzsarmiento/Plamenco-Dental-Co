@@ -50,7 +50,7 @@ export function RegisterPage() {
   }
 
   return (
-    <AuthShell eyebrow="New patient" title="Create account" description="Register to manage your dental care." footer={<p className="auth-switcher">Already have an account? <Link to="/login">Sign in</Link></p>}>
+    <AuthShell eyebrow="" title="Create account" description="Register to manage your dental care." footer={<p className="auth-switcher">Already have an account? <Link to="/login">Sign in</Link></p>}>
       <form className="auth-form auth-form-grid" onSubmit={handleSubmit} noValidate>
         <label className="field auth-field"><span>First name</span><input type="text" autoComplete="given-name" value={form.firstName} onChange={(e)=>setForm(c=>({...c,firstName:e.target.value}))} onBlur={()=>setTouched(c=>({...c,firstName:true}))} aria-invalid={!!touched.firstName && !form.firstName.trim()} required /></label>
         <label className="field auth-field"><span>Middle name <small>(optional)</small></span><input type="text" autoComplete="additional-name" value={form.middleName} onChange={(e)=>setForm(c=>({...c,middleName:e.target.value}))}/></label>
