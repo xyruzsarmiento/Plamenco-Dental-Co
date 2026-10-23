@@ -69,13 +69,6 @@ as $$
     from public.profiles p
     where p.status = 'active'
       and p.role = 'super_admin'
-      and not exists (
-        select 1
-        from public.providers pr
-        where pr.profile_id = p.id
-          and pr.status = 'active'
-          and coalesce(pr.show_on_public_team, true)
-      )
   )
   select *
   from (
