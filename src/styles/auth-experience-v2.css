@@ -460,3 +460,61 @@
     scroll-behavior: auto !important;
   }
 }
+
+
+/* Registration form: keep untouched fields calm; show validation only when the user interacts. */
+.auth-rebuilt .auth-form input:invalid,
+.auth-rebuilt .auth-form select:invalid,
+.auth-rebuilt .auth-form textarea:invalid {
+  border-color: #dce6f3 !important;
+  box-shadow: none !important;
+}
+.auth-rebuilt .auth-form input[aria-invalid="true"],
+.auth-rebuilt .auth-form select[aria-invalid="true"],
+.auth-rebuilt .auth-form textarea[aria-invalid="true"] {
+  border-color: #d95f68 !important;
+  box-shadow: 0 0 0 3px rgba(217, 95, 104, .10) !important;
+}
+.auth-rebuilt .auth-form input:focus:invalid,
+.auth-rebuilt .auth-form select:focus:invalid,
+.auth-rebuilt .auth-form textarea:focus:invalid {
+  border-color: #6d9ee8 !important;
+  box-shadow: 0 0 0 3px rgba(73, 132, 221, .14) !important;
+}
+.auth-rebuilt .auth-form-grid {
+  align-items: start;
+  column-gap: 15px;
+  row-gap: 16px;
+}
+.auth-rebuilt .auth-form-grid .auth-field > span small {
+  color: #8a9bb2;
+  font-size: .7rem;
+  font-weight: 500;
+}
+.auth-rebuilt .auth-form-grid .auth-password-status {
+  grid-column: 1 / -1;
+  margin-top: -5px;
+  padding: 12px 13px;
+  border: 1px solid #e5edf8;
+  border-radius: 11px;
+  background: #f8fbff;
+}
+.auth-rebuilt .auth-form-grid .checkbox-row-wide {
+  padding: 13px 14px;
+  border: 1px solid #e2eaf5;
+  border-radius: 11px;
+  background: #fbfdff;
+}
+.auth-rebuilt .auth-form-grid .checkbox-row-wide input {
+  accent-color: #2864c7;
+}
+.auth-rebuilt .auth-form-grid .checkbox-row-wide:has(input:checked) {
+  border-color: #b9d2f5;
+  background: #f2f7ff;
+}
+.auth-rebuilt .auth-form-grid .auth-field input[type="date"] {
+  color-scheme: light;
+}
+.auth-rebuilt .auth-form-grid .auth-field input:focus-visible {
+  outline: none;
+}
