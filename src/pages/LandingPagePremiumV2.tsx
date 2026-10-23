@@ -73,7 +73,6 @@ export function LandingPagePremiumV2() {
   const [publicTeam, setPublicTeam] = useState<PublicTeamMember[]>(() =>
     getStoredProviders()
       .filter((item) => item.status === 'active')
-      .slice(0, 5)
       .map((provider) => ({
         id: provider.id,
         displayName: provider.displayName,
@@ -235,7 +234,7 @@ export function LandingPagePremiumV2() {
               </article>
 
               <div className="lpv2-team-side">
-                {supportingProviders.slice(0,2).map((provider) => (
+                {supportingProviders.map((provider) => (
                   <article className="lpv2-person-card" key={provider.id}>
                     <div>{provider.photoUrl ? <img src={provider.photoUrl} alt={provider.displayName}/> : <span>{provider.displayName.split(/\s+/).slice(0,2).map((part) => part.charAt(0)).join('')}</span>}</div>
                     <section><span>{provider.role === 'associate_dentist' ? 'Associate Dentist' : provider.role === 'clinic_leadership' ? 'Clinic leadership' : 'Dentist'}</span><h3>{provider.displayName}</h3><p>{provider.specialization || provider.bio || 'Dental care provider at Plamenco Dental Co.'}</p></section>
