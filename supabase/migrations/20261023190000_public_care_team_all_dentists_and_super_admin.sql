@@ -1,9 +1,6 @@
 -- Ensure the public Care Team includes every active dentist and the active super admin.
 -- Existing deployments need this migration because editing an older migration does not rerun it.
 
-alter table public.profiles
-  alter column show_on_public_team set default true;
-
 update public.profiles
 set show_on_public_team = true
 where role = 'super_admin'
@@ -72,7 +69,6 @@ as $$
     from public.profiles p
     where p.status = 'active'
       and p.role = 'super_admin'
-      and coalesce(p.show_on_public_team, true)
       and not exists (
         select 1
         from public.providers pr
@@ -108,7 +104,7 @@ create policy "Public team avatars are readable"
         from public.profiles p
         where p.id::text = split_part(storage.objects.name, '/', 1)
           and p.status = 'active'
-          and coalesce(p.show_on_public_team, true)
+          and (p.role = 'super_admin' or coalesce(p.show_on_public_team, false))
       )
       or exists (
         select 1
