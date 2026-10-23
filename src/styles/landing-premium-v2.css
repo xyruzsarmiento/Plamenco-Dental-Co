@@ -361,3 +361,238 @@
 @media (prefers-reduced-motion: reduce) {
   .lpv2 *, .lpv2 *::before, .lpv2 *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; }
 }
+
+
+/* Premium SaaS-style public landing refresh: tighter typography, quieter surfaces,
+   and compact data-driven sections instead of oversized marketing cards. */
+.lpv2-about {
+  position: relative;
+  padding: 72px 0;
+  border: 0;
+  background: #f8fafc;
+}
+.lpv2-about-grid { gap: clamp(32px, 6vw, 88px); align-items: center; }
+.lpv2-about h2, .lpv2-heading h2, .lpv2-faq h2, .lpv2-cta-card h2 {
+  font-size: clamp(1.9rem, 3vw, 2.7rem);
+  line-height: 1.12;
+  letter-spacing: -.05em;
+}
+.lpv2-about-grid > div:last-child > p { color: #526176; font-size: .94rem; line-height: 1.8; }
+.lpv2-checks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 21px;
+}
+.lpv2-checks span {
+  gap: 7px;
+  padding: 9px 11px;
+  border: 1px solid #e0e7ef;
+  border-radius: 999px;
+  background: #fff;
+  color: #425168;
+  font-size: .76rem;
+  font-weight: 700;
+}
+.lpv2-checks svg { width: 14px; height: 14px; }
+
+.lpv2-section { padding: 76px 0; }
+.lpv2-heading { gap: 28px; margin-bottom: 27px; }
+.lpv2-heading > p { max-width: 390px; font-size: .9rem; }
+.lpv2-service-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+.lpv2-service-card {
+  min-height: 212px;
+  padding: 20px;
+  border-color: #e5eaf1;
+  border-radius: 15px;
+  box-shadow: none;
+}
+.lpv2-service-card:hover { transform: translateY(-2px); border-color: #c6d6ed; box-shadow: 0 12px 28px rgba(25, 49, 83, .055); }
+.lpv2-service-card header { color: #8a96a8; font-size: .7rem; }
+.lpv2-service-card header svg { width: 17px; height: 17px; color: #3468c8; }
+.lpv2-service-card h3 { margin-top: 27px; margin-bottom: 6px; font-size: 1rem; }
+.lpv2-service-card p { font-size: .82rem; line-height: 1.55; }
+.lpv2-service-card footer { margin-top: 16px; padding-top: 12px; font-size: .71rem; }
+
+.lpv2-soft, .lpv2-faq { background: #f7f9fc; }
+.lpv2-benefits { gap: 12px; }
+.lpv2-benefits article {
+  min-height: 0;
+  padding: 22px;
+  border-color: #e5eaf1;
+  border-radius: 15px;
+  box-shadow: none;
+}
+.lpv2-benefits svg { width: 19px; height: 19px; color: #3468c8; }
+.lpv2-benefits h3 { margin: 16px 0 7px; font-size: .95rem; }
+.lpv2-benefits p { font-size: .82rem; line-height: 1.65; }
+
+/* Care team: compact directory grid that scales cleanly as the clinic adds dentists. */
+.lpv2-team { padding: 76px 0; background: #fff; }
+.lpv2-team-heading {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 24px;
+  margin-bottom: 28px;
+}
+.lpv2-team-heading > div:first-child { max-width: 650px; }
+.lpv2-team-heading h2 {
+  margin: 10px 0 9px;
+  color: #142038;
+  font-size: clamp(1.9rem, 3.2vw, 2.65rem);
+  line-height: 1.1;
+  letter-spacing: -.05em;
+}
+.lpv2-team-heading p { margin: 0; color: #667386; font-size: .9rem; line-height: 1.7; }
+.lpv2-team-count {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  flex: 0 0 auto;
+  padding: 10px 13px;
+  border: 1px solid #e4e9f0;
+  border-radius: 999px;
+  background: #fff;
+  color: #5e6c80;
+  font-size: .78rem;
+}
+.lpv2-team-count svg { color: #3468c8; }
+.lpv2-team-count strong { color: #1b2940; font-size: .9rem; }
+.lpv2-team-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+  align-items: stretch;
+}
+.lpv2-member-card {
+  min-width: 0;
+  overflow: hidden;
+  border: 1px solid #e4e9f0;
+  border-radius: 16px;
+  background: #fff;
+  transition: border-color .18s ease, transform .18s ease, box-shadow .18s ease;
+}
+.lpv2-member-card:hover {
+  transform: translateY(-3px);
+  border-color: #cbd8ea;
+  box-shadow: 0 14px 30px rgba(22, 42, 72, .07);
+}
+.lpv2-member-photo {
+  position: relative;
+  display: grid;
+  place-items: center;
+  aspect-ratio: 1.45 / 1;
+  overflow: hidden;
+  background: #f0f4f9;
+}
+.lpv2-member-photo img {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 28%;
+}
+.lpv2-member-initials {
+  display: grid;
+  place-items: center;
+  width: 68px;
+  aspect-ratio: 1;
+  border: 1px solid #dce5f2;
+  border-radius: 50%;
+  background: #e8eef8;
+  color: #315da8;
+  font-size: 1.35rem;
+  font-weight: 800;
+  letter-spacing: -.04em;
+}
+.lpv2-member-photo:not(.has-fallback) img:not([style*="display: none"]) ~ .lpv2-member-initials { display: none; }
+.lpv2-member-photo.has-fallback img { display: none; }
+.lpv2-member-status {
+  position: absolute;
+  z-index: 2;
+  left: 11px;
+  bottom: 10px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 8px;
+  border: 1px solid rgba(255,255,255,.75);
+  border-radius: 999px;
+  background: rgba(255,255,255,.92);
+  color: #516176;
+  font-size: .65rem;
+  font-weight: 750;
+  backdrop-filter: blur(8px);
+}
+.lpv2-member-status > span { width: 6px; height: 6px; border-radius: 50%; background: #2eaa70; }
+.lpv2-member-copy { padding: 15px 16px 17px; }
+.lpv2-member-role {
+  color: #4770b7;
+  font-size: .64rem;
+  font-weight: 850;
+  letter-spacing: .085em;
+  text-transform: uppercase;
+}
+.lpv2-member-copy h3 {
+  margin: 6px 0 6px;
+  color: #17253c;
+  font-size: .97rem;
+  line-height: 1.35;
+  letter-spacing: -.025em;
+  overflow-wrap: anywhere;
+}
+.lpv2-member-copy p {
+  display: -webkit-box;
+  overflow: hidden;
+  margin: 0;
+  color: #6b7789;
+  font-size: .78rem;
+  line-height: 1.55;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+.lpv2-member-card.is-leadership { background: #fbfcfe; }
+.lpv2-member-card.is-leadership .lpv2-member-role { color: #69758a; }
+.lpv2-coordination-card {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 22px;
+  background: #f8fafc;
+}
+.lpv2-coordination-icon {
+  display: grid;
+  place-items: center;
+  width: 43px;
+  height: 43px;
+  margin-bottom: auto;
+  border: 1px solid #e0e7f1;
+  border-radius: 13px;
+  background: #fff;
+  color: #3468c8;
+}
+.lpv2-coordination-card .lpv2-member-copy { padding: 24px 0 0; }
+.lpv2-coordination-card .lpv2-member-copy p { display: block; }
+
+@media (max-width: 1050px) {
+  .lpv2-team-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+@media (max-width: 760px) {
+  .lpv2-team-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 11px; }
+  .lpv2-team-heading { align-items: start; }
+  .lpv2-team-count { margin-top: 4px; }
+  .lpv2-about-grid { gap: 24px; }
+}
+@media (max-width: 520px) {
+  .lpv2-team-heading { display: block; }
+  .lpv2-team-count { margin-top: 17px; }
+  .lpv2-team-grid { gap: 9px; }
+  .lpv2-member-photo { aspect-ratio: 1.05 / 1; }
+  .lpv2-member-copy { padding: 12px; }
+  .lpv2-member-copy h3 { font-size: .88rem; }
+  .lpv2-member-copy p { font-size: .74rem; }
+  .lpv2-coordination-card { padding: 14px; }
+}
