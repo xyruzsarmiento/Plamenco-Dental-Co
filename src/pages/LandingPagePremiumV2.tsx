@@ -127,7 +127,7 @@ export function LandingPagePremiumV2() {
           photoPath,
         }
       }))
-      if (active && rows.length) setPublicTeam(rows.filter((row) => row.displayName))
+      if (active) setPublicTeam(rows.filter((row) => row.displayName && row.role !== 'clinic_leadership' || row.displayName && row.role === 'clinic_leadership'))
     }
     void loadPublicTeam()
     return () => { active = false }
