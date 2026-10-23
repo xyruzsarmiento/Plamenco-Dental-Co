@@ -217,31 +217,40 @@ export function LandingPagePremiumV2() {
 
         <section className="lpv2-team" id="team">
           <div className="lpv2-container">
-            <div className="lpv2-heading team"><div><span className="lpv2-section-label">Care team</span><h2>Meet the people behind your care.</h2></div><p>Featuring clinic leadership, active dentists and the patient-facing staff who help coordinate your visit.</p></div>
-            <div className="lpv2-team-layout">
-              <article className="lpv2-team-feature">
-                <div className="lpv2-team-photo">
-                  {leadProvider?.photoUrl
-                    ? <img src={leadProvider.photoUrl} alt={leadProvider.displayName}/>
-                    : <div className="lpv2-team-initials">{leadProvider?.displayName ? leadProvider.displayName.split(/\s+/).slice(0,2).map((part) => part.charAt(0)).join('') : 'P'}</div>}
-                </div>
-                <div className="lpv2-team-feature-copy">
-                  <span>{leadProvider?.role === 'clinic_leadership' ? 'Clinic leadership' : leadProvider?.role === 'dentist' ? 'Lead Dentist' : 'Featured Dentist'}</span>
-                  <h3>{leadProvider?.displayName ?? 'Plamenco Dental Co. Clinical Team'}</h3>
-                  <p>{leadProvider?.specialization || leadProvider?.bio || 'Patient-focused dental care supported by a coordinated clinic team.'}</p>
-                  <small><Stethoscope size={15}/> Clinical care & treatment planning</small>
+            <div className="lpv2-team-heading">
+              <div>
+                <span className="lpv2-section-label">The people behind your care</span>
+                <h2>Good care starts with good people.</h2>
+                <p>Meet our clinic leadership and dental professionals across Plamenco Dental Co.</p>
+              </div>
+              <div className="lpv2-team-count"><UsersRound size={17}/><span><strong>{publicTeam.length}</strong> {publicTeam.length === 1 ? 'team member' : 'team members'}</span></div>
+            </div>
+
+            <div className="lpv2-team-grid">
+              {publicTeam.map((provider) => (
+                <article className={`lpv2-member-card ${provider.role === 'clinic_leadership' ? 'is-leadership' : ''}`} key={provider.id}>
+                  <div className="lpv2-member-photo">
+                    {provider.photoUrl
+                      ? <img src={provider.photoUrl} alt={provider.displayName} loading="lazy" onError={(event) => { event.currentTarget.style.display = 'none'; event.currentTarget.parentElement?.classList.add('has-fallback') }} />
+                      : null}
+                    <span className="lpv2-member-initials">{provider.displayName.split(/\\s+/).slice(0, 2).map((part) => part.charAt(0)).join('')}</span>
+                    <span className="lpv2-member-status"><span/> Active</span>
+                  </div>
+                  <div className="lpv2-member-copy">
+                    <span className="lpv2-member-role">{provider.role === 'clinic_leadership' ? 'Clinic leadership' : provider.role === 'associate_dentist' ? 'Associate dentist' : 'Dentist'}</span>
+                    <h3>{provider.displayName}</h3>
+                    <p>{provider.specialization || provider.bio || (provider.role === 'clinic_leadership' ? 'Supporting a coordinated patient experience.' : 'Dental care provider at Plamenco Dental Co.')}</p>
+                  </div>
+                </article>
+              ))}
+              <article className="lpv2-member-card lpv2-coordination-card">
+                <div className="lpv2-coordination-icon"><HeartHandshake size={25}/></div>
+                <div className="lpv2-member-copy">
+                  <span className="lpv2-member-role">Clinic staff</span>
+                  <h3>Patient coordination team</h3>
+                  <p>Front-desk coordination, patient support and help before and after your visit.</p>
                 </div>
               </article>
-
-              <div className="lpv2-team-side">
-                {supportingProviders.map((provider) => (
-                  <article className="lpv2-person-card" key={provider.id}>
-                    <div>{provider.photoUrl ? <img src={provider.photoUrl} alt={provider.displayName}/> : <span>{provider.displayName.split(/\s+/).slice(0,2).map((part) => part.charAt(0)).join('')}</span>}</div>
-                    <section><span>{provider.role === 'associate_dentist' ? 'Associate Dentist' : provider.role === 'clinic_leadership' ? 'Clinic leadership' : 'Dentist'}</span><h3>{provider.displayName}</h3><p>{provider.specialization || provider.bio || 'Dental care provider at Plamenco Dental Co.'}</p></section>
-                  </article>
-                ))}
-                <article className="lpv2-staff-card"><img src="/assets/images/cashier.jpg" alt="Plamenco Dental Co. clinic staff"/><div><span>Clinic staff</span><h3>Patient coordination team</h3><p>Front-desk coordination, patient support and clinic operations.</p><small><UsersRound size={15}/> Here to help before and after your visit</small></div></article>
-              </div>
             </div>
           </div>
         </section>
