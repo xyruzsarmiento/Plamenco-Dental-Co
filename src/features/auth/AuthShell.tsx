@@ -1,4 +1,4 @@
-import { ArrowLeft, CalendarCheck2, ShieldCheck, Sparkles } from 'lucide-react'
+import { ArrowLeft, ArrowRight, CheckCircle2, ShieldCheck } from 'lucide-react'
 import type { ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 
@@ -12,61 +12,55 @@ export type AuthShellProps = {
 
 export function AuthShell({ eyebrow, title, description, children, footer }: AuthShellProps) {
   return (
-    <main className="auth-page auth-experience">
-      <div className="auth-shell">
-        <aside className="auth-visual" aria-label="Plamenco Dental Co">
-          <div className="auth-visual-media" aria-hidden="true">
-            <img src="/assets/images/landing.png" alt="" />
+    <main className="auth-page auth-experience auth-rebuilt">
+      <header className="auth-rebuilt-header">
+        <Link to="/" className="auth-rebuilt-brand" aria-label="Plamenco Dental Co home">
+          <img src="/assets/images/logo.png" alt="" />
+          <span><strong>plamenco<span>.</span></strong><small>DENTAL CO.</small></span>
+        </Link>
+        <Link to="/" className="auth-rebuilt-home"><ArrowLeft size={15} aria-hidden="true" /> <span>Back to website</span></Link>
+      </header>
+
+      <div className="auth-rebuilt-layout">
+        <section className="auth-rebuilt-intro" aria-label="Patient portal introduction">
+          <div className="auth-rebuilt-orbit auth-rebuilt-orbit-one" aria-hidden="true" />
+          <div className="auth-rebuilt-orbit auth-rebuilt-orbit-two" aria-hidden="true" />
+          <span className="auth-rebuilt-overline"><span className="auth-rebuilt-status-dot" /> YOUR CARE, CONNECTED</span>
+          <h2>Good care starts with feeling <em>looked after.</em></h2>
+          <p>A calmer, simpler way to stay connected with your dental care—before, during, and after your visit.</p>
+          <div className="auth-rebuilt-promise">
+            <span className="auth-rebuilt-promise-icon"><ShieldCheck size={19} aria-hidden="true" /></span>
+            <span><strong>Your information stays private</strong><small>Secure access to your patient account</small></span>
+            <CheckCircle2 className="auth-rebuilt-promise-check" size={17} aria-hidden="true" />
           </div>
-          <div className="auth-visual-overlay" aria-hidden="true" />
-          <div className="auth-visual-inner">
-            <Link to="/" className="auth-brand" aria-label="Plamenco Dental Co home">
-              <img src="/assets/images/logo.png" alt="" className="auth-brand-logo" />
-              <span>
-                <strong>Plamenco Dental Co.</strong>
-                <small>Pulilan &amp; Plaridel, Bulacan</small>
-              </span>
-            </Link>
-
-            <div className="auth-visual-copy">
-              <span className="auth-kicker"><Sparkles size={14} aria-hidden="true" /> Patient access</span>
-              <h2>Thoughtful dental care, made easier to manage.</h2>
-              <p>Appointments, care information, and your clinic account—together in one secure place.</p>
-            </div>
-
-            <div className="auth-feature-list" aria-label="Portal benefits">
-              <div><ShieldCheck size={17} aria-hidden="true" /><span>Private, secure access</span></div>
-              <div><CalendarCheck2 size={17} aria-hidden="true" /><span>Appointments in one place</span></div>
-            </div>
-            <p className="auth-visual-footnote">A more connected patient experience from Plamenco Dental Co.</p>
+          <div className="auth-rebuilt-decoration" aria-hidden="true">
+            <div className="auth-rebuilt-tooth-mark">p<span>+</span></div>
+            <div className="auth-rebuilt-decoration-line" />
+            <span>CARE THAT FITS YOUR LIFE</span>
           </div>
-        </aside>
+        </section>
 
-        <section className="auth-panel" aria-labelledby="auth-title">
-          <div className="auth-panel-inner">
-            <Link to="/" className="auth-back-link" aria-label="Back to website">
-              <ArrowLeft size={16} aria-hidden="true" />
-              <span>Back to website</span>
-            </Link>
-
-            <Link to="/" className="auth-mobile-brand" aria-label="Plamenco Dental Co home">
-              <img src="/assets/images/logo.png" alt="" />
-              <span>Plamenco Dental Co.</span>
-            </Link>
-
+        <section className="auth-rebuilt-main" aria-labelledby="auth-title">
+          <div className="auth-rebuilt-mobile-brand">
+            <img src="/assets/images/logo.png" alt="" />
+            <span>plamenco<span>.</span></span>
+          </div>
+          <div className="auth-rebuilt-card">
             <div className="auth-panel-header">
-              <span className="auth-kicker">{eyebrow}</span>
+              <span className="auth-rebuilt-eyebrow">{eyebrow}</span>
               <h1 id="auth-title">{title}</h1>
               <p>{description}</p>
             </div>
-
             {children}
-
             {footer ? <div className="auth-footer">{footer}</div> : null}
-            <p className="auth-legal-note">By continuing, you agree to use your account responsibly and keep your sign-in details private.</p>
           </div>
+          <footer className="auth-rebuilt-footnote">
+            <ShieldCheck size={14} aria-hidden="true" />
+            <span>Private patient access</span><i aria-hidden="true">·</i><span>Plamenco Dental Co.</span>
+          </footer>
         </section>
       </div>
+      <footer className="auth-rebuilt-global-footer"><span>© {new Date().getFullYear()} Plamenco Dental Co.</span><span>Patient portal</span><Link to="/">Visit our website <ArrowRight size={13} aria-hidden="true" /></Link></footer>
     </main>
   )
 }
