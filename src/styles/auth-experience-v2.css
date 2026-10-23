@@ -475,11 +475,11 @@
   border-color: #d95f68 !important;
   box-shadow: 0 0 0 3px rgba(217, 95, 104, .10) !important;
 }
-.auth-rebuilt .auth-form input:focus:invalid,
-.auth-rebuilt .auth-form select:focus:invalid,
-.auth-rebuilt .auth-form textarea:focus:invalid {
-  border-color: #6d9ee8 !important;
-  box-shadow: 0 0 0 3px rgba(73, 132, 221, .14) !important;
+.auth-rebuilt .auth-form input[aria-invalid="true"]:focus,
+.auth-rebuilt .auth-form select[aria-invalid="true"]:focus,
+.auth-rebuilt .auth-form textarea[aria-invalid="true"]:focus {
+  border-color: #d95f68 !important;
+  box-shadow: 0 0 0 3px rgba(217, 95, 104, .12) !important;
 }
 .auth-rebuilt .auth-form-grid {
   align-items: start;
