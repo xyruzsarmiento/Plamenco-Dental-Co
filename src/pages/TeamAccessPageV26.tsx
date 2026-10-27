@@ -250,7 +250,21 @@ function InviteAccountModal({ branches, onClose, onSuccess }: {
       }
       await onSuccess(data, { ...state, name, email })
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : 'Unable to invite this internal account.')
+      let message = cause instanceof Error ? cause.message : 'Unable to invite this internal account.'
+      const context = cause && typeof cause === 'object' ? (cause as { context?: unknown }).context : undefined
+      if (context instanceof Response) {
+        try {
+          const body = await context.clone().json() as { error?: unknown; message?: unknown }
+          const serverMessage = typeof body.error === 'string' ? body.error : typeof body.message === 'string' ? body.message : ''
+          if (serverMessage) message = serverMessage
+        } catch {
+          // Some function errors do not include a JSON response body.
+        }
+      }
+      if (/email_exists|already been registered|already registered/i.test(message)) {
+        message = 'This email address already has a Supabase Auth account. Open the existing account in Team & Access and use Resend invitation if available. If it is not listed, verify the account in Supabase Auth before trying again.'
+      }
+      setError(message)
     } finally {
       setBusy(false)
     }
