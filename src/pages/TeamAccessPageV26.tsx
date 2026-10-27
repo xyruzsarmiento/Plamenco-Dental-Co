@@ -243,7 +243,24 @@ function InviteAccountModal({ branches, onClose, onSuccess }: {
           providerProfileRequired: state.role === 'dentist' || state.role === 'associate_dentist',
         },
       })
-      if (invokeError) throw new Error(invokeError.message || 'The secure invitation service rejected the request.')
+      if (invokeError) {
+        let serverMessage = ''
+        const responseContext = (invokeError as typeof invokeError & { context?: unknown }).context
+        if (responseContext && typeof responseContext === 'object' && 'clone' in responseContext && typeof responseContext.clone === 'function') {
+          try {
+            const response = responseContext as Response
+            const body = await response.clone().json() as { error?: unknown; message?: unknown }
+            serverMessage = typeof body.error === 'string' ? body.error : typeof body.message === 'string' ? body.message : ''
+          } catch {
+            // Fall back to the Supabase Functions error message when the body is not JSON.
+          }
+        }
+        const message = serverMessage || invokeError.message || 'The secure invitation service rejected the request.'
+        if (/email_exists|already been registered|already registered/i.test(message)) {
+          throw new Error('This email address already has a Supabase Auth account. Open the existing account in Team & Access and use Resend invitation if available. If it is not listed, verify the account in Supabase Auth before trying again.')
+        }
+        throw new Error(message)
+      }
       if (data?.error) throw new Error(data.error)
       if (!data?.account?.userId || data.invitation?.status !== 'sent') {
         throw new Error('The invitation service did not confirm a sent invitation and provisioned account.')
