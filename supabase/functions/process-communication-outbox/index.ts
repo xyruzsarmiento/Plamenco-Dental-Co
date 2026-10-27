@@ -48,7 +48,17 @@ function nextRetryDate(attempts: number) {
 function providerIdFromResponse(data: unknown) {
   if (!data || typeof data !== 'object') return undefined
   const record = data as Record<string, unknown>
-  const candidates = [record.id, record.message_id, record.messageId, record.sid]
+  const nestedMessage = record.message && typeof record.message === 'object'
+    ? record.message as Record<string, unknown>
+    : undefined
+  const candidates = [
+    nestedMessage?.reference_id,
+    record.reference_id,
+    record.id,
+    record.message_id,
+    record.messageId,
+    record.sid,
+  ]
   const value = candidates.find((entry) => typeof entry === 'string')
   return typeof value === 'string' ? value : undefined
 }
@@ -166,21 +176,32 @@ async function sendEmailViaSmtp(entry: OutboxEntry) {
 }
 
 async function sendSms(entry: OutboxEntry) {
-  const endpoint = requireEnv('SMS_PROVIDER_ENDPOINT')
+  // UniSMS requires HTTP Basic auth with the API secret as username and an empty password.
+  // Keep SMS_API_KEY in Supabase Edge Function secrets; never expose it to the browser.
+  const endpoint = Deno.env.get('SMS_PROVIDER_ENDPOINT') || 'https://unismsapi.com/api/sms'
   const apiKey = requireEnv('SMS_API_KEY')
-  const senderName = Deno.env.get('SMS_SENDER_NAME') ?? 'PLAMENCO'
+  const senderId = requireEnv('SMS_SENDER_NAME')
+  const recipient = (entry.payload.recipient ?? '').trim()
+  const content = (entry.payload.message ?? '').trim()
+
+  if (!recipient) throw new Error('SMS recipient is empty.')
+  if (!content) throw new Error('SMS message content is empty.')
+  if (content.length > 670) throw new Error('UniSMS message content exceeds the 670-character limit.')
 
   return fetch(endpoint, {
     method: 'POST',
     headers: {
-      Authorization: `Bearer ${apiKey}`,
+      Authorization: `Basic ${base64(`${apiKey}:`)}`,
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      to: entry.payload.recipient,
-      message: entry.payload.message,
-      sender: senderName,
-      idempotencyKey: entry.delivery_log_id,
+      recipient,
+      content,
+      sender_id: senderId,
+      metadata: {
+        template: 'appointment_notification',
+        delivery_log_id: entry.delivery_log_id,
+      },
     }),
   })
 }
