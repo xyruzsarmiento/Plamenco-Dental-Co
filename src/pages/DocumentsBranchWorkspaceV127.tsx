@@ -1,4 +1,5 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import {
   Archive,
   Building2,
@@ -84,6 +85,9 @@ export function DocumentsBranchWorkspaceV127() {
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [archiveTarget, setArchiveTarget] = useState<BranchPatientDocument | null>(null)
   const [menuId, setMenuId] = useState<string | null>(null)
+  const [menuPosition, setMenuPosition] = useState<{ top: number; left: number; width: number } | null>(null)
+  const menuRef = useRef<HTMLDivElement | null>(null)
+  const menuTriggerRef = useRef<HTMLButtonElement | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
@@ -109,7 +113,7 @@ export function DocumentsBranchWorkspaceV127() {
   }, [activeBranchId, isAllBranchesMode])
 
   useEffect(() => { void refresh() }, [refresh])
-  useEffect(() => { setUploadOpen(false); setUploadPatientId(''); setSelectedId(null); setArchiveTarget(null); setMenuId(null) }, [activeBranchId, isAllBranchesMode])
+  useEffect(() => { setUploadOpen(false); setUploadPatientId(''); setSelectedId(null); setArchiveTarget(null); setMenuId(null); setMenuPosition(null) }, [activeBranchId, isAllBranchesMode])
   useEffect(() => {
     if (!patients.length) return
     setSelectedPatientId((current) => patients.some((patient) => patient.id === current || patient.patientId === current) ? current : patients[0].patientId)
@@ -126,12 +130,35 @@ export function DocumentsBranchWorkspaceV127() {
         setSelectedId(null)
         setArchiveTarget(null)
         setUploadOpen(false)
-        setMenuId(null)
+        setMenuId(null); setMenuPosition(null)
       }
     }
     document.addEventListener('keydown', handleKey)
     return () => document.removeEventListener('keydown', handleKey)
   }, [archiveTarget, menuId, selectedId, uploadOpen])
+
+  useEffect(() => {
+    if (!menuId) return undefined
+
+    const closeMenu = () => {
+      setMenuId(null); setMenuPosition(null)
+    }
+    const handlePointerDown = (event: PointerEvent) => {
+      const target = event.target
+      if (!(target instanceof Node)) return
+      if (menuRef.current?.contains(target) || menuTriggerRef.current?.contains(target)) return
+      closeMenu()
+    }
+
+    document.addEventListener('pointerdown', handlePointerDown)
+    window.addEventListener('resize', closeMenu)
+    window.addEventListener('scroll', closeMenu, true)
+    return () => {
+      document.removeEventListener('pointerdown', handlePointerDown)
+      window.removeEventListener('resize', closeMenu)
+      window.removeEventListener('scroll', closeMenu, true)
+    }
+  }, [menuId])
 
   const categories = useMemo(() => Array.from(new Set(documents.map((document) => document.category))).sort(), [documents])
   const patientDocumentStats = useMemo(() => {
@@ -176,6 +203,7 @@ export function DocumentsBranchWorkspaceV127() {
   const effectivePage = Math.min(page, pageCount)
   const visiblePage = filtered.slice((effectivePage - 1) * DOCUMENT_PAGE_SIZE, effectivePage * DOCUMENT_PAGE_SIZE)
   const selectedDocument = selectedId ? documents.find((document) => document.id === selectedId) ?? null : null
+  const activeMenuDocument = menuId ? documents.find((document) => document.id === menuId) ?? null : null
   const stats = {
     total: documents.length,
     shared: documents.filter((document) => document.patientVisible).length,
@@ -198,7 +226,7 @@ export function DocumentsBranchWorkspaceV127() {
       setError(cause instanceof Error ? cause.message : 'Document sharing could not be changed.')
     } finally {
       setBusyId(null)
-      setMenuId(null)
+      setMenuId(null); setMenuPosition(null)
     }
   }
 
@@ -217,7 +245,7 @@ export function DocumentsBranchWorkspaceV127() {
       setError(cause instanceof Error ? cause.message : 'Document could not be archived.')
     } finally {
       setBusyId(null)
-      setMenuId(null)
+      setMenuId(null); setMenuPosition(null)
     }
   }
 
@@ -244,7 +272,7 @@ export function DocumentsBranchWorkspaceV127() {
     setSelectedPatientId(patientId)
     setQuery('')
     setSelectedId(null)
-    setMenuId(null)
+    setMenuId(null); setMenuPosition(null)
   }
 
   return (
@@ -328,12 +356,32 @@ export function DocumentsBranchWorkspaceV127() {
                     <div className="doc149-actions doc215-file-actions">
                       <button type="button" disabled={busyId === document.id} onClick={() => void downloadDocument(document)}><Download size={15} /> Download</button>
                       <div className="doc149-menu-wrap">
-                        <button type="button" className="doc149-icon-button" aria-label={`More actions for ${document.fileName}`} aria-haspopup="menu" aria-expanded={menuId === document.id} onClick={() => setMenuId(menuId === document.id ? null : document.id)}><MoreHorizontal size={16} /></button>
-                        {menuId === document.id && <div className="doc149-menu" role="menu">
-                          {canUpload && <button type="button" role="menuitem" disabled={busyId === document.id} onClick={() => void toggleVisibility(document)}>{document.patientVisible ? <LockKeyhole size={14} /> : <Share2 size={14} />}{document.patientVisible ? 'Make private' : 'Share with patient'}</button>}
-                          {canUpload && <button type="button" role="menuitem" disabled={busyId === document.id} onClick={() => { setArchiveTarget(document); setMenuId(null) }}><Archive size={14} /> Archive</button>}
-                          <button type="button" role="menuitem" onClick={() => { setSelectedId(document.id); setMenuId(null) }}><FileText size={14} /> Details</button>
-                        </div>}
+                        <button
+                          type="button"
+                          className="doc149-icon-button"
+                          aria-label={`More actions for ${document.fileName}`}
+                          aria-haspopup="menu"
+                          aria-controls={menuId === document.id ? `doc149-menu-${document.id}` : undefined}
+                          aria-expanded={menuId === document.id}
+                          ref={menuId === document.id ? menuTriggerRef : undefined}
+                          onClick={(event) => {
+                            if (menuId === document.id) {
+                              setMenuId(null); setMenuPosition(null)
+                              return
+                            }
+                            const rect = event.currentTarget.getBoundingClientRect()
+                            const menuWidth = Math.min(210, window.innerWidth - 24)
+                            const menuHeight = canUpload ? 130 : 52
+                            const belowTop = rect.bottom + 8
+                            const top = belowTop + menuHeight <= window.innerHeight - 8
+                              ? belowTop
+                              : Math.max(8, rect.top - menuHeight - 8)
+                            const left = Math.max(12, Math.min(rect.right - menuWidth, window.innerWidth - menuWidth - 12))
+                            menuTriggerRef.current = event.currentTarget
+                            setMenuPosition({ top, left, width: menuWidth })
+                            setMenuId(document.id)
+                          }}
+                        ><MoreHorizontal size={16} /></button>
                       </div>
                     </div>
                   </article>
@@ -396,6 +444,44 @@ export function DocumentsBranchWorkspaceV127() {
           </footer>
         </aside>
       </div>}
+      {activeMenuDocument && menuPosition && createPortal(
+        <div
+          id={`doc149-menu-${activeMenuDocument.id}`}
+          ref={menuRef}
+          className="doc149-menu doc149-menu-portal"
+          role="menu"
+          style={{
+            position: 'fixed',
+            top: menuPosition.top,
+            left: menuPosition.left,
+            right: 'auto',
+            width: menuPosition.width,
+            zIndex: 20000,
+          }}
+        >
+          {canUpload && (
+            <button type="button" role="menuitem" disabled={busyId === activeMenuDocument.id} onClick={() => void toggleVisibility(activeMenuDocument)}>
+              {activeMenuDocument.patientVisible ? <LockKeyhole size={14} /> : <Share2 size={14} />}
+              {activeMenuDocument.patientVisible ? 'Make private' : 'Share with patient'}
+            </button>
+          )}
+          {canUpload && (
+            <button type="button" role="menuitem" disabled={busyId === activeMenuDocument.id} onClick={() => {
+              setArchiveTarget(activeMenuDocument)
+              setMenuId(null); setMenuPosition(null)
+            }}>
+              <Archive size={14} /> Archive
+            </button>
+          )}
+          <button type="button" role="menuitem" onClick={() => {
+            setSelectedId(activeMenuDocument.id)
+            setMenuId(null); setMenuPosition(null)
+          }}>
+            <FileText size={14} /> Details
+          </button>
+        </div>,
+        document.body,
+      )}
       {archiveTarget && <div className="doc149-confirm-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget && !busyId) setArchiveTarget(null) }}>
         <section className="doc149-confirm-dialog" role="dialog" aria-modal="true" aria-labelledby="doc149-confirm-title">
           <header><div><span>Document archive</span><h2 id="doc149-confirm-title">Archive document?</h2><p>{archiveTarget.fileName} will be moved out of the active document list. You can keep the existing archive behavior underneath.</p></div><button type="button" className="doc149-icon-button" onClick={() => !busyId && setArchiveTarget(null)} aria-label="Close archive confirmation"><X size={18} /></button></header>
