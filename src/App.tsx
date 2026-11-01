@@ -21,6 +21,7 @@ import { WorkspaceAccountIsolationGuard } from './features/security/WorkspaceIso
 import { loadServicesFromSupabase } from './features/services/serviceStore'
 import { cachedQuery, queryCachePolicy, readCachedQuery } from './lib/queryCache'
 import { syncSupabaseToLocalStorage } from './lib/supabaseSync'
+import { loadCommunicationPreferencesFromSupabase } from './features/communications/communicationPreferencesStore'
 import './styles/adaptive-pagination.css'
 import './styles/public-auth-responsive-part7.css'
 import './styles/internal-appointments-refinement-v2.css'
@@ -152,6 +153,7 @@ function DataBootstrap({ children }: { children: React.ReactNode }) {
           safeLoad(() => loadProviderFoundationFromSupabase({ strict: false })),
           safeLoad(() => loadPatientsFromSupabase({ strict: false })),
           safeLoad(() => loadServicesFromSupabase({ strict: false })),
+          safeLoad(() => loadCommunicationPreferencesFromSupabase()),
         ]
 
         if (user.role === 'patient') {
