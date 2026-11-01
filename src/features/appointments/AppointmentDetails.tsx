@@ -4,7 +4,7 @@ import { StatusBadge } from '../../components/ui/Badge'
 import { Button } from '../../components/ui/Button'
 import { formatCurrency, getInvoicesByPatient } from '../billing/billingStore'
 import { CommunicationHistoryPanel } from '../communications/CommunicationHistoryPanel'
-import { getCommunicationLogsByAppointment, getCommunicationSettings } from '../communications/communicationStore'
+import { getCommunicationLogsByAppointment, getCommunicationSettings, loadCommunicationLogsForAppointment } from '../communications/communicationStore'
 import { getChannelAvailability } from '../communications/communicationPreferencesStore'
 import type { CommunicationChannel, CommunicationTemplateKey } from '../communications/communicationTypes'
 import { getTreatmentsByPatient } from '../treatments/treatmentStore'
@@ -117,12 +117,17 @@ export function AppointmentDetails({
     const refreshCommunicationState = () => setCommunicationStateRevision((revision) => revision + 1)
     window.addEventListener('plamenco:communication-preferences-updated', refreshCommunicationState)
     window.addEventListener('plamenco:communication-settings-updated', refreshCommunicationState)
+    window.addEventListener('plamenco:communication-logs-updated', refreshCommunicationState)
     return () => {
       window.removeEventListener('plamenco:communication-preferences-updated', refreshCommunicationState)
       window.removeEventListener('plamenco:communication-settings-updated', refreshCommunicationState)
+      window.removeEventListener('plamenco:communication-logs-updated', refreshCommunicationState)
     }
   }, [])
   void communicationStateRevision
+  useEffect(() => {
+    void loadCommunicationLogsForAppointment(appointment.id)
+  }, [appointment.id])
   const communicationChannels = patient ? getChannelAvailability(patient) : []
   const communicationSettings = getCommunicationSettings()
   const channelLabels: Record<CommunicationChannel, string> = { sms: 'SMS', email: 'Email', messenger: 'Messenger', in_app: 'In-app' }
