@@ -112,6 +112,13 @@ export function AppointmentDetails({
   onActionRequest, onManualResend, onOpenPatientRecord, onOpenClinicalRecord, onBookFollowUp, onViewFollowUpRecommendation, canManage, canTransitionStatus, clinicalRestrictionMessage, communicationFeedback, communicationPendingKey,
 }: AppointmentDetailsProps) {
   const communicationLogs = getCommunicationLogsByAppointment(appointment.id)
+  const [communicationPreferencesRevision, setCommunicationPreferencesRevision] = useState(0)
+  useEffect(() => {
+    const refreshPreferences = () => setCommunicationPreferencesRevision((revision) => revision + 1)
+    window.addEventListener('plamenco:communication-preferences-updated', refreshPreferences)
+    return () => window.removeEventListener('plamenco:communication-preferences-updated', refreshPreferences)
+  }, [])
+  void communicationPreferencesRevision
   const communicationChannels = patient ? getChannelAvailability(patient) : []
   const channelLabels: Record<CommunicationChannel, string> = { sms: 'SMS', email: 'Email', messenger: 'Messenger', in_app: 'In-app' }
   const latestCommunication = [...communicationLogs].sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())[0]
@@ -321,8 +328,10 @@ export function AppointmentDetails({
                                   className="appointment-details-v40-action is-communication"
                                   size="sm"
                                   variant="secondary"
+                                  type="button"
                                   disabled={Boolean(communicationPendingKey) || !availability?.available}
                                   title={availability?.available ? `Send via ${channelLabels[channel]}` : availability?.reason ?? 'Patient contact is unavailable'}
+                                  aria-label={`Send ${action.label.toLowerCase()} via ${channelLabels[channel]}`}
                                   onClick={() => onManualResend?.(appointment, action.key, [channel])}
                                 >
                                   <Send size={13}/>{pending ? 'Sending...' : channelLabels[channel]}
@@ -333,6 +342,11 @@ export function AppointmentDetails({
                           <small className="appointment-details-v40-channel-hint">Unavailable channels are disabled until the patient has enabled consent and the required contact details are available.</small>
                         </div>
                       )) : <div className="appointment-details-v40-action-empty">No communication action is available for this status.</div>}
+                      {communicationFeedback && (
+                        <div className={`appointment-details-v40-communication-feedback is-${communicationFeedback.tone}`} role={communicationFeedback.tone === 'danger' ? 'alert' : 'status'}>
+                          {communicationFeedback.message}
+                        </div>
+                      )}
                     </section>
 
                     {exceptionActions.length > 0 && (
@@ -359,7 +373,6 @@ export function AppointmentDetails({
 
               <section className="appointment-details-v40-card">
                 <div className="appointment-details-v40-section-head"><div><span>Communications</span><h3>Recent messaging</h3><p>{recentCommunicationLogs.length ? `${recentCommunicationLogs.length} appointment message${recentCommunicationLogs.length === 1 ? '' : 's'} recorded` : `Latest status: ${communicationStatusLabel(latestCommunication?.status)}`}</p></div></div>
-                {communicationFeedback && <div className={`appointment-details-v40-communication-feedback is-${communicationFeedback.tone}`} role={communicationFeedback.tone === 'danger' ? 'alert' : 'status'}>{communicationFeedback.message}</div>}
                 <div className="appointment-details-v40-communication-history">
                   <CommunicationHistoryPanel logs={recentCommunicationLogs} emptyMessage="No appointment communications recorded." />
                 </div>
