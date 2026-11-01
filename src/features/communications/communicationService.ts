@@ -26,6 +26,7 @@ import { getCommunicationTemplate, renderCommunicationTemplate } from './communi
 import type {
   AppointmentCommunicationEvent,
   CommunicationChannel,
+  CommunicationDeliveryLog,
   CommunicationTemplateKey,
 } from './communicationTypes'
 
@@ -470,7 +471,7 @@ export async function sendAppointmentCommunicationPersisted(event: AppointmentCo
       const updatedLogs = getCommunicationDeliveryLogs().map((log) => {
         const result = resultsByLogId.get(log.id)
         if (!result) return log
-        const status = result.status === 'sent' ? 'sent' : result.status === 'failed' ? 'failed' : 'queued'
+        const status: CommunicationDeliveryLog['status'] = result.status === 'sent' ? 'sent' : result.status === 'failed' ? 'failed' : 'queued'
         return {
           ...log,
           status,
