@@ -127,4 +127,5 @@ export type AppointmentCommunicationEvent = {
   oldAppointment?: Appointment
   reminderOffsetHours?: number
   manual?: boolean
+  channels?: CommunicationChannel[]
 }

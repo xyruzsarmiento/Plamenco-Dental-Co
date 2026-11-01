@@ -707,17 +707,19 @@ export function resendAppointmentCommunication(
   id: string,
   templateKey: 'appointment_confirmed' | 'appointment_reminder' | 'appointment_rescheduled',
   actor: string,
+  channels?: import('../communications/communicationTypes').CommunicationChannel[],
 ) {
   const appointment = getAppointmentById(id)
   if (!appointment) return { error: 'Appointment was not found.' }
   const recentSameMessage = getCommunicationLogsByAppointment(id).find((log) => {
-    if (log.templateKey !== templateKey) return false
+    if (log.templateKey !== templateKey || log.dispatchMode !== 'manual') return false
+    if (channels?.length && !channels.includes(log.channel)) return false
     return Date.now() - new Date(log.createdAt).getTime() < 2 * 60 * 1000
   })
   if (recentSameMessage) {
     return { error: 'This message was already sent or recorded in the last 2 minutes.' }
   }
-  const logs = sendAppointmentCommunication({ appointment, templateKey, actor, manual: true })
+  const logs = sendAppointmentCommunication({ appointment, templateKey, actor, manual: true, channels })
   return { logs }
 }
 
@@ -725,17 +727,19 @@ export async function resendAppointmentCommunicationPersisted(
   id: string,
   templateKey: 'appointment_confirmed' | 'appointment_reminder' | 'appointment_rescheduled',
   actor: string,
+  channels?: import('../communications/communicationTypes').CommunicationChannel[],
 ) {
   const appointment = getAppointmentById(id)
   if (!appointment) return { error: 'Appointment was not found.' }
   const recentSameMessage = getCommunicationLogsByAppointment(id).find((log) => {
-    if (log.templateKey !== templateKey) return false
+    if (log.templateKey !== templateKey || log.dispatchMode !== 'manual') return false
+    if (channels?.length && !channels.includes(log.channel)) return false
     return Date.now() - new Date(log.createdAt).getTime() < 2 * 60 * 1000
   })
   if (recentSameMessage) {
     return { error: 'This message was already sent or recorded in the last 2 minutes.' }
   }
-  const logs = await sendAppointmentCommunicationPersisted({ appointment, templateKey, actor, manual: true })
+  const logs = await sendAppointmentCommunicationPersisted({ appointment, templateKey, actor, manual: true, channels })
   return { logs }
 }
 

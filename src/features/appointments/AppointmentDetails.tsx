@@ -5,7 +5,8 @@ import { Button } from '../../components/ui/Button'
 import { formatCurrency, getInvoicesByPatient } from '../billing/billingStore'
 import { CommunicationHistoryPanel } from '../communications/CommunicationHistoryPanel'
 import { getCommunicationLogsByAppointment } from '../communications/communicationStore'
-import type { CommunicationTemplateKey } from '../communications/communicationTypes'
+import { getChannelAvailability } from '../communications/communicationPreferencesStore'
+import type { CommunicationChannel, CommunicationTemplateKey } from '../communications/communicationTypes'
 import { getTreatmentsByPatient } from '../treatments/treatmentStore'
 import { getRecallDueBucket, getStoredPatientRecalls, listPatientRecalls, type RecallQueueItem } from '../recalls/recallStore'
 import type { Appointment, AppointmentStatus, Operatory } from './appointmentTypes'
@@ -14,6 +15,7 @@ import type { Service } from '../services/serviceTypes'
 import type { Branch } from '../branches/branchTypes'
 import type { Provider } from '../dentists/dentistTypes'
 import { PatientAvatar } from '../patients/PatientAvatar'
+import '../../styles/appointment-details-identity-v219.css'
 
 type AppointmentDetailsProps = {
   appointment: Appointment
@@ -25,7 +27,7 @@ type AppointmentDetailsProps = {
   onClose: () => void
   onStatusChange: (status: AppointmentStatus) => void
   onActionRequest?: (appointment: Appointment, status: AppointmentStatus, label: string, requiresReason?: boolean) => void
-  onManualResend?: (appointment: Appointment, templateKey: CommunicationTemplateKey) => void | Promise<void>
+  onManualResend?: (appointment: Appointment, templateKey: CommunicationTemplateKey, channels: CommunicationChannel[]) => void | Promise<void>
   communicationPendingKey?: string | null
   communicationFeedback?: { tone: 'success' | 'warning' | 'danger' | 'info'; message: string } | null
   onOpenPatientRecord?: (appointment: Appointment) => void
@@ -110,6 +112,8 @@ export function AppointmentDetails({
   onActionRequest, onManualResend, onOpenPatientRecord, onOpenClinicalRecord, onBookFollowUp, onViewFollowUpRecommendation, canManage, canTransitionStatus, clinicalRestrictionMessage, communicationFeedback, communicationPendingKey,
 }: AppointmentDetailsProps) {
   const communicationLogs = getCommunicationLogsByAppointment(appointment.id)
+  const communicationChannels = patient ? getChannelAvailability(patient) : []
+  const channelLabels: Record<CommunicationChannel, string> = { sms: 'SMS', email: 'Email', messenger: 'Messenger', in_app: 'In-app' }
   const latestCommunication = [...communicationLogs].sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())[0]
   const lastPatientMessage = [...communicationLogs]
     .filter((log) => ['appointment_confirmed', 'appointment_reminder', 'appointment_rescheduled'].includes(log.templateKey))
@@ -304,21 +308,31 @@ export function AppointmentDetails({
 
                     <section className="appointment-details-v40-action-group">
                       <div className="appointment-details-v40-action-heading"><span>Communication</span><small>{lastPatientMessage ? `Last sent ${new Date(lastPatientMessage.createdAt).toLocaleString('en-PH')}` : 'No patient message sent yet'}</small></div>
-                      {communicationActions.length ? communicationActions.map((action) => {
-                        const pending = communicationPendingKey === `${appointment.id}:${action.key}`
-                        return (
-                          <Button
-                            key={action.key}
-                            className="appointment-details-v40-action is-communication"
-                            size="sm"
-                            variant="secondary"
-                            disabled={Boolean(communicationPendingKey)}
-                            onClick={() => onManualResend?.(appointment, action.key)}
-                          >
-                            <Send size={14}/>{pending ? 'Sending...' : action.label}
-                          </Button>
-                        )
-                      }) : <div className="appointment-details-v40-action-empty">No communication action is available for this status.</div>}
+                      {communicationActions.length ? communicationActions.map((action) => (
+                        <div className="appointment-details-v40-channel-actions" key={action.key}>
+                          <strong className="appointment-details-v40-channel-action-title">{action.label}</strong>
+                          <div className="appointment-details-v40-channel-action-grid">
+                            {(['sms', 'email', 'messenger', 'in_app'] as CommunicationChannel[]).map((channel) => {
+                              const availability = communicationChannels.find((entry) => entry.channel === channel)
+                              const pending = communicationPendingKey === `${appointment.id}:${action.key}:${channel}`
+                              return (
+                                <Button
+                                  key={`${action.key}:${channel}`}
+                                  className="appointment-details-v40-action is-communication"
+                                  size="sm"
+                                  variant="secondary"
+                                  disabled={Boolean(communicationPendingKey) || !availability?.available}
+                                  title={availability?.available ? `Send via ${channelLabels[channel]}` : availability?.reason ?? 'Patient contact is unavailable'}
+                                  onClick={() => onManualResend?.(appointment, action.key, [channel])}
+                                >
+                                  <Send size={13}/>{pending ? 'Sending...' : channelLabels[channel]}
+                                </Button>
+                              )
+                            })}
+                          </div>
+                          <small className="appointment-details-v40-channel-hint">Unavailable channels are disabled until the patient has enabled consent and the required contact details are available.</small>
+                        </div>
+                      )) : <div className="appointment-details-v40-action-empty">No communication action is available for this status.</div>}
                     </section>
 
                     {exceptionActions.length > 0 && (
