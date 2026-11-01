@@ -242,6 +242,24 @@ const tablesToSync: SyncTableEntry[] = [
     }),
   },
   {
+    table: 'communication_preferences',
+    localKey: 'plamenco.communication.preferences',
+    map: (row: any) => ({
+      patientId: row.patient_id,
+      smsEnabled: Boolean(row.sms_enabled),
+      emailEnabled: Boolean(row.email_enabled),
+      messengerEnabled: Boolean(row.messenger_enabled),
+      inAppEnabled: Boolean(row.in_app_enabled ?? true),
+      preferredChannel: row.preferred_channel ?? 'in_app',
+      messengerRecipientId: row.messenger_recipient_id ?? undefined,
+      messengerConnectedAt: row.messenger_connected_at ?? undefined,
+      consentUpdatedAt: row.consent_updated_at ?? undefined,
+      consentUpdatedBy: row.consent_updated_by ?? '',
+      createdAt: row.created_at ?? new Date().toISOString(),
+      updatedAt: row.updated_at ?? row.created_at ?? new Date().toISOString(),
+    }),
+  },
+  {
     table: 'patients',
     localKey: 'plamenco.patients',
     map: (row: any) => ({
