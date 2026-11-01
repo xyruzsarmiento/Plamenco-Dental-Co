@@ -15,6 +15,7 @@ import type { Service } from '../services/serviceTypes'
 import type { Branch } from '../branches/branchTypes'
 import type { Provider } from '../dentists/dentistTypes'
 import { PatientAvatar } from '../patients/PatientAvatar'
+import '../../styles/appointment-details-identity-v219.css'
 
 type AppointmentDetailsProps = {
   appointment: Appointment
