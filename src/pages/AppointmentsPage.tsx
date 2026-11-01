@@ -60,7 +60,7 @@ import type { Patient } from '../features/patients/patientTypes'
 import { PatientAvatar } from '../features/patients/PatientAvatar'
 import { getStoredServices, loadServicesFromSupabase } from '../features/services/serviceStore'
 import type { Service } from '../features/services/serviceTypes'
-import type { CommunicationTemplateKey } from '../features/communications/communicationTypes'
+import type { CommunicationChannel, CommunicationTemplateKey } from '../features/communications/communicationTypes'
 import { completeRecall, linkRecallToAppointment, listPatientRecalls, type RecallQueueItem } from '../features/recalls/recallStore'
 
 type ViewTab = 'queue' | 'calendar' | 'requests'
@@ -877,9 +877,10 @@ export function AppointmentsPage() {
     })
   }
 
-  async function handleManualResend(appointment: Appointment, templateKey: CommunicationTemplateKey) {
+  async function handleManualResend(appointment: Appointment, templateKey: CommunicationTemplateKey, channels: CommunicationChannel[]) {
     if (!['appointment_confirmed', 'appointment_reminder', 'appointment_rescheduled'].includes(templateKey)) return
-    const actionKey = `${appointment.id}:${templateKey}`
+    if (!channels.length) return
+    const actionKey = `${appointment.id}:${templateKey}:${channels.join(',')}`
     if (communicationPendingKey) return
 
     setCommunicationPendingKey(actionKey)
@@ -889,6 +890,7 @@ export function AppointmentsPage() {
         appointment.id,
         templateKey as 'appointment_confirmed' | 'appointment_reminder' | 'appointment_rescheduled',
         user?.email ?? 'clinic-user',
+        channels,
       )
       if (result.error) {
         setCommunicationFeedback({ appointmentId: appointment.id, tone: 'warning', message: result.error })
