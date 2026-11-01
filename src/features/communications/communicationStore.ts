@@ -138,6 +138,9 @@ export function getCommunicationDeliveryLogs(): CommunicationDeliveryLog[] {
 
 export function saveCommunicationDeliveryLogs(logs: CommunicationDeliveryLog[]) {
   getStorage().setItem(DELIVERY_LOG_STORAGE_KEY, JSON.stringify(logs.slice(0, 2000)))
+  if (typeof window !== 'undefined' && typeof window.dispatchEvent === 'function') {
+    window.dispatchEvent(new Event('plamenco:communication-logs-updated'))
+  }
 }
 
 export function getCommunicationLogsByPatient(patientId: string) {
@@ -146,6 +149,66 @@ export function getCommunicationLogsByPatient(patientId: string) {
 
 export function getCommunicationLogsByAppointment(appointmentId: string) {
   return getCommunicationDeliveryLogs().filter((log) => log.appointmentId === appointmentId)
+}
+
+/**
+ * Reconcile the browser's cached appointment history with the authoritative
+ * Supabase delivery records, including status changes made by the Edge worker.
+ */
+export async function loadCommunicationLogsForAppointment(appointmentId: string) {
+  if (!isSupabaseConfigured || !supabase) return getCommunicationLogsByAppointment(appointmentId)
+
+  const { data, error } = await supabase
+    .from('communication_delivery_logs')
+    .select('*')
+    .eq('appointment_id', appointmentId)
+    .order('created_at', { ascending: false })
+    .limit(50)
+
+  if (error) {
+    console.warn('[communication history] Supabase refresh failed:', error.message)
+    return getCommunicationLogsByAppointment(appointmentId)
+  }
+
+  const remoteLogs: CommunicationDeliveryLog[] = (data ?? []).map((row) => ({
+    id: String(row.id),
+    patientId: String(row.patient_id ?? ''),
+    branchId: row.branch_id ? String(row.branch_id) : undefined,
+    appointmentId: row.appointment_id ? String(row.appointment_id) : appointmentId,
+    paymentId: row.payment_id ? String(row.payment_id) : undefined,
+    relatedType: row.related_type as CommunicationDeliveryLog['relatedType'],
+    relatedId: row.related_id ? String(row.related_id) : undefined,
+    channel: row.channel as CommunicationDeliveryLog['channel'],
+    templateKey: row.template_key as CommunicationDeliveryLog['templateKey'],
+    recipient: String(row.recipient ?? ''),
+    subject: String(row.subject ?? ''),
+    message: String(row.message ?? ''),
+    status: row.status as CommunicationDeliveryLog['status'],
+    provider: String(row.provider ?? ''),
+    providerMessageId: String(row.provider_message_id ?? ''),
+    attemptCount: Number(row.attempt_count ?? 0),
+    maxAttempts: row.max_attempts == null ? undefined : Number(row.max_attempts),
+    idempotencyKey: String(row.idempotency_key ?? ''),
+    dispatchMode: row.dispatch_mode === 'manual' ? 'manual' : 'automated',
+    sentBy: row.sent_by ? String(row.sent_by) : undefined,
+    businessEvent: row.business_event ? String(row.business_event) : undefined,
+    queuedAt: row.queued_at ? String(row.queued_at) : undefined,
+    sentAt: row.sent_at ? String(row.sent_at) : undefined,
+    deliveredAt: row.delivered_at ? String(row.delivered_at) : undefined,
+    failedAt: row.failed_at ? String(row.failed_at) : undefined,
+    nextRetryAt: row.next_retry_at ? String(row.next_retry_at) : undefined,
+    lastRetryAt: row.last_retry_at ? String(row.last_retry_at) : undefined,
+    failureReason: String(row.failure_reason ?? ''),
+    createdAt: String(row.created_at),
+    updatedAt: String(row.updated_at),
+  }))
+
+  const remoteKeys = new Set(remoteLogs.map((log) => log.idempotencyKey))
+  const localLogs = getCommunicationDeliveryLogs().filter((log) =>
+    log.appointmentId !== appointmentId || !remoteKeys.has(log.idempotencyKey),
+  )
+  saveCommunicationDeliveryLogs([...remoteLogs, ...localLogs])
+  return remoteLogs
 }
 
 export function findCommunicationLogByIdempotencyKey(idempotencyKey: string) {
@@ -193,8 +256,15 @@ export async function createCommunicationDeliveryLogPersisted(
 
   const remote = await insertRemoteTableRow('communication_delivery_logs', mapDeliveryLogToRemoteRow(log))
   if (isSupabaseConfigured && !remote) throw new Error('Communication log could not be saved to Supabase.')
-  saveCommunicationDeliveryLogs([log, ...getCommunicationDeliveryLogs()])
-  return log
+
+  // Remote IDs are normalized to deterministic UUIDs before insertion. Keep that
+  // exact ID locally so outbox references and worker results reconcile to this log.
+  const persistedLog: CommunicationDeliveryLog = {
+    ...log,
+    id: typeof remote?.id === 'string' ? remote.id : log.id,
+  }
+  saveCommunicationDeliveryLogs([persistedLog, ...getCommunicationDeliveryLogs()])
+  return persistedLog
 }
 
 export function updateCommunicationDeliveryLog(id: string, updates: Partial<CommunicationDeliveryLog>) {

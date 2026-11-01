@@ -4,7 +4,7 @@ import { StatusBadge } from '../../components/ui/Badge'
 import { Button } from '../../components/ui/Button'
 import { formatCurrency, getInvoicesByPatient } from '../billing/billingStore'
 import { CommunicationHistoryPanel } from '../communications/CommunicationHistoryPanel'
-import { getCommunicationLogsByAppointment, getCommunicationSettings } from '../communications/communicationStore'
+import { getCommunicationLogsByAppointment, getCommunicationSettings, loadCommunicationLogsForAppointment } from '../communications/communicationStore'
 import { getChannelAvailability } from '../communications/communicationPreferencesStore'
 import type { CommunicationChannel, CommunicationTemplateKey } from '../communications/communicationTypes'
 import { getTreatmentsByPatient } from '../treatments/treatmentStore'
@@ -117,12 +117,17 @@ export function AppointmentDetails({
     const refreshCommunicationState = () => setCommunicationStateRevision((revision) => revision + 1)
     window.addEventListener('plamenco:communication-preferences-updated', refreshCommunicationState)
     window.addEventListener('plamenco:communication-settings-updated', refreshCommunicationState)
+    window.addEventListener('plamenco:communication-logs-updated', refreshCommunicationState)
     return () => {
       window.removeEventListener('plamenco:communication-preferences-updated', refreshCommunicationState)
       window.removeEventListener('plamenco:communication-settings-updated', refreshCommunicationState)
+      window.removeEventListener('plamenco:communication-logs-updated', refreshCommunicationState)
     }
   }, [])
   void communicationStateRevision
+  useEffect(() => {
+    void loadCommunicationLogsForAppointment(appointment.id)
+  }, [appointment.id])
   const communicationChannels = patient ? getChannelAvailability(patient) : []
   const communicationSettings = getCommunicationSettings()
   const channelLabels: Record<CommunicationChannel, string> = { sms: 'SMS', email: 'Email', messenger: 'Messenger', in_app: 'In-app' }
@@ -136,6 +141,27 @@ export function AppointmentDetails({
   const lastPatientMessage = [...communicationLogs]
     .filter((log) => ['appointment_confirmed', 'appointment_reminder', 'appointment_rescheduled'].includes(log.templateKey))
     .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())[0]
+  const lastPatientMessageLabel = (() => {
+    if (!lastPatientMessage) return 'No patient message sent yet'
+    const statusLabel: Record<string, string> = {
+      queued: 'Last queued',
+      sending: 'Sending since',
+      sent: 'Last sent to provider',
+      delivered: 'Last delivered',
+      failed: 'Last attempt failed',
+      skipped: 'Last skipped',
+    }
+    const timestamp = lastPatientMessage.status === 'delivered'
+      ? lastPatientMessage.deliveredAt ?? lastPatientMessage.sentAt ?? lastPatientMessage.updatedAt
+      : lastPatientMessage.status === 'sent'
+        ? lastPatientMessage.sentAt ?? lastPatientMessage.updatedAt
+        : lastPatientMessage.status === 'queued'
+          ? lastPatientMessage.queuedAt ?? lastPatientMessage.createdAt
+          : lastPatientMessage.status === 'failed'
+            ? lastPatientMessage.failedAt ?? lastPatientMessage.updatedAt
+            : lastPatientMessage.updatedAt
+    return `${statusLabel[lastPatientMessage.status] ?? 'Last activity'} ${new Date(timestamp).toLocaleString('en-PH', { timeZone: 'Asia/Manila' })}`
+  })()
   const patientInvoices = patient ? getInvoicesByPatient(patient.patientId).filter((invoice) => invoice.status !== 'void') : []
   const outstandingBalanceCents = patientInvoices.reduce((sum, invoice) => sum + Math.max(invoice.balanceCents, 0), 0)
   const treatmentHistory = patient ? getTreatmentsByPatient(patient.patientId) : []
@@ -321,11 +347,11 @@ export function AppointmentDetails({
                           {status === 'completed' ? <CheckCircle2 size={14}/> : <ClipboardList size={14}/>}
                           {getActionLabel(status, label)}
                         </Button>
-                      )) : <div className="appointment-details-v40-action-empty">No patient-flow action available for this status.</div>}
+                      )) : <div className="appointment-details-v40-action-empty">No next-step action is available to your account for this appointment's current status and assignment.</div>}
                     </section>
 
                     <section className="appointment-details-v40-action-group">
-                      <div className="appointment-details-v40-action-heading"><span>Communication</span><small>{lastPatientMessage ? `Last sent ${new Date(lastPatientMessage.createdAt).toLocaleString('en-PH')}` : 'No patient message sent yet'}</small></div>
+                      <div className="appointment-details-v40-action-heading"><span>Communication</span><small>{lastPatientMessageLabel}</small></div>
                       {communicationActions.length ? communicationActions.map((action) => (
                         <div className="appointment-details-v40-channel-actions" key={action.key}>
                           <strong className="appointment-details-v40-channel-action-title">{action.label}</strong>

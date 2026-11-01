@@ -22,6 +22,7 @@ const corsHeaders = {
 }
 
 const transientStatusCodes = new Set([408, 425, 429, 500, 502, 503, 504])
+const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
 
 function json(body: Record<string, unknown>, status = 200) {
   return Response.json(body, { status, headers: corsHeaders })
@@ -303,6 +304,16 @@ Deno.serve(async (request) => {
 
   const client = createClient(supabaseUrl, serviceRoleKey)
   const payload = await request.json().catch(() => ({})) as Record<string, unknown>
+  const requestedDeliveryLogIds = Array.isArray(payload.deliveryLogIds)
+    ? [...new Set(payload.deliveryLogIds.filter((id): id is string => typeof id === 'string' && UUID_PATTERN.test(id)))]
+    : null
+
+  if (
+    Array.isArray(payload.deliveryLogIds)
+    && payload.deliveryLogIds.some((id) => typeof id !== 'string' || !UUID_PATTERN.test(id))
+  ) {
+    return json({ error: 'deliveryLogIds must contain valid delivery log UUIDs.' }, 400)
+  }
 
   if (payload.action === 'refresh_provider_status') {
     const readiness = providerReadiness()
@@ -333,9 +344,14 @@ Deno.serve(async (request) => {
     .order('next_attempt_at', { ascending: true })
     .limit(Math.min(Math.max(limit, 1), 25))
 
+  if (requestedDeliveryLogIds) {
+    outboxQuery = outboxQuery.in('delivery_log_id', requestedDeliveryLogIds)
+  }
+
   if (!isCron && senderEmail) {
-    // Interactive senders may process only their own manual messages. Cron
-    // remains responsible for automated reminders and the shared retry queue.
+    // Interactive senders may process only their own manual messages. When
+    // the client supplies IDs, process exactly those records so an SMS click
+    // cannot consume an older queued email (or another message) first.
     const { data: ownLogs, error: ownLogsError } = await client
       .from('communication_delivery_logs')
       .select('id')
@@ -344,9 +360,16 @@ Deno.serve(async (request) => {
       .eq('status', 'queued')
       .limit(25)
     if (ownLogsError) return json({ error: 'Unable to verify queued messages for this sender.' }, 500)
+
     const ownLogIds = (ownLogs ?? []).map((log) => String(log.id))
-    if (!ownLogIds.length) return json({ processed: 0, results: [] })
-    outboxQuery = outboxQuery.in('delivery_log_id', ownLogIds)
+    const ownLogIdSet = new Set(ownLogIds)
+    if (requestedDeliveryLogIds && requestedDeliveryLogIds.some((id) => !ownLogIdSet.has(id))) {
+      return json({ error: 'One or more requested messages are not queued manual messages owned by this sender.' }, 403)
+    }
+
+    const allowedLogIds = requestedDeliveryLogIds ?? ownLogIds
+    if (!allowedLogIds.length) return json({ processed: 0, results: [] })
+    outboxQuery = outboxQuery.in('delivery_log_id', allowedLogIds)
   }
 
   const { data: entries, error } = await outboxQuery
