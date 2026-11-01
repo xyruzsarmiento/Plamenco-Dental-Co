@@ -73,30 +73,103 @@
 /* Appointment message delivery channel selector */
 .appointment-details-v40-channel-actions {
   display: grid;
-  gap: 8px;
+  gap: 9px;
   min-width: 0;
-  padding: 10px 0;
+  padding: 12px 0;
   border-top: 1px solid var(--border-subtle, #e5e7eb);
 }
 .appointment-details-v40-channel-action-title {
   color: var(--text-primary, #172033);
   font-size: 12px;
-  font-weight: 700;
+  font-weight: 750;
+  line-height: 1.35;
 }
 .appointment-details-v40-channel-action-grid {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 7px;
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  align-items: stretch;
+  gap: 8px;
+  min-width: 0;
+  width: 100%;
 }
 .appointment-details-v40-channel-action-grid .appointment-details-v40-action {
-  min-height: 34px;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+  gap: 8px !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  max-width: 100% !important;
+  min-height: 42px !important;
+  padding: 0 11px !important;
+  white-space: nowrap !important;
+  text-align: left !important;
+  font-size: 12px !important;
+  line-height: 1.2 !important;
+}
+.appointment-details-v40-channel-action-grid .appointment-details-v40-action > svg {
+  flex: 0 0 auto !important;
+}
+.appointment-details-v40-channel-action-grid .appointment-details-v40-action > span {
+  display: block;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .appointment-details-v40-channel-action-grid .appointment-details-v40-action:disabled {
-  cursor: not-allowed;
-  opacity: .42;
+  cursor: not-allowed !important;
+  opacity: .45 !important;
 }
 .appointment-details-v40-channel-hint {
   color: var(--text-muted, #667085);
   font-size: 11px;
-  line-height: 1.45;
+  line-height: 1.5;
+}
+.appointment-details-v40-communication-feedback {
+  padding: 10px 11px;
+  border: 1px solid #bfdbfe;
+  border-radius: 11px;
+  background: #eff6ff;
+  color: #1e40af;
+  font-size: 11px;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+.appointment-details-v40-communication-feedback.is-success {
+  border-color: #bbf7d0;
+  background: #f0fdf4;
+  color: #166534;
+}
+.appointment-details-v40-communication-feedback.is-warning {
+  border-color: #fde68a;
+  background: #fffbeb;
+  color: #92400e;
+}
+.appointment-details-v40-communication-feedback.is-danger {
+  border-color: #fecaca;
+  background: #fef2f2;
+  color: #991b1b;
+}
+@media (max-width: 420px) {
+  .appointment-details-v40-card {
+    padding: 14px;
+  }
+  .appointment-details-v40-channel-action-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 7px;
+  }
+  .appointment-details-v40-channel-action-grid .appointment-details-v40-action {
+    min-height: 40px !important;
+    padding-inline: 9px !important;
+    font-size: 11px !important;
+  }
+  .appointment-details-v40-channel-hint {
+    font-size: 10px;
+  }
+}
+@media (max-width: 340px) {
+  .appointment-details-v40-channel-action-grid {
+    grid-template-columns: 1fr !important;
+  }
 }
