@@ -26,6 +26,7 @@ const UUID_VALUE_FIELDS = new Set([
   'treatment_id',
   'invoice_id',
   'payment_id',
+  'delivery_log_id',
   'charge_id',
   'supplier_id',
   'default_supplier_id',
