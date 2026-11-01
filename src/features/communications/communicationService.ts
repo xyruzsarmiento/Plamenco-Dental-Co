@@ -455,7 +455,10 @@ export async function sendAppointmentCommunicationPersisted(event: AppointmentCo
   const queuedLogs = logs.filter((log) => log.status === 'queued')
   if (queuedLogs.length && supabase) {
     const { data, error } = await supabase.functions.invoke('process-communication-outbox', {
-      body: { limit: Math.min(25, queuedLogs.length) },
+      body: {
+        limit: Math.min(25, queuedLogs.length),
+        deliveryLogIds: queuedLogs.map((log) => log.id),
+      },
     })
 
     if (error) {
