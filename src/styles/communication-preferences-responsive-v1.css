@@ -1,0 +1,138 @@
+/* Patient communication preferences: responsive, readable controls. */
+.communication-preferences-responsive-v1 {
+  display: grid;
+  gap: 13px;
+  width: 100%;
+  min-width: 0;
+}
+.communication-preferences-responsive-v1 .communication-panel-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  min-width: 0;
+}
+.communication-preferences-responsive-v1 .communication-panel-header > div {
+  min-width: 0;
+}
+.communication-preferences-responsive-v1 .communication-panel-header h4 {
+  margin: 3px 0 4px;
+}
+.communication-preferences-responsive-v1 .communication-panel-header small {
+  display: block;
+  color: #64748b;
+  font-size: 11px;
+  line-height: 1.45;
+}
+.communication-preferences-responsive-v1 .communication-channel-grid {
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  align-items: stretch;
+  gap: 10px;
+  width: 100%;
+  min-width: 0;
+}
+.communication-preferences-responsive-v1 .communication-channel-card {
+  display: grid;
+  align-content: start;
+  gap: 10px;
+  min-width: 0;
+  padding: 12px;
+  border: 1px solid #e2e8f0;
+  border-radius: 13px;
+  background: #fff;
+}
+.communication-preferences-responsive-v1 .communication-channel-card.is-enabled {
+  border-color: #cbdcfb;
+  background: #fbfdff;
+}
+.communication-preferences-responsive-v1 .communication-channel-topline {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 7px;
+  min-width: 0;
+}
+.communication-preferences-responsive-v1 .communication-channel-topline > div {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  min-width: 0;
+}
+.communication-preferences-responsive-v1 .communication-channel-topline strong {
+  color: #172033;
+  font-size: 12px;
+}
+.communication-preferences-responsive-v1 .communication-channel-card > p {
+  min-height: 30px;
+  margin: 0;
+  color: #64748b;
+  font-size: 10px;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+.communication-preferences-responsive-v1 .communication-card-actions {
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  gap: 7px;
+  min-width: 0;
+}
+.communication-preferences-responsive-v1 .communication-card-actions .btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 100% !important;
+  min-width: 0 !important;
+  min-height: 36px;
+  padding: 0 8px !important;
+  white-space: nowrap;
+  font-size: 10px;
+}
+.communication-preferences-responsive-v1 .communication-preferences-loading,
+.communication-preferences-responsive-v1 .communication-consent-note {
+  margin: 0;
+  color: #64748b;
+  font-size: 10px;
+  line-height: 1.5;
+}
+.communication-preferences-responsive-v1 .communication-consent-note {
+  display: grid;
+  gap: 4px;
+  overflow-wrap: anywhere;
+}
+.communication-preferences-responsive-v1 .communication-consent-note strong {
+  color: #334155;
+}
+.communication-preferences-feedback {
+  margin: 0;
+  padding: 9px 10px;
+  border: 1px solid #bbf7d0;
+  border-radius: 10px;
+  background: #f0fdf4;
+  color: #166534;
+  font-size: 11px;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+.communication-preferences-feedback.is-error {
+  border-color: #fecaca;
+  background: #fef2f2;
+  color: #991b1b;
+}
+@media (max-width: 720px) {
+  .communication-preferences-responsive-v1 .communication-channel-grid {
+    grid-template-columns: 1fr !important;
+  }
+  .communication-preferences-responsive-v1 .communication-channel-card {
+    padding: 12px;
+  }
+}
+@media (max-width: 360px) {
+  .communication-preferences-responsive-v1 .communication-panel-header {
+    flex-direction: column;
+  }
+  .communication-preferences-responsive-v1 .communication-card-actions {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+}
