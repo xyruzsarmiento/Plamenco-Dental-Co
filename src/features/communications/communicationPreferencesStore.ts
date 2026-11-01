@@ -41,6 +41,7 @@ export function normalizePhilippineMobileNumber(value: string) {
   let canonical = ''
 
   if (/^09\d{9}$/.test(digits)) canonical = `+63${digits.slice(1)}`
+  else if (/^9\d{9}$/.test(digits)) canonical = `+63${digits}`
   else if (/^639\d{9}$/.test(digits)) canonical = `+${digits}`
 
   if (!canonical || !/^\+639\d{9}$/.test(canonical)) {
@@ -273,7 +274,9 @@ export function getChannelAvailability(patient: Patient, preference = getCommuni
       enabled: preference.messengerEnabled,
       available: preference.messengerEnabled && Boolean(messengerRecipient),
       recipient: messengerRecipient,
-      reason: !preference.messengerEnabled ? 'Messenger not enabled by patient preference' : 'Messenger is not connected',
+      reason: !preference.messengerEnabled
+        ? 'Messenger not enabled by patient preference'
+        : 'Messenger consent is enabled, but the patient must first connect to the clinic Facebook Page so a recipient ID can be saved.',
     },
   ]
 }
