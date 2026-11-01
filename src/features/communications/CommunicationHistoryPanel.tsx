@@ -47,7 +47,9 @@ export function CommunicationHistoryPanel({ logs, emptyMessage = 'No communicati
               <div className="communication-history-copy">
                 <div className="communication-history-mainline">
                   <strong className="communication-history-title">{log.subject || log.templateKey.replaceAll('_', ' ')}</strong>
-                  <StatusBadge status={log.status} variant="compact" />
+                  <span className="communication-history-status">
+                    <StatusBadge status={log.status} variant="compact" />
+                  </span>
                 </div>
                 <div className="communication-history-meta">
                   <span>{log.channel.replace('_', ' ')}</span>
