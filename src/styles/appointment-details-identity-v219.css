@@ -194,3 +194,175 @@
     font-size: 9px;
   }
 }
+
+
+/* Compact appointment messaging controls and history. */
+.appointment-details-v40-message-action {
+  gap: 8px !important;
+}
+.appointment-details-v40-message-type {
+  display: grid;
+  gap: 5px;
+  min-width: 0;
+}
+.appointment-details-v40-message-type > span {
+  color: var(--text-muted, #667085);
+  font-size: 10px;
+  font-weight: 650;
+}
+.appointment-details-v40-message-type select {
+  width: 100%;
+  min-width: 0;
+  min-height: 36px;
+  padding: 0 34px 0 10px;
+  border: 1px solid var(--border, #e5e7eb);
+  border-radius: 9px;
+  background: var(--surface, #fff);
+  color: var(--text, #1b1715);
+  font: inherit;
+  font-size: 11px;
+  outline-offset: 2px;
+}
+.appointment-details-v40-message-action .appointment-details-v40-channel-actions {
+  gap: 8px;
+  padding: 9px 0 2px;
+}
+.appointment-details-v40-message-action .appointment-details-v40-channel-action-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  gap: 7px;
+}
+.appointment-details-v40-message-action .appointment-details-v40-channel-action-grid .appointment-details-v40-action {
+  min-height: 36px !important;
+  padding-inline: 10px !important;
+  border-radius: 9px !important;
+  font-size: 11px !important;
+}
+.appointment-details-v40-message-action .appointment-details-v40-channel-hint {
+  font-size: 10px;
+  line-height: 1.4;
+}
+.appointment-details-v40-communication-card {
+  padding: 14px 15px !important;
+}
+.appointment-details-v40-communication-card .appointment-details-v40-section-head {
+  margin-bottom: 8px !important;
+}
+.appointment-details-v40-communication-card .appointment-details-v40-section-head h3 {
+  font-size: 14px !important;
+}
+.appointment-details-v40-communication-card .appointment-details-v40-section-head p {
+  margin-top: 3px !important;
+  font-size: 10px !important;
+}
+.appointment-details-v40-communication-history {
+  min-width: 0;
+}
+.communication-history-panel-compact,
+.communication-history-list {
+  display: grid;
+  gap: 7px;
+  min-width: 0;
+}
+.communication-history-row {
+  display: grid;
+  grid-template-columns: 28px minmax(0, 1fr);
+  align-items: start;
+  gap: 9px;
+  min-width: 0;
+  padding: 8px 9px;
+  border: 1px solid var(--border-subtle, #eee5da);
+  border-radius: 10px;
+  background: var(--surface, #fff);
+}
+.communication-history-icon {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  background: var(--surface-alt, #f8f5f2);
+  color: var(--text-muted, #5d534d);
+}
+.communication-history-copy {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+.communication-history-mainline {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+.communication-history-title {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--text, #1b1715);
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.3;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.communication-history-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 5px;
+  color: var(--text-soft, #7a7067);
+  font-size: 9px;
+  line-height: 1.3;
+  text-transform: capitalize;
+}
+.communication-history-details {
+  margin-top: 2px;
+}
+.communication-history-details summary {
+  width: fit-content;
+  color: var(--text-muted, #5d534d);
+  cursor: pointer;
+  font-size: 10px;
+  font-weight: 600;
+  line-height: 1.4;
+}
+.communication-history-message {
+  margin: 5px 0 1px;
+  color: var(--text-muted, #5d534d);
+  font-size: 10px;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+.communication-history-failure {
+  margin: 2px 0 0;
+  color: var(--danger, #b7594d);
+  font-size: 10px;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+.communication-history-toggle {
+  justify-self: start;
+  padding: 3px 1px;
+  border: 0;
+  background: transparent;
+  color: var(--gold-900, #8b6833);
+  cursor: pointer;
+  font: inherit;
+  font-size: 10px;
+  font-weight: 700;
+}
+.communication-history-toggle:hover {
+  text-decoration: underline;
+}
+@media (max-width: 420px) {
+  .appointment-details-v40-message-action .appointment-details-v40-channel-action-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+  .communication-history-row {
+    padding: 7px 8px;
+  }
+  .communication-history-title {
+    font-size: 10px;
+  }
+}
