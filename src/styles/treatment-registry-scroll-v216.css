@@ -52,3 +52,162 @@
   .tx43-treatment-list,
   .tp80-plan-grid { max-height: 56vh; }
 }
+
+/* Compact treatment-plan cards: keep the same information in a shorter stack. */
+.tp80-plan-card {
+  gap: 7px !important;
+  padding: 10px 12px !important;
+}
+
+.tp80-plan-head {
+  align-items: flex-start;
+  gap: 8px !important;
+}
+
+.tp80-plan-head > div {
+  min-width: 0;
+}
+
+.tp80-plan-head small {
+  margin-bottom: 1px !important;
+  font-size: 8px !important;
+  line-height: 1.2 !important;
+}
+
+.tp80-plan-head h3 {
+  font-size: 15px !important;
+  line-height: 1.25 !important;
+}
+
+.tp80-plan-head p,
+.tp80-description {
+  margin-top: 2px !important;
+  font-size: 9px !important;
+  line-height: 1.35 !important;
+}
+
+.tp80-plan-head .tp80-status {
+  flex: 0 0 auto;
+  padding: 3px 7px !important;
+  font-size: 8px !important;
+  line-height: 1.25 !important;
+}
+
+.tp80-description {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.tp80-plan-stats {
+  grid-template-columns: minmax(0, 1.2fr) repeat(2, minmax(0, .85fr)) !important;
+  gap: 5px !important;
+}
+
+.tp80-plan-stats > div {
+  min-width: 0;
+  padding: 5px 7px !important;
+}
+
+.tp80-plan-stats span {
+  font-size: 8px !important;
+  line-height: 1.2 !important;
+}
+
+.tp80-plan-stats strong {
+  margin-top: 1px !important;
+  font-size: 10px !important;
+  line-height: 1.25 !important;
+  overflow-wrap: anywhere;
+}
+
+.tp80-preview {
+  gap: 0 !important;
+}
+
+.tp80-preview > div {
+  gap: 8px !important;
+  padding: 4px 2px !important;
+}
+
+.tp80-preview span {
+  min-width: 0;
+}
+
+.tp80-preview strong {
+  overflow: hidden;
+  font-size: 10px !important;
+  line-height: 1.25 !important;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tp80-preview small {
+  font-size: 8px !important;
+  line-height: 1.25 !important;
+}
+
+.tp80-preview b {
+  flex: 0 0 auto;
+  font-size: 10px !important;
+  white-space: nowrap;
+}
+
+.tp80-plan-card footer {
+  gap: 6px !important;
+  padding-top: 0 !important;
+}
+
+.tp80-plan-card footer > button:not(.btn) {
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  padding: 0 4px;
+  font-size: 10px !important;
+}
+
+.tp80-plan-card footer .btn {
+  min-height: 29px !important;
+  padding: 4px 9px !important;
+  font-size: 10px !important;
+}
+
+@media (max-width: 640px) {
+  .tp80-plan-card {
+    gap: 6px !important;
+    padding: 9px 10px !important;
+  }
+
+  .tp80-plan-stats {
+    grid-template-columns: minmax(0, 1.2fr) repeat(2, minmax(0, .85fr)) !important;
+  }
+
+  .tp80-plan-stats > div:first-child {
+    grid-column: auto !important;
+  }
+
+  .tp80-plan-card footer {
+    align-items: center !important;
+    flex-direction: row !important;
+    justify-content: flex-end !important;
+  }
+
+  .tp80-plan-card footer .btn {
+    width: auto !important;
+  }
+}
+
+@media (max-width: 390px) {
+  .tp80-plan-stats {
+    grid-template-columns: minmax(0, 1.15fr) repeat(2, minmax(0, .85fr)) !important;
+  }
+
+  .tp80-plan-stats > div:first-child {
+    grid-column: auto !important;
+  }
+
+  .tp80-plan-stats strong {
+    font-size: 9px !important;
+  }
+}
