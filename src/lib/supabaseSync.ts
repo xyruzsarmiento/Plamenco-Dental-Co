@@ -912,11 +912,19 @@ export async function syncSupabaseToLocalStorage() {
     const { data, error } = await supabase.from(entry.table).select('*')
     if (error || !Array.isArray(data)) continue
 
+    // RLS may return an empty, policy-filtered result for roles that are not
+    // permitted to read this table. Do not interpret that as a request to
+    // erase a previously hydrated patient-consent cache.
+    if (entry.table === 'communication_preferences' && data.length === 0) continue
+
     window.localStorage.removeItem(entry.localKey)
     if (data.length === 0) continue
 
     const rows = reconcileMappedPatientReferences(entry.table, data.map(entry.map))
     window.localStorage.setItem(entry.localKey, JSON.stringify(rows))
+    if (entry.table === 'communication_preferences') {
+      window.dispatchEvent(new Event('plamenco:communication-preferences-updated'))
+    }
     synced = true
   }
   return synced
