@@ -68,3 +68,35 @@
     border-radius: 14px !important;
   }
 }
+
+
+/* Appointment message delivery channel selector */
+.appointment-details-v40-channel-actions {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+  padding: 10px 0;
+  border-top: 1px solid var(--border-subtle, #e5e7eb);
+}
+.appointment-details-v40-channel-action-title {
+  color: var(--text-primary, #172033);
+  font-size: 12px;
+  font-weight: 700;
+}
+.appointment-details-v40-channel-action-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+.appointment-details-v40-channel-action-grid .appointment-details-v40-action {
+  min-height: 34px;
+}
+.appointment-details-v40-channel-action-grid .appointment-details-v40-action:disabled {
+  cursor: not-allowed;
+  opacity: .42;
+}
+.appointment-details-v40-channel-hint {
+  color: var(--text-muted, #667085);
+  font-size: 11px;
+  line-height: 1.45;
+}
