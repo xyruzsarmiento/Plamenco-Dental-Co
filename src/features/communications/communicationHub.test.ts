@@ -2,7 +2,7 @@ import test from 'node:test'
 import assert from 'node:assert/strict'
 
 import { saveStoredPatients } from '../patients/patientStore.ts'
-import { updateCommunicationPreference } from './communicationPreferencesStore.ts'
+import { normalizePhilippineMobileNumber, updateCommunicationPreference } from './communicationPreferencesStore.ts'
 import { sendManualPatientCommunication } from './communicationService.ts'
 import {
   createCommunicationDeliveryLog,
@@ -69,6 +69,22 @@ test.beforeEach(() => {
     createdAt: '2026-08-18T00:00:00Z',
     updatedAt: '2026-08-18T00:00:00Z',
   }])
+})
+
+test('normalizes Philippine numbers with or without the leading zero or country code', () => {
+  assert.deepEqual(normalizePhilippineMobileNumber('09921237559'), {
+    valid: true,
+    value: '+639921237559',
+  })
+  assert.deepEqual(normalizePhilippineMobileNumber('9921237559'), {
+    valid: true,
+    value: '+639921237559',
+  })
+  assert.deepEqual(normalizePhilippineMobileNumber('+639921237559'), {
+    valid: true,
+    value: '+639921237559',
+  })
+  assert.equal(normalizePhilippineMobileNumber('092123755').valid, false)
 })
 
 test('manual patient communication uses consent and central outbox', () => {
