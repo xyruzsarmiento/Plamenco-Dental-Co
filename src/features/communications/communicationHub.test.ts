@@ -83,6 +83,7 @@ test('manual patient communication uses consent and central outbox', () => {
   })
 
   assert.equal(logs.length, 1)
+  assert.deepEqual(logs.map((log) => log.channel), ['sms'])
   assert.equal(logs[0].dispatchMode, 'manual')
   assert.equal(logs[0].status, 'queued')
   assert.equal(getCommunicationOutbox().length, 1)
