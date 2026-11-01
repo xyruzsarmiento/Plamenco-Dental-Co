@@ -1,5 +1,5 @@
 import { insertRemoteTableRow, updateRemoteTableRow } from '../../lib/supabaseSync'
-import { isSupabaseConfigured } from '../../lib/supabase'
+import { isSupabaseConfigured, supabase } from '../../lib/supabase'
 import type {
   CommunicationDeliveryLog,
   CommunicationOutboxEntry,
@@ -70,7 +70,65 @@ export function getCommunicationSettings(): CommunicationSettings {
 
 export function saveCommunicationSettings(settings: CommunicationSettings) {
   getStorage().setItem(SETTINGS_STORAGE_KEY, JSON.stringify(settings))
+  if (typeof window !== 'undefined' && typeof window.dispatchEvent === 'function') {
+    window.dispatchEvent(new Event('plamenco:communication-settings-updated'))
+  }
   return settings
+}
+
+/**
+ * Refresh provider readiness from the server-side environment. The Edge
+ * Function checks only whether required secrets exist; it never returns them.
+ * The row is then read through the sending user's RLS permission.
+ */
+export async function loadCommunicationSettingsFromSupabase() {
+  if (!isSupabaseConfigured || !supabase) return false
+
+  const { error: refreshError } = await supabase.functions.invoke('process-communication-outbox', {
+    body: { action: 'refresh_provider_status' },
+  })
+  if (refreshError) {
+    console.warn('[communication settings] provider readiness refresh failed:', refreshError.message)
+  }
+
+  const { data, error } = await supabase
+    .from('communication_settings')
+    .select('*')
+    .eq('id', 'clinic')
+    .maybeSingle()
+
+  if (error || !data) {
+    if (error) console.warn('[communication settings] Supabase load failed:', error.message)
+    return false
+  }
+
+  const validChannels = ['sms', 'email', 'messenger', 'in_app']
+  const channels = Array.isArray(data.default_channels)
+    ? data.default_channels.filter((channel: string) => validChannels.includes(channel)) as CommunicationSettings['defaultChannels']
+    : defaultSettings.defaultChannels
+
+  saveCommunicationSettings({
+    smsProvider: data.sms_provider === 'unisms' ? 'unisms' : 'semaphore',
+    smsSenderName: String(data.sms_sender_name ?? 'PLAMENCO'),
+    smsConfigured: Boolean(data.sms_configured),
+    emailProvider: data.email_provider === 'gmail_smtp'
+      ? 'gmail_smtp'
+      : data.email_provider === 'supabase_edge_function'
+        ? 'supabase_edge_function'
+        : 'not_configured',
+    emailConfigured: Boolean(data.email_configured),
+    messengerProvider: 'meta_messenger',
+    messengerConfigured: Boolean(data.messenger_configured),
+    defaultChannels: channels.length ? channels : defaultSettings.defaultChannels,
+    reminderOffsetsHours: Array.isArray(data.reminder_offsets_hours)
+      ? data.reminder_offsets_hours.map(Number).filter((value: number) => Number.isFinite(value) && value > 0)
+      : defaultSettings.reminderOffsetsHours,
+    maxRetryAttempts: Number(data.max_retry_attempts ?? defaultSettings.maxRetryAttempts),
+    timezone: 'Asia/Manila',
+    updatedAt: String(data.updated_at ?? nowIso()),
+    updatedBy: String(data.updated_by ?? 'database'),
+  })
+  return true
 }
 
 export function getCommunicationDeliveryLogs(): CommunicationDeliveryLog[] {

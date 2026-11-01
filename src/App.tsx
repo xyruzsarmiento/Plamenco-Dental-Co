@@ -22,6 +22,7 @@ import { loadServicesFromSupabase } from './features/services/serviceStore'
 import { cachedQuery, queryCachePolicy, readCachedQuery } from './lib/queryCache'
 import { syncSupabaseToLocalStorage } from './lib/supabaseSync'
 import { loadCommunicationPreferencesFromSupabase } from './features/communications/communicationPreferencesStore'
+import { loadCommunicationSettingsFromSupabase } from './features/communications/communicationStore'
 import './styles/adaptive-pagination.css'
 import './styles/public-auth-responsive-part7.css'
 import './styles/internal-appointments-refinement-v2.css'
@@ -149,6 +150,9 @@ function DataBootstrap({ children }: { children: React.ReactNode }) {
     // on every authenticated session, even when the broader workspace bootstrap
     // is warm and served from cache.
     const communicationPreferencesRefresh = safeLoad(() => loadCommunicationPreferencesFromSupabase())
+    const communicationSettingsRefresh = user.role === 'patient'
+      ? Promise.resolve(false)
+      : safeLoad(() => loadCommunicationSettingsFromSupabase())
 
     const bootstrap = cachedQuery(
       currentBootstrapKey,
@@ -159,6 +163,7 @@ function DataBootstrap({ children }: { children: React.ReactNode }) {
           safeLoad(() => loadPatientsFromSupabase({ strict: false })),
           safeLoad(() => loadServicesFromSupabase({ strict: false })),
           communicationPreferencesRefresh,
+          communicationSettingsRefresh,
         ]
 
         if (user.role === 'patient') {

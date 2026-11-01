@@ -61,6 +61,7 @@ function normalizePhilippineMobileNumber(value = '') {
   const compact = value.replace(/[^\d+]/g, '')
   const digits = compact.startsWith('+') ? compact.slice(1) : compact
   if (/^09\d{9}$/.test(digits)) return { valid: true, value: `+63${digits.slice(1)}` }
+  if (/^9\d{9}$/.test(digits)) return { valid: true, value: `+63${digits}` }
   if (/^639\d{9}$/.test(digits)) return { valid: true, value: `+${digits}` }
   return { valid: false, value }
 }

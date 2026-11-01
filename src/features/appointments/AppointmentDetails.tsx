@@ -4,7 +4,7 @@ import { StatusBadge } from '../../components/ui/Badge'
 import { Button } from '../../components/ui/Button'
 import { formatCurrency, getInvoicesByPatient } from '../billing/billingStore'
 import { CommunicationHistoryPanel } from '../communications/CommunicationHistoryPanel'
-import { getCommunicationLogsByAppointment } from '../communications/communicationStore'
+import { getCommunicationLogsByAppointment, getCommunicationSettings } from '../communications/communicationStore'
 import { getChannelAvailability } from '../communications/communicationPreferencesStore'
 import type { CommunicationChannel, CommunicationTemplateKey } from '../communications/communicationTypes'
 import { getTreatmentsByPatient } from '../treatments/treatmentStore'
@@ -112,15 +112,26 @@ export function AppointmentDetails({
   onActionRequest, onManualResend, onOpenPatientRecord, onOpenClinicalRecord, onBookFollowUp, onViewFollowUpRecommendation, canManage, canTransitionStatus, clinicalRestrictionMessage, communicationFeedback, communicationPendingKey,
 }: AppointmentDetailsProps) {
   const communicationLogs = getCommunicationLogsByAppointment(appointment.id)
-  const [communicationPreferencesRevision, setCommunicationPreferencesRevision] = useState(0)
+  const [communicationStateRevision, setCommunicationStateRevision] = useState(0)
   useEffect(() => {
-    const refreshPreferences = () => setCommunicationPreferencesRevision((revision) => revision + 1)
-    window.addEventListener('plamenco:communication-preferences-updated', refreshPreferences)
-    return () => window.removeEventListener('plamenco:communication-preferences-updated', refreshPreferences)
+    const refreshCommunicationState = () => setCommunicationStateRevision((revision) => revision + 1)
+    window.addEventListener('plamenco:communication-preferences-updated', refreshCommunicationState)
+    window.addEventListener('plamenco:communication-settings-updated', refreshCommunicationState)
+    return () => {
+      window.removeEventListener('plamenco:communication-preferences-updated', refreshCommunicationState)
+      window.removeEventListener('plamenco:communication-settings-updated', refreshCommunicationState)
+    }
   }, [])
-  void communicationPreferencesRevision
+  void communicationStateRevision
   const communicationChannels = patient ? getChannelAvailability(patient) : []
+  const communicationSettings = getCommunicationSettings()
   const channelLabels: Record<CommunicationChannel, string> = { sms: 'SMS', email: 'Email', messenger: 'Messenger', in_app: 'In-app' }
+  const providerConfiguredByChannel: Record<CommunicationChannel, boolean> = {
+    sms: communicationSettings.smsConfigured,
+    email: communicationSettings.emailConfigured,
+    messenger: communicationSettings.messengerConfigured,
+    in_app: true,
+  }
   const latestCommunication = [...communicationLogs].sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())[0]
   const lastPatientMessage = [...communicationLogs]
     .filter((log) => ['appointment_confirmed', 'appointment_reminder', 'appointment_rescheduled'].includes(log.templateKey))
@@ -322,24 +333,34 @@ export function AppointmentDetails({
                             {(['sms', 'email', 'messenger', 'in_app'] as CommunicationChannel[]).map((channel) => {
                               const availability = communicationChannels.find((entry) => entry.channel === channel)
                               const pending = communicationPendingKey === `${appointment.id}:${action.key}:${channel}`
+                              const contactAvailable = Boolean(availability?.available)
+                              const providerConfigured = providerConfiguredByChannel[channel]
+                              const available = contactAvailable && providerConfigured
+                              const unavailableReason = !contactAvailable
+                                ? availability?.reason ?? 'Patient contact is unavailable.'
+                                : !providerConfigured
+                                  ? `${channelLabels[channel]} provider is not configured. Check the Delivery engine's server-side provider setup.`
+                                  : ''
                               return (
-                                <Button
-                                  key={`${action.key}:${channel}`}
-                                  className="appointment-details-v40-action is-communication"
-                                  size="sm"
-                                  variant="secondary"
-                                  type="button"
-                                  disabled={Boolean(communicationPendingKey) || !availability?.available}
-                                  title={availability?.available ? `Send via ${channelLabels[channel]}` : availability?.reason ?? 'Patient contact is unavailable'}
-                                  aria-label={`Send ${action.label.toLowerCase()} via ${channelLabels[channel]}`}
-                                  onClick={() => onManualResend?.(appointment, action.key, [channel])}
-                                >
-                                  <Send size={13}/>{pending ? 'Sending...' : channelLabels[channel]}
-                                </Button>
+                                <div className="appointment-details-v40-channel-action-cell" key={`${action.key}:${channel}`}>
+                                  <Button
+                                    className="appointment-details-v40-action is-communication"
+                                    size="sm"
+                                    variant="secondary"
+                                    type="button"
+                                    disabled={Boolean(communicationPendingKey) || !available}
+                                    title={available ? `Send via ${channelLabels[channel]}` : unavailableReason}
+                                    aria-label={`Send ${action.label.toLowerCase()} via ${channelLabels[channel]}`}
+                                    onClick={() => onManualResend?.(appointment, action.key, [channel])}
+                                  >
+                                    <Send size={13}/>{pending ? 'Sending...' : channelLabels[channel]}
+                                  </Button>
+                                  {!available && <small className="appointment-details-v40-channel-reason">{unavailableReason}</small>}
+                                </div>
                               )
                             })}
                           </div>
-                          <small className="appointment-details-v40-channel-hint">Unavailable channels are disabled until the patient has enabled consent and the required contact details are available.</small>
+                          <small className="appointment-details-v40-channel-hint">A channel is usable only when patient consent, valid contact routing, and its server-side provider are all ready.</small>
                         </div>
                       )) : <div className="appointment-details-v40-action-empty">No communication action is available for this status.</div>}
                       {communicationFeedback && (

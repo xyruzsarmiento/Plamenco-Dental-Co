@@ -40,6 +40,43 @@ function isAuthorizedCronRequest(request: Request) {
   return Boolean(secret && (authorization === `Bearer ${secret}` || headerSecret === secret))
 }
 
+async function getAuthorizedSenderEmail(request: Request, supabaseUrl: string): Promise<string | null> {
+  const authorization = request.headers.get('Authorization') ?? ''
+  if (!authorization.startsWith('Bearer ')) return null
+
+  const anonKey = Deno.env.get('SUPABASE_ANON_KEY')
+  if (!anonKey) return null
+
+  const userClient = createClient(supabaseUrl, anonKey, {
+    global: { headers: { Authorization: authorization } },
+  })
+  const { data: authData, error: authError } = await userClient.auth.getUser()
+  if (authError || !authData.user?.email) return null
+
+  const { data: canSend, error: permissionError } = await userClient.rpc('has_profile_permission', {
+    permission_key: 'notifications.send',
+  })
+  return !permissionError && Boolean(canSend) ? authData.user.email : null
+}
+
+function providerReadiness() {
+  const smsConfigured = Boolean(Deno.env.get('SMS_API_KEY') && Deno.env.get('SMS_SENDER_NAME'))
+
+  const smtpNames = ['SMTP_HOST', 'SMTP_PORT', 'SMTP_USER', 'SMTP_PASSWORD', 'SMTP_FROM_EMAIL', 'SMTP_FROM_NAME']
+  const smtpValues = smtpNames.map((name) => Deno.env.get(name) ?? '')
+  const smtpConfigured = smtpValues.every(Boolean)
+  const smtpPartiallyConfigured = smtpValues.some(Boolean) && !smtpConfigured
+  const emailApiConfigured = Boolean(
+    Deno.env.get('EMAIL_PROVIDER_ENDPOINT')
+    && Deno.env.get('EMAIL_API_KEY')
+    && Deno.env.get('EMAIL_FROM'),
+  )
+  const emailConfigured = smtpConfigured || (!smtpPartiallyConfigured && emailApiConfigured)
+  const messengerConfigured = Boolean(Deno.env.get('META_PAGE_ACCESS_TOKEN'))
+
+  return { smsConfigured, emailConfigured, messengerConfigured }
+}
+
 function nextRetryDate(attempts: number) {
   const delayMinutes = Math.min(60, 2 ** Math.max(attempts, 1))
   return new Date(Date.now() + delayMinutes * 60_000).toISOString()
@@ -253,16 +290,42 @@ async function deliver(entry: OutboxEntry) {
 Deno.serve(async (request) => {
   if (request.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders })
   if (request.method !== 'POST') return json({ error: 'Method not allowed' }, 405)
-  if (!isAuthorizedCronRequest(request)) return json({ error: 'Authorized scheduler request required.' }, 401)
 
   const supabaseUrl = Deno.env.get('SUPABASE_URL')
   const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
   if (!supabaseUrl || !serviceRoleKey) return json({ error: 'Communication worker is not configured.' }, 500)
 
-  const client = createClient(supabaseUrl, serviceRoleKey)
-  const limit = Number(new URL(request.url).searchParams.get('limit') ?? '10')
+  const isCron = isAuthorizedCronRequest(request)
+  const senderEmail = isCron ? null : await getAuthorizedSenderEmail(request, supabaseUrl)
+  if (!isCron && !senderEmail) {
+    return json({ error: 'An authenticated account with patient communication send permission is required.' }, 401)
+  }
 
-  const { data: entries, error } = await client
+  const client = createClient(supabaseUrl, serviceRoleKey)
+  const payload = await request.json().catch(() => ({})) as Record<string, unknown>
+
+  if (payload.action === 'refresh_provider_status') {
+    const readiness = providerReadiness()
+    const { error } = await client
+      .from('communication_settings')
+      .upsert({
+        id: 'clinic',
+        sms_configured: readiness.smsConfigured,
+        email_configured: readiness.emailConfigured,
+        messenger_configured: readiness.messengerConfigured,
+        updated_by: 'server provider readiness check',
+        updated_at: new Date().toISOString(),
+      }, { onConflict: 'id' })
+
+    if (error) {
+      console.error('[communication worker] provider readiness could not be saved:', error.message)
+      return json({ error: 'Provider readiness could not be refreshed.' }, 500)
+    }
+    return json({ refreshed: true, providers: readiness })
+  }
+
+  const limit = Number(payload.limit ?? new URL(request.url).searchParams.get('limit') ?? '10')
+  let outboxQuery = client
     .from('communication_outbox')
     .select('id, delivery_log_id, channel, provider, patient_id, branch_id, payload, attempts, max_attempts')
     .eq('status', 'queued')
@@ -270,6 +333,23 @@ Deno.serve(async (request) => {
     .order('next_attempt_at', { ascending: true })
     .limit(Math.min(Math.max(limit, 1), 25))
 
+  if (!isCron && senderEmail) {
+    // Interactive senders may process only their own manual messages. Cron
+    // remains responsible for automated reminders and the shared retry queue.
+    const { data: ownLogs, error: ownLogsError } = await client
+      .from('communication_delivery_logs')
+      .select('id')
+      .ilike('sent_by', senderEmail)
+      .eq('dispatch_mode', 'manual')
+      .eq('status', 'queued')
+      .limit(25)
+    if (ownLogsError) return json({ error: 'Unable to verify queued messages for this sender.' }, 500)
+    const ownLogIds = (ownLogs ?? []).map((log) => String(log.id))
+    if (!ownLogIds.length) return json({ processed: 0, results: [] })
+    outboxQuery = outboxQuery.in('delivery_log_id', ownLogIds)
+  }
+
+  const { data: entries, error } = await outboxQuery
   if (error) return json({ error: 'Unable to load communication outbox.' }, 500)
 
   const results = []
@@ -305,7 +385,7 @@ Deno.serve(async (request) => {
           failure_reason: `Provider returned HTTP ${response.status}`,
           updated_at: new Date().toISOString(),
         }).eq('id', entry.delivery_log_id)
-        results.push({ id: entry.id, status, providerStatus: response.status })
+        results.push({ id: entry.id, deliveryLogId: entry.delivery_log_id, status, providerStatus: response.status })
         continue
       }
 
@@ -316,7 +396,7 @@ Deno.serve(async (request) => {
         provider_message_id: providerIdFromResponse(parsed) ?? '',
         updated_at: new Date().toISOString(),
       }).eq('id', entry.delivery_log_id)
-      results.push({ id: entry.id, status: 'sent' })
+      results.push({ id: entry.id, deliveryLogId: entry.delivery_log_id, status: 'sent' })
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Provider delivery failed'
       const maxAttempts = entry.max_attempts ?? 3
@@ -335,7 +415,7 @@ Deno.serve(async (request) => {
         failure_reason: message,
         updated_at: new Date().toISOString(),
       }).eq('id', entry.delivery_log_id)
-      results.push({ id: entry.id, status: 'failed', reason: message })
+      results.push({ id: entry.id, deliveryLogId: entry.delivery_log_id, status: shouldRetry ? 'queued' : 'failed', reason: message })
     }
   }
 

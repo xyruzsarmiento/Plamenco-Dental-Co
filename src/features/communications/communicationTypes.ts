@@ -104,10 +104,10 @@ export type CommunicationOutboxEntry = {
 }
 
 export type CommunicationSettings = {
-  smsProvider: 'semaphore'
+  smsProvider: 'semaphore' | 'unisms'
   smsSenderName: string
   smsConfigured: boolean
-  emailProvider: 'supabase_edge_function' | 'not_configured'
+  emailProvider: 'supabase_edge_function' | 'gmail_smtp' | 'not_configured'
   emailConfigured: boolean
   messengerProvider: 'meta_messenger'
   messengerConfigured: boolean
