@@ -35,7 +35,7 @@ const channelField: Record<CommunicationChannel, 'smsEnabled' | 'emailEnabled' |
 export function CommunicationPreferencesPanel({ patient, actor, canEdit = true }: CommunicationPreferencesPanelProps) {
   const [preference, setPreference] = useState(() => getCommunicationPreference(patient.patientId))
   const [isLoading, setIsLoading] = useState(true)
-  const [savingChannel, setSavingChannel] = useState<CommunicationChannel | null>(null)
+  const [savingChannel, setSavingChannel] = useState<CommunicationChannel | 'all_external' | null>(null)
   const [feedback, setFeedback] = useState<{ tone: 'success' | 'error'; message: string } | null>(null)
   const availability = useMemo(() => getChannelAvailability(patient, preference), [patient, preference])
 
@@ -94,6 +94,35 @@ export function CommunicationPreferencesPanel({ patient, actor, canEdit = true }
     }
   }
 
+  async function enableAllExternalChannels() {
+    if (!canEdit || isLoading || savingChannel) return
+    setSavingChannel('all_external')
+    setFeedback(null)
+    try {
+      const updated = await updateCommunicationPreferencePersisted(
+        patient.patientId,
+        {
+          smsEnabled: true,
+          emailEnabled: true,
+          messengerEnabled: true,
+        },
+        actor,
+      )
+      setPreference(updated)
+      setFeedback({
+        tone: 'success',
+        message: 'SMS, Email and Messenger consent has been saved. You can turn off any channel individually below.',
+      })
+    } catch (cause) {
+      setFeedback({
+        tone: 'error',
+        message: cause instanceof Error ? cause.message : 'Your channel choices could not be saved.',
+      })
+    } finally {
+      setSavingChannel(null)
+    }
+  }
+
   async function setPreferredChannel(channel: CommunicationChannel) {
     if (!canEdit || savingChannel) return
     setSavingChannel(channel)
@@ -123,6 +152,27 @@ export function CommunicationPreferencesPanel({ patient, actor, canEdit = true }
         </div>
         <Badge tone="info">In-app on</Badge>
       </div>
+
+      {!(preference.smsEnabled && preference.emailEnabled && preference.messengerEnabled) && (
+        <section className="communication-enable-all" aria-labelledby="communication-enable-all-title">
+          <div>
+            <strong id="communication-enable-all-title">Enable all external channels</strong>
+            <p>
+              Allow the clinic to send appointment and care updates by SMS, email and Messenger.
+              These channels use the contact details and Messenger account linked to your profile.
+              You can turn off any channel below at any time. This does not include promotional messages.
+            </p>
+          </div>
+          <Button
+            size="sm"
+            onClick={() => void enableAllExternalChannels()}
+            disabled={isLoading || Boolean(savingChannel) || !canEdit}
+            type="button"
+          >
+            {savingChannel === 'all_external' ? 'Saving consent…' : 'Enable SMS, Email & Messenger'}
+          </Button>
+        </section>
+      )}
 
       {feedback && (
         <p className={`communication-preferences-feedback is-${feedback.tone}`} role={feedback.tone === 'error' ? 'alert' : 'status'}>
