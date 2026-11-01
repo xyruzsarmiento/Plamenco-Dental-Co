@@ -14,11 +14,15 @@ type AppointmentBranchLoadOptions = {
 
 function localScopedAppointments(branchId: string | null, isAllBranchesMode: boolean) {
   const rows = getStoredAppointments()
-  if (isAllBranchesMode || !branchId) return rows
+  if (isAllBranchesMode) return rows
+  if (!branchId) return []
   return rows.filter((appointment) => appointment.branchId === branchId)
 }
 
 async function fetchScopedAppointments(options: AppointmentBranchLoadOptions): Promise<Appointment[]> {
+  // Missing branch scope must never turn into an unfiltered appointment query.
+  if (!options.isAllBranchesMode && !options.branchId) return []
+
   if (!supabase) {
     if (options.strict) throw new Error('Clinic database is not configured. Unable to load appointments.')
     return localScopedAppointments(options.branchId, options.isAllBranchesMode)
