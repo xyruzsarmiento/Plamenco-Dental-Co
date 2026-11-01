@@ -131,7 +131,6 @@ export function DocumentsBranchWorkspaceV127() {
         setArchiveTarget(null)
         setUploadOpen(false)
         setMenuId(null); setMenuPosition(null)
-        setMenuPosition(null)
       }
     }
     document.addEventListener('keydown', handleKey)
@@ -143,7 +142,6 @@ export function DocumentsBranchWorkspaceV127() {
 
     const closeMenu = () => {
       setMenuId(null); setMenuPosition(null)
-      setMenuPosition(null)
     }
     const handlePointerDown = (event: PointerEvent) => {
       const target = event.target
