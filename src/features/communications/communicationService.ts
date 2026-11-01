@@ -187,7 +187,7 @@ export function sendAppointmentCommunication(event: AppointmentCommunicationEven
   const variables = getAppointmentTemplateVariables(event, patient)
   const logs = []
 
-  for (const channel of getOrderedChannels(preference, settings.defaultChannels)) {
+  for (const channel of (event.channels?.length ? event.channels : getOrderedChannels(preference, settings.defaultChannels))) {
     const channelAvailability = availability.find((entry) => entry.channel === channel)
     const template = getCommunicationTemplate(event.templateKey, channel)
     if (!template) continue
@@ -329,7 +329,7 @@ export async function sendAppointmentCommunicationPersisted(event: AppointmentCo
   const variables = getAppointmentTemplateVariables(event, patient)
   const logs = []
 
-  for (const channel of getOrderedChannels(preference, settings.defaultChannels)) {
+  for (const channel of (event.channels?.length ? event.channels : getOrderedChannels(preference, settings.defaultChannels))) {
     const channelAvailability = availability.find((entry) => entry.channel === channel)
     const template = getCommunicationTemplate(event.templateKey, channel)
     if (!template) continue
