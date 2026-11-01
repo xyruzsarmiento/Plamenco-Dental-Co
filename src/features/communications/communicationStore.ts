@@ -70,7 +70,7 @@ export function getCommunicationSettings(): CommunicationSettings {
 
 export function saveCommunicationSettings(settings: CommunicationSettings) {
   getStorage().setItem(SETTINGS_STORAGE_KEY, JSON.stringify(settings))
-  if (typeof window !== 'undefined') {
+  if (typeof window !== 'undefined' && typeof window.dispatchEvent === 'function') {
     window.dispatchEvent(new Event('plamenco:communication-settings-updated'))
   }
   return settings
