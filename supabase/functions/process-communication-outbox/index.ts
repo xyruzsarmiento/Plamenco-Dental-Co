@@ -339,7 +339,7 @@ Deno.serve(async (request) => {
     const { data: ownLogs, error: ownLogsError } = await client
       .from('communication_delivery_logs')
       .select('id')
-      .eq('sent_by', senderEmail)
+      .ilike('sent_by', senderEmail)
       .eq('dispatch_mode', 'manual')
       .eq('status', 'queued')
       .limit(25)
