@@ -40,23 +40,23 @@ function isAuthorizedCronRequest(request: Request) {
   return Boolean(secret && (authorization === `Bearer ${secret}` || headerSecret === secret))
 }
 
-async function isAuthorizedSenderRequest(request: Request, supabaseUrl: string) {
+async function getAuthorizedSenderEmail(request: Request, supabaseUrl: string): Promise<string | null> {
   const authorization = request.headers.get('Authorization') ?? ''
-  if (!authorization.startsWith('Bearer ')) return false
+  if (!authorization.startsWith('Bearer ')) return null
 
   const anonKey = Deno.env.get('SUPABASE_ANON_KEY')
-  if (!anonKey) return false
+  if (!anonKey) return null
 
   const userClient = createClient(supabaseUrl, anonKey, {
     global: { headers: { Authorization: authorization } },
   })
   const { data: authData, error: authError } = await userClient.auth.getUser()
-  if (authError || !authData.user) return false
+  if (authError || !authData.user?.email) return null
 
   const { data: canSend, error: permissionError } = await userClient.rpc('has_profile_permission', {
     permission_key: 'notifications.send',
   })
-  return !permissionError && Boolean(canSend)
+  return !permissionError && Boolean(canSend) ? authData.user.email : null
 }
 
 function providerReadiness() {
@@ -296,7 +296,8 @@ Deno.serve(async (request) => {
   if (!supabaseUrl || !serviceRoleKey) return json({ error: 'Communication worker is not configured.' }, 500)
 
   const isCron = isAuthorizedCronRequest(request)
-  if (!isCron && !(await isAuthorizedSenderRequest(request, supabaseUrl))) {
+  const senderEmail = isCron ? null : await getAuthorizedSenderEmail(request, supabaseUrl)
+  if (!isCron && !senderEmail) {
     return json({ error: 'An authenticated account with patient communication send permission is required.' }, 401)
   }
 
@@ -324,8 +325,7 @@ Deno.serve(async (request) => {
   }
 
   const limit = Number(payload.limit ?? new URL(request.url).searchParams.get('limit') ?? '10')
-
-  const { data: entries, error } = await client
+  let outboxQuery = client
     .from('communication_outbox')
     .select('id, delivery_log_id, channel, provider, patient_id, branch_id, payload, attempts, max_attempts')
     .eq('status', 'queued')
@@ -333,6 +333,23 @@ Deno.serve(async (request) => {
     .order('next_attempt_at', { ascending: true })
     .limit(Math.min(Math.max(limit, 1), 25))
 
+  if (!isCron && senderEmail) {
+    // Interactive senders may process only their own manual messages. Cron
+    // remains responsible for automated reminders and the shared retry queue.
+    const { data: ownLogs, error: ownLogsError } = await client
+      .from('communication_delivery_logs')
+      .select('id')
+      .eq('sent_by', senderEmail)
+      .eq('dispatch_mode', 'manual')
+      .eq('status', 'queued')
+      .limit(25)
+    if (ownLogsError) return json({ error: 'Unable to verify queued messages for this sender.' }, 500)
+    const ownLogIds = (ownLogs ?? []).map((log) => String(log.id))
+    if (!ownLogIds.length) return json({ processed: 0, results: [] })
+    outboxQuery = outboxQuery.in('delivery_log_id', ownLogIds)
+  }
+
+  const { data: entries, error } = await outboxQuery
   if (error) return json({ error: 'Unable to load communication outbox.' }, 500)
 
   const results = []
