@@ -113,6 +113,10 @@ export function AppointmentDetails({
 }: AppointmentDetailsProps) {
   const communicationLogs = getCommunicationLogsByAppointment(appointment.id)
   const [communicationStateRevision, setCommunicationStateRevision] = useState(0)
+  const [selectedCommunicationTemplate, setSelectedCommunicationTemplate] = useState<CommunicationTemplateKey | null>(null)
+  useEffect(() => {
+    setSelectedCommunicationTemplate(null)
+  }, [appointment.id])
   useEffect(() => {
     const refreshCommunicationState = () => setCommunicationStateRevision((revision) => revision + 1)
     window.addEventListener('plamenco:communication-preferences-updated', refreshCommunicationState)
@@ -221,6 +225,9 @@ export function AppointmentDetails({
     : ['checked_in', 'waiting'].includes(appointment.status) ? [{ key: 'appointment_reminder', label: 'Resend reminder' }]
     : appointment.status === 'rescheduled' ? [{ key: 'appointment_rescheduled', label: 'Send reschedule' }]
     : []
+  const activeCommunicationAction = communicationActions.find((action) => action.key === selectedCommunicationTemplate)
+    ?? communicationActions.find((action) => action.key === 'appointment_reminder')
+    ?? communicationActions[0]
   const recentCommunicationLogs = communicationLogs
     .filter((log) => ['appointment_confirmed', 'appointment_reminder', 'appointment_rescheduled'].includes(log.templateKey))
     .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
@@ -350,15 +357,31 @@ export function AppointmentDetails({
                       )) : <div className="appointment-details-v40-action-empty">No next-step action is available to your account for this appointment's current status and assignment.</div>}
                     </section>
 
-                    <section className="appointment-details-v40-action-group">
-                      <div className="appointment-details-v40-action-heading"><span>Communication</span><small>{lastPatientMessageLabel}</small></div>
-                      {communicationActions.length ? communicationActions.map((action) => (
-                        <div className="appointment-details-v40-channel-actions" key={action.key}>
-                          <strong className="appointment-details-v40-channel-action-title">{action.label}</strong>
+                    <section className="appointment-details-v40-action-group appointment-details-v40-message-action">
+                      <div className="appointment-details-v40-action-heading">
+                        <span>Patient message</span>
+                        <small>{lastPatientMessageLabel}</small>
+                      </div>
+                      {activeCommunicationAction ? (
+                        <div className="appointment-details-v40-channel-actions">
+                          {communicationActions.length > 1 ? (
+                            <label className="appointment-details-v40-message-type">
+                              <span>Message type</span>
+                              <select
+                                value={activeCommunicationAction.key}
+                                onChange={(event) => setSelectedCommunicationTemplate(event.target.value as CommunicationTemplateKey)}
+                                aria-label="Message type"
+                              >
+                                {communicationActions.map((action) => <option key={action.key} value={action.key}>{action.label}</option>)}
+                              </select>
+                            </label>
+                          ) : (
+                            <strong className="appointment-details-v40-channel-action-title">{activeCommunicationAction.label}</strong>
+                          )}
                           <div className="appointment-details-v40-channel-action-grid">
                             {(['sms', 'email', 'messenger', 'in_app'] as CommunicationChannel[]).map((channel) => {
                               const availability = communicationChannels.find((entry) => entry.channel === channel)
-                              const pending = communicationPendingKey === `${appointment.id}:${action.key}:${channel}`
+                              const pending = communicationPendingKey === `${appointment.id}:${activeCommunicationAction.key}:${channel}`
                               const contactAvailable = Boolean(availability?.available)
                               const providerConfigured = providerConfiguredByChannel[channel]
                               const available = contactAvailable && providerConfigured
@@ -368,7 +391,7 @@ export function AppointmentDetails({
                                   ? `${channelLabels[channel]} provider is not configured. Check the Delivery engine's server-side provider setup.`
                                   : ''
                               return (
-                                <div className="appointment-details-v40-channel-action-cell" key={`${action.key}:${channel}`}>
+                                <div className="appointment-details-v40-channel-action-cell" key={channel}>
                                   <Button
                                     className="appointment-details-v40-action is-communication"
                                     size="sm"
@@ -376,8 +399,8 @@ export function AppointmentDetails({
                                     type="button"
                                     disabled={Boolean(communicationPendingKey) || !available}
                                     title={available ? `Send via ${channelLabels[channel]}` : unavailableReason}
-                                    aria-label={`Send ${action.label.toLowerCase()} via ${channelLabels[channel]}`}
-                                    onClick={() => onManualResend?.(appointment, action.key, [channel])}
+                                    aria-label={`Send ${activeCommunicationAction.label.toLowerCase()} via ${channelLabels[channel]}`}
+                                    onClick={() => onManualResend?.(appointment, activeCommunicationAction.key, [channel])}
                                   >
                                     <Send size={13}/>{pending ? 'Sending...' : channelLabels[channel]}
                                   </Button>
@@ -386,9 +409,9 @@ export function AppointmentDetails({
                               )
                             })}
                           </div>
-                          <small className="appointment-details-v40-channel-hint">A channel is usable only when patient consent, valid contact routing, and its server-side provider are all ready.</small>
+                          <small className="appointment-details-v40-channel-hint">Channels require patient consent, valid contact details, and an active server-side provider.</small>
                         </div>
-                      )) : <div className="appointment-details-v40-action-empty">No communication action is available for this status.</div>}
+                      ) : <div className="appointment-details-v40-action-empty">No patient message is available for this appointment status.</div>}
                       {communicationFeedback && (
                         <div className={`appointment-details-v40-communication-feedback is-${communicationFeedback.tone}`} role={communicationFeedback.tone === 'danger' ? 'alert' : 'status'}>
                           {communicationFeedback.message}
@@ -418,8 +441,8 @@ export function AppointmentDetails({
                 </section>
               )}
 
-              <section className="appointment-details-v40-card">
-                <div className="appointment-details-v40-section-head"><div><span>Communications</span><h3>Recent messaging</h3><p>{recentCommunicationLogs.length ? `${recentCommunicationLogs.length} appointment message${recentCommunicationLogs.length === 1 ? '' : 's'} recorded` : `Latest status: ${communicationStatusLabel(latestCommunication?.status)}`}</p></div></div>
+              <section className="appointment-details-v40-card appointment-details-v40-communication-card">
+                <div className="appointment-details-v40-section-head"><div><span>Communications</span><h3>Message history</h3><p>{recentCommunicationLogs.length ? `${recentCommunicationLogs.length} appointment message${recentCommunicationLogs.length === 1 ? '' : 's'} recorded` : `Latest status: ${communicationStatusLabel(latestCommunication?.status)}`}</p></div></div>
                 <div className="appointment-details-v40-communication-history">
                   <CommunicationHistoryPanel logs={recentCommunicationLogs} emptyMessage="No appointment communications recorded." />
                 </div>
