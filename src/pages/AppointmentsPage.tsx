@@ -473,7 +473,7 @@ export function AppointmentsPage() {
     }
     return false
   }
-  const clinicalRestrictionMessage = (appointment: Appointment, action: 'start' | 'complete') => {
+  const clinicalRestrictionMessage = (appointment: Appointment, action: 'check_in' | 'start' | 'complete') => {
     const assignedProvider = appointment.providerId ? providerMap.get(appointment.providerId) : undefined
     if (!appointment.providerId) return 'Assign a dentist before this visit can enter the clinical workflow.'
     if (user?.role === 'dentist' || user?.role === 'associate_dentist') {
@@ -481,10 +481,12 @@ export function AppointmentsPage() {
       const providerName = /^dr\.?\s/i.test(assignedProvider.displayName)
         ? assignedProvider.displayName
         : `Dr. ${assignedProvider.displayName}`
-      return `This appointment is assigned to ${providerName}.`
+      return `This appointment is assigned to ${providerName}. Only the assigned dentist can advance its clinical workflow.`
     }
     if (user?.role === 'staff') {
-      return `You do not have permission to ${action} visits for this appointment branch.`
+      return action === 'check_in'
+        ? 'You do not have permission to check patients in for this appointment branch.'
+        : `You do not have permission to ${action} visits for this appointment branch.`
     }
     return `You do not have permission to ${action} this visit.`
   }
@@ -898,18 +900,21 @@ export function AppointmentsPage() {
       }
 
       const logs = result.logs ?? []
-      const sentOrQueued = logs.filter((log) => ['sent', 'queued', 'delivered'].includes(log.status)).length
+      const accepted = logs.filter((log) => ['sent', 'delivered'].includes(log.status)).length
+      const queued = logs.filter((log) => log.status === 'queued').length
       const skipped = logs.filter((log) => log.status === 'skipped').length
       const failed = logs.filter((log) => log.status === 'failed').length
       const latest = logs[0]
-      const summary = sentOrQueued
-        ? `${sentOrQueued} channel${sentOrQueued === 1 ? '' : 's'} sent or queued.`
-        : skipped
-          ? `${skipped} channel${skipped === 1 ? '' : 's'} skipped by patient preferences, contact availability, or provider setup.`
-          : 'No communication channel was eligible.'
+      const parts = [
+        accepted ? `${accepted} channel${accepted === 1 ? '' : 's'} accepted by the provider` : '',
+        queued ? `${queued} channel${queued === 1 ? '' : 's'} queued; not sent yet` : '',
+        skipped ? `${skipped} channel${skipped === 1 ? '' : 's'} skipped by patient preferences, contact availability, or provider setup` : '',
+        failed ? `${failed} channel${failed === 1 ? '' : 's'} failed` : '',
+      ].filter(Boolean)
+      const summary = parts.length ? `${parts.join('; ')}.` : 'No communication channel was eligible.'
       setCommunicationFeedback({
         appointmentId: appointment.id,
-        tone: failed ? 'danger' : sentOrQueued ? 'success' : 'warning',
+        tone: failed ? 'danger' : queued || skipped ? 'warning' : accepted ? 'success' : 'info',
         message: latest ? `${summary} Last recorded: ${new Date(latest.createdAt).toLocaleString('en-PH')}.` : summary,
       })
       setAppointments(getStoredAppointments())
@@ -1425,13 +1430,15 @@ export function AppointmentsPage() {
           canManage={Boolean(user && user.role !== 'patient')}
           canTransitionStatus={(status) => canTransitionAppointment(currentSelectedAppointment, status)}
           clinicalRestrictionMessage={
-            currentSelectedAppointment.status === 'checked_in' || currentSelectedAppointment.status === 'waiting'
-              ? (!canTransitionAppointment(currentSelectedAppointment, 'in_progress')
-                  ? clinicalRestrictionMessage(currentSelectedAppointment, 'start')
-                  : undefined)
-              : currentSelectedAppointment.status === 'in_progress' && !canTransitionAppointment(currentSelectedAppointment, 'completed')
-                ? clinicalRestrictionMessage(currentSelectedAppointment, 'complete')
-                : undefined
+            currentSelectedAppointment.status === 'confirmed' && !canTransitionAppointment(currentSelectedAppointment, 'checked_in')
+              ? clinicalRestrictionMessage(currentSelectedAppointment, 'check_in')
+              : currentSelectedAppointment.status === 'checked_in' || currentSelectedAppointment.status === 'waiting'
+                ? (!canTransitionAppointment(currentSelectedAppointment, 'in_progress')
+                    ? clinicalRestrictionMessage(currentSelectedAppointment, 'start')
+                    : undefined)
+                : currentSelectedAppointment.status === 'in_progress' && !canTransitionAppointment(currentSelectedAppointment, 'completed')
+                  ? clinicalRestrictionMessage(currentSelectedAppointment, 'complete')
+                  : undefined
           }
           onClose={() => setSelectedAppointment(null)}
           onStatusChange={(status) => void handleStatusChange(status)}
