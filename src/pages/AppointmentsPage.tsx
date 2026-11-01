@@ -944,7 +944,7 @@ export function AppointmentsPage() {
         message: latest ? `${summary} Last recorded: ${new Date(latest.createdAt).toLocaleString('en-PH')}.` : summary,
       })
       setAppointments(getScopedStoredAppointments())
-      setSelectedAppointment(getStoredAppointments().find((entry) => entry.id === appointment.id) ?? appointment)
+      setSelectedAppointment(getScopedStoredAppointments().find((entry) => entry.id === appointment.id) ?? appointment)
     } catch (cause) {
       setCommunicationFeedback({ appointmentId: appointment.id, tone: 'danger', message: cause instanceof Error ? cause.message : 'The communication could not be recorded.' })
     } finally {
