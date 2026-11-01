@@ -145,6 +145,11 @@ function DataBootstrap({ children }: { children: React.ReactNode }) {
       }, BOOTSTRAP_WATCHDOG_MS)
     }
 
+    // Consent settings are security-sensitive operational data: refresh them
+    // on every authenticated session, even when the broader workspace bootstrap
+    // is warm and served from cache.
+    const communicationPreferencesRefresh = safeLoad(() => loadCommunicationPreferencesFromSupabase())
+
     const bootstrap = cachedQuery(
       currentBootstrapKey,
       async () => {
@@ -153,7 +158,7 @@ function DataBootstrap({ children }: { children: React.ReactNode }) {
           safeLoad(() => loadProviderFoundationFromSupabase({ strict: false })),
           safeLoad(() => loadPatientsFromSupabase({ strict: false })),
           safeLoad(() => loadServicesFromSupabase({ strict: false })),
-          safeLoad(() => loadCommunicationPreferencesFromSupabase()),
+          communicationPreferencesRefresh,
         ]
 
         if (user.role === 'patient') {
