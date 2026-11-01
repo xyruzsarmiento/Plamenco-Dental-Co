@@ -1,4 +1,5 @@
 import { upsertRemoteTableRows } from '../../lib/supabaseSync'
+import { isSupabaseConfigured, supabase } from '../../lib/supabase'
 import type { Patient } from '../patients/patientTypes'
 import { recordAuditEntry } from '../security/auditLogStore'
 import type { ChannelAvailability, CommunicationChannel, CommunicationPreference } from './communicationTypes'
@@ -69,6 +70,32 @@ export function getDefaultCommunicationPreference(patientId: string): Communicat
     createdAt: now,
     updatedAt: now,
   }
+}
+
+export async function loadCommunicationPreferencesFromSupabase() {
+  if (!isSupabaseConfigured || !supabase) return false
+  const { data, error } = await supabase.from('communication_preferences').select('*')
+  if (error || !Array.isArray(data)) {
+    if (error) console.error('[communication preferences] Supabase load failed:', error.message)
+    return false
+  }
+
+  const preferences: CommunicationPreference[] = data.map((row) => ({
+    patientId: row.patient_id,
+    smsEnabled: Boolean(row.sms_enabled),
+    emailEnabled: Boolean(row.email_enabled),
+    messengerEnabled: Boolean(row.messenger_enabled),
+    inAppEnabled: Boolean(row.in_app_enabled ?? true),
+    preferredChannel: row.preferred_channel ?? 'in_app',
+    messengerRecipientId: row.messenger_recipient_id ?? undefined,
+    messengerConnectedAt: row.messenger_connected_at ?? undefined,
+    consentUpdatedAt: row.consent_updated_at ?? undefined,
+    consentUpdatedBy: row.consent_updated_by ?? '',
+    createdAt: row.created_at ?? nowIso(),
+    updatedAt: row.updated_at ?? row.created_at ?? nowIso(),
+  }))
+  saveStoredCommunicationPreferences(preferences)
+  return true
 }
 
 export function getStoredCommunicationPreferences() {
