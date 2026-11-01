@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type KeyboardEvent } from 'react'
+import { useCallback, useEffect, useMemo, useState, type KeyboardEvent } from 'react'
 import { createPortal } from 'react-dom'
 import { useLocation, useNavigate } from 'react-router-dom'
 import {
@@ -41,7 +41,6 @@ import {
 import {
   assignAppointmentProviderPersisted,
   createAppointmentPersisted,
-  loadAppointmentsFromSupabase,
   rescheduleAppointmentPersisted,
   transitionAppointmentStatusPersisted,
 } from '../features/appointments/appointmentPersistence'
@@ -49,6 +48,7 @@ import { createClinicalVisitFromAppointment } from '../features/dentalRecords/de
 import type { DentalRecord } from '../features/dentalRecords/dentalRecordTypes'
 import { formatAppointmentTime, getAvailableAppointmentSlots, getEligibleProviders } from '../features/appointments/availabilityEngine'
 import { usePermissions } from '../features/auth/permissions'
+import { loadAppointmentsForBranchScope } from '../features/appointments/appointmentBranchLoader'
 import { getStoredBranches } from '../features/branches/branchStore'
 import { useBranchContext } from '../features/branches/BranchContext'
 import type { Branch } from '../features/branches/branchTypes'
@@ -108,6 +108,12 @@ function shortDateLabel(date: string) {
     weekday: 'short',
     day: 'numeric',
   })
+}
+
+function scopeAppointmentsToBranch(rows: Appointment[], branchId: string | null, isAllBranchesMode: boolean) {
+  if (isAllBranchesMode) return rows
+  if (!branchId) return []
+  return rows.filter((appointment) => appointment.branchId === branchId)
 }
 
 function providerInitials(provider?: Provider) {
@@ -221,9 +227,19 @@ export function AppointmentsPage() {
   const navigate = useNavigate()
   const { user } = useAuth()
   const permissions = usePermissions()
-  const { authorizedBranchIds } = useBranchContext()
+  const { authorizedBranchIds, activeBranchId, isAllBranchesMode } = useBranchContext()
   const canAssignDentist = permissions.can('appointments.approve') && permissions.can('appointments.assign_dentist')
   const [appointments, setAppointments] = useState<Appointment[]>([])
+  const loadScopedAppointments = useCallback(async () => {
+    if (!user?.id) return []
+    return loadAppointmentsForBranchScope({
+      branchId: activeBranchId,
+      isAllBranchesMode,
+      userId: user.id,
+      strict: true,
+      bypassCache: true,
+    })
+  }, [activeBranchId, isAllBranchesMode, user?.id])
   const [patients, setPatients] = useState<Patient[]>(getStoredPatients())
   const [services, setServices] = useState<Service[]>(getStoredServices())
   const [branches] = useState<Branch[]>(getStoredBranches().filter((branch) => branch.status === 'active'))
@@ -341,24 +357,33 @@ export function AppointmentsPage() {
 
   useEffect(() => {
     let active = true
-    void loadAppointmentsFromSupabase({ strict: true })
+    setAppointments([])
+    void loadScopedAppointments()
       .then((rows) => {
         if (active) setAppointments(rows)
       })
       .catch((error) => {
-        if (active) setOperationError(error instanceof Error ? error.message : 'Unable to load appointments from Supabase.')
+        if (active) setOperationError(error instanceof Error ? error.message : 'Unable to load appointments for the selected branch.')
       })
     return () => { active = false }
-  }, [user?.id])
+  }, [loadScopedAppointments])
   const [isAppointmentSaving, setIsAppointmentSaving] = useState(false)
   const [communicationPendingKey, setCommunicationPendingKey] = useState<string | null>(null)
   const [communicationFeedback, setCommunicationFeedback] = useState<CommunicationFeedback>(null)
   const [requestProviderDrafts, setRequestProviderDrafts] = useState<Record<string, string>>({})
 
-  const confirmedCount = appointments.filter((appointment) => appointment.status === 'confirmed').length
-  const pendingCount = appointments.filter((appointment) => appointment.status === 'pending').length
+  // Enforce branch scope in the data model, not only through the visible calendar filter.
+  // Today's Flow, KPIs, requests, charts, and calendar all consume this scoped collection.
+  const scopedAppointments = useMemo(
+    () => scopeAppointmentsToBranch(appointments, activeBranchId, isAllBranchesMode),
+    [activeBranchId, appointments, isAllBranchesMode],
+  )
+  const getScopedStoredAppointments = () => scopeAppointmentsToBranch(getStoredAppointments(), activeBranchId, isAllBranchesMode)
+
+  const confirmedCount = scopedAppointments.filter((appointment) => appointment.status === 'confirmed').length
+  const pendingCount = scopedAppointments.filter((appointment) => appointment.status === 'pending').length
   const today = manilaDate()
-  const todayAppointments = appointments.filter((appointment) => appointment.date === today)
+  const todayAppointments = scopedAppointments.filter((appointment) => appointment.date === today)
   const waitingCount = todayAppointments.filter((appointment) => appointment.status === 'waiting' || appointment.status === 'checked_in').length
   const inTreatmentCount = todayAppointments.filter((appointment) => appointment.status === 'in_progress').length
   const completedTodayCount = todayAppointments.filter((appointment) => appointment.status === 'completed').length
@@ -367,17 +392,18 @@ export function AppointmentsPage() {
   const checkedInTodayCount = todayAppointments.filter((appointment) => appointment.status === 'checked_in').length
 
   const pendingRequests = useMemo(
-    () => appointments.filter((appointment) => appointment.status === 'pending' && !appointment.providerId),
-    [appointments]
+    () => scopedAppointments.filter((appointment) => appointment.status === 'pending' && !appointment.providerId),
+    [scopedAppointments]
   )
 
   const filteredAppointments = useMemo(() => {
-    return appointments.filter((appointment) => {
+    return scopedAppointments.filter((appointment) => {
       const patient = patients.find((entry) => entry.id === appointment.patientId || entry.patientId === appointment.patientId)
       const matchesStatus = statusFilter === 'all' || appointment.status === statusFilter
       const matchesService = serviceFilter === 'all' || appointment.serviceId === serviceFilter
       const matchesDate = !dateFilter || appointment.date === dateFilter
-      const matchesBranch = branchFilter === 'all' || appointment.branchId === branchFilter
+      const matchesBranch = (branchFilter === 'all' || appointment.branchId === branchFilter)
+        && (isAllBranchesMode || appointment.branchId === activeBranchId)
       const matchesProvider = providerFilter === 'all' || appointment.providerId === providerFilter
       const query = searchQuery.trim().toLowerCase()
       const matchesSearch = !query || [
@@ -393,7 +419,7 @@ export function AppointmentsPage() {
 
       return matchesStatus && matchesService && matchesDate && matchesBranch && matchesProvider && matchesSearch
     })
-  }, [appointments, branchFilter, dateFilter, patients, providerFilter, searchQuery, serviceFilter, statusFilter])
+  }, [activeBranchId, branchFilter, dateFilter, isAllBranchesMode, patients, providerFilter, searchQuery, scopedAppointments, serviceFilter, statusFilter])
 
   const patientMap = useMemo(() => {
     const map = new Map<string, Patient>()
@@ -512,9 +538,9 @@ export function AppointmentsPage() {
     const date = manilaDateOffset(index - 6)
     return {
       label: shortDateLabel(date),
-      value: appointments.filter((appointment) => appointment.date === date).length,
+      value: scopedAppointments.filter((appointment) => appointment.date === date).length,
     }
-  }), [appointments])
+  }), [scopedAppointments])
 
   const statusData: StatusDatum[] = [
     { key: 'confirmed', label: 'Confirmed', value: confirmedTodayCount },
@@ -532,14 +558,14 @@ export function AppointmentsPage() {
 
   const upcomingWeek = useMemo(() => Array.from({ length: 7 }, (_, index) => {
     const date = manilaDateOffset(index)
-    const dayAppointments = appointments.filter((appointment) => appointment.date === date)
+    const dayAppointments = scopedAppointments.filter((appointment) => appointment.date === date)
     return {
       date,
       label: new Date(`${date}T00:00:00+08:00`).toLocaleDateString('en-PH', { weekday: 'short', timeZone: 'Asia/Manila' }),
       day: new Date(`${date}T00:00:00+08:00`).toLocaleDateString('en-PH', { day: 'numeric', timeZone: 'Asia/Manila' }),
       count: dayAppointments.length,
     }
-  }), [appointments])
+  }), [scopedAppointments])
 
   function handleAddAppointment(date: string, time?: string) {
     setSelectedAppointment(null)
@@ -677,7 +703,7 @@ export function AppointmentsPage() {
           await linkRecallToAppointment(pendingFollowUpRecall.id, confirmed.id)
           await listPatientRecalls(confirmed.patientId)
         } catch (linkError) {
-          setAppointments(await loadAppointmentsFromSupabase({ strict: true }))
+          setAppointments(await loadScopedAppointments())
           setShowForm(false)
           setConflictError(null)
           setPendingFollowUpRecall(null)
@@ -685,7 +711,7 @@ export function AppointmentsPage() {
           return
         }
       }
-      setAppointments(await loadAppointmentsFromSupabase({ strict: true }))
+      setAppointments(await loadScopedAppointments())
       setShowForm(false)
       setConflictError(null)
       setPendingFollowUpRecall(null)
@@ -740,7 +766,7 @@ export function AppointmentsPage() {
         actor: user?.email ?? 'clinic-user',
         expectedUpdatedAt: appointment.updatedAt,
       })
-      setAppointments(await loadAppointmentsFromSupabase({ strict: true }))
+      setAppointments(await loadScopedAppointments())
       setOperationError(`Appointment ${updated.appointmentNumber ?? updated.id} confirmed.`)
       setRequestProviderDrafts((current) => {
         const next = { ...current }
@@ -765,7 +791,7 @@ export function AppointmentsPage() {
         expectedUpdatedAt: appointment.updatedAt,
         reason: 'Rejected from appointment requests',
       })
-      setAppointments(getStoredAppointments())
+      setAppointments(getScopedStoredAppointments())
     } catch (cause) {
       setOperationError(cause instanceof Error ? cause.message : 'The request could not be rejected.')
     } finally {
@@ -917,8 +943,8 @@ export function AppointmentsPage() {
         tone: failed ? 'danger' : queued || skipped ? 'warning' : accepted ? 'success' : 'info',
         message: latest ? `${summary} Last recorded: ${new Date(latest.createdAt).toLocaleString('en-PH')}.` : summary,
       })
-      setAppointments(getStoredAppointments())
-      setSelectedAppointment(getStoredAppointments().find((entry) => entry.id === appointment.id) ?? appointment)
+      setAppointments(getScopedStoredAppointments())
+      setSelectedAppointment(getScopedStoredAppointments().find((entry) => entry.id === appointment.id) ?? appointment)
     } catch (cause) {
       setCommunicationFeedback({ appointmentId: appointment.id, tone: 'danger', message: cause instanceof Error ? cause.message : 'The communication could not be recorded.' })
     } finally {
