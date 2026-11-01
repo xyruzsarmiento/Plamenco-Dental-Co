@@ -817,3 +817,453 @@
 .doc149-menu-portal > button svg {
   flex: 0 0 auto !important;
 }
+
+
+/* Responsive pass: Patient Documents workspace */
+@media (max-width: 900px) {
+  .app-shell .doc215-workspace,
+  .app-shell .doc177-skeleton-workspace {
+    grid-template-columns: minmax(0, 1fr) !important;
+    gap: 12px !important;
+  }
+
+  .app-shell .doc215-directory {
+    position: static !important;
+    top: auto !important;
+    max-height: 300px !important;
+  }
+
+  .app-shell .doc215-patient-list {
+    max-height: 180px !important;
+  }
+
+  .app-shell .doc215-main,
+  .app-shell .doc215-library,
+  .app-shell .doc215-file-grid {
+    min-width: 0 !important;
+    width: 100%;
+  }
+}
+
+@media (max-width: 680px) {
+  .app-shell .doc149-page,
+  .app-shell .doc215-workspace,
+  .app-shell .doc215-main {
+    min-width: 0 !important;
+    width: 100%;
+  }
+
+  .app-shell .doc215-workspace {
+    gap: 10px !important;
+  }
+
+  /* Keep the directory compact; its own patient list scrolls independently. */
+  .app-shell .doc215-directory {
+    display: grid !important;
+    grid-template-rows: auto auto minmax(0, 1fr) !important;
+    gap: 8px !important;
+    max-height: 258px !important;
+    padding: 11px !important;
+    border-radius: 10px !important;
+  }
+
+  .app-shell .doc215-directory > header strong {
+    font-size: .82rem !important;
+  }
+
+  .app-shell .doc215-directory-search {
+    min-height: 44px !important;
+    padding-inline: 10px !important;
+  }
+
+  .app-shell .doc215-directory-search input {
+    min-height: 42px !important;
+    font-size: 16px !important;
+  }
+
+  .app-shell .doc215-patient-list {
+    max-height: 150px !important;
+    min-height: 0 !important;
+    padding-right: 2px;
+    overscroll-behavior: contain;
+  }
+
+  .app-shell .doc215-patient-list > button {
+    min-height: 50px !important;
+    grid-template-columns: 34px minmax(0, 1fr) auto auto !important;
+    gap: 7px !important;
+    padding: 6px !important;
+  }
+
+  .app-shell .doc215-patient-list > button > :first-child {
+    width: 34px;
+    height: 34px;
+  }
+
+  .app-shell .doc215-patient-copy strong {
+    font-size: .75rem !important;
+  }
+
+  .app-shell .doc215-patient-copy small {
+    font-size: .64rem !important;
+  }
+
+  .app-shell .doc215-patient-hero {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) auto !important;
+    align-items: start !important;
+    gap: 10px !important;
+    padding: 12px !important;
+    border-radius: 10px !important;
+  }
+
+  .app-shell .doc215-patient-identity {
+    min-width: 0 !important;
+    gap: 9px !important;
+  }
+
+  .app-shell .doc215-patient-identity h2 {
+    max-width: 100% !important;
+    font-size: 1rem !important;
+    line-height: 1.25 !important;
+    white-space: normal !important;
+    overflow-wrap: anywhere !important;
+  }
+
+  .app-shell .doc215-patient-identity p {
+    max-width: 100% !important;
+    font-size: .68rem !important;
+    line-height: 1.4 !important;
+    white-space: normal !important;
+    overflow-wrap: anywhere !important;
+  }
+
+  .app-shell .doc215-patient-stats {
+    min-width: 78px !important;
+    justify-items: end !important;
+    text-align: right;
+  }
+
+  .app-shell .doc215-patient-stats strong {
+    font-size: 1.2rem !important;
+    line-height: 1.1 !important;
+  }
+
+  .app-shell .doc215-patient-stats span,
+  .app-shell .doc215-patient-stats small {
+    font-size: .62rem !important;
+    line-height: 1.3 !important;
+  }
+
+  /* Search spans the full row; the shorter filters share the space below. */
+  .app-shell .doc149-toolbar.doc215-toolbar {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 8px !important;
+    padding: 10px !important;
+    min-width: 0 !important;
+  }
+
+  .app-shell .doc149-toolbar.doc215-toolbar .doc149-search {
+    grid-column: 1 / -1 !important;
+    min-width: 0 !important;
+    min-height: 44px !important;
+  }
+
+  .app-shell .doc149-toolbar.doc215-toolbar select {
+    width: 100% !important;
+    min-width: 0 !important;
+    min-height: 44px !important;
+    padding-inline: 9px 28px !important;
+    font-size: 16px !important;
+  }
+
+  .app-shell .doc215-library {
+    max-height: min(620px, calc(100dvh - 230px)) !important;
+    min-height: 0 !important;
+    border-radius: 10px !important;
+  }
+
+  .app-shell .doc215-library > header {
+    display: flex !important;
+    align-items: flex-start !important;
+    padding: 10px 2px !important;
+  }
+
+  .app-shell .doc215-library > header h2 {
+    font-size: .98rem !important;
+    overflow-wrap: anywhere;
+  }
+
+  .app-shell .doc215-library > header p {
+    font-size: .68rem !important;
+    line-height: 1.4 !important;
+    overflow-wrap: anywhere;
+  }
+
+  .app-shell .doc215-file-grid {
+    grid-template-columns: minmax(0, 1fr) !important;
+    gap: 8px !important;
+    padding: 8px 2px !important;
+    min-height: 0 !important;
+    overscroll-behavior: contain;
+  }
+
+  .app-shell .doc215-file-card {
+    min-width: 0 !important;
+    min-height: 0 !important;
+    border-radius: 10px !important;
+  }
+
+  .app-shell .doc215-file-card:hover {
+    transform: none !important;
+  }
+
+  .app-shell .doc215-file-main {
+    grid-template-columns: 36px minmax(0, 1fr) !important;
+    align-items: start !important;
+    gap: 8px 10px !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    padding: 11px !important;
+  }
+
+  .app-shell .doc215-file-main .doc149-file-icon {
+    grid-column: 1 !important;
+    grid-row: 1 / span 2 !important;
+    width: 36px !important;
+    height: 36px !important;
+    padding: 9px !important;
+  }
+
+  .app-shell .doc215-file-main .doc149-file-copy {
+    grid-column: 2 !important;
+    grid-row: 1 !important;
+    display: grid !important;
+    gap: 4px !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+  }
+
+  .app-shell .doc215-file-main .doc149-file-copy strong {
+    display: -webkit-box !important;
+    max-width: 100% !important;
+    overflow: hidden !important;
+    font-size: .78rem !important;
+    line-height: 1.35 !important;
+    overflow-wrap: anywhere !important;
+    text-overflow: ellipsis !important;
+    white-space: normal !important;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+  }
+
+  .app-shell .doc215-file-main .doc149-file-copy small {
+    display: -webkit-box !important;
+    max-width: 100% !important;
+    overflow: hidden !important;
+    font-size: .68rem !important;
+    line-height: 1.4 !important;
+    overflow-wrap: anywhere !important;
+    white-space: normal !important;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+  }
+
+  .app-shell .doc215-file-main .doc149-visibility {
+    grid-column: 2 !important;
+    grid-row: 2 !important;
+    justify-self: start !important;
+    min-height: 26px !important;
+    padding: 4px 8px !important;
+    font-size: .62rem !important;
+    white-space: nowrap !important;
+  }
+
+  .app-shell .doc215-file-meta {
+    grid-column: 1 / -1 !important;
+    display: flex !important;
+    flex-wrap: wrap !important;
+    gap: 6px 10px !important;
+    min-width: 0 !important;
+    padding-top: 8px !important;
+    margin-top: 1px;
+  }
+
+  .app-shell .doc215-file-meta > span {
+    min-width: 0 !important;
+    max-width: 100% !important;
+    font-size: .64rem !important;
+    line-height: 1.35 !important;
+    white-space: normal !important;
+    overflow-wrap: anywhere !important;
+  }
+
+  .app-shell .doc215-file-actions {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) 44px !important;
+    align-items: center !important;
+    gap: 8px !important;
+    padding: 8px 10px !important;
+  }
+
+  .app-shell .doc215-file-actions > button {
+    width: 100% !important;
+    min-width: 0 !important;
+    min-height: 44px !important;
+    justify-content: center !important;
+    font-size: .76rem !important;
+  }
+
+  .app-shell .doc215-file-actions .doc149-menu-wrap {
+    display: flex !important;
+    justify-content: flex-end !important;
+    min-width: 44px !important;
+  }
+
+  .app-shell .doc215-file-actions .doc149-icon-button {
+    display: inline-flex !important;
+    width: 44px !important;
+    min-width: 44px !important;
+    min-height: 44px !important;
+    height: 44px !important;
+    padding: 0 !important;
+    justify-content: center !important;
+  }
+
+  .app-shell .doc215-library .doc149-pagination {
+    gap: 8px !important;
+    padding: 8px 2px 2px !important;
+  }
+
+  .app-shell .doc215-library .doc149-pagination > span {
+    font-size: .68rem !important;
+    line-height: 1.4 !important;
+  }
+
+  .app-shell .doc215-library .ui-pagination {
+    min-width: 0 !important;
+    gap: 4px !important;
+    padding: 6px !important;
+  }
+
+  .app-shell .doc215-library .ui-pagination > .btn {
+    min-width: 38px !important;
+    min-height: 40px !important;
+  }
+
+  .app-shell .doc215-library .ui-pagination-pages {
+    min-width: 0 !important;
+    flex-wrap: wrap !important;
+    gap: 3px !important;
+  }
+
+  .app-shell .doc215-library .ui-pagination-pages > .btn {
+    min-width: 34px !important;
+    min-height: 38px !important;
+    padding-inline: 7px !important;
+  }
+
+  .app-shell .doc149-upload-modal,
+  .app-shell .doc149-drawer,
+  .app-shell .doc149-confirm-dialog {
+    box-sizing: border-box !important;
+    min-width: 0 !important;
+  }
+}
+
+@media (max-width: 430px) {
+  .app-shell .doc215-directory {
+    max-height: 238px !important;
+    padding: 10px !important;
+  }
+
+  .app-shell .doc215-patient-list {
+    max-height: 132px !important;
+  }
+
+  .app-shell .doc215-patient-hero {
+    grid-template-columns: minmax(0, 1fr) !important;
+    padding: 11px !important;
+  }
+
+  .app-shell .doc215-patient-stats {
+    display: flex !important;
+    align-items: baseline !important;
+    justify-content: flex-start !important;
+    gap: 6px 9px !important;
+    flex-wrap: wrap !important;
+    min-width: 0 !important;
+    padding-top: 8px !important;
+    border-top: 1px solid #e3eaf3 !important;
+    text-align: left !important;
+  }
+
+  .app-shell .doc215-patient-stats strong {
+    font-size: 1rem !important;
+  }
+
+  .app-shell .doc149-toolbar.doc215-toolbar {
+    gap: 7px !important;
+    padding: 9px !important;
+  }
+
+  .app-shell .doc149-toolbar.doc215-toolbar select {
+    padding-inline: 8px 22px !important;
+    font-size: 14px !important;
+  }
+
+  .app-shell .doc215-file-grid {
+    padding-inline: 0 !important;
+  }
+
+  .app-shell .doc215-file-main {
+    padding: 10px !important;
+  }
+
+  .app-shell .doc215-file-actions {
+    padding: 7px 8px !important;
+  }
+
+  .app-shell .doc149-menu-portal {
+    width: min(210px, calc(100vw - 24px)) !important;
+    max-width: calc(100vw - 24px) !important;
+  }
+
+  .app-shell .doc149-drawer-backdrop,
+  .app-shell .doc149-modal-backdrop,
+  .app-shell .doc149-confirm-backdrop {
+    padding: 8px !important;
+  }
+}
+
+@media (max-width: 360px) {
+  .app-shell .doc149-toolbar.doc215-toolbar {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+
+  .app-shell .doc149-toolbar.doc215-toolbar .doc149-search {
+    grid-column: 1 !important;
+  }
+
+  .app-shell .doc215-file-main {
+    gap: 7px 8px !important;
+    padding: 9px !important;
+  }
+
+  .app-shell .doc215-file-main .doc149-file-icon {
+    width: 32px !important;
+    height: 32px !important;
+    padding: 8px !important;
+  }
+
+  .app-shell .doc215-file-actions {
+    grid-template-columns: minmax(0, 1fr) 42px !important;
+  }
+
+  .app-shell .doc215-file-actions .doc149-icon-button {
+    width: 42px !important;
+    min-width: 42px !important;
+    height: 44px !important;
+  }
+}
