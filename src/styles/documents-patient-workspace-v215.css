@@ -1267,3 +1267,57 @@
     height: 44px !important;
   }
 }
+
+/* Mobile card sizing correction:
+   The bounded desktop library uses an inner scroll region. On phones, let the
+   document list grow naturally so card content and action rows never overlap. */
+@media (max-width: 680px) {
+  .app-shell .doc215-library {
+    display: grid !important;
+    grid-template-rows: auto auto !important;
+    height: auto !important;
+    max-height: none !important;
+    min-height: 0 !important;
+    overflow: visible !important;
+  }
+
+  .app-shell .doc215-file-grid {
+    grid-auto-rows: max-content !important;
+    align-content: start !important;
+    min-height: 0 !important;
+    height: auto !important;
+    overflow: visible !important;
+    overflow-y: visible !important;
+    overscroll-behavior: auto !important;
+  }
+
+  .app-shell .doc215-file-card {
+    display: flex !important;
+    flex-direction: column !important;
+    align-self: start !important;
+    height: auto !important;
+    min-height: 0 !important;
+    overflow: hidden !important;
+  }
+
+  .app-shell .doc215-file-main {
+    display: grid !important;
+    flex: 0 0 auto !important;
+    grid-template-rows: auto auto auto !important;
+    align-content: start !important;
+    height: auto !important;
+    min-height: 0 !important;
+  }
+
+  .app-shell .doc215-file-meta {
+    position: static !important;
+    grid-row: 3 !important;
+    align-self: start !important;
+  }
+
+  .app-shell .doc215-file-actions {
+    flex: 0 0 auto !important;
+    position: static !important;
+    min-height: 0 !important;
+  }
+}
