@@ -101,7 +101,8 @@ export function CommunicationPreferencesPanel({ patient, actor, canEdit = true }
     try {
       const updated = await updateCommunicationPreferencePersisted(patient.patientId, { preferredChannel: channel }, actor)
       setPreference(updated)
-      setFeedback({ tone: 'success', message: `${channelIcons[channel] ? channel : 'Channel'} is now your preferred channel.` })
+      const channelLabel = availability.find((entry) => entry.channel === channel)?.label ?? 'Channel'
+      setFeedback({ tone: 'success', message: `${channelLabel} is now your preferred channel.` })
     } catch (cause) {
       setFeedback({
         tone: 'error',
