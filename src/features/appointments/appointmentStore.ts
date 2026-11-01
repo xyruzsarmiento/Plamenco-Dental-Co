@@ -712,7 +712,7 @@ export function resendAppointmentCommunication(
   const appointment = getAppointmentById(id)
   if (!appointment) return { error: 'Appointment was not found.' }
   const recentSameMessage = getCommunicationLogsByAppointment(id).find((log) => {
-    if (log.templateKey !== templateKey) return false
+    if (log.templateKey !== templateKey || log.dispatchMode !== 'manual') return false
     if (channels?.length && !channels.includes(log.channel)) return false
     return Date.now() - new Date(log.createdAt).getTime() < 2 * 60 * 1000
   })
@@ -732,7 +732,7 @@ export async function resendAppointmentCommunicationPersisted(
   const appointment = getAppointmentById(id)
   if (!appointment) return { error: 'Appointment was not found.' }
   const recentSameMessage = getCommunicationLogsByAppointment(id).find((log) => {
-    if (log.templateKey !== templateKey) return false
+    if (log.templateKey !== templateKey || log.dispatchMode !== 'manual') return false
     if (channels?.length && !channels.includes(log.channel)) return false
     return Date.now() - new Date(log.createdAt).getTime() < 2 * 60 * 1000
   })
