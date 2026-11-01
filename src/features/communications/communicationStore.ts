@@ -193,8 +193,15 @@ export async function createCommunicationDeliveryLogPersisted(
 
   const remote = await insertRemoteTableRow('communication_delivery_logs', mapDeliveryLogToRemoteRow(log))
   if (isSupabaseConfigured && !remote) throw new Error('Communication log could not be saved to Supabase.')
-  saveCommunicationDeliveryLogs([log, ...getCommunicationDeliveryLogs()])
-  return log
+
+  // Remote IDs are normalized to deterministic UUIDs before insertion. Keep that
+  // exact ID locally so outbox references and worker results reconcile to this log.
+  const persistedLog: CommunicationDeliveryLog = {
+    ...log,
+    id: typeof remote?.id === 'string' ? remote.id : log.id,
+  }
+  saveCommunicationDeliveryLogs([persistedLog, ...getCommunicationDeliveryLogs()])
+  return persistedLog
 }
 
 export function updateCommunicationDeliveryLog(id: string, updates: Partial<CommunicationDeliveryLog>) {
