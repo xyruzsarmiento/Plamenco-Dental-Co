@@ -7,12 +7,15 @@ import { getStoredPatients } from '../patients/patientStore'
 import type { Patient } from '../patients/patientTypes'
 import { getStoredServices } from '../services/serviceStore'
 import { recordAuditEntry } from '../security/auditLogStore'
+import { supabase } from '../../lib/supabase'
 import {
   createCommunicationDeliveryLog,
   createCommunicationDeliveryLogPersisted,
   createCommunicationOutboxEntry,
   createCommunicationOutboxEntryPersisted,
+  getCommunicationDeliveryLogs,
   getCommunicationSettings,
+  saveCommunicationDeliveryLogs,
 } from './communicationStore'
 import {
   getChannelAvailability,
@@ -304,6 +307,52 @@ export function sendAppointmentCommunication(event: AppointmentCommunicationEven
       deliveryLogId: log.id,
     })
     logs.push(log)
+  }
+
+  const queuedLogs = logs.filter((log) => log.status === 'queued')
+  if (queuedLogs.length && supabase) {
+    const { data, error } = await supabase.functions.invoke('process-communication-outbox', {
+      body: { limit: Math.min(25, queuedLogs.length) },
+    })
+
+    if (error) {
+      console.error('[communication outbox] immediate worker invocation failed:', error.message)
+    } else if (Array.isArray(data?.results)) {
+      const resultsByLogId = new Map<string, { status: string; reason?: string }>(
+        data.results
+          .filter((result: { deliveryLogId?: string }) => Boolean(result.deliveryLogId))
+          .map((result: { deliveryLogId: string; status: string; reason?: string }) => [
+            result.deliveryLogId,
+            { status: result.status, reason: result.reason },
+          ]),
+      )
+      const now = new Date().toISOString()
+      const updatedLogs = getCommunicationDeliveryLogs().map((log) => {
+        const result = resultsByLogId.get(log.id)
+        if (!result) return log
+        const status = result.status === 'sent' ? 'sent' : result.status === 'failed' ? 'failed' : 'queued'
+        return {
+          ...log,
+          status,
+          sentAt: status === 'sent' ? now : log.sentAt,
+          failedAt: status === 'failed' ? now : log.failedAt,
+          failureReason: result.reason ?? log.failureReason,
+          updatedAt: now,
+        }
+      })
+      saveCommunicationDeliveryLogs(updatedLogs)
+
+      for (const log of logs) {
+        const updated = resultsByLogId.get(log.id)
+        if (updated) {
+          log.status = updated.status === 'sent' ? 'sent' : updated.status === 'failed' ? 'failed' : 'queued'
+          if (updated.reason) log.failureReason = updated.reason
+          log.updatedAt = now
+          if (log.status === 'sent') log.sentAt = now
+          if (log.status === 'failed') log.failedAt = now
+        }
+      }
+    }
   }
 
   if (event.manual) {
