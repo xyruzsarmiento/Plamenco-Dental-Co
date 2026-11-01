@@ -72,16 +72,9 @@ export function getDefaultCommunicationPreference(patientId: string): Communicat
   }
 }
 
-export async function loadCommunicationPreferencesFromSupabase() {
-  if (!isSupabaseConfigured || !supabase) return false
-  const { data, error } = await supabase.from('communication_preferences').select('*')
-  if (error || !Array.isArray(data)) {
-    if (error) console.error('[communication preferences] Supabase load failed:', error.message)
-    return false
-  }
-
-  const preferences: CommunicationPreference[] = data.map((row) => ({
-    patientId: row.patient_id,
+function mapRemotePreference(row: Record<string, any>): CommunicationPreference {
+  return {
+    patientId: String(row.patient_id ?? ''),
     smsEnabled: Boolean(row.sms_enabled),
     emailEnabled: Boolean(row.email_enabled),
     messengerEnabled: Boolean(row.messenger_enabled),
@@ -93,9 +86,51 @@ export async function loadCommunicationPreferencesFromSupabase() {
     consentUpdatedBy: row.consent_updated_by ?? '',
     createdAt: row.created_at ?? nowIso(),
     updatedAt: row.updated_at ?? row.created_at ?? nowIso(),
-  }))
-  saveStoredCommunicationPreferences(preferences)
+  }
+}
+
+function replaceStoredPreference(preference: CommunicationPreference) {
+  const preferences = getStoredCommunicationPreferences().filter((entry) => entry.patientId !== preference.patientId)
+  saveStoredCommunicationPreferences([...preferences, preference])
+}
+
+export async function loadCommunicationPreferencesFromSupabase() {
+  if (!isSupabaseConfigured || !supabase) return false
+  const { data, error } = await supabase.from('communication_preferences').select('*')
+  if (error || !Array.isArray(data)) {
+    if (error) console.error('[communication preferences] Supabase load failed:', error.message)
+    return false
+  }
+
+  // RLS can legitimately return no rows for authenticated users who do not
+  // have permission to read the whole consent table. Never erase a warm cache
+  // merely because this role received an empty, policy-filtered result.
+  if (data.length > 0) {
+    saveStoredCommunicationPreferences(data.map((row) => mapRemotePreference(row)))
+  }
   return true
+}
+
+/** Load one patient's preference through the patient's own RLS-scoped row. */
+export async function loadCommunicationPreferenceForPatientFromSupabase(patientId: string) {
+  if (!isSupabaseConfigured || !supabase) return getCommunicationPreference(patientId)
+
+  const { data, error } = await supabase
+    .from('communication_preferences')
+    .select('*')
+    .eq('patient_id', patientId)
+    .maybeSingle()
+
+  if (error) {
+    throw new Error(`Unable to load your notification preferences: ${error.message}`)
+  }
+
+  const preference = data
+    ? mapRemotePreference(data)
+    : getDefaultCommunicationPreference(patientId)
+
+  replaceStoredPreference(preference)
+  return preference
 }
 
 export function getStoredCommunicationPreferences() {
@@ -104,6 +139,9 @@ export function getStoredCommunicationPreferences() {
 
 export function saveStoredCommunicationPreferences(preferences: CommunicationPreference[]) {
   getStorage().setItem(PREFERENCES_STORAGE_KEY, JSON.stringify(preferences))
+  if (typeof window !== 'undefined' && typeof window.dispatchEvent === 'function') {
+    window.dispatchEvent(new Event('plamenco:communication-preferences-updated'))
+  }
 }
 
 export function getCommunicationPreference(patientId: string) {
@@ -148,6 +186,55 @@ export function updateCommunicationPreference(
   })
 
   return updated
+}
+
+/** Persist a patient's consent and preferred channel before treating the change as saved. */
+export async function updateCommunicationPreferencePersisted(
+  patientId: string,
+  updates: Partial<Omit<CommunicationPreference, 'patientId' | 'createdAt' | 'updatedAt'>>,
+  actor: string,
+) {
+  if (!isSupabaseConfigured || !supabase) {
+    throw new Error('The clinic database is unavailable. Your notification preferences were not saved.')
+  }
+
+  const current = getCommunicationPreference(patientId)
+  const now = nowIso()
+  const updated: CommunicationPreference = {
+    ...current,
+    ...updates,
+    patientId,
+    consentUpdatedAt: now,
+    consentUpdatedBy: actor,
+    updatedAt: now,
+  }
+
+  const { data, error } = await supabase
+    .from('communication_preferences')
+    .upsert(mapPreferenceToRemoteRow(updated), { onConflict: 'patient_id' })
+    .select('*')
+    .single()
+
+  if (error || !data) {
+    throw new Error(`Your notification preferences could not be saved: ${error?.message ?? 'No saved row was returned.'}`)
+  }
+
+  const confirmed = mapRemotePreference(data)
+  replaceStoredPreference(confirmed)
+  recordAuditEntry({
+    user: actor,
+    action: 'communication_preference_changed',
+    entity: 'patient',
+    entityId: patientId,
+    metadata: {
+      smsEnabled: confirmed.smsEnabled,
+      emailEnabled: confirmed.emailEnabled,
+      messengerEnabled: confirmed.messengerEnabled,
+      inAppEnabled: confirmed.inAppEnabled,
+      preferredChannel: confirmed.preferredChannel,
+    },
+  })
+  return confirmed
 }
 
 export function getChannelAvailability(patient: Patient, preference = getCommunicationPreference(patient.patientId)): ChannelAvailability[] {
