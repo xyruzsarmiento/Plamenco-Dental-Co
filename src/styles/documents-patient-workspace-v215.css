@@ -1210,7 +1210,7 @@
 
   .app-shell .doc149-toolbar.doc215-toolbar select {
     padding-inline: 8px 22px !important;
-    font-size: 14px !important;
+    font-size: 16px !important;
   }
 
   .app-shell .doc215-file-grid {
@@ -1225,7 +1225,7 @@
     padding: 7px 8px !important;
   }
 
-  .app-shell .doc149-menu-portal {
+  .doc149-menu-portal {
     width: min(210px, calc(100vw - 24px)) !important;
     max-width: calc(100vw - 24px) !important;
   }
