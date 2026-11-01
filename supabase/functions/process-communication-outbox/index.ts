@@ -340,12 +340,19 @@ Deno.serve(async (request) => {
     .from('communication_outbox')
     .select('id, delivery_log_id, channel, provider, patient_id, branch_id, payload, attempts, max_attempts')
     .eq('status', 'queued')
-    .lte('next_attempt_at', new Date().toISOString())
     .order('next_attempt_at', { ascending: true })
     .limit(Math.min(Math.max(limit, 1), 25))
 
   if (requestedDeliveryLogIds) {
+    // A manual send invokes this worker immediately after the outbox insert.
+    // next_attempt_at is intentionally initialized just after insertion, so
+    // applying the scheduled-retry time gate here creates a race: the worker
+    // can arrive before that timestamp and return processed: 0. Exact,
+    // sender-authorized IDs are safe to process immediately while still
+    // preserving the due-time gate for scheduler/batch scans.
     outboxQuery = outboxQuery.in('delivery_log_id', requestedDeliveryLogIds)
+  } else {
+    outboxQuery = outboxQuery.lte('next_attempt_at', new Date().toISOString())
   }
 
   if (!isCron && senderEmail) {
