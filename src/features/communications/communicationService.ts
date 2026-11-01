@@ -318,14 +318,12 @@ export function sendAppointmentCommunication(event: AppointmentCommunicationEven
     if (error) {
       console.error('[communication outbox] immediate worker invocation failed:', error.message)
     } else if (Array.isArray(data?.results)) {
-      const resultsByLogId = new Map<string, { status: string; reason?: string }>(
-        data.results
-          .filter((result: { deliveryLogId?: string }) => Boolean(result.deliveryLogId))
-          .map((result: { deliveryLogId: string; status: string; reason?: string }) => [
-            result.deliveryLogId,
-            { status: result.status, reason: result.reason },
-          ]),
-      )
+      const resultsByLogId = new Map<string, { status: string; reason?: string }>()
+      for (const result of data.results as Array<{ deliveryLogId?: string; status?: string; reason?: string }>) {
+        if (result.deliveryLogId && result.status) {
+          resultsByLogId.set(result.deliveryLogId, { status: result.status, reason: result.reason })
+        }
+      }
       const now = new Date().toISOString()
       const updatedLogs = getCommunicationDeliveryLogs().map((log) => {
         const result = resultsByLogId.get(log.id)
